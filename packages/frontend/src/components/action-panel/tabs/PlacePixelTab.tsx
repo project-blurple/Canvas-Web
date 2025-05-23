@@ -19,9 +19,18 @@ import BotCommandCard from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
 const ColorPicker = styled("div")`
+  --min-swatch-width: 3rem;
+
   display: grid;
   gap: 0.25rem;
-  grid-template-columns: repeat(auto-fill, minmax(3rem, 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--min-swatch-width), 1fr)
+  );
+
+  ${({ theme }) => theme.breakpoints.up("lg")} {
+    --min-swatch-width: 3.5rem;
+  }
 `;
 
 const PlacePixelTabBlock = styled(TabBlock)`

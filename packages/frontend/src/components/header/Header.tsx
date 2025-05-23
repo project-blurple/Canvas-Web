@@ -18,7 +18,8 @@ const Wrapper = styled("header")`
 
   ${({ theme }) => theme.breakpoints.up("md")} {
     gap: 1rem;
-    padding-inline: 4rem;
+    // This is overridden in Main.tsx
+    padding-inline: var(--layout-padding-x, 4rem);
   }
 `;
 
