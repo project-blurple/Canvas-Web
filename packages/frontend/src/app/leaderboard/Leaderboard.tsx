@@ -38,7 +38,10 @@ const RankCell = styled("td")`
 
 const AvatarCell = styled("td")`
   --avatar-size: min(8svw, 3.75rem);
-  width: calc(var(--avatar-size) + 2 * var(--cell-padding));
+  --width: calc(var(--avatar-size) + 2 * var(--cell-padding));
+
+  width: var(--width);
+  min-width: var(--width);
 `;
 
 const UsernameCell = styled("td")`
@@ -98,7 +101,7 @@ function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
         <Username>
           {userId ?
             (username ?? userId)
-          : <Skeleton variant="rounded" width={260} />}
+          : <Skeleton variant="rounded" width="min(35svw, 16rem)" />}
         </Username>
       </UsernameCell>
       <PixelCountCell>
@@ -106,12 +109,12 @@ function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
           <PixelCount>
             {totalPixels ?
               totalPixels.toLocaleString()
-            : <Skeleton width={90} />}
+            : <Skeleton width="min(12svw, 5.5rem)" />}
           </PixelCount>
           <PixelCountLabel>
             {totalPixels ?
               <>pixels placed</>
-            : <Skeleton width={90} />}
+            : <Skeleton width="min(12svw, 5.5rem)" />}
           </PixelCountLabel>
         </PixelCountCellContents>
       </PixelCountCell>
