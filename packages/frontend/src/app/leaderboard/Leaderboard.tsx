@@ -11,7 +11,7 @@ const Wrapper = styled("div")`
   flex-direction: column;
   place-items: center;
   padding-inline: var(--layout-padding-x);
-  padding-block: calc(2 * var(--layout-padding-y));
+  padding-block: 4rem;
   gap: calc(2 * var(--layout-padding-y));
 `;
 
