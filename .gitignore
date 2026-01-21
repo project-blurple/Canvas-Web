@@ -4,6 +4,7 @@
 # Generated code
 **/node_modules/
 **/.pnp
+**/migrations/
 .pnp.js
 .yarn/install-state.gz
 
