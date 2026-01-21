@@ -120,7 +120,9 @@ pixelRouter.post<CanvasIdParam>("/", tenSecondLimiter, async (req, res) => {
     if (!futureCooldown) return res.status(201).json({ cooldownEndTime: null });
     return res
       .status(201)
-      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
+      .json({
+        cooldownEndDate: futureCooldown.toISOString(),
+      });
   } catch (error) {
     ApiError.sendError(res, error);
   }

@@ -1,3 +1,3 @@
 export interface Cooldown {
-  cooldownEndTime?: number;
+  cooldownEndDate?: string;
 }

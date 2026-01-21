@@ -25,20 +25,17 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
   const { color } = useSelectedColorContext();
   const isSelected = adjustedCoords && color;
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [cooldownDate, setCooldownDate] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
+  const [, tick] = useState(0);
   const { user, signOut } = useAuthContext();
 
-  // cooldown timer
+  // Force updating the timer
   useEffect(() => {
-    if (timeLeft) {
-      const timerId = setTimeout(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-      return () => clearTimeout(timerId);
-    }
-    setTimeLeft(0);
-  }, [timeLeft]);
+    if (cooldownDate <= Date.now()) return;
+    const id = setInterval(() => tick(v => v + 1), 1000);
+    return () => clearInterval(id);
+  }, [cooldownDate]);
 
   const handlePixelRequest = () => {
     if (!coords || !color) return;
@@ -58,9 +55,9 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
       })
       .then((res) => res.data)
       .then((data) => {
-        const cooldown = data.cooldownEndTime;
+        const cooldown = data.cooldownEndDate;
         if (cooldown) {
-          setTimeLeft(Math.ceil(cooldown / 1000));
+          setCooldownDate(new Date(cooldown).getTime());
         }
         setIsPlacing(false);
       })
@@ -99,10 +96,10 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
     );
   }
 
-  if (timeLeft > 0) {
+  if (cooldownDate > Date.now()) {
     return (
       <Button variant="contained" disabled>
-        On cooldown: {timeLeft} seconds left
+        On cooldown: {Math.ceil((cooldownDate - Date.now()) / 1000)} seconds left
       </Button>
     );
   }

@@ -15,7 +15,9 @@ import { pixelRouter } from "./pixel";
 
 export const canvasRouter = Router();
 
-canvasRouter.use("/:canvasId/pixel", pixelRouter);
+canvasRouter.use("/:canvasId/pixel", (req, res, next) => {
+  pixelRouter(req, res, next)
+});
 
 canvasRouter.get("/", async (req, res) => {
   try {
