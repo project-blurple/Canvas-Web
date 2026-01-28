@@ -13,6 +13,7 @@ const Wrapper = styled("div")`
   place-items: center;
   padding: 4rem 4rem;
   gap: 4rem;
+  overflow-x: hidden;
 `;
 
 const TitleBlock = styled("div")`
@@ -32,6 +33,11 @@ const Table = styled("table")`
   }
 `;
 
+const EntryRow = styled("tr")`
+  height: 60px;
+  overflow: hidden;
+`;
+
 const RankCell = styled("td")`
   color: oklch(from var(--discord-white) l c h / 45%);
   text-align: center;
@@ -46,7 +52,10 @@ const UserCell = styled("td")`
 `;
 
 const Username = styled("p")`
-  max-inline-size: 22rem;
+  max-inline-size: min(22rem, 50vw);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 `;
 
 const PixelCountCell = styled("td")`
@@ -82,7 +91,7 @@ const NoContentsMessage = styled("p")`
 function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
   const { userId, rank, profilePictureUrl, username, totalPixels } = user ?? {};
   return (
-    <tr key={userId}>
+    <EntryRow key={userId}>
       <RankCell>{rank}</RankCell>
       <UserCell>
         {userId && profilePictureUrl ?
@@ -112,7 +121,7 @@ function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
           </PixelCountLabel>
         </PixelCountCellContents>
       </PixelCountCell>
-    </tr>
+    </EntryRow>
   );
 }
 
