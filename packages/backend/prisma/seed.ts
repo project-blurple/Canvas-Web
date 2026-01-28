@@ -6,6 +6,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const OVERRIDE = true;
+const USERS = 50_000 + Math.floor(Math.random() * 50_000);
 
 async function main() {
   const seedings: Prisma.ModelName[] = [
@@ -61,10 +62,10 @@ async function main() {
       .map((seeding) => prisma[seeding].deleteMany()),
   ]);
 
-  const userNumber = 51 + Math.floor(Math.random() * 450);
+  const userNumber = Math.max(51, USERS);
   const userIds = new Set<number>();
   while (userIds.size < userNumber)
-    userIds.add(Math.floor(Math.random() * 100_000) + 100_000);
+    userIds.add(Math.floor(Math.random() * 900_000) + 100_000);
 
   if (seedings.includes("color")) {
     await prisma.color.createMany({
