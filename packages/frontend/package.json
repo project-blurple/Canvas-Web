@@ -21,8 +21,8 @@
     "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.1"
+    "node": ">=24",
+    "pnpm": ">=10.33.0"
   },
   "scripts": {
     "dev": "next dev --turbo",
@@ -57,7 +57,7 @@
     "@blurple-canvas-web/types": "workspace:*",
     "@types/js-cookie": "^3.0.6",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^25.5.0",
+    "@types/node": "^24.1.0",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "prettier": "^3.5.3",
