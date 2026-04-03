@@ -44,6 +44,15 @@
     "node": ">=20",
     "pnpm": ">=9.0.1"
   },
+  "pnpm": {
+    "overrides": {
+      "braces": "^3.0.3",
+      "path-to-regexp": "0.1.13",
+      "qs": "^6.15.0",
+      "@babel/runtime": "^7.26.10",
+      "yaml@^1.10.0": "1.10.3"
+    }
+  },
   "packageManager": "pnpm@9.15.6+sha256.5bf88eca1e818b973b9359a16e57405177c7a9b8177b9125d587577311786e64",
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
