@@ -31,8 +31,9 @@ export const viewport: Viewport = {
  * action (requiring it to be async and returning a promise) while still allowing it to access the
  * cookies during SSR... I love Next.js 😭
  */
-function getServerSideProfile(): DiscordUserProfile | null {
-  const profile = cookies().get("profile");
+async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
+  const cookieStore = await cookies();
+  const profile = cookieStore.get("profile");
 
   if (!profile) {
     return null;
@@ -74,16 +75,19 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [profile, canvasInfo] = await Promise.all([
+    getServerSideProfile(),
+    getServerSideCanvasInfo(),
+  ]);
+
   return (
     <html lang="en">
       <body>
         <AppRouterCacheProvider>
-          <AuthProvider profile={getServerSideProfile()}>
+          <AuthProvider profile={profile}>
             <QueryClientProvider>
               <SelectedColorProvider>
-                <CanvasProvider
-                  mainCanvasInfo={await getServerSideCanvasInfo()}
-                >
+                <CanvasProvider mainCanvasInfo={canvasInfo}>
                   <ThemeProvider theme={Theme}>{children}</ThemeProvider>
                 </CanvasProvider>
               </SelectedColorProvider>
