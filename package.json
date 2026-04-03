@@ -48,7 +48,6 @@
     "overrides": {
       "braces": "^3.0.3",
       "diff": "4.0.4",
-      "path-to-regexp": "0.1.13",
       "@babel/runtime": "^7.26.10",
       "yaml@^1.10.0": "1.10.3"
     },
