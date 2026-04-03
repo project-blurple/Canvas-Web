@@ -47,6 +47,7 @@
   "pnpm": {
     "overrides": {
       "braces": "^3.0.3",
+      "diff": "4.0.4",
       "path-to-regexp": "0.1.13",
       "qs": "^6.15.0",
       "@babel/runtime": "^7.26.10",
