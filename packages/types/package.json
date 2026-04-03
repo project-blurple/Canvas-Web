@@ -28,8 +28,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "format": "prettier --check --cache . --ignore-path ../../.gitignore",
-    "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
+    "format": "biome format .",
+    "format:fix": "biome format --write .",
     "lint": "biome check --formatter-enabled=false .",
     "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm format && pnpm lint",
@@ -38,7 +38,6 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
-    "prettier": "^3.5.3",
     "typescript": "^5.8.2"
   },
   "dependencies": {
