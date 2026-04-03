@@ -1,4 +1,4 @@
-import { CanvasInfo, CanvasSummary, LeaderboardEntry, Palette } from "..";
+import { CanvasSummary, LeaderboardEntry } from "..";
 
 export interface Params {
   canvasId: CanvasSummary["id"];

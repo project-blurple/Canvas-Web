@@ -1,10 +1,9 @@
 "use client";
 
+import { BlurpleEvent, EventRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
 import config from "@/config";
-import { BlurpleEvent, EventRequest } from "@blurple-canvas-web/types";
 
 export function useEventInfo(eventId?: BlurpleEvent["id"]) {
   const getEvent = async () => {

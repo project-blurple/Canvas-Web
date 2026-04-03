@@ -1,10 +1,10 @@
 "use client";
 
-import config from "@/config";
-import { useAuthContext } from "@/contexts";
-import { Button, Typography, styled } from "@mui/material";
+import { Button, styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
+import config from "@/config";
+import { useAuthContext } from "@/contexts";
 
 const Background = styled("div")`
   align-items: center;

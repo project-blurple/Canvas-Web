@@ -31,7 +31,7 @@
     "format": "prettier --check --cache . --ignore-path ../../.gitignore",
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
-    "lint:fix": "biome check --formatter-enabled=false --apply .",
+    "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm format && pnpm lint",
     "check:fix": "pnpm format:fix && pnpm lint:fix",
     "clean": "rm -rf node_modules/ build/"

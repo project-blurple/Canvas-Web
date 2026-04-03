@@ -60,6 +60,13 @@ type CssValue =
   | { type: "Rem"; value: number }
   | { type: "Percentage"; value: number };
 
+// Kinda just eyeballed the 6 and 3.75 rem and it looked ok.
+const pointerBounds = [
+  { type: "Rem", value: 6 },
+  { type: "Percentage", value: 50 },
+  { type: "Rem", value: -3.75 },
+] as const satisfies CssValue[];
+
 interface SlideableDrawerProps {
   children: React.ReactNode;
 }
@@ -69,7 +76,7 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
   // Needed to use custom getMovementDelta function
   const previousPointerEventRef = useRef<PointerEvent | null>(null);
   const drawerWrapperRef = useCallback((elem: HTMLDivElement | null) => {
-    if (!elem || !elem.parentElement) return;
+    if (!elem?.parentElement) return;
     const resizeObserver = new ResizeObserver((entries) => {
       const height = entries[0].target.clientHeight;
       setMaxHeight(height);
@@ -88,15 +95,9 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
     );
   }, []);
 
-  // Kinda just eyeballed the 6 and 3.75 rem and it looked ok.
-  const pointerBounds: CssValue[] = [
-    { type: "Rem", value: 6 },
-    { type: "Percentage", value: 50 },
-    { type: "Rem", value: -3.75 },
-  ];
-
   const convertBoundToPixels = useCallback(
     (maxHeight: number) => {
+      // biome-ignore lint/suspicious/useIterableCallbackReturn: This is watertight
       return pointerBounds.map((bound) => {
         switch (bound.type) {
           case "Rem":

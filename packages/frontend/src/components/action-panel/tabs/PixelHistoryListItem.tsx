@@ -1,6 +1,5 @@
-import { Skeleton, styled } from "@mui/material";
-
 import { PixelHistoryRecord } from "@blurple-canvas-web/types";
+import { Skeleton, styled } from "@mui/material";
 
 import ColorCodeChip from "@/components/ColorCodeChip";
 import { StaticSwatch } from "@/components/swatch";

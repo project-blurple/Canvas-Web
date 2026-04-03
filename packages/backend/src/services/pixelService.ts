@@ -1,13 +1,13 @@
-import { prisma } from "@/client";
-import config from "@/config";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
-import { socketHandler } from "@/index";
 import {
   PaletteColor,
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
 import { color } from "@prisma/client";
+import { prisma } from "@/client";
+import config from "@/config";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
+import { socketHandler } from "@/index";
 import { updateCachedCanvasPixel } from "./canvasService";
 
 /**
@@ -191,7 +191,7 @@ export async function getCooldown(
   );
 
   // Return early if no cooldown exists
-  if (!cooldown || !cooldown?.cooldown_time) {
+  if (!cooldown?.cooldown_time) {
     return { currentCooldown: null, futureCooldown };
   }
 

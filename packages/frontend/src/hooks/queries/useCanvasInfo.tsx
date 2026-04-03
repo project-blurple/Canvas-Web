@@ -1,10 +1,9 @@
 "use client";
 
+import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
 import config from "@/config";
-import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
   const getMainCanvasInfo = async () => {

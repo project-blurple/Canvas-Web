@@ -1,14 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-
-import config from "@/config";
 import {
   CanvasInfo,
   DiscordUserProfile,
   UserStatsRequest,
 } from "@blurple-canvas-web/types";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import config from "@/config";
 
 export function useUserStats(
   userId: DiscordUserProfile["id"] | undefined,

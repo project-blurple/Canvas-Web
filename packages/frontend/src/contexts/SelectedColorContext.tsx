@@ -2,9 +2,9 @@
 
 import { PaletteColor } from "@blurple-canvas-web/types";
 import {
+  createContext,
   Dispatch,
   SetStateAction,
-  createContext,
   useContext,
   useState,
 } from "react";

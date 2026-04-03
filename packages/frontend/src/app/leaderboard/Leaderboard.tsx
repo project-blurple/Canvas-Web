@@ -1,10 +1,10 @@
 "use client";
 
+import { LeaderboardEntry } from "@blurple-canvas-web/types";
+import { Skeleton, styled } from "@mui/material";
 import Avatar from "@/components/Avatar";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
-import { LeaderboardEntry } from "@blurple-canvas-web/types";
-import { Skeleton, styled } from "@mui/material";
 
 const Wrapper = styled("div")`
   display: flex;

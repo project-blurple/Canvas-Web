@@ -1,11 +1,10 @@
 "use client";
 
+import { CanvasSummary } from "@blurple-canvas-web/types";
 import { NativeSelect, nativeSelectClasses, styled } from "@mui/material";
 import { ChevronsUpDown } from "lucide-react";
-
 import { useCanvasContext } from "@/contexts";
 import { useCanvasInfo, useCanvasList, useEventInfo } from "@/hooks";
-import { CanvasSummary } from "@blurple-canvas-web/types";
 
 const Select = styled(NativeSelect)`
   background-color: var(--discord-legacy-not-quite-black);
@@ -85,7 +84,7 @@ export default function CanvasPicker() {
   const pastCanvases = canvases.filter(({ id }) => id !== currentEvent?.id);
 
   function handleChangeCanvas(event: React.ChangeEvent<HTMLSelectElement>) {
-    setCanvas(Number.parseInt(event.target.value));
+    setCanvas(Number.parseInt(event.target.value, 10));
   }
 
   return (

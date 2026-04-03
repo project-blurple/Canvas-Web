@@ -1,11 +1,11 @@
 import fs from "node:fs";
+import { CanvasInfo, CanvasSummary, Point } from "@blurple-canvas-web/types";
+import { canvas } from "@prisma/client";
+import { PNG } from "pngjs";
 import { prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { PlacePixelArray } from "@/models/bodyModels";
-import { CanvasInfo, CanvasSummary, Point } from "@blurple-canvas-web/types";
-import { canvas } from "@prisma/client";
-import { PNG } from "pngjs";
 
 type PixelColor = number[]; // [r, g, b, a]
 

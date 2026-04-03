@@ -1,11 +1,6 @@
 import { NotFoundError } from "@/errors";
 import { seedCanvases, seedColors, seedPixels } from "@/test";
-import {
-  getCanvasInfo,
-  getCanvasPixels,
-  getCanvasPng,
-  getCanvases,
-} from "./canvasService";
+import { getCanvases, getCanvasInfo, getCanvasPixels } from "./canvasService";
 
 describe("Canvas Info Tests", () => {
   beforeEach(() => {
