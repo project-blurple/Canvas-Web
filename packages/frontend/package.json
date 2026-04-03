@@ -57,7 +57,7 @@
     "@blurple-canvas-web/types": "workspace:*",
     "@types/js-cookie": "^3.0.6",
     "@types/luxon": "^3.4.2",
-    "@types/node": "^25.5.0",
+    "@types/node": "^25.5.2",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "prettier": "^3.5.3",
