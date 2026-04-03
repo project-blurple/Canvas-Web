@@ -1,8 +1,7 @@
+import { Cooldown } from "@blurple-canvas-web/types";
 import { CircularProgress, styled } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
-import { Cooldown } from "@blurple-canvas-web/types";
 
 import config from "@/config";
 import {

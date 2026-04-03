@@ -1,4 +1,4 @@
-import { Typography, styled } from "@mui/material";
+import { styled, Typography } from "@mui/material";
 
 const LoadingText = styled(Typography)`
   font-size: 11vw;

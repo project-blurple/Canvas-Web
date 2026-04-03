@@ -1,6 +1,5 @@
-import { styled } from "@mui/material";
-
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 
 type AvatarProps = Pick<
   DiscordUserProfile,

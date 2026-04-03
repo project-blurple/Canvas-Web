@@ -1,11 +1,10 @@
 "use client";
 
+import { BlurpleEvent, PaletteRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-
-import config from "@/config";
-import { BlurpleEvent, PaletteRequest } from "@blurple-canvas-web/types";
 import Color, { Coords } from "colorjs.io";
+import config from "@/config";
 
 export function usePalette(eventId?: BlurpleEvent["id"]) {
   const getPalette = async () => {

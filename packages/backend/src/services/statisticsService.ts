@@ -1,9 +1,9 @@
-import { prisma } from "@/client";
 import {
   CanvasInfo,
   LeaderboardEntry,
   UserStats,
 } from "@blurple-canvas-web/types";
+import { prisma } from "@/client";
 import { createDefaultAvatarUrl } from "./discordProfileService";
 
 export async function getUserStats(

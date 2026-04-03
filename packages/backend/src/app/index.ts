@@ -5,9 +5,9 @@ import config from "@/config";
 import { apiRouter } from "@/routes";
 import "@/utils";
 import { createServer } from "node:http";
+import { Server } from "socket.io";
 import { initializeAuth } from "@/middleware/auth";
 import { initializeCache } from "@/services/canvasService";
-import { Server } from "socket.io";
 import { SocketHandler } from "./SockerHandler";
 
 interface App {

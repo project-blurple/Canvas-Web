@@ -1,11 +1,7 @@
-import { ApiError, BadRequestError } from "@/errors";
-import {
-  LeaderboardParamModel,
-  LeaderboardQueryModel,
-  parseCanvasId,
-} from "@/models/paramModels";
-import { getLeaderboard, getUserStats } from "@/services/statisticsService";
 import { Router } from "express";
+import { ApiError, BadRequestError } from "@/errors";
+import { LeaderboardQueryModel, parseCanvasId } from "@/models/paramModels";
+import { getLeaderboard, getUserStats } from "@/services/statisticsService";
 
 export const statisticsRouter = Router();
 

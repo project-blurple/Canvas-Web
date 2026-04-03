@@ -6,15 +6,15 @@ import type { Metadata, Viewport } from "next";
 import config from "@/config";
 import { QueryClientProvider, SelectedColorProvider } from "@/contexts";
 import "@/styles/core.css";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
-import { Theme } from "@/theme";
 import {
   CanvasInfo,
   CanvasInfoRequest,
   DiscordUserProfile,
 } from "@blurple-canvas-web/types";
 import { cookies } from "next/headers";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { CanvasProvider } from "@/contexts/CanvasContext";
+import { Theme } from "@/theme";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),

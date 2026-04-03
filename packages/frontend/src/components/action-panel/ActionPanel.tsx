@@ -1,10 +1,9 @@
 "use client";
 
+import { PaletteColor } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useState } from "react";
-
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
-import { PaletteColor } from "@blurple-canvas-web/types";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 
 const Wrapper = styled("div")`

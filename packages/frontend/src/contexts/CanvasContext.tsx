@@ -1,24 +1,23 @@
 "use client";
 
-import axios from "axios";
-import {
-  Dispatch,
-  SetStateAction,
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
-
-import { addPoints, tupleToPoint } from "@/components/canvas/point";
-import config from "@/config";
-import { socket } from "@/socket";
 import {
   CanvasInfo,
   CanvasInfoRequest,
   Point,
 } from "@blurple-canvas-web/types";
+import axios from "axios";
+import {
+  createContext,
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import { addPoints, tupleToPoint } from "@/components/canvas/point";
+import config from "@/config";
+import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 
 interface CanvasContextType {
