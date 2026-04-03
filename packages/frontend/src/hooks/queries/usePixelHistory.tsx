@@ -16,8 +16,11 @@ export function usePixelHistory(
 
     const { x, y } = coordinates;
     const response = await axios.get<HistoryRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${canvasId}/pixel/history?x=${x}&y=${y}`,
-      { signal },
+      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+      {
+        params: { x, y },
+        signal,
+      },
     );
     return response.data;
   };

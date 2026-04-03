@@ -76,7 +76,7 @@ export const CanvasProvider = ({
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {
       const response = await axios.get<CanvasInfoRequest.ResBody>(
-        `${config.apiUrl}/api/v1/canvas/${canvasId}/info`,
+        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
       );
       setActiveCanvas(response.data);
       setSelectedColor(null);

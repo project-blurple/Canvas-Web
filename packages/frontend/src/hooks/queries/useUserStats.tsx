@@ -18,7 +18,7 @@ export function useUserStats(
     if (!userId) return null;
 
     const response = await axios.get<UserStatsRequest.ResBody>(
-      `${config.apiUrl}/api/v1/statistics/user/${userId}/${canvasId}`,
+      `${config.apiUrl}/api/v1/statistics/user/${encodeURIComponent(userId)}/${encodeURIComponent(canvasId)}`,
     );
     return response.data;
   };
