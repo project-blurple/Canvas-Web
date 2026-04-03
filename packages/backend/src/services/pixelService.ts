@@ -1,9 +1,11 @@
 import {
   PaletteColor,
+  PixelColor,
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
 import { color } from "@prisma/client";
+
 import { prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
@@ -115,13 +117,15 @@ export async function validatePixel(
  * @param colorId - The ID of the color
  * @returns The corresponding color object
  */
-export async function validateColor(colorId: number): Promise<color> {
-  const color = await prisma.color.findFirst({
+export async function validateColor(
+  colorId: number,
+): Promise<color & { rgba: PixelColor }> {
+  const color = (await prisma.color.findFirst({
     where: {
       id: colorId,
     },
-  });
-  //
+  })) as (color & { rgba: PixelColor }) | null;
+
   if (!color) {
     throw new NotFoundError(`There is no color with ID ${colorId}`);
   }
