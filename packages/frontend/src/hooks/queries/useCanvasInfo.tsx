@@ -9,7 +9,7 @@ import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
   const getMainCanvasInfo = async () => {
     const response = await axios.get<CanvasInfoRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId) ?? "current"}/info`,
+      `${config.apiUrl}/api/v1/canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
     );
     return response.data;
   };
