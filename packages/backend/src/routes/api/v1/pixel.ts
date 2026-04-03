@@ -1,5 +1,6 @@
 import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
+import { SafeParseReturnType } from "zod";
 import config from "@/config";
 import {
   ApiError,
@@ -10,6 +11,7 @@ import {
 import { socketHandler } from "@/index";
 import { tenSecondLimiter } from "@/middleware/ratelimit";
 import {
+  PlacePixelArray,
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
 } from "@/models/bodyModels";
@@ -68,7 +70,9 @@ pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
       throw new UnauthorizedError("Invalid API key");
     }
 
-    const result = await PlacePixelArrayBodyModel.safeParseAsync(req.body);
+    const result = (await PlacePixelArrayBodyModel.safeParseAsync(
+      req.body,
+    )) as SafeParseReturnType<PlacePixelArray, PlacePixelArray>;
     if (!result.success) {
       throw new BadRequestError("Body is not valid", result.error.issues);
     }

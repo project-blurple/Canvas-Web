@@ -1,13 +1,17 @@
 import fs from "node:fs";
-import { CanvasInfo, CanvasSummary, Point } from "@blurple-canvas-web/types";
+import {
+  CanvasInfo,
+  CanvasSummary,
+  PixelColor,
+  Point,
+} from "@blurple-canvas-web/types";
 import { canvas } from "@prisma/client";
 import { PNG } from "pngjs";
+
 import { prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { PlacePixelArray } from "@/models/bodyModels";
-
-type PixelColor = number[]; // [r, g, b, a]
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -255,7 +259,7 @@ export function updateCachedCanvasPixel(
 }
 
 export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
-  const pixels = await prisma.pixel.findMany({
+  const pixels = (await prisma.pixel.findMany({
     select: {
       color: {
         select: { rgba: true },
@@ -263,7 +267,7 @@ export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
     },
     where: { canvas_id: canvasId },
     orderBy: [{ y: "asc" }, { x: "asc" }],
-  });
+  })) as { color: { rgba: PixelColor } }[];
 
   return pixels.map((pixel) => pixel.color.rgba);
 }

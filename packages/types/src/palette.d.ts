@@ -1,7 +1,5 @@
 /** `[r, g, b, a]` */
-export type PixelColor =
-  | [number, number, number]
-  | [number, number, number, number];
+export type PixelColor = [number, number, number, number];
 
 export interface PaletteColor {
   id: number;
