@@ -68,7 +68,7 @@
     "prettier": "^3.5.3",
     "prisma": "^5.22.0",
     "prismock": "^1.35.3",
-    "supertest": "^7.0.0",
+    "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.11",
     "typescript": "^5.8.2",
