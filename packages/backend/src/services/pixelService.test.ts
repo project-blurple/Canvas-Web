@@ -1,5 +1,6 @@
 import { fail } from "node:assert";
 import { prisma } from "@/client";
+import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import {
   seedBlacklist,
@@ -8,6 +9,13 @@ import {
   seedPixels,
   seedUsers,
 } from "@/test";
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
+
 import { getCanvasPng } from "./canvasService";
 import {
   getCooldown,
@@ -87,6 +95,10 @@ describe("Color Validation Tests", () => {
   });
 
   it("Rejects color that is not global", async () => {
+    if (config.allColorsGlobal) {
+      return expect(validateColor(3)).resolves.toMatchObject({ id: 3 });
+    }
+
     return expect(validateColor(3)).rejects.toThrow(ForbiddenError);
   });
 
@@ -233,7 +245,7 @@ describe("Place Pixel Tests", () => {
       { id: 1, rgba: [88, 101, 242, 127] },
     );
     for (let i = 0; i < 3; i++) {
-      expect(
+      await expect(
         placePixel(
           canvasId,
           userId,
