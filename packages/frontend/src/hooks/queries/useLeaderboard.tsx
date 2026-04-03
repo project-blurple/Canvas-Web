@@ -9,7 +9,7 @@ import { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
 export function useLeaderboard(canvasId: CanvasInfo["id"]) {
   const getLeaderboard = async () => {
     const response = await axios.get<LeaderboardRequest.ResBody>(
-      `${config.apiUrl}/api/v1/statistics/leaderboard/${canvasId}`,
+      `${config.apiUrl}/api/v1/statistics/leaderboard/${encodeURIComponent(canvasId)}`,
     );
     return response.data;
   };
