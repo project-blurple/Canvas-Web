@@ -1,12 +1,12 @@
-# <img src="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/assets/33956381/86000a76-a73b-4abe-8c61-05dbfecbec40" width="24" height="24" /> Blurple Canvas Web
+# <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/86000a76-a73b-4abe-8c61-05dbfecbec40" width="24" height="24" /> Blurple Canvas Web
 
-## <img src="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
+## <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
 
 [Project Blurple](https://projectblurple.com) is an annual, week-long, community-run event which celebrates Discord’s anniversary. Part of this is Blurple Canvas where people in participating servers create pixel art on a shared canvas.
 
 Blurple Canvas Web is a web alternative to the [existing Discord bot](https://github.com/Rocked03/Blurple-Canvas) Discord bot, which brings canvas to the web!
 
-If you’d like a bit more context, [we have a wiki!](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/wiki)
+If you’d like a bit more context, [we have a wiki!](https://github.com/project-blurple/Canvas-Web/wiki)
 
 ## 🧚 Features
 
@@ -80,7 +80,7 @@ pnpm --version
 
 ### 🤫 Secrets & environment variables
 
-The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/graphs/contributors) if you need any secrets.
+The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/project-blurple/Canvas-Web/graphs/contributors) if you need any secrets.
 
 ### 🚀 Build & deploy
 
@@ -145,4 +145,4 @@ Blurple Canvas Web wouldn’t exist without these lovely people and projects. Th
 
 ## 📜 Licence
 
-The code for Blurple Canvas Web is licensed under the [Apache License, Version 2.0](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes?tab=License-1-ov-file#readme).
+The code for Blurple Canvas Web is licensed under the [Apache License, Version 2.0](https://github.com/project-blurple/Canvas-Web?tab=License-1-ov-file#readme).
