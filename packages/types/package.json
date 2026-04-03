@@ -22,8 +22,8 @@
     "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.1"
+    "node": ">=24",
+    "pnpm": ">=10.33.0"
   },
   "scripts": {
     "build": "tsc",
