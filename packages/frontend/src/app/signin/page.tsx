@@ -48,10 +48,7 @@ const Disclaimer = () => (
     </p>
     <p>
       Blurple Canvas Web is{" "}
-      <a href="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes">
-        open source
-      </a>
-      .
+      <a href="https://github.com/project-blurple/Canvas-Web">open source</a>.
     </p>
   </Footer>
 );
