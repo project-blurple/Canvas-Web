@@ -56,7 +56,7 @@
   },
   "packageManager": "pnpm@9.15.6+sha256.5bf88eca1e818b973b9359a16e57405177c7a9b8177b9125d587577311786e64",
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.10",
     "husky": "^9.1.7",
     "lint-staged": "^15.4.3"
   }
