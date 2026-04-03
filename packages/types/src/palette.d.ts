@@ -1,10 +1,13 @@
-export type PixelColor = number[]; // [r, g, b, a]
+/** `[r, g, b, a]` */
+export type PixelColor =
+  | [number, number, number]
+  | [number, number, number, number];
 
 export interface PaletteColor {
   id: number;
   code: string;
   name: string;
-  rgba: number[]; // [r, g, b, a];
+  rgba: PixelColor;
   global: boolean;
   invite: string | null;
   guildName: string | null;

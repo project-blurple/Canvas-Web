@@ -12,11 +12,15 @@ export function usePalette(eventId?: BlurpleEvent["id"]) {
       `${config.apiUrl}/api/v1/palette/${eventId ?? "current"}`,
     );
     return response.data.sort((a, b) => {
-      const rgbA = a.rgba.slice(0, 3) as Coords;
-      const rgbB = b.rgba.slice(0, 3) as Coords;
+      const rgbA = a.rgba.slice(0, 3) as [number, number, number];
+      const rgbB = b.rgba.slice(0, 3) as [number, number, number];
       const hueA = new Color("srgb", rgbA).to("oklch").coords[2];
       const hueB = new Color("srgb", rgbB).to("oklch").coords[2];
-      return hueA - hueB;
+      if (hueA && hueB) return hueA - hueB;
+      // Everything below should be unreachable in pratice
+      if (hueA === null) return 1;
+      if (hueB == null) return -1;
+      return 0;
     });
   };
 
