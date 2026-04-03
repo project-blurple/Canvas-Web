@@ -51,7 +51,7 @@
     "next": "^15.5.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",
