@@ -1,6 +1,5 @@
 "use client";
 
-
 import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
