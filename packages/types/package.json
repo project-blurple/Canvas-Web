@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/node24": "^24.0.4",
     "prettier": "^3.5.3",
     "typescript": "^5.8.2"
   },

@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",
-    "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/node24": "^24.0.4",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.1.0",
