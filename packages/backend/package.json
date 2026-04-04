@@ -39,7 +39,7 @@
     "clean": "rm -rf node_modules/ build/"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^6.19.3",
     "@quixo3/prisma-session-store": "^3.1.19",
     "@types/express-session": "^1.18.1",
     "@types/passport": "^1.0.17",
