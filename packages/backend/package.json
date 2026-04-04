@@ -45,7 +45,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-discord": "^0.1.14",
     "@types/pngjs": "^6.0.5",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.19.0",
@@ -59,7 +59,7 @@
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",
     "@tsconfig/node22": "^22.0.5",
-    "@types/cors": "^2.8.17",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/node": "^24.1.0",
     "@types/supertest": "^7.2.0",
