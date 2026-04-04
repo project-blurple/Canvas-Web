@@ -2,6 +2,7 @@
 
 import { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
+import { JSX } from "react";
 import Avatar from "@/components/Avatar";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
