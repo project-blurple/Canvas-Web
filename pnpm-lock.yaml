@@ -27,11 +27,11 @@ importers:
   packages/backend:
     dependencies:
       '@prisma/client':
-        specifier: ^5.22.0
-        version: 5.22.0(prisma@5.22.0)
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@5.22.0)(typescript@5.8.2)
       '@quixo3/prisma-session-store':
         specifier: ^3.1.19
-        version: 3.1.19(@prisma/client@5.22.0(prisma@5.22.0))(express-session@1.19.0)
+        version: 3.1.19(@prisma/client@7.6.0(prisma@5.22.0)(typescript@5.8.2))(express-session@1.19.0)
       '@types/express-session':
         specifier: ^1.18.1
         version: 1.18.1
@@ -104,7 +104,7 @@ importers:
         version: 5.22.0
       prismock:
         specifier: ^1.35.4
-        version: 1.35.4(@prisma/client@5.22.0(prisma@5.22.0))(prisma@5.22.0)
+        version: 1.35.4(@prisma/client@7.6.0(prisma@5.22.0)(typescript@5.8.2))(prisma@5.22.0)
       supertest:
         specifier: ^7.2.2
         version: 7.2.2
@@ -875,13 +875,19 @@ packages:
   '@popperjs/core@2.11.8':
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
 
-  '@prisma/client@5.22.0':
-    resolution: {integrity: sha512-M0SVXfyHnQREBKxCgyo7sffrKttwE6R8PMq330MIUF0pTwjUhLbW84pFDlf06B27XyCR++VtjugEnIHdr07SVA==}
-    engines: {node: '>=16.13'}
+  '@prisma/client-runtime-utils@7.6.0':
+    resolution: {integrity: sha512-fD7jlqubsZvVODKvsp9lOpXVecx2aWGxC2l35Ioz2t+teUJ5CfR0SAMsi7UkU1VvaZmmm+DS6BdujF622nY7tQ==}
+
+  '@prisma/client@7.6.0':
+    resolution: {integrity: sha512-7Pe/1ayh3GgWPEg4mmT4ax77LJ1wC+XlnIFvQ94bLP2DsUnOpnruQQR3Jw7r+Frthk94QqDNxo3FjSg8h9PXeQ==}
+    engines: {node: ^20.19 || ^22.12 || >=24.0}
     peerDependencies:
       prisma: '*'
+      typescript: '>=5.4.0'
     peerDependenciesMeta:
       prisma:
+        optional: true
+      typescript:
         optional: true
 
   '@prisma/debug@5.22.0':
@@ -3106,9 +3112,14 @@ snapshots:
 
   '@popperjs/core@2.11.8': {}
 
-  '@prisma/client@5.22.0(prisma@5.22.0)':
+  '@prisma/client-runtime-utils@7.6.0': {}
+
+  '@prisma/client@7.6.0(prisma@5.22.0)(typescript@5.8.2)':
+    dependencies:
+      '@prisma/client-runtime-utils': 7.6.0
     optionalDependencies:
       prisma: 5.22.0
+      typescript: 5.8.2
 
   '@prisma/debug@5.22.0': {}
 
@@ -3154,10 +3165,10 @@ snapshots:
       '@prisma/prisma-schema-wasm': 5.22.0-44.605197351a3c8bdd595af2d2a9bc3025bca48ea2
       fs-extra: 11.1.1
 
-  '@quixo3/prisma-session-store@3.1.19(@prisma/client@5.22.0(prisma@5.22.0))(express-session@1.19.0)':
+  '@quixo3/prisma-session-store@3.1.19(@prisma/client@7.6.0(prisma@5.22.0)(typescript@5.8.2))(express-session@1.19.0)':
     dependencies:
       '@paralleldrive/cuid2': 2.3.1
-      '@prisma/client': 5.22.0(prisma@5.22.0)
+      '@prisma/client': 7.6.0(prisma@5.22.0)(typescript@5.8.2)
       express-session: 1.19.0
       ts-dedent: 2.2.0
       type-fest: 5.5.0
@@ -4280,10 +4291,10 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  prismock@1.35.4(@prisma/client@5.22.0(prisma@5.22.0))(prisma@5.22.0):
+  prismock@1.35.4(@prisma/client@7.6.0(prisma@5.22.0)(typescript@5.8.2))(prisma@5.22.0):
     dependencies:
       '@paralleldrive/cuid2': 2.2.2
-      '@prisma/client': 5.22.0(prisma@5.22.0)
+      '@prisma/client': 7.6.0(prisma@5.22.0)(typescript@5.8.2)
       '@prisma/generator-helper': 5.22.0
       '@prisma/internals': 5.22.0
       bson: 6.10.4
