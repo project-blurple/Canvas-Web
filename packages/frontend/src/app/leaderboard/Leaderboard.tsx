@@ -85,34 +85,30 @@ function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
     <tr key={userId}>
       <RankCell>{rank}</RankCell>
       <UserCell>
-        {userId && profilePictureUrl ? (
+        {userId && profilePictureUrl ?
           <Avatar
             username={username ?? userId}
             profilePictureUrl={profilePictureUrl}
             size={60}
           />
-        ) : (
-          <Skeleton variant="circular" width={60} height={60} />
-        )}
+        : <Skeleton variant="circular" width={60} height={60} />}
         <Username>
-          {userId ? (
+          {userId ?
             (username ?? userId)
-          ) : (
-            <Skeleton variant="rounded" width={260} />
-          )}
+          : <Skeleton variant="rounded" width={260} />}
         </Username>
       </UserCell>
       <PixelCountCell>
         <PixelCountCellContents>
           <PixelCount>
-            {totalPixels ? (
+            {totalPixels ?
               totalPixels.toLocaleString()
-            ) : (
-              <Skeleton width={90} />
-            )}
+            : <Skeleton width={90} />}
           </PixelCount>
           <PixelCountLabel>
-            {totalPixels ? <>pixels placed</> : <Skeleton width={90} />}
+            {totalPixels ?
+              <>pixels placed</>
+            : <Skeleton width={90} />}
           </PixelCountLabel>
         </PixelCountCellContents>
       </PixelCountCell>
@@ -140,13 +136,11 @@ export default function Leaderboard() {
           </tr>
         </thead>
         <tbody>
-          {leaderboardIsLoading ? (
+          {leaderboardIsLoading ?
             Array.from({ length: 10 }, () => leaderboardRecordToTableRow())
-          ) : leaderboard.length > 0 ? (
+          : leaderboard.length > 0 ?
             leaderboard.map(leaderboardRecordToTableRow)
-          ) : (
-            <NoContentsMessage>No leaderboard found</NoContentsMessage>
-          )}
+          : <NoContentsMessage>No leaderboard found</NoContentsMessage>}
         </tbody>
       </Table>
     </Wrapper>

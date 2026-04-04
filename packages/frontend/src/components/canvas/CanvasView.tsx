@@ -275,9 +275,8 @@ export default function CanvasView() {
     (image: HTMLImageElement): void => {
       if (currentCanvasIDRef.current === canvas.id) return;
       currentCanvasIDRef.current = canvas.id;
-      const zoom = containerRef.current
-        ? getDefaultZoom(containerRef.current, image)
-        : 1;
+      const zoom =
+        containerRef.current ? getDefaultZoom(containerRef.current, image) : 1;
 
       const offscreenCanvas = new OffscreenCanvas(image.width, image.height);
       const ctx = offscreenCanvas.getContext("2d");
@@ -725,9 +724,9 @@ export default function CanvasView() {
           transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
           // Only apply transition when zooming is triggered by wheel event
           transition:
-            !isSafari && isZooming
-              ? "transform var(--transition-duration-fast) ease-out"
-              : undefined,
+            !isSafari && isZooming ?
+              "transform var(--transition-duration-fast) ease-out"
+            : undefined,
         }}
       >
         <ReticleContainer

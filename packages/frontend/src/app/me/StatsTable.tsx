@@ -58,50 +58,42 @@ export default function StatsTable({
       <tbody>
         <tr>
           <th>
-            {statsAreLoading ? (
+            {statsAreLoading ?
               <Skeleton width={150} />
-            ) : (
-              <>{totalPixels?.toLocaleString() ?? "?"}&nbsp;pixels placed</>
-            )}
+            : <>{totalPixels?.toLocaleString() ?? "?"}&nbsp;pixels placed</>}
           </th>
           <td>
-            {statsAreLoading ? (
+            {statsAreLoading ?
               <Skeleton width={40} />
-            ) : (
-              rank && `${rank}${getOrdinalSuffix(rank)}`
-            )}
+            : rank && `${rank}${getOrdinalSuffix(rank)}`}
           </td>
         </tr>
         <tr>
           <th>
-            {statsAreLoading ? <Skeleton width={130} /> : <>Most used color</>}
+            {statsAreLoading ?
+              <Skeleton width={130} />
+            : <>Most used color</>}
           </th>
           <td>
-            {statsAreLoading ? (
+            {statsAreLoading ?
               <Skeleton width={80} />
-            ) : (
-              (mostFrequentColor?.name ?? "Unknown")
-            )}
+            : (mostFrequentColor?.name ?? "Unknown")}
           </td>
         </tr>
         <tr>
           <th>
-            {statsAreLoading ? (
+            {statsAreLoading ?
               <Skeleton width={170} />
-            ) : (
-              <>Most recently placed</>
-            )}
+            : <>Most recently placed</>}
           </th>
           <td>
-            {statsAreLoading ? (
+            {statsAreLoading ?
               <Skeleton width={150} />
-            ) : mostRecentTimestamp ? (
+            : mostRecentTimestamp ?
               <span title={formatTimestamp(mostRecentTimestamp)}>
                 {formatTimestampLocalTZ(mostRecentTimestamp)}
               </span>
-            ) : (
-              "Unknown"
-            )}
+            : "Unknown"}
           </td>
         </tr>
       </tbody>

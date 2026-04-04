@@ -59,8 +59,9 @@ export async function getPixelHistory(
       timestamp: history.timestamp,
       guildId: history.guild_id?.toString(),
       userId: history.user_id.toString(),
-      userProfile: history.discord_user_profile
-        ? {
+      userProfile:
+        history.discord_user_profile ?
+          {
             id: history.discord_user_profile.user_id.toString(),
             username: history.discord_user_profile.username,
             profilePictureUrl: history.discord_user_profile.profile_picture_url,

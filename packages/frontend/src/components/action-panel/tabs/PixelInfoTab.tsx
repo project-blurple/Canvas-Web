@@ -80,14 +80,12 @@ export default function PixelInfoTab({
   return (
     <PixelInfoTabBlock active={active}>
       <ActionPanelTabBody>
-        {adjustedCoords ? (
+        {adjustedCoords ?
           <div>
             <CoordinatesCard coordinates={adjustedCoords} />
             <PixelHistoryCurrent history={pixelHistory} isLoading={isLoading} />
           </div>
-        ) : (
-          <p>No selected pixel</p>
-        )}
+        : <p>No selected pixel</p>}
       </ActionPanelTabBody>
       {adjustedCoords && pixelHistory.length > 1 && (
         <ScrollBlock>

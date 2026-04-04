@@ -50,11 +50,10 @@ export default function ColorInfoCard({
 
   const guildName = color.guildName ?? "a partnered server";
 
-  const text = canvas.allColorsGlobal
-    ? "This color is from"
-    : !userInServer
-      ? "This color can be used in"
-      : "You can use this color in";
+  const text =
+    canvas.allColorsGlobal ? "This color is from"
+    : !userInServer ? "This color can be used in"
+    : "You can use this color in";
 
   return (
     <Wrapper>
@@ -64,7 +63,10 @@ export default function ColorInfoCard({
       <Code>{colorCode}</Code>
       {!color.global && (
         <Subtitle>
-          {text} {invite ? <a href={invite}>{guildName}</a> : guildName}
+          {text}{" "}
+          {invite ?
+            <a href={invite}>{guildName}</a>
+          : guildName}
         </Subtitle>
       )}
     </Wrapper>

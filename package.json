@@ -34,9 +34,9 @@
     "clean": "pnpm --recursive clean && rm -rf node_modules/"
   },
   "lint-staged": {
-    "*.{css,html,md,markdown,yaml,yml}": "biome format --write .",
+    "*.{css,html,md,markdown,yaml,yml}": "prettier --write",
     "*.{cjs,d.cts,d.mts,js,json,jsonc,jsx,mjs,ts,tsx}": [
-      "biome format --write .",
+      "prettier --write",
       "biome check --write --formatter-enabled=false --files-ignore-unknown=true --no-errors-on-unmatched"
     ]
   },

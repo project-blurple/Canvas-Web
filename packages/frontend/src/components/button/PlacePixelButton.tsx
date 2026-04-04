@@ -121,9 +121,8 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { x, y } = adjustedCoords;
   const nbsp = "\u00A0";
 
-  const placePixelMessege = isVerbose
-    ? `Place ${color.code} at`
-    : "Place pixel";
+  const placePixelMessege =
+    isVerbose ? `Place ${color.code} at` : "Place pixel";
 
   return (
     <DynamicButton color={color} onAction={handlePixelRequest}>

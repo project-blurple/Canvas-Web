@@ -80,9 +80,9 @@ export default function Nav() {
 
   const links: LinkInfo[] = [
     { href: "/leaderboard", label: "Leaderboard" },
-    user
-      ? { href: "/me", label: user.username }
-      : { href: "/signin", label: "Sign in" },
+    user ?
+      { href: "/me", label: user.username }
+    : { href: "/signin", label: "Sign in" },
   ];
 
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {

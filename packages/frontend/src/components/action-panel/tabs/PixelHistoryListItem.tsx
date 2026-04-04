@@ -43,27 +43,21 @@ export default function PixelHistoryListItem({
 
   return (
     <Wrapper>
-      {record ? (
+      {record ?
         <StyledSwatch key={color.code} rgba={color.rgba} />
-      ) : (
-        <SwatchSkeleton variant="rectangular" />
-      )}
+      : <SwatchSkeleton variant="rectangular" />}
       <div>
         <Username title={record?.userId}>
-          {record ? (
+          {record ?
             (userProfile?.username ?? record.userId)
-          ) : (
-            <Skeleton width={80} />
-          )}
+          : <Skeleton width={80} />}
         </Username>
         <ColorName>
-          {record ? (
+          {record ?
             <>
               {color.name} <ColorCodeChip color={color} />
             </>
-          ) : (
-            <Skeleton width={120} />
-          )}
+          : <Skeleton width={120} />}
         </ColorName>
       </div>
     </Wrapper>
