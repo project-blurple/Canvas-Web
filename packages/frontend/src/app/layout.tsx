@@ -5,7 +5,7 @@ import type { Metadata, Viewport } from "next";
 
 import config from "@/config";
 import { QueryClientProvider, SelectedColorProvider } from "@/contexts";
-import "@/styles/core.css";
+import "../styles/core.css";
 import {
   CanvasInfo,
   CanvasInfoRequest,
