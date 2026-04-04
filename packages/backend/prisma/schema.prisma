@@ -1,15 +1,11 @@
 generator client {
   provider        = "prisma-client-js"
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
-  // pnpm workspaces cause the types to be generated in the wrong place, so we need to manually make
-  // sure it's being installed in the right place.
-  output          = "../../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client"
   previewFeatures = ["views"]
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model blacklist {
@@ -207,7 +203,7 @@ view user_stats {
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
 
-  @@id([user_id, canvas_id])
+  @@unique([user_id, canvas_id])
 }
 
 view guild_stats {
@@ -222,7 +218,7 @@ view guild_stats {
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
 
-  @@id([guild_id, canvas_id])
+  @@unique([guild_id, canvas_id])
 }
 
 view leaderboard {
@@ -234,7 +230,7 @@ view leaderboard {
   total_pixels         Int
   rank                 Int
 
-  @@id([user_id, canvas_id])
+  @@unique([user_id, canvas_id])
 }
 
 view leaderboard_guild {
@@ -248,7 +244,7 @@ view leaderboard_guild {
   total_pixels         Int
   rank                 Int
 
-  @@id([user_id, guild_id, canvas_id])
+  @@unique([user_id, guild_id, canvas_id])
 }
 
 view color_place_frequency {
@@ -256,7 +252,7 @@ view color_place_frequency {
   canvas_id        Int
   median_time_diff Unsupported("interval")
 
-  @@id([user_id, canvas_id])
+  @@unique([user_id, canvas_id])
 }
 
 view color_place_frequency_guild {
@@ -264,7 +260,7 @@ view color_place_frequency_guild {
   canvas_id        Int
   median_time_diff Unsupported("interval")
 
-  @@id([guild_id, canvas_id])
+  @@unique([guild_id, canvas_id])
 }
 
 view most_frequent_color_guild {
@@ -273,7 +269,7 @@ view most_frequent_color_guild {
   color_id  Int
   count     Int
 
-  @@id([guild_id, canvas_id])
+  @@unique([guild_id, canvas_id])
 }
 
 view most_frequent_color {
@@ -282,5 +278,5 @@ view most_frequent_color {
   color_id  Int
   count     Int
 
-  @@id([user_id, canvas_id])
+  @@unique([user_id, canvas_id])
 }

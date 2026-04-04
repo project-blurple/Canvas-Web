@@ -3,8 +3,8 @@ import { seedCanvases, seedColors, seedPixels } from "@/test";
 import { getCanvases, getCanvasInfo, getCanvasPixels } from "./canvasService";
 
 describe("Canvas Info Tests", () => {
-  beforeEach(() => {
-    seedCanvases();
+  beforeEach(async () => {
+    await seedCanvases();
   });
 
   it("Gets canvases", async () => {
@@ -43,8 +43,8 @@ describe("Canvas Info Tests", () => {
 });
 
 describe("Canvas Validation Tests", () => {
-  beforeEach(() => {
-    seedCanvases();
+  beforeEach(async () => {
+    await seedCanvases();
   });
 
   it("Resolves valid canvas", async () => {
@@ -57,10 +57,10 @@ describe("Canvas Validation Tests", () => {
 });
 
 describe("Canvas Pixels Tests", () => {
-  beforeEach(() => {
-    seedCanvases();
-    seedColors();
-    seedPixels();
+  beforeEach(async () => {
+    await seedCanvases();
+    await seedColors();
+    await seedPixels();
   });
 
   it("Gets canvas pixels", async () => {

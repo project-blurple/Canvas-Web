@@ -1,7 +1,7 @@
 import { prisma } from "@/client";
 
-export default function () {
-  prisma.guild.createMany({
+export default async function () {
+  await prisma.guild.createMany({
     data: [
       { id: 0, invite: "web" },
       { id: 1, invite: "Guild 1" },

@@ -1,8 +1,8 @@
 import { prisma } from "@/client";
 
-export default function seedDiscordProfiles() {
+export default async function seedDiscordProfiles() {
   try {
-    prisma.discord_user_profile.createMany({
+    await prisma.discord_user_profile.createMany({
       data: [
         {
           user_id: 204778476102877187n,

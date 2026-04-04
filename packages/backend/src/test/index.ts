@@ -19,17 +19,17 @@ export { default as seedPixels } from "./seedPixels";
 export { default as seedUsers } from "./seedUsers";
 
 // This is a code felony. Thoughts on implementing a builder?
-export default function seedPrismock() {
+export default async function seedPrismock() {
   // TODO: Josh
   // info
   // participation
-  seedBlacklist();
-  seedCanvases();
-  seedColors();
-  seedDiscordProfiles();
-  seedEvents();
-  seedGuilds();
-  seedHistory();
-  seedPixels();
-  seedUsers();
+  await seedUsers();
+  await seedEvents();
+  await seedGuilds();
+  await seedCanvases();
+  await seedColors();
+  await seedPixels();
+  await seedHistory();
+  await seedDiscordProfiles();
+  await seedBlacklist();
 }

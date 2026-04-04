@@ -15,8 +15,8 @@ import { pixelRouter } from "./pixel";
 let app: express.Express;
 
 describe("Place Pixel Tests", () => {
-  beforeEach(() => {
-    seedPrismock();
+  beforeEach(async () => {
+    await seedPrismock();
     vi.useFakeTimers();
 
     app = express();

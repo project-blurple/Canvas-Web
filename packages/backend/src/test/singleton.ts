@@ -1,15 +1,14 @@
-import { PrismockClientType } from "prismock/build/main/lib/client";
-import { prisma } from "@/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
+import createPrismaMock from "prisma-mock/client";
 
-vi.mock("@prisma/client", async () => {
-  const prismock = await vi.importActual("prismock");
-  return {
-    ...vi.importActual("@prisma/client"),
-    PrismaClient: prismock.PrismockClient,
-  };
-});
+type PrismaTestClient = PrismaClient & { $clear: () => void };
+
+const prisma = createPrismaMock<PrismaClient>(Prisma) as PrismaTestClient;
+
+vi.mock("@/client", () => ({
+  prisma,
+}));
 
 afterEach(() => {
-  const prismock = prisma as PrismockClientType;
-  prismock.reset();
+  prisma.$clear();
 });

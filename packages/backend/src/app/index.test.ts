@@ -5,8 +5,8 @@ import seedPrismock from "@/test";
 // It would be better to create an express app at the start and then add the specific route
 
 describe("Test Prisma Stuff", () => {
-  beforeEach(() => {
-    seedPrismock();
+  beforeEach(async () => {
+    await seedPrismock();
   });
 
   it("can write to in memory prisma instance", async () => {
