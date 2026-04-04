@@ -39,8 +39,8 @@ importers:
         specifier: ^1.0.17
         version: 1.0.17
       '@types/passport-discord':
-        specifier: ^0.1.14
-        version: 0.1.14
+        specifier: ^0.1.15
+        version: 0.1.15
       '@types/pngjs':
         specifier: ^6.0.5
         version: 6.0.5
@@ -197,8 +197,8 @@ importers:
   packages/types:
     dependencies:
       '@types/passport-discord':
-        specifier: ^0.1.14
-        version: 0.1.14
+        specifier: ^0.1.15
+        version: 0.1.15
     devDependencies:
       '@tsconfig/node22':
         specifier: ^22.0.5
@@ -1133,17 +1133,17 @@ packages:
   '@types/node@24.12.2':
     resolution: {integrity: sha512-A1sre26ke7HDIuY/M23nd9gfB+nrmhtYyMINbjI1zHJxYteKR6qSMX56FsmjMcDb3SMcjJg5BiRRgOCC/yBD0g==}
 
-  '@types/oauth@0.9.4':
-    resolution: {integrity: sha512-qk9orhti499fq5XxKCCEbd0OzdPZuancneyse3KtR+vgMiHRbh+mn8M4G6t64ob/Fg+GZGpa565MF/2dKWY32A==}
+  '@types/oauth@0.9.6':
+    resolution: {integrity: sha512-H9TRCVKBNOhZZmyHLqFt9drPM9l+ShWiqqJijU1B8P3DX3ub84NjxDuy+Hjrz+fEca5Kwip3qPMKNyiLgNJtIA==}
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
 
-  '@types/passport-discord@0.1.14':
-    resolution: {integrity: sha512-JE7Wbtr4bqqV9poWAbwB+aeVkd3/TM6wgGTtn4Ym6KPLJlJju73BEIH3uS+EeR+D7tY3lP1MtUpJPbxC86PXzA==}
+  '@types/passport-discord@0.1.15':
+    resolution: {integrity: sha512-F5ryPS2vaSNoIz9IajuQjWx3gf0W2YhCJjX7eMQapzAZyl64WGPZEAmBlnpYDtJWMHXMPpJ8ixT4xl0Uk3/k1w==}
 
-  '@types/passport-oauth2@1.4.15':
-    resolution: {integrity: sha512-9cUTP/HStNSZmhxXGuRrBJfEWzIEJRub2eyJu3CvkA+8HAMc9W3aKdFhVq+Qz1hi42qn+GvSAnz3zwacDSYWpw==}
+  '@types/passport-oauth2@1.8.0':
+    resolution: {integrity: sha512-6//z+4orIOy/g3zx17HyQ71GSRK4bs7Sb+zFasRoc2xzlv7ZCJ+vkDBYFci8U6HY+or6Zy7ajf4mz4rK7nsWJQ==}
 
   '@types/passport@1.0.17':
     resolution: {integrity: sha512-aciLyx+wDwT2t2/kJGJR2AEeBz0nJU4WuRX04Wu9Dqc5lSUtwu0WERPHYsLhF9PtseiAMPBGNUOtFjxZ56prsg==}
@@ -3224,22 +3224,22 @@ snapshots:
     dependencies:
       undici-types: 7.16.0
 
-  '@types/oauth@0.9.4':
+  '@types/oauth@0.9.6':
     dependencies:
       '@types/node': 24.12.2
 
   '@types/parse-json@4.0.2': {}
 
-  '@types/passport-discord@0.1.14':
+  '@types/passport-discord@0.1.15':
     dependencies:
       '@types/express': 5.0.6
       '@types/passport': 1.0.17
-      '@types/passport-oauth2': 1.4.15
+      '@types/passport-oauth2': 1.8.0
 
-  '@types/passport-oauth2@1.4.15':
+  '@types/passport-oauth2@1.8.0':
     dependencies:
       '@types/express': 5.0.6
-      '@types/oauth': 0.9.4
+      '@types/oauth': 0.9.6
       '@types/passport': 1.0.17
 
   '@types/passport@1.0.17':

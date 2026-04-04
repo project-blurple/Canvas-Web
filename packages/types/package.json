@@ -41,6 +41,6 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
-    "@types/passport-discord": "^0.1.14"
+    "@types/passport-discord": "^0.1.15"
   }
 }
