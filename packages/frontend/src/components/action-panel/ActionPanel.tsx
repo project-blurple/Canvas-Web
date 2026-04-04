@@ -53,11 +53,11 @@ const Tab = styled("li")<{ active?: boolean }>`
   user-select: none;
 
   ${({ active }) =>
-    active ?
-      css`
+    active
+      ? css`
         background-color: var(--discord-legacy-dark-but-not-black);
       `
-    : ""}
+      : ""}
 
   /*
   * Workaround for accessibility issue with VoiceOver.
