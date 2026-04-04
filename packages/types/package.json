@@ -37,9 +37,9 @@
     "clean": "rm -rf node_modules/ build/"
   },
   "devDependencies": {
-    "@tsconfig/node22": "^22.0.5",
+    "@tsconfig/node24": "^24.0.4",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
+    "typescript": "^6.0.2"
   },
   "dependencies": {
     "@types/passport-discord": "^0.1.15"

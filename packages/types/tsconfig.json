@@ -1,6 +1,6 @@
 {
   // See: https://www.npmjs.com/package/@tsconfig/node22
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
 
   // Reference: https://www.typescriptlang.org/tsconfig
   "compilerOptions": {
