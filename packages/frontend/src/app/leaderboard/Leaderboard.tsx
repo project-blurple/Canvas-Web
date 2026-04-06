@@ -4,7 +4,10 @@ import { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
-import LeaderboardRow, { LeaderboardRowEntry } from "./LeaderboardRow";
+import LeaderboardRow, {
+  LeaderboardRowEntry,
+  LeaderboardRowSkeleton,
+} from "./LeaderboardRow";
 
 const Wrapper = styled("div")`
   display: flex;
@@ -45,8 +48,7 @@ export default function Leaderboard() {
   const { data: leaderboard = [], isLoading: isLeaderboardLoading } =
     useLeaderboard(canvas.id);
 
-  const entries = toLeaderboardRowEntries(isLeaderboardLoading, leaderboard);
-  const isLeaderboardEmpty = entries.length === 0;
+  const isLeaderboardEmpty = leaderboard.length === 0;
 
   return (
     <Wrapper>
@@ -63,9 +65,13 @@ export default function Leaderboard() {
           </tr>
         </thead>
         <tbody>
-          {isLeaderboardEmpty ?
+          {isLeaderboardLoading ?
+            Array.from({ length: 10 }, (_, index) => (
+              <LeaderboardRowSkeleton key={index.toString()} />
+            ))
+          : isLeaderboardEmpty ?
             <NoContentsMessage>No leaderboard found</NoContentsMessage>
-          : entries.map((entry) => (
+          : leaderboard.map((entry) => (
               <LeaderboardRow key={entry.userId} entry={entry} />
             ))
           }
@@ -73,22 +79,4 @@ export default function Leaderboard() {
       </Table>
     </Wrapper>
   );
-}
-
-function toLeaderboardRowEntries(
-  isLoading: boolean,
-  entries: LeaderboardEntry[],
-): LeaderboardRowEntry[] {
-  if (isLoading) {
-    return Array.from({ length: 10 }, (_, index) => ({
-      isLoading: true,
-      userId: index.toString(), // This is used for the React key prop.
-      rank: index + 1,
-    }));
-  }
-
-  return entries.map((entry) => ({
-    isLoading: false,
-    ...entry,
-  }));
 }

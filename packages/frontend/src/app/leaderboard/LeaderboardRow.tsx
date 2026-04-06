@@ -80,43 +80,47 @@ interface LoadedEntry extends LeaderboardEntry {
 export type LeaderboardRowEntry = LoadingEntry | LoadedEntry;
 
 export interface LeaderboardRowProps {
-  entry: LeaderboardRowEntry;
+  entry: LeaderboardEntry;
+}
+
+export function LeaderboardRowSkeleton() {
+  return (
+    <tr>
+      <RankCell $isLoading>
+        <Skeleton variant="text" width="2ch" />
+      </RankCell>
+      <AvatarCell>
+        <AvatarSkeleton />
+      </AvatarCell>
+      <UsernameCell>
+        <Skeleton variant="rounded" width="min(35svw, 16rem)" />
+      </UsernameCell>
+      <PixelCountCell>
+        <PixelCountCellContents>
+          <PixelCountSkeleton />
+        </PixelCountCellContents>
+      </PixelCountCell>
+    </tr>
+  );
 }
 
 export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
   return (
     <tr>
-      <RankCell $isLoading={entry.isLoading}>
-        {entry.rank.toLocaleString()}
-      </RankCell>
+      <RankCell>{entry.rank.toLocaleString()}</RankCell>
       <AvatarCell>
-        {entry.isLoading ?
-          <AvatarSkeleton />
-        : <Avatar
-            username={entry.username ?? entry.userId}
-            profilePictureUrl={entry.profilePictureUrl}
-          />
-        }
+        <Avatar
+          username={entry.username ?? entry.userId}
+          profilePictureUrl={entry.profilePictureUrl}
+        />
       </AvatarCell>
       <UsernameCell>
-        <Username>
-          {entry.isLoading ?
-            <Skeleton variant="rounded" width="min(35svw, 16rem)" />
-          : (entry.username ?? entry.userId)}
-        </Username>
+        <Username>{entry.username ?? entry.userId}</Username>
       </UsernameCell>
       <PixelCountCell>
         <PixelCountCellContents>
-          <PixelCount>
-            {entry.isLoading ?
-              <PixelCountSkeleton />
-            : entry.totalPixels.toLocaleString()}
-          </PixelCount>
-          <PixelCountLabel>
-            {entry.isLoading ?
-              <PixelCountSkeleton />
-            : "pixels placed"}
-          </PixelCountLabel>
+          <PixelCount>entry.totalPixels.toLocaleString()</PixelCount>
+          <PixelCountLabel>"pixels placed"</PixelCountLabel>
         </PixelCountCellContents>
       </PixelCountCell>
     </tr>
