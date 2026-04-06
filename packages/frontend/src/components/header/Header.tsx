@@ -7,12 +7,12 @@ import Nav, { NavLink } from "./Nav";
 
 const Wrapper = styled("header")`
   body:has(&) {
-    --layout-padding-y: 1rem;
     --layout-padding-x: 2rem;
+    --layout-padding-y: 1rem;
 
     ${({ theme }) => theme.breakpoints.up("lg")} {
-      --layout-padding-y: 2rem;
       --layout-padding-x: 4rem;
+      --layout-padding-y: 2rem;
     }
   }
 

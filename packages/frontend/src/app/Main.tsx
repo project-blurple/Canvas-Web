@@ -8,10 +8,10 @@ import { SlideableDrawer } from "@/components/slideable-drawer";
 
 const Wrapper = styled("main")`
   body:has(&) {
-    --navbar-height: 4rem;
-    --row-gap: 0.5rem;
-    --column-gap: 1rem;
     --action-panel-width: 19rem;
+    --navbar-height: 4rem;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
 
     display: grid;
     grid-template-rows: var(--navbar-height) calc(100dvh - var(--navbar-height));
@@ -23,10 +23,10 @@ const Wrapper = styled("main")`
     }
   }
 
+  column-gap: inherit;
   display: grid;
   grid-template-rows: 1fr 1fr;
-  row-gap: var(--row-gap);
-  column-gap: var(--column-gap);
+  row-gap: inherit;
 
   ${({ theme }) => theme.breakpoints.up("md")} {
     grid-auto-flow: column;

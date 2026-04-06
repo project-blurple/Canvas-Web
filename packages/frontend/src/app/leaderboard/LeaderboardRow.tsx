@@ -1,7 +1,7 @@
 "use client";
 
 import { LeaderboardEntry } from "@blurple-canvas-web/types";
-import { Skeleton, styled } from "@mui/material";
+import { css, Skeleton, styled } from "@mui/material";
 import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 
 const RankCell = styled("td", {
@@ -11,7 +11,11 @@ const RankCell = styled("td", {
 }>`
   color: oklch(from var(--discord-white) l c h / 45%);
 
-  ${(props) => props.$isLoading && "visibility: hidden"};
+  ${(props) =>
+    props.$isLoading &&
+    css`
+      visibility: hidden;
+    `};
 `;
 
 const AvatarCell = styled("td")`
@@ -31,7 +35,8 @@ const AvatarCell = styled("td")`
 const UsernameCell = styled("td")`
   font-stretch: 125%;
   font-weight: 900;
-  text-align: left;
+  font-width: 125%;
+  text-align: start;
 `;
 
 const Username = styled("p")`

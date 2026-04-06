@@ -9,10 +9,10 @@ import LeaderboardRow, { LeaderboardRowEntry } from "./LeaderboardRow";
 const Wrapper = styled("div")`
   display: flex;
   flex-direction: column;
-  place-items: center;
-  padding-inline: var(--layout-padding-x);
-  padding-block: 4rem;
   gap: calc(2 * var(--layout-padding-y));
+  padding-block: 4rem;
+  padding-inline: var(--layout-padding-x);
+  place-items: center;
 `;
 
 const TitleBlock = styled("div")`
