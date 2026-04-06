@@ -1,7 +1,6 @@
-import { Skeleton, styled } from "@mui/material";
-
 import { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
-
+import { Skeleton, styled } from "@mui/material";
+import { useCallback, useEffect, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -9,12 +8,14 @@ import {
 } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { decodeUserGuildsBase64 } from "@/util";
-import { useCallback, useEffect, useState } from "react";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
-import { ScrollBlock, TabBlock } from "./ActionPanelTabBody";
-import { ActionPanelTabBody } from "./ActionPanelTabBody";
+import {
+  ActionPanelTabBody,
+  ScrollBlock,
+  TabBlock,
+} from "./ActionPanelTabBody";
 import BotCommandCard from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 

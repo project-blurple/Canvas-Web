@@ -1,8 +1,7 @@
+import { Cooldown } from "@blurple-canvas-web/types";
 import { CircularProgress, styled } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
-import { Cooldown } from "@blurple-canvas-web/types";
 
 import config from "@/config";
 import {
@@ -130,7 +129,7 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
       {isSelected ? placePixelMessege : "Select a pixel"}
       {isSelected && (
         <CoordinateLabel>
-          {/* String interpolation is required to prevent https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues/255 */}
+          {/* String interpolation is required to prevent https://github.com/project-blurple/Canvas-Web/issues/255 */}
           {`(${x},${nbsp}${y})`}
         </CoordinateLabel>
       )}

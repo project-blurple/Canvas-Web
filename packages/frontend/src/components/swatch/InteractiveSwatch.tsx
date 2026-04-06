@@ -42,7 +42,7 @@ export function InteractiveSwatch({
 }: InteractiveSwatchProps) {
   // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
   const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 255;
+  const alphaFloat = rgba[3] / 0xff;
 
   const clickHandler = onAction;
   const keyUpHandler = (event: React.KeyboardEvent) => {

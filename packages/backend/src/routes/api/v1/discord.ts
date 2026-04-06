@@ -1,7 +1,6 @@
+import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import passport from "passport";
-
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
 
 import config from "@/config";
 import { saveDiscordProfile } from "@/services/discordProfileService";

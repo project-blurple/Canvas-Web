@@ -1,8 +1,7 @@
 "use client";
 
-import { buttonClasses, css, styled } from "@mui/material";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { buttonClasses, css, styled } from "@mui/material";
 
 import { Button as ButtonBase } from "@/components/button";
 

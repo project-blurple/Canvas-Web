@@ -13,16 +13,16 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes.git",
+    "url": "https://github.com/project-blurple/Canvas-Web.git",
     "directory": "packages/frontend"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues"
+    "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.1"
+    "node": ">=24",
+    "pnpm": ">=10.33.0"
   },
   "scripts": {
     "dev": "next dev --turbo",
@@ -31,7 +31,7 @@
     "format": "prettier --check --cache . --ignore-path ../../.gitignore",
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
-    "lint:fix": "biome check --formatter-enabled=false --apply .",
+    "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm format && pnpm lint",
     "check:fix": "pnpm format:fix && pnpm lint:fix",
     "clean": "rm -rf node_modules/ .next/"
@@ -39,28 +39,28 @@
   "dependencies": {
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.0",
-    "@mui/material": "^5.16.14",
-    "@mui/material-nextjs": "^5.16.14",
-    "@tanstack/react-query": "^5.67.2",
-    "axios": "^1.8.2",
-    "colorjs.io": "^0.5.2",
+    "@emotion/styled": "^11.14.1",
+    "@mui/material": "^7.3.9",
+    "@mui/material-nextjs": "^7.3.9",
+    "@tanstack/react-query": "^5.96.2",
+    "axios": "^1.14.0",
+    "colorjs.io": "^0.6.1",
     "js-cookie": "^3.0.5",
-    "lucide-react": "^0.378.0",
-    "luxon": "^3.5.0",
-    "next": "^14.2.24",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "socket.io-client": "^4.8.1"
+    "lucide-react": "^1.7.0",
+    "luxon": "^3.7.2",
+    "next": "^16.2.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",
     "@types/js-cookie": "^3.0.6",
-    "@types/luxon": "^3.4.2",
-    "@types/node": "^22.13.10",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
+    "@types/luxon": "^3.7.1",
+    "@types/node": "^24.1.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
+    "typescript": "^6.0.2"
   }
 }

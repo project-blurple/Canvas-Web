@@ -1,8 +1,7 @@
 "use client";
 
-import { styled } from "@mui/material";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 
 const Container = styled("code", {
   shouldForwardProp: (prop) => prop !== "backgroundColor",

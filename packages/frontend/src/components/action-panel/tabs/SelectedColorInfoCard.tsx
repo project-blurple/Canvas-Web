@@ -1,7 +1,6 @@
-import { styled } from "@mui/material";
-
-import { useCanvasContext } from "@/contexts";
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
+import { useCanvasContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: baseline;
@@ -43,9 +42,9 @@ export default function ColorInfoCard({
   invite?: string;
   isUserInServer?: boolean;
 }) {
-  if (!color) return <Wrapper>No color selected</Wrapper>;
-
   const { canvas } = useCanvasContext();
+
+  if (!color) return <Wrapper>No color selected</Wrapper>;
 
   const { name: colorName, code: colorCode } = color;
 

@@ -1,9 +1,8 @@
 "use client";
 
+import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
 
 import config from "@/config";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
@@ -11,13 +10,13 @@ import { socket } from "@/socket";
 import { clamp } from "@/util";
 import { Button } from "../button";
 import {
-  ORIGIN,
   addPoints,
   diffPoints,
   distanceBetweenPoints,
   dividePoint,
   getMovementDelta,
   multiplyPoint,
+  ORIGIN,
 } from "./point";
 
 const CanvasContainer = styled("div")`
@@ -271,6 +270,7 @@ export default function CanvasView() {
   const [isSafari, setIsSafari] = useState(false);
 
   const imageUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}`;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
     (image: HTMLImageElement): void => {
       if (currentCanvasIDRef.current === canvas.id) return;
@@ -322,6 +322,7 @@ export default function CanvasView() {
    * SOCKET FUNCTIONALITY.       *
    ********************************/
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   useEffect(() => {
     const onDisconnect = () => {
       console.debug("[Live Updating]: Disconnected from server");
@@ -444,6 +445,7 @@ export default function CanvasView() {
    * @param newZoom The new zoom level as a value from `initialZoom * MIN_ZOOM` to `MAX_ZOOM`
    * @param pointerOffset The offset of the `Point` from the visual center of the wrapping container
    */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleZoom = useCallback(
     (scale: number, pointerPosition: Point, elem: HTMLElement) => {
       // The mouse position's origin is in the top left of the container.
@@ -709,76 +711,75 @@ export default function CanvasView() {
   const reticleOffset = calculateReticleOffset(coords);
 
   return (
-    <>
-      <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
-        {config.discordServerInvite && (
-          <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
-          </a>
-        )}
-        <div
-          id="canvas-pan-and-zoom"
-          ref={canvasPanAndZoomRef}
+    <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
+      {config.discordServerInvite && (
+        <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
+          <InviteButton>Project Blurple</InviteButton>
+        </a>
+      )}
+      <div
+        id="canvas-pan-and-zoom"
+        ref={canvasPanAndZoomRef}
+        style={{
+          transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
+          // Only apply transition when zooming is triggered by wheel event
+          transition:
+            !isSafari && isZooming ?
+              "transform var(--transition-duration-fast) ease-out"
+            : undefined,
+        }}
+      >
+        <ReticleContainer
           style={{
-            transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
-            // Only apply transition when zooming is triggered by wheel event
-            transition:
-              !isSafari && isZooming ?
-                "transform var(--transition-duration-fast) ease-out"
-              : undefined,
+            scale: RETICLE_SCALE,
+            ...(coords && {
+              transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
+            }),
           }}
         >
-          <ReticleContainer
-            style={{
-              scale: RETICLE_SCALE,
-              ...(coords && {
-                transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
-              }),
-            }}
-          >
-            {color && (
-              <PreviewPixel
-                style={{
-                  width: PREVIEW_PIXEL_SIZE,
-                  height: PREVIEW_PIXEL_SIZE,
-                  top: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                  left: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                  backgroundColor: `rgba(${color?.rgba.join()})`,
-                }}
-              />
-            )}
-            <Reticle
-              src="./images/reticle.png"
-              alt="Reticle"
-              className="reticle"
+          {color && (
+            <PreviewPixel
               style={{
-                width: RETICLE_SIZE,
-                height: RETICLE_SIZE,
-                // These min sizes prevent the reticle being squished which causes it to be misalignment.
-                minWidth: RETICLE_SIZE,
-                minHeight: RETICLE_SIZE,
+                width: PREVIEW_PIXEL_SIZE,
+                height: PREVIEW_PIXEL_SIZE,
+                top: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
+                left: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
+                backgroundColor: `rgba(${color?.rgba.join()})`,
               }}
             />
-          </ReticleContainer>
-          <CanvasImageWrapper
-            ref={canvasImageWrapperRef}
-            isLoading={isLoading}
-            isLaunching={isLaunching}
-            id="canvas-image-wrapper"
-          >
-            <img
-              alt="Active Blurple Canvas"
-              onLoad={(event) => handleLoadImage(event.currentTarget)}
-              ref={imageRef}
-              src={imageUrl}
-              crossOrigin="anonymous"
-              // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
-              style={{ minWidth: canvas.width, minHeight: canvas.height }}
-            />
-          </CanvasImageWrapper>
-        </div>
-        {isLoading && <CircularProgress className="loader" />}
-      </CanvasContainer>
-    </>
+          )}
+          <Reticle
+            src="./images/reticle.png"
+            alt="Reticle"
+            className="reticle"
+            style={{
+              width: RETICLE_SIZE,
+              height: RETICLE_SIZE,
+              // These min sizes prevent the reticle being squished which causes it to be misalignment.
+              minWidth: RETICLE_SIZE,
+              minHeight: RETICLE_SIZE,
+            }}
+          />
+        </ReticleContainer>
+        <CanvasImageWrapper
+          ref={canvasImageWrapperRef}
+          isLoading={isLoading}
+          isLaunching={isLaunching}
+          id="canvas-image-wrapper"
+        >
+          {/* biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art */}
+          <img
+            alt="Active Blurple Canvas"
+            onLoad={(event) => handleLoadImage(event.currentTarget)}
+            ref={imageRef}
+            src={imageUrl}
+            crossOrigin="anonymous"
+            // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
+            style={{ minWidth: canvas.width, minHeight: canvas.height }}
+          />
+        </CanvasImageWrapper>
+      </div>
+      {isLoading && <CircularProgress className="loader" />}
+    </CanvasContainer>
   );
 }

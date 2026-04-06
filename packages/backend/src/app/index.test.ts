@@ -1,6 +1,3 @@
-import request from "supertest";
-import { createApp } from "./index";
-
 import { prisma } from "@/client";
 import seedPrismock from "@/test";
 

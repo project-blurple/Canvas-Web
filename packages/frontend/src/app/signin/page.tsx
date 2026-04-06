@@ -1,10 +1,10 @@
 "use client";
 
-import config from "@/config";
-import { useAuthContext } from "@/contexts";
-import { Button, Typography, styled } from "@mui/material";
+import { Button, styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
+import config from "@/config";
+import { useAuthContext } from "@/contexts";
 
 const Background = styled("div")`
   align-items: center;
@@ -48,10 +48,7 @@ const Disclaimer = () => (
     </p>
     <p>
       Blurple Canvas Web is{" "}
-      <a href="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes">
-        open source
-      </a>
-      .
+      <a href="https://github.com/project-blurple/Canvas-Web">open source</a>.
     </p>
   </Footer>
 );

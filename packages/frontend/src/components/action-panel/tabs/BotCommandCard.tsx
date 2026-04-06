@@ -1,6 +1,6 @@
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
+import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: center;

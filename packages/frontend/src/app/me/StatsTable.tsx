@@ -1,13 +1,12 @@
 "use client";
 
+import { UserStats } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
-
 import {
   formatTimestamp,
   formatTimestampLocalTZ,
   getOrdinalSuffix,
 } from "@/util";
-import { UserStats } from "@blurple-canvas-web/types";
 
 const EmptyStateMessage = styled("div")`
   border-radius: var(--card-border-radius);

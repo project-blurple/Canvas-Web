@@ -7,12 +7,15 @@
     "rules": {
       "style": {
         "useImportType": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn"
       }
     }
   },
   "javascript": {
     "formatter": {
-      "trailingComma": "all"
+      "trailingCommas": "all"
     }
   },
   "vcs": {
