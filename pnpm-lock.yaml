@@ -23,6 +23,9 @@ importers:
       lint-staged:
         specifier: ^16.4.0
         version: 16.4.0
+      prettier:
+        specifier: ^3.5.3
+        version: 3.5.3
 
   packages/backend:
     dependencies:

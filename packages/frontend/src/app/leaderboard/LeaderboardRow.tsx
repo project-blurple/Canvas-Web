@@ -1,8 +1,8 @@
 "use client";
 
-import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 import { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
+import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 
 const RankCell = styled("td", {
   shouldForwardProp: (prop) => prop !== "$isLoading",
