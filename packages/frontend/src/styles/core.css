@@ -45,6 +45,7 @@
   h5,
   h6 {
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   b,
