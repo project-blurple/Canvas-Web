@@ -124,7 +124,7 @@ Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac
 - [Henry Wang](http://henryh.wang)
 - [Jasper Lai](https://lai.nz)
 - [Josh Jeffers](https://pumbas.net)
-- Samuel Ou
+- [Samuel Ou](https://sjou.dev)
 
 ![](./group-image/Golden%20Giraffes.webp)
 
@@ -133,7 +133,7 @@ Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac
 Blurple Canvas Web wouldn’t exist without these lovely people and projects. Thanks to:
 
 - [Project Blurple](https://projectblurple.com) and the Project Blurple community, for obvious reasons;
-- [Rocked03](https://github.com/Rocked03) for creating the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;[^samuel]
+- [Rocked03](https://rocked03.dev) for creating the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;[^samuel]
 - the [Place Atlas Initiative](https://github.com/placeAtlas) for their efforts cataloguing r/Place;
 - [Josh Wardle](https://www.powerlanguage.co.uk) and [r/Place](https://www.reddit.com/r/place) participants (no introduction needed); and
 - you, for your interest in this project!
