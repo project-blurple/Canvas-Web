@@ -22,7 +22,6 @@ export function useFrame({
   guildIds?: DiscordGuildRecord["guild_id"][];
 }) {
   const getFrame = async (): Promise<Frame[]> => {
-    console.log(frameId, canvasId, userId, guildIds);
     if (frameId) {
       if (canvasId || userId || guildIds) {
         throw new Error(
@@ -60,8 +59,12 @@ export function useFrame({
           params: {
             guildIds: guildIds,
           },
+          paramsSerializer: {
+            indexes: null,
+          },
         },
       );
+      console.log("Guild frames response:", response.data);
       return response.data;
     }
 
