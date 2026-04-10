@@ -33,8 +33,7 @@ const StatsCard = styled("div")`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
   margin-block: 1rem;
-  max-inline-size: 100%;
-  min-inline-size: min(100%, 20rem);
+  inline-size: min(100%, 20rem);
   padding: 1.5rem;
   text-align: center;
 `;

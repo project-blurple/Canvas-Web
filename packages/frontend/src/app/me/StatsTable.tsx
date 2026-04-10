@@ -15,6 +15,7 @@ const EmptyStateMessage = styled("div")`
 `;
 
 const Table = styled("table")`
+  container-type: inline-size;
   margin-block-start: 1rem;
   font-size: 1.125rem;
   width: 100%;
@@ -57,12 +58,12 @@ export default function StatsTable({ stats, isStatsLoading }: StatsTableProps) {
         <tr>
           <th>
             {isStatsLoading ?
-              <Skeleton width="min(27svw, 9rem)" />
+              <Skeleton width="clamp(5rem, 45cqi, 9rem)" />
             : <>{totalPixels?.toLocaleString() ?? "?"}&nbsp;pixels placed</>}
           </th>
           <td>
             {isStatsLoading ?
-              <Skeleton width="min(7.5svw, 2.5rem)" />
+              <Skeleton width="clamp(1.5rem, 12.5cqi, 2.5rem)" />
             : rank !== undefined &&
               `${rank.toLocaleString()}${getOrdinalSuffix(rank)}`
             }
@@ -71,24 +72,24 @@ export default function StatsTable({ stats, isStatsLoading }: StatsTableProps) {
         <tr>
           <th>
             {isStatsLoading ?
-              <Skeleton width="min(24svw, 8rem)" />
+              <Skeleton width="clamp(4.5rem, 40cqi, 8rem)" />
             : <>Most used color</>}
           </th>
           <td>
             {isStatsLoading ?
-              <Skeleton width="min(15svw, 5rem)" />
+              <Skeleton width="clamp(3rem, 25cqi, 5rem)" />
             : (mostFrequentColor?.name ?? "Unknown")}
           </td>
         </tr>
         <tr>
           <th>
             {isStatsLoading ?
-              <Skeleton width="min(30svw, 10rem)" />
+              <Skeleton width="clamp(5.5rem, 50cqi, 10rem)" />
             : <>Most recently placed</>}
           </th>
           <td>
             {isStatsLoading ?
-              <Skeleton width="min(24svw, 8rem)" />
+              <Skeleton width="clamp(4.5rem, 40cqi, 8rem)" />
             : mostRecentTimestamp ?
               <span title={formatTimestamp(mostRecentTimestamp)}>
                 {formatTimestampLocalTZ(mostRecentTimestamp)}

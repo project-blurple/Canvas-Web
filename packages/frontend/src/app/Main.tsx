@@ -14,7 +14,7 @@ const Wrapper = styled("main")`
     row-gap: 0.5rem;
 
     display: grid;
-    grid-template-rows: var(--navbar-height) calc(100dvh - var(--navbar-height));
+    grid-template-rows: auto 1fr;
     height: 100dvh;
 
     ${({ theme }) => theme.breakpoints.up("lg")} {

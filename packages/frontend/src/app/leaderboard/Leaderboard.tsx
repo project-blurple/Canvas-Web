@@ -1,13 +1,9 @@
 "use client";
 
-import { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
-import LeaderboardRow, {
-  LeaderboardRowEntry,
-  LeaderboardRowSkeleton,
-} from "./LeaderboardRow";
+import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
 
 const Wrapper = styled("div")`
   display: flex;

@@ -5,21 +5,21 @@ import { css, Skeleton, styled } from "@mui/material";
 import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 
 const RankCell = styled("td", {
-  shouldForwardProp: (prop) => prop !== "$isLoading",
+  shouldForwardProp: (prop) => prop !== "isLoading",
 })<{
-  $isLoading?: boolean;
+  isLoading?: boolean;
 }>`
   color: oklch(from var(--discord-white) l c h / 45%);
 
   ${(props) =>
-    props.$isLoading &&
+    props.isLoading &&
     css`
       visibility: hidden;
     `};
 `;
 
 const AvatarCell = styled("td")`
-  --avatar-size: min(8svw, 3.75rem);
+  --avatar-size: clamp(2.5rem, 8svi, 3.75rem);
   --width: calc(var(--avatar-size) + 2 * var(--cell-padding));
 
   // We need to define the width here so that the cell doesn't get wider than the avatar.
@@ -59,14 +59,14 @@ const PixelCount = styled("span")`
 
 const PixelCountLabel = styled("span")`
   color: oklch(from var(--discord-white) l c h / 55%);
-  font-size: min(2svw, 0.75rem);
+  font-size: clamp(0.75rem, 2svi, 0.9rem);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 `;
 
 const PixelCountSkeleton = styled(Skeleton)`
-  width: min(12svw, 5.5rem);
+  width: clamp(4.5rem, 12svi, 5.5rem);
 `;
 
 interface LoadingEntry extends Pick<LeaderboardEntry, "userId" | "rank"> {
@@ -86,14 +86,14 @@ export interface LeaderboardRowProps {
 export function LeaderboardRowSkeleton() {
   return (
     <tr>
-      <RankCell $isLoading>
+      <RankCell isLoading>
         <Skeleton variant="text" width="2ch" />
       </RankCell>
       <AvatarCell>
         <AvatarSkeleton />
       </AvatarCell>
       <UsernameCell>
-        <Skeleton variant="rounded" width="min(35svw, 16rem)" />
+        <Skeleton variant="rounded" width="clamp(10rem, 35svi, 16rem)" />
       </UsernameCell>
       <PixelCountCell>
         <PixelCountCellContents>
