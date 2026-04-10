@@ -26,9 +26,11 @@ interface CanvasContextType {
   coords: Point | null;
   selectedFrame: Frame | null;
   adjustedCoords: Point | null;
+  isReticleVisible: boolean;
   setCanvas: (canvasId: CanvasInfo["id"]) => void;
   setCoords: Dispatch<SetStateAction<Point | null>>;
   setSelectedFrame: Dispatch<SetStateAction<Frame | null>>;
+  setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
@@ -46,9 +48,11 @@ export const CanvasContext = createContext<CanvasContextType>({
   coords: null,
   selectedFrame: null,
   adjustedCoords: null,
+  isReticleVisible: false,
   setCoords: () => {},
   setCanvas: () => {},
   setSelectedFrame: () => {},
+  setIsReticleVisible: () => {},
 });
 
 interface CanvasProviderProps {
@@ -65,6 +69,8 @@ export const CanvasProvider = ({
     useState<CanvasContextType["coords"]>(null);
   const [selectedFrame, setSelectedFrame] =
     useState<CanvasContextType["selectedFrame"]>(null);
+  const [isReticleVisible, setIsReticleVisible] =
+    useState<CanvasContextType["isReticleVisible"]>(true);
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -107,9 +113,11 @@ export const CanvasProvider = ({
         adjustedCoords,
         canvas: activeCanvas,
         selectedFrame: selectedFrame,
+        isReticleVisible: isReticleVisible && selectedCoords !== null,
         setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
         setSelectedFrame: setSelectedFrame,
+        setIsReticleVisible: setIsReticleVisible,
       }}
     >
       {children}

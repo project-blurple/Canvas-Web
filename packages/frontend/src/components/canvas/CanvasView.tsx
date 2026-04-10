@@ -290,7 +290,8 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, coords, selectedFrame, setCoords } = useCanvasContext();
+  const { canvas, coords, isReticleVisible, selectedFrame, setCoords } =
+    useCanvasContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -794,6 +795,7 @@ export default function CanvasView() {
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
+            display: isReticleVisible ? "block" : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),

@@ -105,17 +105,25 @@ export default function ActionPanel() {
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
 
   const { color, setColor } = useSelectedColorContext();
-  const { canvas } = useCanvasContext();
+  const { canvas, setIsReticleVisible } = useCanvasContext();
 
   const onSwitchTab = (newTab: TABS) => {
     // switching tabs
-    // hiding colour from reticle if we are on look tab
     setCurrentTab(newTab);
+
+    // hiding colour from reticle if we are on look tab
     if (newTab === TABS.LOOK) {
       setTempColor(color);
       setColor(null);
     } else {
       setColor(tempColor);
+    }
+
+    // hiding reticle if we are on frames tab
+    if (newTab === TABS.FRAMES) {
+      setIsReticleVisible(false);
+    } else {
+      setIsReticleVisible(true);
     }
   };
 
