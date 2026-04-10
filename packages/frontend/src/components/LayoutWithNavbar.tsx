@@ -1,15 +1,15 @@
 "use client";
 
-import { Navbar } from "@/components/nav";
+import { Header } from "@/components/header";
 
-export default function LayoutWithNavbar({
+export default function LayoutWithHeader({
   content,
 }: {
   content: React.ReactNode;
 }) {
   return (
     <>
-      <Navbar />
+      <Header />
       {content}
     </>
   );

@@ -5,7 +5,7 @@ import { SwatchBase } from "./SwatchBase";
 
 const StyledSwatchBase = styled(SwatchBase)`
   cursor: pointer;
-  border: 0.25rem solid oklch(var(--discord-white-oklch) / 15%);
+  border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
   transition:
     opacity var(--transition-duration-fast) ease,
     outline-width var(--transition-duration-fast) ease,
@@ -42,7 +42,7 @@ export function InteractiveSwatch({
 }: InteractiveSwatchProps) {
   // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
   const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 255;
+  const alphaFloat = rgba[3] / 0xff;
 
   const clickHandler = onAction;
   const keyUpHandler = (event: React.KeyboardEvent) => {

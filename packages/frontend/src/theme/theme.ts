@@ -28,7 +28,7 @@ export const Theme = createTheme({
       main: "#5865F2", // Blurple
     },
     background: {
-      paper: "oklch(var(--discord-legacy-not-quite-black-oklch))",
+      paper: "var(--discord-legacy-not-quite-black)",
     },
   },
   typography: {
@@ -62,7 +62,7 @@ export const Theme = createTheme({
           "&.Mui-disabled": {
             backgroundColor: "var(--discord-legacy-greyple)",
             opacity: 0.55,
-            color: "#ffffff",
+            color: "var(--discord-legacy-full-white)",
           },
         },
       },

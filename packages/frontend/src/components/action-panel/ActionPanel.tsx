@@ -1,10 +1,9 @@
 "use client";
 
+import { PaletteColor } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useState } from "react";
-
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
-import { PaletteColor } from "@blurple-canvas-web/types";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
@@ -23,25 +22,19 @@ const Wrapper = styled("div")`
   > * {
     border-radius: calc(var(--card-border-radius) - var(--padding-width));
   }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    border-radius: 0;
+    border: initial;
+  }
 `;
 
 const TabBar = styled("ul")`
-  border-radius: .5rem;
+  border-radius: 0.5rem;
   display: grid;
-  gap: .5rem;
+  gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
   list-style-type: none;
-
-
-
-    /*
-     * Workaround for accessibility issue with VoiceOver.
-     * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
-     */
-    li::before {
-      content: "\\200B"; /* zero-width space */
-    }
-  }
 `;
 
 const Tab = styled("li")<{ active?: boolean }>`
@@ -67,6 +60,14 @@ const Tab = styled("li")<{ active?: boolean }>`
       `
     : ""}
 
+  /*
+  * Workaround for accessibility issue with VoiceOver.
+  * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
+  */
+  &::before {
+    content: "\\200B"; /* zero-width space */
+  }
+
   :hover,
   :focus,
   :focus-visible {
@@ -84,7 +85,7 @@ const Tab = styled("li")<{ active?: boolean }>`
 `;
 
 export const Heading = styled("h2")`
-  color: oklch(var(--discord-white-oklch) / 60%);
+  color: oklch(from var(--discord-white) l c h / 60%);
   font-weight: 600;
   font-size: 1rem;
   grid-column: 1 / -1;

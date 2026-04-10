@@ -3,7 +3,7 @@ generator client {
   binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
   // pnpm workspaces cause the types to be generated in the wrong place, so we need to manually make
   // sure it's being installed in the right place.
-  output          = "../../../node_modules/.pnpm/@prisma+client@5.12.1_prisma@5.12.1/node_modules/.prisma/client"
+  output          = "../../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client"
   previewFeatures = ["views"]
 }
 

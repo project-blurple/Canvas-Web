@@ -1,14 +1,14 @@
 "use client";
 
-import config from "@/config";
-import { useAuthContext } from "@/contexts";
-import { Button, Typography, styled } from "@mui/material";
+import { Button, styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
+import config from "@/config";
+import { useAuthContext } from "@/contexts";
 
 const Background = styled("div")`
   align-items: center;
-  block-size: 100vh;
+  block-size: 100dvh;
   display: grid;
   gap: 4rem;
   grid-template-rows: 1fr min-content;
@@ -26,7 +26,7 @@ const SignInForm = styled("form")`
   align-items: center;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 `;
 
 const AlreadySignedIn = styled("p")`
@@ -38,9 +38,10 @@ const Footer = styled("footer")`
   color: #808080;
   color: oklch(50% 0 0);
   text-align: inherit;
+  text-wrap: balance;
 `;
 
-const Disclaimer = () => (
+const disclaimer = (
   <Footer>
     <p>
       Project Blurple and Blurple Canvas are community-driven projects, not
@@ -48,7 +49,11 @@ const Disclaimer = () => (
     </p>
     <p>
       Blurple Canvas Web is{" "}
-      <a href="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes">
+      <a
+        href="https://github.com/project-blurple/Canvas-Web"
+        rel="external nofollow noopener"
+        target="_blank"
+      >
         open source
       </a>
       .
@@ -65,7 +70,7 @@ export default function SignInPage() {
         <picture>
           <Image
             src="/images/blurple-canvas-logo~dark.svg"
-            alt="Blurple Canvas logo"
+            alt="The Blurple Canvas logo. A three-by-three grid of purple pixels, reminiscent of one face of a Rubik’s Cube. The lit pixels create form two small arrows, one pointing northwest, one southeast."
             width={60}
             height={60}
           />
@@ -83,7 +88,7 @@ export default function SignInPage() {
         )}
       </SignInForm>
 
-      <Disclaimer />
+      {disclaimer}
     </Background>
   );
 }

@@ -1,6 +1,5 @@
-import { DateTime } from "luxon";
-
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { DateTime } from "luxon";
 
 /**
  * Return the value clamped so that it is within the range [min, max].
@@ -28,10 +27,10 @@ export function getOrdinalSuffix(rank: number) {
 
 export function formatInterval(interval: string) {
   const [daysStr, time] = interval.split(" ");
-  const days = Number.parseInt(daysStr);
+  const days = Number.parseInt(daysStr, 10);
   const [hours, minutes, seconds] = time
     .split(":")
-    .map((num) => Number.parseInt(num));
+    .map((num) => Number.parseInt(num, 10));
   const components = [];
   if (days > 0) components.push(`${days} ${days === 1 ? "day" : "days"}`);
   if (hours > 0) components.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);

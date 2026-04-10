@@ -1,12 +1,14 @@
-import { styled } from "@mui/material";
-
 import { PixelHistoryRecord } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 
 import { useCanvasContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { Heading } from "../ActionPanel";
-import { ScrollBlock, TabBlock } from "./ActionPanelTabBody";
-import { ActionPanelTabBody } from "./ActionPanelTabBody";
+import {
+  ActionPanelTabBody,
+  ScrollBlock,
+  TabBlock,
+} from "./ActionPanelTabBody";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 
@@ -71,10 +73,9 @@ export default function PixelInfoTab({
   canvasId,
 }: PixelInfoTabProps) {
   const { coords, adjustedCoords } = useCanvasContext();
-  const { data: pixelHistory = [], isLoading } = usePixelHistory(
-    canvasId,
-    coords,
-  );
+  const { data, isLoading } = usePixelHistory(canvasId, coords);
+
+  const pixelHistory = data?.pixelHistory ?? [];
 
   return (
     <PixelInfoTabBlock active={active}>
@@ -86,7 +87,7 @@ export default function PixelInfoTab({
           </div>
         : <p>No selected pixel</p>}
       </ActionPanelTabBody>
-      {adjustedCoords && pixelHistory.length > 1 ?
+      {adjustedCoords && pixelHistory.length > 1 && (
         <ScrollBlock>
           <ActionPanelTabBody>
             <div>
@@ -94,7 +95,7 @@ export default function PixelInfoTab({
             </div>
           </ActionPanelTabBody>
         </ScrollBlock>
-      : <></>}
+      )}
     </PixelInfoTabBlock>
   );
 }

@@ -1,5 +1,5 @@
-export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { AuthProvider, useAuthContext } from "./AuthProvider";
+export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { QueryClientProvider } from "./QueryClientProvider";
 export {
   SelectedColorProvider,

@@ -1,25 +1,37 @@
+import { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
-
-import { Palette } from "@blurple-canvas-web/types";
-
+import { useCallback, useEffect, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette } from "@/hooks";
+import { decodeUserGuildsBase64 } from "@/util";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
-import { ScrollBlock, TabBlock } from "./ActionPanelTabBody";
-import { ActionPanelTabBody } from "./ActionPanelTabBody";
+import {
+  ActionPanelTabBody,
+  ScrollBlock,
+  TabBlock,
+} from "./ActionPanelTabBody";
 import BotCommandCard, { PlaceBotCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
 const ColorPicker = styled("div")`
+  --min-swatch-width: 3rem;
+
   display: grid;
   gap: 0.25rem;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(var(--min-swatch-width), 1fr)
+  );
+
+  ${({ theme }) => theme.breakpoints.up("lg")} {
+    --min-swatch-width: 3.5rem;
+  }
 `;
 
 const PlacePixelTabBlock = styled(TabBlock)`
@@ -47,11 +59,10 @@ export const partitionPalette = (palette: Palette) => {
   return [mainColors, partnerColors];
 };
 
-// function userWithinServer(user: DiscordUserProfile, serverId: string) {
-//   return false;
-//   const guildIds = decodeUserGuildsBase64(user);
-//   return guildIds.some((guildId) => guildId === serverId);
-// }
+function isUserInServer(user: DiscordUserProfile, serverId: string) {
+  const guildIds = decodeUserGuildsBase64(user);
+  return guildIds.includes(serverId);
+}
 
 interface PlacePixelTabProps {
   active?: boolean;
@@ -64,6 +75,30 @@ export default function PlacePixelTab({
 }: PlacePixelTabProps) {
   const { data: palette = [] } = usePalette(eventId ?? undefined);
   const [mainColors, partnerColors] = partitionPalette(palette);
+  // Boolean to hide certain elements when the tab is too small
+  // Current implementation is a bit jarring when things pop in and out
+  const [isLarge, setIsLarge] = useState(true);
+
+  // Get value of the rem in pixels (and only run it client-side)
+  const [remPixels, setRemPixels] = useState<number>(16);
+  useEffect(() => {
+    // This runs only in the browser after hydration
+    setRemPixels(
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+    );
+  }, []);
+
+  const PlacePixelTabBlockRef = useCallback(
+    (elem: HTMLDivElement | null) => {
+      if (!elem) return;
+      const resizeObserver = new ResizeObserver((entries) => {
+        const height = entries[0].target.clientHeight;
+        setIsLarge(height > remPixels * 20);
+      });
+      resizeObserver.observe(elem);
+    },
+    [remPixels],
+  );
 
   const { color: selectedColor, setColor: setSelectedColor } =
     useSelectedColorContext();
@@ -77,9 +112,11 @@ export default function PlacePixelTab({
     hasInvite ? `https://discord.gg/${inviteSlug}` : undefined;
 
   const webPlacingEnabled = canvas.webPlacingEnabled;
+  const allColorsGlobal = canvas.allColorsGlobal;
 
   const canPlacePixel =
-    webPlacingEnabled && (!selectedColor || selectedColor.global);
+    webPlacingEnabled &&
+    (!selectedColor || selectedColor.global || allColorsGlobal);
 
   const readOnly = canvas.isLocked;
 
@@ -88,8 +125,15 @@ export default function PlacePixelTab({
     !selectedColor?.global &&
     serverInvite;
 
+  const userInServer =
+    (user &&
+      selectedColor &&
+      !selectedColor.global &&
+      isUserInServer(user, selectedColor?.guildId)) ??
+    false;
+
   return (
-    <PlacePixelTabBlock active={active}>
+    <PlacePixelTabBlock active={active} ref={PlacePixelTabBlockRef}>
       <ScrollBlock>
         <ActionPanelTabBody>
           <ColorPicker>
@@ -127,14 +171,21 @@ export default function PlacePixelTab({
         </ActionPanelTabBody>
       </ScrollBlock>
       <ActionPanelTabBody>
-        <ColorInfoCard color={selectedColor} invite={serverInvite} />
-        {canPlacePixel && <PlacePixelButton />}
+        {isLarge && (
+          <ColorInfoCard
+            color={selectedColor}
+            invite={serverInvite}
+            isUserInServer={userInServer}
+          />
+        )}
+        {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
           <DynamicAnchorButton color={selectedColor} href={serverInvite}>
-            Join {selectedColor?.guildName ?? "server"}
+            {!userInServer ? "Join" : "Open"}{" "}
+            {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>
         )}
-        {!readOnly && <PlaceBotCommandCard />}
+        {!readOnly && isLarge && <PlaceBotCommandCard />}
       </ActionPanelTabBody>
     </PlacePixelTabBlock>
   );

@@ -5,16 +5,16 @@ import type { Metadata, Viewport } from "next";
 
 import config from "@/config";
 import { QueryClientProvider, SelectedColorProvider } from "@/contexts";
-import "@/styles/core.css";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
-import { Theme } from "@/theme";
+import "../styles/core.css";
 import {
   CanvasInfo,
   CanvasInfoRequest,
   DiscordUserProfile,
 } from "@blurple-canvas-web/types";
 import { cookies } from "next/headers";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { CanvasProvider } from "@/contexts/CanvasContext";
+import { Theme } from "@/theme";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),
@@ -31,8 +31,9 @@ export const viewport: Viewport = {
  * action (requiring it to be async and returning a promise) while still allowing it to access the
  * cookies during SSR... I love Next.js 😭
  */
-function getServerSideProfile(): DiscordUserProfile | null {
-  const profile = cookies().get("profile");
+async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
+  const cookieStore = await cookies();
+  const profile = cookieStore.get("profile");
 
   if (!profile) {
     return null;
@@ -64,6 +65,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
       startCoordinates: [1, 1],
       eventId: 1,
       webPlacingEnabled: false,
+      allColorsGlobal: false,
     };
   }
 }
@@ -73,16 +75,19 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [profile, canvasInfo] = await Promise.all([
+    getServerSideProfile(),
+    getServerSideCanvasInfo(),
+  ]);
+
   return (
     <html lang="en">
       <body>
         <AppRouterCacheProvider>
-          <AuthProvider profile={getServerSideProfile()}>
+          <AuthProvider profile={profile}>
             <QueryClientProvider>
               <SelectedColorProvider>
-                <CanvasProvider
-                  mainCanvasInfo={await getServerSideCanvasInfo()}
-                >
+                <CanvasProvider mainCanvasInfo={canvasInfo}>
                   <ThemeProvider theme={Theme}>{children}</ThemeProvider>
                 </CanvasProvider>
               </SelectedColorProvider>

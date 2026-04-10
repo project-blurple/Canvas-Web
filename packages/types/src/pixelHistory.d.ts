@@ -9,4 +9,9 @@ export interface PixelHistoryRecord {
   userProfile: DiscordUserProfile | null;
 }
 
-export type PixelHistory = PixelHistoryRecord[];
+export interface PixelHistoryWrapper {
+  pixelHistory: PixelHistoryRecord[];
+  totalEntries: number;
+}
+
+export type PixelHistory = PixelHistoryWrapper;

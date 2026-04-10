@@ -10,20 +10,20 @@
     "Henry Wang <hwan513@aucklanduni.ac.nz> (http://henryh.wang)",
     "Jasper Lai <klai866@aucklanduni.ac.nz> (https://lai.nz)",
     "Josh Jeffers <joshjeffers600@gmail.com> (https://pumbas.net)",
-    "Samuel Ou <rockedohthree@gmail.com>"
+    "Samuel Ou <me@sjou.dev> (https://sjou.dev)"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes.git",
+    "url": "https://github.com/project-blurple/Canvas-Web.git",
     "directory": "packages/types"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues"
+    "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.1"
+    "node": ">=24",
+    "pnpm": ">=10.33.0"
   },
   "scripts": {
     "build": "tsc",
@@ -31,17 +31,17 @@
     "format": "prettier --check --cache . --ignore-path ../../.gitignore",
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
-    "lint:fix": "biome check --formatter-enabled=false --apply .",
+    "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm format && pnpm lint",
     "check:fix": "pnpm format:fix && pnpm lint:fix",
     "clean": "rm -rf node_modules/ build/"
   },
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.4",
-    "prettier": "^3.2.5",
-    "typescript": "^5.4.2"
+    "@tsconfig/node24": "^24.0.4",
+    "prettier": "^3.8.1",
+    "typescript": "^6.0.2"
   },
   "dependencies": {
-    "@types/passport-discord": "^0.1.13"
+    "@types/passport-discord": "^0.1.15"
   }
 }

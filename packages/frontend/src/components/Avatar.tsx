@@ -1,6 +1,7 @@
-import { styled } from "@mui/material";
+"use client";
 
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { Skeleton, styled } from "@mui/material";
 
 type AvatarProps = Pick<
   DiscordUserProfile,
@@ -14,7 +15,8 @@ const StyledObject = styled("object")`
   --stroke-width: max(0.125rem, 1px);
 
   border-radius: calc(infinity * 1px);
-  outline: oklch(var(--discord-white-oklch) / 12%) var(--stroke-width) solid;
+  outline: oklch(from var(--discord-white) l c h / 12%) var(--stroke-width)
+    solid;
   outline-offset: calc(-1 * var(--stroke-width));
 `;
 
@@ -34,5 +36,16 @@ export default function Avatar({
         src="https://cdn.discordapp.com/embed/avatars/1.png"
       />
     </StyledObject>
+  );
+}
+
+export function AvatarSkeleton() {
+  return (
+    <Skeleton
+      variant="circular"
+      width="100%"
+      height="auto"
+      sx={{ aspectRatio: 1 }}
+    />
   );
 }

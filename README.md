@@ -1,12 +1,12 @@
-# <img src="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/assets/33956381/86000a76-a73b-4abe-8c61-05dbfecbec40" width="24" height="24" /> Blurple Canvas Web
+# <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/86000a76-a73b-4abe-8c61-05dbfecbec40" width="24" height="24" /> Blurple Canvas Web
 
-## <img src="https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
+## <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
 
 [Project Blurple](https://projectblurple.com) is an annual, week-long, community-run event which celebrates Discord’s anniversary. Part of this is Blurple Canvas where people in participating servers create pixel art on a shared canvas.
 
 Blurple Canvas Web is a web alternative to the [existing Discord bot](https://github.com/Rocked03/Blurple-Canvas) Discord bot, which brings canvas to the web!
 
-If you’d like a bit more context, [we have a wiki!](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/wiki)
+If you’d like a bit more context, [we have a wiki!](https://github.com/project-blurple/Canvas-Web/wiki)
 
 ## 🧚 Features
 
@@ -46,9 +46,6 @@ All packages are written in [TypeScript](https://www.typescriptlang.org). **back
 
 ## 🌱 Getting started
 
-> [!TIP]
-> We suggest opening this project as a Visual Studio Code [multi-root workspace](https://code.visualstudio.com/docs/editor/multi-root-workspaces): just open the [`blurple-canvas-web.code-workspace`](/blurple-canvas-web.code-workspace) file. The workspace is configured to use the right linter and formatter, and recommends a few extensions. But, you’re welcome to use your preferred editor.
-
 ### ☑️ Prerequisites
 
 > [!WARNING]
@@ -80,7 +77,7 @@ pnpm --version
 
 ### 🤫 Secrets & environment variables
 
-The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/graphs/contributors) if you need any secrets.
+The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/project-blurple/Canvas-Web/graphs/contributors) if you need any secrets.
 
 ### 🚀 Build & deploy
 
@@ -127,7 +124,7 @@ Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac
 - [Henry Wang](http://henryh.wang)
 - [Jasper Lai](https://lai.nz)
 - [Josh Jeffers](https://pumbas.net)
-- Samuel Ou
+- [Samuel Ou](https://sjou.dev)
 
 ![](./group-image/Golden%20Giraffes.webp)
 
@@ -136,7 +133,7 @@ Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac
 Blurple Canvas Web wouldn’t exist without these lovely people and projects. Thanks to:
 
 - [Project Blurple](https://projectblurple.com) and the Project Blurple community, for obvious reasons;
-- [Rocked03](https://github.com/Rocked03) for creating the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;[^samuel]
+- [Rocked03](https://rocked03.dev) for creating the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;[^samuel]
 - the [Place Atlas Initiative](https://github.com/placeAtlas) for their efforts cataloguing r/Place;
 - [Josh Wardle](https://www.powerlanguage.co.uk) and [r/Place](https://www.reddit.com/r/place) participants (no introduction needed); and
 - you, for your interest in this project!
@@ -145,4 +142,4 @@ Blurple Canvas Web wouldn’t exist without these lovely people and projects. Th
 
 ## 📜 Licence
 
-The code for Blurple Canvas Web is licensed under the [Apache License, Version 2.0](https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes?tab=License-1-ov-file#readme).
+The code for Blurple Canvas Web is licensed under the [Apache License, Version 2.0](https://github.com/project-blurple/Canvas-Web?tab=License-1-ov-file#readme).

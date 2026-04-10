@@ -1,60 +1,54 @@
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
+import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: center;
-  color: var(--discord-white-oklch);
-  display: flex;
-  font-size: 0.9rem;
+  color: var(--discord-white);
+  display: grid;
+  gap: 0.5rem;
   grid-template-columns: 1fr auto;
-`;
-
-const Code = styled("code")`
-  color: var(--discord-white-oklch);
-  flex: 1;
-  letter-spacing: 0.05em;
-  line-height: 1.1;
+  line-height: 1.45;
 `;
 
 interface CopyButtonProps {
   onClick?: () => void;
 }
 
-const StyledCopyIcon = styled(CopyIcon)`
-  height: 1.325rem;
-`;
-
 const CopyButton = styled("button")<CopyButtonProps>`
-  background-color: oklch(var(--discord-white-oklch) / 12%);
-  border-radius: 0.5rem;
+  background-color: oklch(from var(--discord-white) l c h / 12%);
   border: none;
-  color: var(--discord-white-oklch);
+  border-radius: 0.5rem;
   cursor: pointer;
   display: flex;
-  font-size: 1rem;
-  padding: 0.4rem 0.3rem;
+  padding: 0.5rem;
   place-items: center;
-  transition: background-color var(--transition-duration-slow) ease;
+  transition: background-color var(--transition-duration-fast) ease;
 
-  &:hover {
-    background-color: oklch(var(--discord-white-oklch) / 24%);
+  :hover {
+    background-color: oklch(from var(--discord-white) l c h / 24%);
   }
 
-  &:active {
-    background-color: oklch(var(--discord-white-oklch) / 6%);
+  :active {
+    background-color: oklch(from var(--discord-white) l c h / 6%);
   }
+`;
+
+const StyledCopyIcon = styled(CopyIcon)`
+  block-size: 1.5rem;
+  inline-size: 1.5rem;
 `;
 
 export default function BotCommandCard({ command }: { command: string }) {
+  const { adjustedCoords: coordinates } = useCanvasContext();
+  const { color } = useSelectedColorContext();
+
+  if (!(coordinates && color)) return null;
+
   return (
     <Wrapper>
-      <Code>{command}</Code>
-      <CopyButton
-        onClick={() => {
-          navigator.clipboard.writeText(command);
-        }}
-      >
+      <code>{command}</code>
+      <CopyButton onClick={() => navigator.clipboard.writeText(command)}>
         <StyledCopyIcon />
       </CopyButton>
     </Wrapper>

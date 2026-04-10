@@ -1,13 +1,12 @@
 "use client";
 
+import { UserStats } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
-
 import {
   formatTimestamp,
   formatTimestampLocalTZ,
   getOrdinalSuffix,
 } from "@/util";
-import { UserStats } from "@blurple-canvas-web/types";
 
 const EmptyStateMessage = styled("div")`
   border-radius: var(--card-border-radius);
@@ -16,8 +15,10 @@ const EmptyStateMessage = styled("div")`
 `;
 
 const Table = styled("table")`
+  container-type: inline-size;
   margin-block-start: 1rem;
   font-size: 1.125rem;
+  width: 100%;
 
   th,
   td {
@@ -39,14 +40,11 @@ const Table = styled("table")`
 
 interface StatsTableProps {
   stats?: UserStats;
-  statsAreLoading: boolean;
+  isStatsLoading: boolean;
 }
 
-export default function StatsTable({
-  stats,
-  statsAreLoading,
-}: StatsTableProps) {
-  if (!stats && !statsAreLoading)
+export default function StatsTable({ stats, isStatsLoading }: StatsTableProps) {
+  if (!stats && !isStatsLoading)
     return (
       <EmptyStateMessage>You don’t have any stats (yet)!</EmptyStateMessage>
     );
@@ -59,37 +57,39 @@ export default function StatsTable({
       <tbody>
         <tr>
           <th>
-            {statsAreLoading ?
-              <Skeleton width={150} />
+            {isStatsLoading ?
+              <Skeleton width="clamp(5rem, 45cqi, 9rem)" />
             : <>{totalPixels?.toLocaleString() ?? "?"}&nbsp;pixels placed</>}
           </th>
           <td>
-            {statsAreLoading ?
-              <Skeleton width={40} />
-            : rank && `${rank}${getOrdinalSuffix(rank)}`}
+            {isStatsLoading ?
+              <Skeleton width="clamp(1.5rem, 12.5cqi, 2.5rem)" />
+            : rank !== undefined &&
+              `${rank.toLocaleString()}${getOrdinalSuffix(rank)}`
+            }
           </td>
         </tr>
         <tr>
           <th>
-            {statsAreLoading ?
-              <Skeleton width={130} />
+            {isStatsLoading ?
+              <Skeleton width="clamp(4.5rem, 40cqi, 8rem)" />
             : <>Most used color</>}
           </th>
           <td>
-            {statsAreLoading ?
-              <Skeleton width={80} />
-            : mostFrequentColor?.name ?? "Unknown"}
+            {isStatsLoading ?
+              <Skeleton width="clamp(3rem, 25cqi, 5rem)" />
+            : (mostFrequentColor?.name ?? "Unknown")}
           </td>
         </tr>
         <tr>
           <th>
-            {statsAreLoading ?
-              <Skeleton width={170} />
+            {isStatsLoading ?
+              <Skeleton width="clamp(5.5rem, 50cqi, 10rem)" />
             : <>Most recently placed</>}
           </th>
           <td>
-            {statsAreLoading ?
-              <Skeleton width={150} />
+            {isStatsLoading ?
+              <Skeleton width="clamp(4.5rem, 40cqi, 8rem)" />
             : mostRecentTimestamp ?
               <span title={formatTimestamp(mostRecentTimestamp)}>
                 {formatTimestampLocalTZ(mostRecentTimestamp)}

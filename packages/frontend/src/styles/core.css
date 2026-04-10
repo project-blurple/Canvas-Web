@@ -15,6 +15,7 @@
     font-synthesis: none;
     hanging-punctuation: first allow-end last;
     hyphenate-character: "‐"; /* Unambiguous hyphen U+2010 */
+    interpolate-size: allow-keywords;
     letter-spacing: 0;
     margin: 0;
     orphans: 2;
@@ -45,6 +46,7 @@
   h5,
   h6 {
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   b,
@@ -139,44 +141,25 @@
 
 @layer core {
   :root {
-    --discord-blurple-oklch: 57.74% 0.209 273.85;
-    --discord-green-oklch: 85.48% 0.197 150.16;
-    --discord-yellow-oklch: 92.18% 0.157 99.87;
-    --discord-fuchsia-oklch: 65.34% 0.217 351.92;
-    --discord-red-oklch: 63.18% 0.207 24.57;
-    --discord-white-oklch: 100% 0 0;
-    --discord-black-oklch: 0% 0 0;
-    --discord-legacy-blurple-oklch: 64.74% 0.124 270.62;
-    --discord-legacy-full-white-oklch: 100% 0 0;
-    --discord-legacy-greyple-oklch: 72.83% 0.025 236.13;
-    --discord-legacy-dark-but-not-black-oklch: 30.38% 0.008 255.56;
-    --discord-legacy-not-quite-black-oklch: 26.99% 0.008 240.16;
-    --discord-legacy-actually-black-oklch: 0% 0 0;
+    --discord-blurple: oklch(57.74% 0.209 273.85);
+    --discord-green: oklch(85.48% 0.197 150.16);
+    --discord-yellow: oklch(92.18% 0.157 99.87);
+    --discord-fuchsia: oklch(65.34% 0.217 351.92);
+    --discord-red: oklch(63.18% 0.207 24.57);
+    --discord-white: white;
+    --discord-black: black;
+    --discord-legacy-blurple: oklch(64.74% 0.124 270.62);
+    --discord-legacy-full-white: oklch(100% 0 0);
+    --discord-legacy-greyple: oklch(72.83% 0.025 236.13);
+    --discord-legacy-dark-but-not-black: oklch(30.38% 0.008 255.56);
+    --discord-legacy-not-quite-black: oklch(26.99% 0.008 240.16);
+    --discord-legacy-actually-black: black;
 
-    --discord-blurple: oklch(var(--discord-blurple-oklch));
-    --discord-green: oklch(var(--discord-green-oklch));
-    --discord-yellow: oklch(var(--discord-yellow-oklch));
-    --discord-fuchsia: oklch(var(--discord-fuchsia-oklch));
-    --discord-red: oklch(var(--discord-red-oklch));
-    --discord-white: oklch(var(--discord-white-oklch));
-    --discord-black: oklch(var(--discord-black-oklch));
-    --discord-legacy-blurple: oklch(var(--discord-legacy-blurple-oklch));
-    --discord-legacy-full-white: oklch(var(--discord-legacy-full-white-oklch));
-    --discord-legacy-greyple: oklch(var(--discord-legacy-greyple-oklch));
-    --discord-legacy-dark-but-not-black: oklch(
-      var(--discord-legacy-dark-but-not-black-oklch)
-    );
-    --discord-legacy-not-quite-black: oklch(
-      var(--discord-legacy-not-quite-black-oklch)
-    );
-    --discord-legacy-actually-black: oklch(
-      var(--discord-legacy-actually-black-oklch)
-    );
-
-    --font-body: "Mona Sans", system-ui, -apple-system, BlinkMacSystemFont,
-      "Inter", "Segoe UI", Roboto, Ubuntu, sans-serif;
+    --font-body:
+      "Mona Sans", system-ui, -apple-system, BlinkMacSystemFont, "Inter",
+      "Segoe UI", Roboto, Ubuntu, sans-serif;
     --font-monospace: "Monaspace Neon", ui-monospace, Consolas, monospace;
-    --border-color: oklch(var(--discord-white-oklch) / 15%);
+    --border-color: oklch(from var(--discord-white) l c h / 15%);
     --card-border: var(--border-color) solid max(0.125rem, 1px);
     --card-border-radius: 1.5rem;
     --focus-outline: var(--discord-blurple) solid max(0.125rem, 1px);
@@ -203,11 +186,12 @@
     }
 
     h2 {
-      color: oklch(var(--discord-white-oklch) / 55%);
+      color: oklch(from var(--discord-white) l c h / 55%);
       font-weight: 400;
     }
   }
 
+  /* biome-ignore lint/correctness/noUnknownFunction: https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech */
   @supports (font-tech(variations)) {
     :root {
       --text-slnt: 0;

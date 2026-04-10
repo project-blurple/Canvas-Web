@@ -1,8 +1,7 @@
 "use client";
 
-import { buttonClasses, css, styled } from "@mui/material";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { buttonClasses, css, styled } from "@mui/material";
 
 import { Button as ButtonBase } from "@/components/button";
 
@@ -25,13 +24,13 @@ const StyledButton = styled(ButtonBase, {
         css`
           --dynamic-bg-color: ${backgroundColorStr};
         `}
-      border-color: oklch(var(--discord-white-oklch) / 36%);
+      border-color: oklch(from var(--discord-white) l c h / 36%);
       font-weight: 600;
     }
   }
 
   &:active {
-    border-color: oklch(var(--discord-white-oklch) / 72%);
+    border-color: oklch(from var(--discord-white) l c h / 72%);
     font-weight: 450;
   }
 `;

@@ -1,6 +1,5 @@
-import { styled } from "@mui/material";
-
 import { Point } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 
 export const Wrapper = styled("div")`
   color: var(--discord-white);

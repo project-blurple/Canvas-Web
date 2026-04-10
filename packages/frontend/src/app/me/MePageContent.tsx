@@ -3,12 +3,11 @@
 import { styled } from "@mui/material";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
+import { useEffect } from "react";
 import Avatar from "@/components/Avatar";
 import { Button } from "@/components/button";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useUserStats } from "@/hooks";
-import { useEffect } from "react";
 import StatsTable from "./StatsTable";
 
 const Container = styled("main")`
@@ -34,8 +33,7 @@ const StatsCard = styled("div")`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
   margin-block: 1rem;
-  max-inline-size: 100%;
-  min-inline-size: 20rem;
+  inline-size: min(100%, 20rem);
   padding: 1.5rem;
   text-align: center;
 `;
@@ -45,7 +43,7 @@ export default function MePageContent() {
   const { signOut, user } = useAuthContext();
   const router = useRouter();
 
-  const { data: stats, isLoading: statsAreLoading } = useUserStats(
+  const { data: stats, isLoading: isStatsLoading } = useUserStats(
     user?.id,
     activeCanvas.id,
   );
@@ -77,7 +75,7 @@ export default function MePageContent() {
         <h2>{activeCanvas.name}</h2>
         <StatsTable
           stats={stats ?? undefined}
-          statsAreLoading={statsAreLoading}
+          isStatsLoading={isStatsLoading}
         />
       </StatsCard>
     </Container>

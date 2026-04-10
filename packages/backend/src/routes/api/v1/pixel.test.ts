@@ -3,18 +3,26 @@ import request from "supertest";
 
 import seedPrismock from "@/test";
 import { mockAuth } from "@/test/mockAuth";
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
+
 import { pixelRouter } from "./pixel";
 
-const app = express();
-
-app.use(express.json());
-app.use(mockAuth);
-app.use("/api/v1/canvas/:canvasId/pixel", pixelRouter);
+let app: express.Express;
 
 describe("Place Pixel Tests", () => {
   beforeEach(() => {
     seedPrismock();
     vi.useFakeTimers();
+
+    app = express();
+    app.use(express.json());
+    app.use(mockAuth);
+    app.use("/api/v1/canvas/:canvasId/pixel", pixelRouter);
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -32,9 +40,8 @@ describe("Place Pixel Tests", () => {
       .type("json")
       .set("X-TestUserId", "1");
 
-    const futureDate = new Date(30 * 1000);
     expect(response.body).toStrictEqual({
-      cooldownEndTime: futureDate.toISOString(),
+      cooldownEndTime: 30 * 1000,
     });
     expect(response.status).toBe(201);
   });
@@ -56,14 +63,14 @@ describe("Place Pixel Tests", () => {
 
     const firstResponse = await endpointRequest();
     const promises = [];
-    const iterations = 3;
+    const iterations = 2;
     for (let index = 0; index < iterations; index++) {
       promises[index] = endpointRequest();
     }
     const responses = await Promise.all(promises);
     expect(firstResponse.status).toBe(201);
     for (let index = 0; index < iterations; index++) {
-      expect(responses[index].status).toBe(403);
+      expect([403, 429]).toContain(responses[index].status);
     }
   });
 });

@@ -1,10 +1,10 @@
-import { styled } from "@mui/material";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
+import { useCanvasContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: baseline;
-  color: oklch(var(--discord-white-oklch) / 60%);
+  color: oklch(from var(--discord-white) l c h / 60%);
   display: grid;
   font-size: 1.375rem;
   grid-template-columns: 1fr auto;
@@ -24,27 +24,36 @@ const Subtitle = styled("p")`
 
   &,
   a {
-    color: oklch(var(--discord-white-oklch) / 60%);
+    color: oklch(from var(--discord-white) l c h / 60%);
   }
 `;
 
 const Code = styled("code")`
-  color: oklch(var(--discord-white-oklch) / 60%);
+  color: oklch(from var(--discord-white) l c h / 60%);
   line-height: 1.1;
 `;
 
 export default function ColorInfoCard({
   color,
   invite,
+  isUserInServer: userInServer = false,
 }: {
   color?: PaletteColor | null;
   invite?: string;
+  isUserInServer?: boolean;
 }) {
+  const { canvas } = useCanvasContext();
+
   if (!color) return <Wrapper>No color selected</Wrapper>;
 
   const { name: colorName, code: colorCode } = color;
 
   const guildName = color.guildName ?? "a partnered server";
+
+  const text =
+    canvas.allColorsGlobal ? "This color is from"
+    : !userInServer ? "This color can be used in"
+    : "You can use this color in";
 
   return (
     <Wrapper>
@@ -54,7 +63,7 @@ export default function ColorInfoCard({
       <Code>{colorCode}</Code>
       {!color.global && (
         <Subtitle>
-          This color can be used in{" "}
+          {text}{" "}
           {invite ?
             <a href={invite}>{guildName}</a>
           : guildName}
