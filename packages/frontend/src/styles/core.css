@@ -214,8 +214,8 @@
   }
 
   /*
-   * biome-ignore lint/correctness/noUnknownFunction:
-   * It is known 🙄 https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech
+   * biome-ignore lint/correctness/noUnknownFunction: It is known 🙄
+   * https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech
    */
   @supports (font-tech(variations)) {
     :root {
