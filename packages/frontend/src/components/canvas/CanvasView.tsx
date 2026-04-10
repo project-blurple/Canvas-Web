@@ -295,7 +295,7 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, containerRef, coords, zoom, setCoords, setZoom } =
+  const { canvas, containerRef, coords, zoom, setCanvas, setCoords, setZoom } =
     useCanvasContext();
 
   const [isLoading, setIsLoading] = useState(true);
@@ -336,10 +336,15 @@ export default function CanvasView() {
       setInitialZoom(zoom);
 
       let appliedInitialView = false;
+      const params = initialCanvasSearchParamsRef.current;
+      const shouldApplyInitialViewForCurrentCanvas =
+        params.canvasId === null || params.canvasId === canvas.id;
 
-      if (!hasAppliedInitialViewRef.current) {
+      if (
+        !hasAppliedInitialViewRef.current &&
+        shouldApplyInitialViewForCurrentCanvas
+      ) {
         const container = containerRef.current;
-        const params = initialCanvasSearchParamsRef.current;
 
         if (container) {
           const initialView = getInitialViewFromSearchParams({
@@ -357,8 +362,6 @@ export default function CanvasView() {
               y: initialView.targetPoint.y,
             });
             appliedInitialView = true;
-
-            console.log("Applied initial view from search params", initialView);
           }
         }
 
@@ -381,7 +384,21 @@ export default function CanvasView() {
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
+  const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
+
+  useEffect(() => {
+    if (hasAppliedInitialCanvasRef.current) return;
+
+    const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
+    if (targetCanvasId === null || targetCanvasId === canvas.id) {
+      hasAppliedInitialCanvasRef.current = true;
+      return;
+    }
+
+    hasAppliedInitialCanvasRef.current = true;
+    void setCanvas(targetCanvasId);
+  }, [canvas.id, setCanvas]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
   useEffect(() => {

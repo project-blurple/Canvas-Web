@@ -1,6 +1,5 @@
 "use client";
 
-import { clamp } from "colorjs.io/src/util.js";
 import { useSearchParams } from "next/navigation";
 import { extractSearchParam } from "@/util/searchParams";
 

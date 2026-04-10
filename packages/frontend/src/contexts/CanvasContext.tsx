@@ -28,7 +28,7 @@ interface CanvasContextType {
   containerRef: RefObject<HTMLDivElement | null>;
   coords: Point | null;
   zoom: number;
-  setCanvas: (canvasId: CanvasInfo["id"]) => void;
+  setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
   setCoords: Dispatch<SetStateAction<Point | null>>;
   setZoom: Dispatch<SetStateAction<number>>;
 }
@@ -50,7 +50,7 @@ export const CanvasContext = createContext<CanvasContextType>({
   coords: null,
   zoom: 1,
   setCoords: () => {},
-  setCanvas: () => {},
+  setCanvas: async () => {},
   setZoom: () => {},
 });
 
