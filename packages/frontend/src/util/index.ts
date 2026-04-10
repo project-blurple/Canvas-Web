@@ -1,7 +1,7 @@
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
-export { default } from "./searchParams";
+export { default as createPixelUrl } from "./searchParams";
 
 /**
  * Return the value clamped so that it is within the range [min, max].

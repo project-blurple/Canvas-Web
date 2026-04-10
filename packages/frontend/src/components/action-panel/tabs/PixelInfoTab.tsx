@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DynamicButton } from "@/components/button";
 import { useCanvasContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
-import createPixelUrl from "@/util";
+import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
