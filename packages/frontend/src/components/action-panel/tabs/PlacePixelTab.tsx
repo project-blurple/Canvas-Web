@@ -16,7 +16,7 @@ import {
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
-import BotCommandCard, { PlaceBotCommandCard } from "./BotCommandCard";
+import { PlaceBotCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
 const ColorPicker = styled("div")`

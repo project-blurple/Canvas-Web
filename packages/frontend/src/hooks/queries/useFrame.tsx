@@ -1,6 +1,5 @@
 "use client";
 
-import config from "@/config";
 import {
   DiscordGuildRecord,
   DiscordUserProfile,
@@ -9,6 +8,7 @@ import {
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import config from "@/config";
 
 export function useFrame({
   frameId,

@@ -1,6 +1,6 @@
+import { Frame } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
-import { Frame } from "@blurple-canvas-web/types";
 
 // biome-ignore lint/suspicious/noExplicitAny: extracting from below
 function frameFromDb(frame: any): Frame {
