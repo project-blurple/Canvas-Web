@@ -248,8 +248,8 @@ function getInitialViewFromSearchParams({
     : initialZoom;
 
   const targetPoint = {
-    x: canvasX - canvas.startCoordinates[0],
-    y: canvasY - canvas.startCoordinates[1],
+    x: clamp(canvasX - canvas.startCoordinates[0], 0, canvas.width - 1),
+    y: clamp(canvasY - canvas.startCoordinates[1], 0, canvas.height - 1),
   };
 
   const offset = {
@@ -397,7 +397,10 @@ export default function CanvasView() {
     }
 
     hasAppliedInitialCanvasRef.current = true;
-    void setCanvas(targetCanvasId);
+    void setCanvas(targetCanvasId).catch(() => {
+      // If URL canvas does not exist, keep default canvas and never apply URL pan/zoom.
+      hasAppliedInitialViewRef.current = true;
+    });
   }, [canvas.id, setCanvas]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
