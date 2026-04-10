@@ -1,5 +1,6 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { User, Users } from "lucide-react";
 
 const Wrapper = styled("div")`
   // kinda stolen from SelectedColorInfoCard.tsx
@@ -7,7 +8,6 @@ const Wrapper = styled("div")`
   color: oklch(var(--discord-white-oklch) / 60%);
   display: grid;
   font-size: 1.375rem;
-  // grid-template-columns: 1fr auto;
 `;
 
 const Heading = styled("h3")`
@@ -16,16 +16,27 @@ const Heading = styled("h3")`
   line-height: 1.1;
 `;
 
+const OwnerInfo = styled("p")`
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+`;
+
 export default function FrameInfoCard({ frame }: { frame?: Frame }) {
   if (!frame) return <Wrapper>No frame selected</Wrapper>;
 
   return (
     <Wrapper>
       <Heading>{frame.name}</Heading>
-      <p>Owner: {frame.ownerGuild?.name || frame.ownerUser?.username}</p>
-      <p>
-        Coordinates: {frame.x_0}, {frame.y_0} - {frame.x_1}, {frame.y_1}
-      </p>
+      {frame.ownerGuild ?
+        <OwnerInfo>
+          <Users /> {frame.ownerGuild.name}
+        </OwnerInfo>
+      : frame.ownerUser ?
+        <OwnerInfo>
+          <User /> {frame.ownerUser.username}
+        </OwnerInfo>
+      : null}
     </Wrapper>
   );
 }
