@@ -1,5 +1,6 @@
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
+import VisuallyHidden from "@/components/VisuallyHidden";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
@@ -54,7 +55,8 @@ export default function BotCommandCard() {
     <Wrapper>
       <code>{command}</code>
       <CopyButton onClick={() => navigator.clipboard.writeText(command)}>
-        <StyledCopyIcon />
+        <StyledCopyIcon aria-hidden />
+        <VisuallyHidden>Copy bot command</VisuallyHidden>
       </CopyButton>
     </Wrapper>
   );
