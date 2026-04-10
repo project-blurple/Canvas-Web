@@ -1,5 +1,6 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { useState } from "react";
 import { useAuthContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useFrame } from "@/hooks/queries/useFrame";
@@ -32,6 +33,8 @@ interface FramesTabProps {
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
   const sourceImage = useCanvasImage(canvasId);
+
+  const [selectedFrame, setSelectedFrame] = useState<Frame | null>(null);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
   const { data: userFrames = [] } = useFrame({
@@ -78,6 +81,10 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     },
   );
 
+  function setFrame(frame: Frame) {
+    setSelectedFrame(frame);
+  }
+
   return (
     <FramesTabBlock active={active}>
       <ScrollBlock>
@@ -89,6 +96,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                 key={frame.id}
                 frame={frame}
                 sourceImage={sourceImage}
+                onClick={() => setFrame(frame)}
               />
             ))}
           </FramesContainer>
@@ -102,17 +110,19 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                     key={frame.id}
                     frame={frame}
                     sourceImage={sourceImage}
+                    onClick={() => setFrame(frame)}
                   />
                 ))}
             </FramesContainer>
           ))}
         </ActionPanelTabBody>
       </ScrollBlock>
-      <ActionPanelTabBody>
-        <FrameInfoCard frame={userFrames[0] ?? null} />
-        {/* need to add select */}
-        <BotCommandCard command="/frame create" />
-      </ActionPanelTabBody>
+      {selectedFrame && (
+        <ActionPanelTabBody>
+          <FrameInfoCard frame={selectedFrame} />
+          {/* <BotCommandCard command="/frame create" /> */}
+        </ActionPanelTabBody>
+      )}
     </FramesTabBlock>
   );
 }

@@ -11,6 +11,7 @@ const FRAME_FILL_RATIO = 0.9;
 const CardBody = styled("div")`
   background: oklch(from var(--discord-white) l c h / 10%);
   border-radius: 0.5rem;
+  cursor: pointer;
 `;
 
 const Thumbnail = styled("canvas")`
@@ -32,6 +33,7 @@ const FrameTitle = styled("p")`
 interface FramePreviewCardProps {
   frame: Frame;
   sourceImage: CanvasImageSource | null;
+  onClick?: () => void;
 }
 
 function normalizeFrame(frame: Frame) {
@@ -91,6 +93,7 @@ function getFrameCropRect(
 export function FramePreviewCard({
   frame,
   sourceImage,
+  onClick,
 }: FramePreviewCardProps) {
   const { canvas } = useCanvasContext();
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -121,7 +124,7 @@ export function FramePreviewCard({
   }, [frame, sourceImage, canvas.width, canvas.height]);
 
   return (
-    <CardBody>
+    <CardBody onClick={onClick}>
       <Thumbnail
         ref={thumbnailCanvasRef}
         width={THUMB_WIDTH}

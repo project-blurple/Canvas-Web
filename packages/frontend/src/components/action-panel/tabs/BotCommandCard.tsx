@@ -40,11 +40,6 @@ const StyledCopyIcon = styled(CopyIcon)`
 `;
 
 export default function BotCommandCard({ command }: { command: string }) {
-  const { adjustedCoords: coordinates } = useCanvasContext();
-  const { color } = useSelectedColorContext();
-
-  if (!(coordinates && color)) return null;
-
   return (
     <Wrapper>
       <code>{command}</code>
