@@ -3,10 +3,11 @@ import { styled } from "@mui/material/styles";
 import { useEffect, useRef } from "react";
 import { useCanvasContext } from "@/contexts";
 
-const THUMB_WIDTH = 1600;
-const THUMB_HEIGHT = 900;
-const THUMB_ASPECT_RATIO = THUMB_WIDTH / THUMB_HEIGHT;
 const FRAME_FILL_RATIO = 0.9;
+const DESKTOP_THUMB_WIDTH = 1600;
+const DESKTOP_THUMB_HEIGHT = 900;
+const MOBILE_THUMB_WIDTH = 500;
+const MOBILE_THUMB_HEIGHT = 500;
 
 const CardBody = styled("div")`
   background: oklch(from var(--discord-white) l c h / 10%);
@@ -14,8 +15,10 @@ const CardBody = styled("div")`
   cursor: pointer;
 `;
 
-const Thumbnail = styled("canvas")`
-  aspect-ratio: 16 / 9;
+const Thumbnail = styled("canvas", {
+  shouldForwardProp: (prop) => prop !== "isMobile",
+})<{ isMobile?: boolean }>`
+  aspect-ratio: ${({ isMobile }) => (isMobile ? "1 / 1" : "16 / 9")};
   border-radius: 0.375rem;
   display: block;
   image-rendering: pixelated;
@@ -33,6 +36,7 @@ const FrameTitle = styled("p")`
 interface FramePreviewCardProps {
   frame: Frame;
   sourceImage: CanvasImageSource | null;
+  isMobile?: boolean;
   onClick?: () => void;
 }
 
@@ -56,6 +60,7 @@ function getFrameCropRect(
   frame: Frame,
   canvasWidth: number,
   canvasHeight: number,
+  targetAspectRatio: number,
 ) {
   const bounds = normalizeFrameBounds(frame);
   const centerX = (bounds.left + bounds.right) / 2;
@@ -66,10 +71,10 @@ function getFrameCropRect(
   let cropHeight = bounds.height / FRAME_FILL_RATIO;
   const frameAspectRatio = cropWidth / cropHeight;
 
-  if (frameAspectRatio > THUMB_ASPECT_RATIO) {
-    cropHeight = cropWidth / THUMB_ASPECT_RATIO;
+  if (frameAspectRatio > targetAspectRatio) {
+    cropHeight = cropWidth / targetAspectRatio;
   } else {
-    cropWidth = cropHeight * THUMB_ASPECT_RATIO;
+    cropWidth = cropHeight * targetAspectRatio;
   }
 
   // Keep a strict 16:9 crop while fitting within canvas bounds.
@@ -93,10 +98,14 @@ function getFrameCropRect(
 export function FramePreviewCard({
   frame,
   sourceImage,
+  isMobile,
   onClick,
 }: FramePreviewCardProps) {
   const { canvas } = useCanvasContext();
   const thumbnailCanvasRef = useRef<HTMLCanvasElement>(null);
+  const thumbWidth = isMobile ? MOBILE_THUMB_WIDTH : DESKTOP_THUMB_WIDTH;
+  const thumbHeight = isMobile ? MOBILE_THUMB_HEIGHT : DESKTOP_THUMB_HEIGHT;
+  const thumbAspectRatio = thumbWidth / thumbHeight;
 
   useEffect(() => {
     const thumbnailCanvas = thumbnailCanvasRef.current;
@@ -106,9 +115,14 @@ export function FramePreviewCard({
     const context = thumbnailCanvas.getContext("2d");
     if (!context) return;
 
-    const crop = getFrameCropRect(frame, canvas.width, canvas.height);
+    const crop = getFrameCropRect(
+      frame,
+      canvas.width,
+      canvas.height,
+      thumbAspectRatio,
+    );
 
-    context.clearRect(0, 0, THUMB_WIDTH, THUMB_HEIGHT);
+    context.clearRect(0, 0, thumbWidth, thumbHeight);
     context.imageSmoothingEnabled = false;
     context.drawImage(
       sourceImage,
@@ -118,17 +132,26 @@ export function FramePreviewCard({
       crop.height,
       0,
       0,
-      THUMB_WIDTH,
-      THUMB_HEIGHT,
+      thumbWidth,
+      thumbHeight,
     );
-  }, [frame, sourceImage, canvas.width, canvas.height]);
+  }, [
+    frame,
+    sourceImage,
+    canvas.width,
+    canvas.height,
+    thumbAspectRatio,
+    thumbHeight,
+    thumbWidth,
+  ]);
 
   return (
     <CardBody onClick={onClick}>
       <Thumbnail
+        isMobile={isMobile}
         ref={thumbnailCanvasRef}
-        width={THUMB_WIDTH}
-        height={THUMB_HEIGHT}
+        width={thumbWidth}
+        height={thumbHeight}
       />
       <FrameTitle>{frame.name}</FrameTitle>
     </CardBody>
