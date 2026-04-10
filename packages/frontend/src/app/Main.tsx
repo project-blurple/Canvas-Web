@@ -11,7 +11,7 @@ const Wrapper = styled("main")`
     --action-panel-width: 19rem;
     --navbar-height: 4rem;
     column-gap: 1rem;
-    row-gap: 0.5rem;
+    row-gap: 0;
 
     display: grid;
     // Restricts the height of the page to the viewport

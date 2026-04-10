@@ -3,8 +3,8 @@ import { styled } from "@mui/material/styles";
 import { useEffect, useRef } from "react";
 import { useCanvasContext } from "@/contexts";
 
-const THUMB_WIDTH = 160;
-const THUMB_HEIGHT = 90;
+const THUMB_WIDTH = 1600;
+const THUMB_HEIGHT = 900;
 const THUMB_ASPECT_RATIO = THUMB_WIDTH / THUMB_HEIGHT;
 const FRAME_FILL_RATIO = 0.9;
 
