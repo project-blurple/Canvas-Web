@@ -1,8 +1,7 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useEffect, useState } from "react";
-import config from "@/config";
 import { useAuthContext } from "@/contexts";
+import { useCanvasImage } from "@/hooks";
 import { useFrame } from "@/hooks/queries/useFrame";
 import { decodeUserGuildsBase64 } from "@/util";
 import { Heading } from "../ActionPanel";
@@ -32,30 +31,7 @@ interface FramesTabProps {
 
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
-  const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    const image = new Image();
-    image.decoding = "async";
-    image.src = `${config.apiUrl}/api/v1/canvas/${canvasId}`;
-
-    image.onload = () => {
-      if (!cancelled) {
-        setSourceImage(image);
-      }
-    };
-
-    image.onerror = () => {
-      if (!cancelled) {
-        setSourceImage(null);
-      }
-    };
-
-    return () => {
-      cancelled = true;
-    };
-  }, [canvasId]);
+  const sourceImage = useCanvasImage(canvasId);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
   const { data: userFrames = [] } = useFrame({

@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import config from "@/config";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import { useCanvasImage } from "@/hooks";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
 import { Button } from "../button";
@@ -246,6 +247,7 @@ export default function CanvasView() {
 
   const { color } = useSelectedColorContext();
   const { canvas, coords, setCoords } = useCanvasContext();
+  const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLaunching, setIsLaunching] = useState(true);
@@ -269,7 +271,6 @@ export default function CanvasView() {
   const pixelOverlayThreshold = 50;
   const [isSafari, setIsSafari] = useState(false);
 
-  const imageUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}`;
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
     (image: HTMLImageElement): void => {
@@ -294,18 +295,14 @@ export default function CanvasView() {
     [canvas.id],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
   useEffect(() => {
     // Stops placing pixels from reloading the canvas
     if (currentCanvasIDRef.current === canvas.id) return;
     setIsLoading(true);
-    // The image onLoad doesn't always seem to fire, especially on reloads. Instead, the image
-    // seems pre-loaded. This may have something to do with SSR, or browser image caching. We'll
-    // need to check it's working correctly when we start placing pixels.
-    if (imageRef.current?.complete) {
-      handleLoadImage(imageRef.current);
+    if (sourceImage) {
+      handleLoadImage(sourceImage);
     }
-  }, [handleLoadImage, imageUrl]);
+  }, [canvas.id, sourceImage, handleLoadImage]);
 
   useEffect(() => {
     // Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
@@ -772,7 +769,7 @@ export default function CanvasView() {
             alt="Active Blurple Canvas"
             onLoad={(event) => handleLoadImage(event.currentTarget)}
             ref={imageRef}
-            src={imageUrl}
+            src={sourceImage?.src}
             crossOrigin="anonymous"
             // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
