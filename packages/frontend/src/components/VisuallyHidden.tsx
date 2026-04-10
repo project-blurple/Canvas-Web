@@ -16,6 +16,7 @@ export const Root = styled("span")`
   }
 `;
 
+/** @see https://www.joshwcomeau.com/snippets/react-components/visually-hidden */
 export default function VisuallyHidden(
   props: React.ComponentPropsWithRef<typeof Root>,
 ) {
