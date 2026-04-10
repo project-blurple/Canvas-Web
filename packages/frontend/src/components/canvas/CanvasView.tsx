@@ -240,16 +240,15 @@ function calculateReticleOffset(coords: Point | null): Point {
 
 export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, coords, setCoords } = useCanvasContext();
+  const { canvas, containerRef, coords, zoom, setCoords, setZoom } =
+    useCanvasContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLaunching, setIsLaunching] = useState(true);
-  const [zoom, setZoom] = useState(1);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
@@ -518,7 +517,7 @@ export default function CanvasView() {
 
     return () =>
       containerRef.current?.removeEventListener("wheel", handleWheel);
-  }, [handleZoom]);
+  }, [handleZoom, containerRef]);
 
   /********************************
    * PANNING FUNCTIONALITY.       *

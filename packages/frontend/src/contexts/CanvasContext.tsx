@@ -9,10 +9,12 @@ import axios from "axios";
 import {
   createContext,
   Dispatch,
+  RefObject,
   SetStateAction,
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { addPoints, tupleToPoint } from "@/components/canvas/point";
@@ -21,14 +23,18 @@ import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 
 interface CanvasContextType {
-  canvas: CanvasInfo;
-  coords: Point | null;
   adjustedCoords: Point | null;
+  canvas: CanvasInfo;
+  containerRef: RefObject<HTMLDivElement | null>;
+  coords: Point | null;
+  zoom: number;
   setCanvas: (canvasId: CanvasInfo["id"]) => void;
   setCoords: Dispatch<SetStateAction<Point | null>>;
+  setZoom: Dispatch<SetStateAction<number>>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
+  adjustedCoords: null,
   canvas: {
     id: -1,
     name: "",
@@ -40,10 +46,12 @@ export const CanvasContext = createContext<CanvasContextType>({
     webPlacingEnabled: false,
     allColorsGlobal: false,
   },
+  containerRef: { current: null },
   coords: null,
-  adjustedCoords: null,
+  zoom: 1,
   setCoords: () => {},
   setCanvas: () => {},
+  setZoom: () => {},
 });
 
 interface CanvasProviderProps {
@@ -58,6 +66,8 @@ export const CanvasProvider = ({
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasContextType["coords"]>(null);
+  const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -95,11 +105,14 @@ export const CanvasProvider = ({
   return (
     <CanvasContext.Provider
       value={{
-        coords: selectedCoords,
         adjustedCoords,
         canvas: activeCanvas,
+        containerRef: containerRef,
+        coords: selectedCoords,
+        zoom: zoom,
         setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
+        setZoom: setZoom,
       }}
     >
       {children}
