@@ -1,5 +1,7 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { useEffect, useState } from "react";
+import config from "@/config";
 import { useAuthContext } from "@/contexts";
 import { useFrame } from "@/hooks/queries/useFrame";
 import { decodeUserGuildsBase64 } from "@/util";
@@ -10,10 +12,17 @@ import {
   TabBlock,
 } from "./ActionPanelTabBody";
 import BotCommandCard from "./BotCommandCard";
+import { FramePreviewCard } from "./FramePreviewCard";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
 const FramesTabBlock = styled(TabBlock)`
   grid-template-rows: 1fr auto;
+`;
+
+const FramesContainer = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 interface FramesTabProps {
@@ -23,6 +32,30 @@ interface FramesTabProps {
 
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
+  const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const image = new Image();
+    image.decoding = "async";
+    image.src = `${config.apiUrl}/api/v1/canvas/${canvasId}`;
+
+    image.onload = () => {
+      if (!cancelled) {
+        setSourceImage(image);
+      }
+    };
+
+    image.onerror = () => {
+      if (!cancelled) {
+        setSourceImage(null);
+      }
+    };
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canvasId]);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
   const { data: userFrames = [] } = useFrame({
@@ -38,12 +71,12 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     return (
       <FramesTabBlock active={active}>
         <ActionPanelTabBody>
-          <div>
+          <FramesContainer>
             <Heading>Your Frames</Heading>
             <p>
               <a href="/signin">Sign in</a> to view frames
             </p>
-          </div>
+          </FramesContainer>
         </ActionPanelTabBody>
       </FramesTabBlock>
     );
@@ -73,27 +106,30 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     <FramesTabBlock active={active}>
       <ScrollBlock>
         <ActionPanelTabBody>
-          <div>
+          <FramesContainer>
             <Heading>Your Frames</Heading>
             {userFrames.map((frame) => (
-              <div key={frame.id}>
-                <p>{frame.name}</p>
-              </div>
+              <FramePreviewCard
+                key={frame.id}
+                frame={frame}
+                sourceImage={sourceImage}
+              />
             ))}
-
-            {sortedGuildFrameMap.map(([ownerId, frames]) => (
-              <div key={ownerId}>
-                <Heading>{frames[0]?.ownerGuild?.name}</Heading>
-                {frames
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((frame) => (
-                    <div key={frame.id}>
-                      <p>{frame.name}</p>
-                    </div>
-                  ))}
-              </div>
-            ))}
-          </div>
+          </FramesContainer>
+          {sortedGuildFrameMap.map(([ownerId, frames]) => (
+            <FramesContainer key={ownerId}>
+              <Heading>{frames[0]?.ownerGuild?.name}</Heading>
+              {frames
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((frame) => (
+                  <FramePreviewCard
+                    key={frame.id}
+                    frame={frame}
+                    sourceImage={sourceImage}
+                  />
+                ))}
+            </FramesContainer>
+          ))}
         </ActionPanelTabBody>
       </ScrollBlock>
       <ActionPanelTabBody>
