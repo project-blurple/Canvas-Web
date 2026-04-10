@@ -16,6 +16,19 @@ export const SEARCH_PARAM_KEYS = {
   frameId: { canonical: "f", aliases: ["frame"] },
 } as const satisfies Record<string, SearchParamConfig>;
 
+export type ParamKey = keyof typeof SEARCH_PARAM_KEYS;
+
+type ParamVariant<K extends ParamKey> =
+  | (typeof SEARCH_PARAM_KEYS)[K]["canonical"]
+  | (typeof SEARCH_PARAM_KEYS)[K]["aliases"][number];
+
+function getSearchParamVariants<K extends ParamKey>(
+  key: K,
+): readonly ParamVariant<K>[] {
+  const config = SEARCH_PARAM_KEYS[key];
+  return [config.canonical, ...config.aliases];
+}
+
 export default function createPixelUrl({
   canvasId,
   coords,
@@ -62,4 +75,18 @@ export default function createPixelUrl({
     .join("&");
 
   return url.toString();
+}
+
+export function extractSearchParam(
+  searchParams: URLSearchParams | null,
+  key: ParamKey,
+): string | null {
+  if (!searchParams) return null;
+
+  return (
+    getSearchParamVariants(key)
+      .map((variant) => searchParams.get(variant))
+      .find((value): value is string => value !== null && value.length > 0) ??
+    null
+  );
 }
