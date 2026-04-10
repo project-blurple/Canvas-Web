@@ -1,6 +1,11 @@
 "use client";
 
-import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
+import {
+  CanvasInfo,
+  Frame,
+  PlacePixelSocket,
+  Point,
+} from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -9,6 +14,7 @@ import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
+import { normalizeFrameBounds } from "../action-panel/tabs/FramePreviewCard";
 import { Button } from "../button";
 import {
   addPoints,
@@ -210,12 +216,17 @@ function calculateTouchOffsetDelta(
   return { offsetDelta, scale, centerOffset: relativePosition };
 }
 
+function clampZoom(zoom: number, initialZoom: number) {
+  return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
+}
+
 // Arbitrary value applied to the deltaY of the wheel zoom function to make it feel right
 const SCALE_FACTOR = 0.002;
 // MAX ZOOM is the absolute maximum scaling that can be applied to the image element
 const MAX_ZOOM = 100;
 // MIN ZOOM_FACTOR is relative to the initalZoom. i.e. MIN_ZOOM_FACTOR = 0.9 -> minimumCssScale = 0.9 * initialZoom
 const MIN_ZOOM_FACTOR = 0.9;
+const FRAME_FIT_FILL_RATIO = 0.75;
 
 const PAN_DECAY = 0.75;
 
@@ -239,6 +250,39 @@ function calculateReticleOffset(coords: Point | null): Point {
   };
 }
 
+function getViewForFrame({
+  frame,
+  canvas,
+  container,
+  initialZoom,
+}: {
+  frame: Frame;
+  canvas: CanvasInfo;
+  container: HTMLDivElement;
+  initialZoom: number;
+}) {
+  const frameBounds = normalizeFrameBounds(frame);
+  const targetZoom = clampZoom(
+    Math.min(
+      (container.clientWidth * FRAME_FIT_FILL_RATIO) / frameBounds.width,
+      (container.clientHeight * FRAME_FIT_FILL_RATIO) / frameBounds.height,
+    ),
+    initialZoom,
+  );
+
+  const targetPoint = {
+    x: clamp((frameBounds.left + frameBounds.right) / 2, 0, canvas.width - 1),
+    y: clamp((frameBounds.top + frameBounds.bottom) / 2, 0, canvas.height - 1),
+  };
+
+  const offset = {
+    x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
+    y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
+  };
+
+  return { targetZoom, offset, targetPoint };
+}
+
 export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -246,7 +290,7 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, coords, setCoords } = useCanvasContext();
+  const { canvas, coords, selectedFrame, setCoords } = useCanvasContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -537,6 +581,27 @@ export default function CanvasView() {
     },
     [canvas],
   );
+
+  useEffect(() => {
+    if (!selectedFrame || selectedFrame.canvasId !== canvas.id) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const frameView = getViewForFrame({
+      frame: selectedFrame,
+      canvas,
+      container,
+      initialZoom,
+    });
+
+    setIsZooming(false);
+    setZoom(frameView.targetZoom);
+    setOffset(clampOffset(frameView.offset, frameView.targetZoom));
+    setCoords({
+      x: Math.floor(frameView.targetPoint.x),
+      y: Math.floor(frameView.targetPoint.y),
+    });
+  }, [canvas, initialZoom, selectedFrame, setCoords, clampOffset]);
 
   const updateOffset = useCallback(
     (diff: Point): void => {

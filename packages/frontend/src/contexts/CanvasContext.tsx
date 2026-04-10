@@ -3,6 +3,7 @@
 import {
   CanvasInfo,
   CanvasInfoRequest,
+  Frame,
   Point,
 } from "@blurple-canvas-web/types";
 import axios from "axios";
@@ -23,9 +24,11 @@ import { useSelectedColorContext } from "./SelectedColorContext";
 interface CanvasContextType {
   canvas: CanvasInfo;
   coords: Point | null;
+  selectedFrame: Frame | null;
   adjustedCoords: Point | null;
   setCanvas: (canvasId: CanvasInfo["id"]) => void;
   setCoords: Dispatch<SetStateAction<Point | null>>;
+  setSelectedFrame: Dispatch<SetStateAction<Frame | null>>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
@@ -41,9 +44,11 @@ export const CanvasContext = createContext<CanvasContextType>({
     allColorsGlobal: false,
   },
   coords: null,
+  selectedFrame: null,
   adjustedCoords: null,
   setCoords: () => {},
   setCanvas: () => {},
+  setSelectedFrame: () => {},
 });
 
 interface CanvasProviderProps {
@@ -58,6 +63,8 @@ export const CanvasProvider = ({
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasContextType["coords"]>(null);
+  const [selectedFrame, setSelectedFrame] =
+    useState<CanvasContextType["selectedFrame"]>(null);
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -80,6 +87,7 @@ export const CanvasProvider = ({
       setActiveCanvas(response.data);
       setSelectedColor(null);
       setSelectedCoords(null);
+      setSelectedFrame(null);
 
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
@@ -98,8 +106,10 @@ export const CanvasProvider = ({
         coords: selectedCoords,
         adjustedCoords,
         canvas: activeCanvas,
+        selectedFrame: selectedFrame,
         setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
+        setSelectedFrame: setSelectedFrame,
       }}
     >
       {children}

@@ -1,7 +1,6 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useState } from "react";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useFrame } from "@/hooks/queries/useFrame";
 import { decodeUserGuildsBase64 } from "@/util";
@@ -11,7 +10,6 @@ import {
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
-import BotCommandCard from "./BotCommandCard";
 import { FramePreviewCard } from "./FramePreviewCard";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -32,9 +30,8 @@ interface FramesTabProps {
 
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
+  const { selectedFrame, setSelectedFrame } = useCanvasContext();
   const sourceImage = useCanvasImage(canvasId);
-
-  const [selectedFrame, setSelectedFrame] = useState<Frame | null>(null);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
   const { data: userFrames = [] } = useFrame({

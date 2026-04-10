@@ -36,7 +36,7 @@ interface FramePreviewCardProps {
   onClick?: () => void;
 }
 
-function normalizeFrame(frame: Frame) {
+export function normalizeFrameBounds(frame: Frame) {
   const left = Math.min(frame.x_0, frame.x_1);
   const right = Math.max(frame.x_0, frame.x_1);
   const top = Math.min(frame.y_0, frame.y_1);
@@ -57,7 +57,7 @@ function getFrameCropRect(
   canvasWidth: number,
   canvasHeight: number,
 ) {
-  const bounds = normalizeFrame(frame);
+  const bounds = normalizeFrameBounds(frame);
   const centerX = (bounds.left + bounds.right) / 2;
   const centerY = (bounds.top + bounds.bottom) / 2;
 
