@@ -4,25 +4,35 @@ import { styled } from "@mui/material";
 
 import { ActionPanel } from "@/components/action-panel";
 import { CanvasView } from "@/components/canvas";
+import { SlideableDrawer } from "@/components/slideable-drawer";
 
 const Wrapper = styled("main")`
   body:has(&) {
+    --action-panel-width: 19rem;
     --navbar-height: 4rem;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
 
     display: grid;
-    grid-template-rows: var(--navbar-height) calc(100vh - var(--navbar-height));
-    height: 100vh;
+    grid-template-rows: auto 1fr;
+    height: 100dvh;
+
+    ${({ theme }) => theme.breakpoints.up("lg")} {
+      --column-gap: 2rem;
+      --action-panel-width: 23rem;
+    }
   }
 
+  column-gap: inherit;
   display: grid;
-  gap: 0.5rem 2rem;
+  grid-template-rows: 1fr 1fr;
+  row-gap: inherit;
 
   ${({ theme }) => theme.breakpoints.up("md")} {
-    --padding-y: 2rem;
-
     grid-auto-flow: column;
-    grid-template-columns: 1fr 23rem;
-    padding: var(--padding-y) 4rem;
+    grid-template-columns: 1fr var(--action-panel-width);
+    grid-template-rows: initial;
+    padding: var(--layout-padding-y) var(--layout-padding-x);
   }
 `;
 
@@ -30,7 +40,9 @@ export default function Main() {
   return (
     <Wrapper>
       <CanvasView />
-      <ActionPanel />
+      <SlideableDrawer>
+        <ActionPanel />
+      </SlideableDrawer>
     </Wrapper>
   );
 }

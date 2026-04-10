@@ -1,5 +1,5 @@
-import { prisma } from "@/client";
 import { PrismockClientType } from "prismock/build/main/lib/client";
+import { prisma } from "@/client";
 
 vi.mock("@prisma/client", async () => {
   const prismock = await vi.importActual("prismock");

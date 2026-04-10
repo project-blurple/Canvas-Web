@@ -1,8 +1,7 @@
+import { Cooldown } from "@blurple-canvas-web/types";
 import { CircularProgress, styled } from "@mui/material";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
-import { Cooldown } from "@blurple-canvas-web/types";
 
 import config from "@/config";
 import {
@@ -17,7 +16,11 @@ export const CoordinateLabel = styled("span")`
   opacity: 0.6;
 `;
 
-export default function PlacePixelButton() {
+interface PlacePixelButtonProps {
+  isVerbose: boolean;
+}
+
+export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
   const { color } = useSelectedColorContext();
   const isSelected = adjustedCoords && color;
@@ -56,9 +59,7 @@ export default function PlacePixelButton() {
       .then((data) => {
         const cooldown = data.cooldownEndTime;
         if (cooldown) {
-          setTimeLeft(
-            Math.round((new Date(cooldown).valueOf() - Date.now()) / 1000),
-          );
+          setTimeLeft(Math.ceil(cooldown / 1000));
         }
         setIsPlacing(false);
       })
@@ -120,12 +121,15 @@ export default function PlacePixelButton() {
   const { x, y } = adjustedCoords;
   const nbsp = "\u00A0";
 
+  const placePixelMessege =
+    isVerbose ? `Place ${color.code} at` : "Place pixel";
+
   return (
     <DynamicButton color={color} onAction={handlePixelRequest}>
-      {isSelected ? "Place pixel" : "Select a pixel"}
+      {isSelected ? placePixelMessege : "Select a pixel"}
       {isSelected && (
         <CoordinateLabel>
-          {/* String interpolation is required to prevent https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues/255 */}
+          {/* String interpolation is required to prevent https://github.com/project-blurple/Canvas-Web/issues/255 */}
           {`(${x},${nbsp}${y})`}
         </CoordinateLabel>
       )}

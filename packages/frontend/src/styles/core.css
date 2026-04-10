@@ -15,6 +15,7 @@
     font-synthesis: none;
     hanging-punctuation: first allow-end last;
     hyphenate-character: "‐"; /* Unambiguous hyphen U+2010 */
+    interpolate-size: allow-keywords;
     letter-spacing: 0;
     margin: 0;
     orphans: 2;
@@ -45,6 +46,7 @@
   h5,
   h6 {
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   b,

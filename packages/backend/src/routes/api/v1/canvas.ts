@@ -1,23 +1,23 @@
+import { Response, Router } from "express";
 import { ApiError } from "@/errors";
 import { parseCanvasId } from "@/models/paramModels";
 import {
   CachedCanvas,
+  getCanvases,
   getCanvasFilename,
   getCanvasInfo,
   getCanvasPng,
-  getCanvases,
   getCurrentCanvas,
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
-import { Response, Router } from "express";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = Router();
 
 canvasRouter.use("/:canvasId/pixel", pixelRouter);
 
-canvasRouter.get("/", async (req, res) => {
+canvasRouter.get("/", async (_req, res) => {
   try {
     const canvases = await getCanvases();
     res.status(200).json(canvases);
@@ -26,7 +26,7 @@ canvasRouter.get("/", async (req, res) => {
   }
 });
 
-canvasRouter.get("/current/info", async (req, res) => {
+canvasRouter.get("/current/info", async (_req, res) => {
   try {
     const canvasInfo = await getCurrentCanvasInfo();
     res.status(200).json(canvasInfo);
@@ -46,7 +46,7 @@ canvasRouter.get("/:canvasId/info", async (req, res) => {
   }
 });
 
-canvasRouter.get("/current", async (req, res) => {
+canvasRouter.get("/current", async (_req, res) => {
   try {
     const [canvasId, cachedCanvas] = await getCurrentCanvas();
     sendCachedCanvas(res, canvasId, cachedCanvas);

@@ -1,4 +1,4 @@
-import { PaletteColor, PixelHistoryRecord } from "..";
+import { PixelHistory } from "..";
 
 export interface Params {
   canvasId: number;

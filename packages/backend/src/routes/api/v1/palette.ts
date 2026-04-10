@@ -1,3 +1,4 @@
+import { Router } from "express";
 import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
 import { EventIdParamModel } from "@/models/paramModels";
@@ -5,11 +6,10 @@ import {
   getCurrentEventPalette,
   getEventPalette,
 } from "@/services/paletteService";
-import { Router } from "express";
 
 export const paletteRouter = Router();
 
-paletteRouter.get("/current", async (req, res) => {
+paletteRouter.get("/current", async (_req, res) => {
   try {
     const palette = await getCurrentEventPalette();
     return res.status(200).json(palette);

@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "biomejs.biome",
+    "EditorConfig.EditorConfig",
+    "esbenp.prettier-vscode",
+    "humao.rest-client",
+    "Prisma.prisma",
+    "streetsidesoftware.code-spell-checker",
+    "styled-components.vscode-styled-components"
+  ]
+}

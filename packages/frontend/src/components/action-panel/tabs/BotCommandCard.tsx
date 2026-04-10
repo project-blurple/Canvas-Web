@@ -1,6 +1,6 @@
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
+import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: center;
@@ -43,10 +43,9 @@ const StyledCopyIcon = styled(CopyIcon)`
 
 export default function BotCommandCard() {
   const { adjustedCoords: coordinates } = useCanvasContext();
-  if (!coordinates) return null;
-
   const { color } = useSelectedColorContext();
-  if (!color) return null;
+
+  if (!coordinates || !color) return null;
 
   const { x, y } = coordinates;
   const command = `/place x:${x} y:${y} color:${color.code}`;

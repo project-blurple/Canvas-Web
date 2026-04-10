@@ -1,16 +1,16 @@
 "use client";
 
-import config from "@/config";
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import axios from "axios";
 import Cookies from "js-cookie";
 import {
-  ReactNode,
   createContext,
+  ReactNode,
   useCallback,
   useContext,
   useState,
 } from "react";
+import config from "@/config";
 
 interface AuthContextType {
   user: DiscordUserProfile | null;

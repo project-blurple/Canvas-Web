@@ -1,6 +1,6 @@
-import BadRequestError from "@/errors/BadRequestError";
 import { CanvasInfo } from "@blurple-canvas-web/types";
 import z from "zod";
+import BadRequestError from "@/errors/BadRequestError";
 
 const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),
@@ -23,6 +23,7 @@ export const PixelHistoryParamModel = z.object({
 
 export interface CanvasIdParam {
   canvasId: string;
+  [key: string]: string;
 }
 
 export async function parseCanvasId(

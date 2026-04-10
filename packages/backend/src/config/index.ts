@@ -40,6 +40,7 @@ const config = {
    */
   webGuildId: 0,
   webPlacingEnabled: process.env.WEB_PLACING_ENABLED === "true",
+  allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
 } as const;

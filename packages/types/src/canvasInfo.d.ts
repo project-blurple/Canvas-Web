@@ -7,6 +7,7 @@ export interface CanvasInfo {
   isLocked: boolean;
   eventId: number | null;
   webPlacingEnabled: boolean;
+  allColorsGlobal: boolean;
 }
 
 export type CanvasSummary = Pick<CanvasInfo, "id" | "name" | "eventId">;

@@ -1,6 +1,6 @@
+import { BlurpleEvent } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
-import { BlurpleEvent } from "@blurple-canvas-web/types";
 
 export async function getEventById(
   eventId: BlurpleEvent["id"],

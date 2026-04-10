@@ -7,6 +7,9 @@
     "rules": {
       "style": {
         "useImportType": "off"
+      },
+      "suspicious": {
+        "noArrayIndexKey": "warn"
       }
     }
   },

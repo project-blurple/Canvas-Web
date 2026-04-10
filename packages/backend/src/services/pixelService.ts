@@ -1,13 +1,15 @@
+import {
+  PaletteColor,
+  PixelColor,
+  PixelHistoryWrapper,
+  Point,
+} from "@blurple-canvas-web/types";
+import { color } from "@prisma/client";
+
 import { prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
-import {
-  PaletteColor,
-  PixelHistoryRecord,
-  Point,
-} from "@blurple-canvas-web/types";
-import { color } from "@prisma/client";
 import { updateCachedCanvasPixel } from "./canvasService";
 
 /**
@@ -19,43 +21,55 @@ import { updateCachedCanvasPixel } from "./canvasService";
 export async function getPixelHistory(
   canvasId: number,
   coordinates: Point,
-): Promise<PixelHistoryRecord[]> {
+): Promise<PixelHistoryWrapper> {
   // check if canvas exists
   await validatePixel(canvasId, coordinates, false);
 
-  const pixelHistory = await prisma.history.findMany({
-    select: {
-      id: true,
-      color: true,
-      timestamp: true,
-      guild_id: true,
-      user_id: true,
-      discord_user_profile: true,
-    },
-    where: {
-      canvas_id: canvasId,
-      ...coordinates,
-    },
-    orderBy: {
-      timestamp: "desc",
-    },
-  });
+  const [pixelHistory, totalEntries] = await Promise.all([
+    prisma.history.findMany({
+      take: 100,
+      orderBy: {
+        timestamp: "desc",
+      },
+      where: {
+        canvas_id: canvasId,
+        ...coordinates,
+      },
+      select: {
+        id: true,
+        color: true,
+        timestamp: true,
+        guild_id: true,
+        user_id: true,
+        discord_user_profile: true,
+      },
+    }),
+    prisma.history.count({
+      where: {
+        canvas_id: canvasId,
+        ...coordinates,
+      },
+    }),
+  ]);
 
-  return pixelHistory.map((history) => ({
-    id: history.id.toString(),
-    color: history.color,
-    timestamp: history.timestamp,
-    guildId: history.guild_id?.toString(),
-    userId: history.user_id.toString(),
-    userProfile:
-      history.discord_user_profile ?
-        {
-          id: history.discord_user_profile.user_id.toString(),
-          username: history.discord_user_profile.username,
-          profilePictureUrl: history.discord_user_profile.profile_picture_url,
-        }
-      : null,
-  }));
+  return {
+    pixelHistory: pixelHistory.map((history) => ({
+      id: history.id.toString(),
+      color: history.color,
+      timestamp: history.timestamp,
+      guildId: history.guild_id?.toString(),
+      userId: history.user_id.toString(),
+      userProfile:
+        history.discord_user_profile ?
+          {
+            id: history.discord_user_profile.user_id.toString(),
+            username: history.discord_user_profile.username,
+            profilePictureUrl: history.discord_user_profile.profile_picture_url,
+          }
+        : null,
+    })),
+    totalEntries,
+  };
 }
 
 /** Ensures that the given pixel coordinates are within the bounds of the canvas and the canvas exists
@@ -103,18 +117,20 @@ export async function validatePixel(
  * @param colorId - The ID of the color
  * @returns The corresponding color object
  */
-export async function validateColor(colorId: number): Promise<color> {
-  const color = await prisma.color.findFirst({
+export async function validateColor(
+  colorId: number,
+): Promise<color & { rgba: PixelColor }> {
+  const color = (await prisma.color.findFirst({
     where: {
       id: colorId,
     },
-  });
-  //
+  })) as (color & { rgba: PixelColor }) | null;
+
   if (!color) {
     throw new NotFoundError(`There is no color with ID ${colorId}`);
   }
 
-  if (!color.global) {
+  if (!color.global && !config.allColorsGlobal) {
     throw new ForbiddenError(
       `Partnered color with ID ${colorId} is not allowed from web client`,
     );
@@ -179,7 +195,7 @@ export async function getCooldown(
   );
 
   // Return early if no cooldown exists
-  if (!cooldown || !cooldown?.cooldown_time) {
+  if (!cooldown?.cooldown_time) {
     return { currentCooldown: null, futureCooldown };
   }
 

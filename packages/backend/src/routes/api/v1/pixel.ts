@@ -1,7 +1,14 @@
+import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import { Router } from "express";
 import config from "@/config";
-import { ApiError, ForbiddenError } from "@/errors";
-import { BadRequestError, UnauthorizedError } from "@/errors";
+import {
+  ApiError,
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/errors";
 import { socketHandler } from "@/index";
+import { tenSecondLimiter } from "@/middleware/ratelimit";
 import {
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
@@ -11,10 +18,7 @@ import {
   PixelHistoryParamModel,
   parseCanvasId,
 } from "@/models/paramModels";
-import {
-  updateCachedCanvasPixel,
-  updateManyCachedPixels,
-} from "@/services/canvasService";
+import { updateManyCachedPixels } from "@/services/canvasService";
 import {
   getPixelHistory,
   placePixel,
@@ -22,8 +26,6 @@ import {
   validatePixel,
   validateUser,
 } from "@/services/pixelService";
-import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
-import { Router } from "express";
 
 export const pixelRouter = Router({ mergeParams: true });
 
@@ -86,7 +88,7 @@ pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
  * Endpoint for placing a pixel on the canvas
  * Requires the user to be authenticated and not blacklisted
  */
-pixelRouter.post<CanvasIdParam>("/", async (req, res) => {
+pixelRouter.post<CanvasIdParam>("/", tenSecondLimiter, async (req, res) => {
   if (!config.webPlacingEnabled) {
     throw new ForbiddenError("Web placing is disabled");
   }
@@ -101,7 +103,7 @@ pixelRouter.post<CanvasIdParam>("/", async (req, res) => {
     const canvasId = await parseCanvasId(req.params);
     const profile = req.user as DiscordUserProfile;
 
-    if (!profile || !profile.id) {
+    if (!profile?.id) {
       throw new UnauthorizedError("User is not authenticated");
     }
 
@@ -116,10 +118,10 @@ pixelRouter.post<CanvasIdParam>("/", async (req, res) => {
       coordinates,
       color,
     );
-
+    if (!futureCooldown) return res.status(201).json({ cooldownEndTime: null });
     return res
       .status(201)
-      .json({ cooldownEndTime: futureCooldown?.toISOString() ?? null });
+      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
   } catch (error) {
     ApiError.sendError(res, error);
   }
