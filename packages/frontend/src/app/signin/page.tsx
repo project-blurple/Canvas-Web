@@ -1,8 +1,9 @@
 "use client";
 
-import { Button, styled, Typography } from "@mui/material";
+import { styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
+import { Button } from "@/components/button";
 import config from "@/config";
 import { useAuthContext } from "@/contexts";
 
