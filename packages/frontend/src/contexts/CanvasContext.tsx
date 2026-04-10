@@ -6,6 +6,7 @@ import {
   Point,
 } from "@blurple-canvas-web/types";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   Dispatch,
@@ -20,6 +21,7 @@ import {
 import { addPoints, tupleToPoint } from "@/components/canvas/point";
 import config from "@/config";
 import { socket } from "@/socket";
+import { SEARCH_PARAM_KEYS } from "@/util/searchParams";
 import { useSelectedColorContext } from "./SelectedColorContext";
 
 interface CanvasContextType {
@@ -63,6 +65,7 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
+  const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasContextType["coords"]>(null);
@@ -91,6 +94,16 @@ export const CanvasProvider = ({
       setSelectedColor(null);
       setSelectedCoords(null);
 
+      const url = new URL(window.location.href);
+      url.search = "";
+      if (canvasId !== mainCanvasInfo.id) {
+        url.searchParams.set(
+          SEARCH_PARAM_KEYS.canvasId.canonical,
+          canvasId.toString(),
+        );
+      }
+      router.replace(`${url.pathname}${url.search}${url.hash}`);
+
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
       // already been placed.
@@ -99,7 +112,7 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [setSelectedColor],
+    [mainCanvasInfo.id, router, setSelectedColor],
   );
 
   return (
