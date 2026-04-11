@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { ApiError } from "@/errors";
-import { parseCanvasId } from "@/models/paramModels";
+import { ApiError, BadRequestError } from "@/errors";
+import { FrameGuildIdsQueryModel, parseCanvasId } from "@/models/paramModels";
 import {
   getFrameById,
   getFramesByGuildIds,
@@ -32,9 +32,16 @@ frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
 
 frameRouter.get("/guilds/:canvasId", async (req, res) => {
   try {
-    const guildIds: string[] = (req.query.guildIds as string[]) ?? [];
+    const queryResult = await FrameGuildIdsQueryModel.safeParseAsync(req.query);
+    if (!queryResult.success) {
+      throw new BadRequestError(
+        "Invalid query parameters. Expected guildIds as a string or string array",
+        queryResult.error.issues,
+      );
+    }
+
     const frame = await getFramesByGuildIds(
-      guildIds,
+      queryResult.data.guildIds,
       await parseCanvasId(req.params),
     );
     res.status(200).json(frame);
