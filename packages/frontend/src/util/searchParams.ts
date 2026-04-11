@@ -38,8 +38,7 @@ function getSearchParamVariants<K extends ParamKey>(
   return [config.canonical, ...config.aliases];
 }
 
-export default function createPixelUrl({
-  canvasId,
+function initParameters({
   coords,
   zoom,
   pixelWidth,
@@ -72,15 +71,34 @@ export default function createPixelUrl({
     }
   }
 
+  return parameters;
+}
+
+export default function createPixelUrl({
+  canvasId,
+  coords,
+  zoom,
+  pixelWidth,
+  pixelHeight,
+  frameId,
+}: CreatePixelUrlOptions) {
+  const parameters = initParameters({
+    coords,
+    zoom,
+    pixelWidth,
+    pixelHeight,
+    frameId,
+  });
+
   const url = new URL(config.baseUrl);
 
   if (canvasId !== undefined) {
-    url.pathname = `/canvas/${canvasId}`;
+    url.pathname = `/canvas/${encodeURIComponent(canvasId)}`;
   }
 
-  url.search = Array.from(parameters.entries())
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&");
+  parameters.forEach((value, key) => {
+    url.searchParams.set(key, value);
+  });
 
   return url.toString();
 }
@@ -91,10 +109,12 @@ export function extractSearchParam(
 ): string | null {
   if (!searchParams) return null;
 
-  return (
-    getSearchParamVariants(key)
-      .map((variant) => searchParams.get(variant))
-      .find((value): value is string => value !== null && value.length > 0) ??
-    null
-  );
+  for (const variant of getSearchParamVariants(key)) {
+    const value = searchParams.get(variant);
+    if (value !== null && value.length > 0) {
+      return value;
+    }
+  }
+
+  return null;
 }
