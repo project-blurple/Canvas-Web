@@ -1,10 +1,10 @@
 import { Point } from "@blurple-canvas-web/types";
 import config from "@/config";
 
-type SearchParamConfig = {
+export interface SearchParamConfig {
   readonly canonical: string;
   readonly aliases: readonly string[];
-};
+}
 
 export const SEARCH_PARAM_KEYS = {
   canvasId: { canonical: "c", aliases: ["canvas"] },
@@ -22,6 +22,15 @@ type ParamVariant<K extends ParamKey> =
   | (typeof SEARCH_PARAM_KEYS)[K]["canonical"]
   | (typeof SEARCH_PARAM_KEYS)[K]["aliases"][number];
 
+export interface CreatePixelUrlOptions {
+  canvasId?: number;
+  coords?: Point;
+  zoom?: number;
+  pixelWidth?: number;
+  pixelHeight?: number;
+  frameId?: string;
+}
+
 function getSearchParamVariants<K extends ParamKey>(
   key: K,
 ): readonly ParamVariant<K>[] {
@@ -36,17 +45,13 @@ export default function createPixelUrl({
   pixelWidth,
   pixelHeight,
   frameId,
-}: {
-  canvasId?: number;
-  coords?: Point;
-  zoom?: number;
-  pixelWidth?: number;
-  pixelHeight?: number;
-  frameId?: string;
-}) {
-  const parameters = new Map<string, string>();
+}: CreatePixelUrlOptions) {
+  const parameters = new Map<ParamVariant<ParamKey>, string>();
 
-  const params = [
+  const params: readonly {
+    key: ParamVariant<ParamKey>;
+    value: string | undefined;
+  }[] = [
     { key: SEARCH_PARAM_KEYS.x.canonical, value: coords?.x.toString() },
     { key: SEARCH_PARAM_KEYS.y.canonical, value: coords?.y.toString() },
     { key: SEARCH_PARAM_KEYS.z.canonical, value: zoom?.toFixed(3) },
