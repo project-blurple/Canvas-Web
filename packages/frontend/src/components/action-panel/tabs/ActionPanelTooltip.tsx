@@ -1,11 +1,6 @@
 import { Tooltip, TooltipProps } from "@mui/material";
 
-interface ActionPanelTooltipProps extends Omit<
-  TooltipProps,
-  "placement" | "slotProps"
-> {
-  children: React.ReactElement;
-}
+type ActionPanelTooltipProps = Omit<TooltipProps, "placement" | "slotProps">;
 
 export default function ActionPanelTooltip({
   children,
@@ -28,7 +23,7 @@ export default function ActionPanelTooltip({
         tooltip: {
           sx: {
             bgcolor: "var(--discord-legacy-dark-but-not-black);",
-            boxShadow: "0px 0px 5px rgba(0, 0, 0, 0.25)",
+            boxShadow: "0px 0px 5px oklch(0 0 0 / 25%)",
           },
         },
       }}

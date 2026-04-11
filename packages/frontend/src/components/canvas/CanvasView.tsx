@@ -231,25 +231,34 @@ function getInitialViewFromSearchParams({
 
   if (canvasX === null || canvasY === null) return null;
 
-  const targetZoom =
-    params.zoom !== null ? clampZoom(params.zoom, initialZoom)
-    : params.pixelWidth !== null || params.pixelHeight !== null ?
-      clampZoom(
-        Math.min(
-          params.pixelWidth !== null ?
-            container.clientWidth / params.pixelWidth
-          : Number.POSITIVE_INFINITY,
-          params.pixelHeight !== null ?
-            container.clientHeight / params.pixelHeight
-          : Number.POSITIVE_INFINITY,
-        ),
-        initialZoom,
-      )
-    : initialZoom;
+  const zoomFromQuery = params.zoom;
+  const hasPixelDimensions =
+    params.pixelWidth !== null || params.pixelHeight !== null;
+
+  let targetZoom = initialZoom;
+
+  if (zoomFromQuery !== null) {
+    targetZoom = clampZoom(zoomFromQuery, initialZoom);
+  } else if (hasPixelDimensions) {
+    const widthBasedZoom =
+      params.pixelWidth !== null ?
+        container.clientWidth / params.pixelWidth
+      : Number.POSITIVE_INFINITY;
+
+    const heightBasedZoom =
+      params.pixelHeight !== null ?
+        container.clientHeight / params.pixelHeight
+      : Number.POSITIVE_INFINITY;
+
+    const fitZoom = Math.min(widthBasedZoom, heightBasedZoom);
+    targetZoom = clampZoom(fitZoom, initialZoom);
+  }
+
+  const [startX, startY] = canvas.startCoordinates;
 
   const targetPoint = {
-    x: clamp(canvasX - canvas.startCoordinates[0], 0, canvas.width - 1),
-    y: clamp(canvasY - canvas.startCoordinates[1], 0, canvas.height - 1),
+    x: clamp(canvasX - startX, 0, canvas.width - 1),
+    y: clamp(canvasY - startY, 0, canvas.height - 1),
   };
 
   const offset = {
