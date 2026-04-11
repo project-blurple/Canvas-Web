@@ -1,7 +1,7 @@
 import { Cooldown } from "@blurple-canvas-web/types";
 import { CircularProgress, styled } from "@mui/material";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import config from "@/config";
 import {
@@ -26,7 +26,14 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
+  const [previousTimeLeft, setPreviousTimeLeft] = useState(0);
   const { user, signOut } = useAuthContext();
+
+  const handleCooldownExpired = useCallback(() => {
+    void new Audio("/audio/cooldown_notification.ogg").play().catch(() => {
+      // Ignore playback failures from browser autoplay rules.
+    });
+  }, []);
 
   // cooldown timer
   useEffect(() => {
@@ -38,6 +45,13 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
     }
     setTimeLeft(0);
   }, [timeLeft]);
+
+  useEffect(() => {
+    if (previousTimeLeft > 0 && timeLeft === 0) {
+      handleCooldownExpired();
+    }
+    setPreviousTimeLeft(timeLeft);
+  }, [previousTimeLeft, timeLeft, handleCooldownExpired]);
 
   const handlePixelRequest = () => {
     if (!coords || !color) return;
