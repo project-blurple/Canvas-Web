@@ -120,11 +120,7 @@ export default function ActionPanel() {
     }
 
     // hiding reticle if we are on frames tab
-    if (newTab === TABS.FRAMES) {
-      setIsReticleVisible(false);
-    } else {
-      setIsReticleVisible(true);
-    }
+    setIsReticleVisible(newTab !== TABS.FRAMES);
   };
 
   return (

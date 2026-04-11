@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
+import { parseCanvasId } from "@/models/paramModels";
 import {
   getFrameById,
   getFramesByGuildIds,
@@ -21,7 +22,7 @@ frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
   try {
     const frame = await getFramesByUserId(
       req.params.userId,
-      Number.parseInt(req.params.canvasId),
+      await parseCanvasId(req.params),
     );
     res.status(200).json(frame);
   } catch (error) {
@@ -34,7 +35,7 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
     const guildIds: string[] = (req.query.guildIds as string[]) ?? [];
     const frame = await getFramesByGuildIds(
       guildIds,
-      Number.parseInt(req.params.canvasId),
+      await parseCanvasId(req.params),
     );
     res.status(200).json(frame);
   } catch (error) {

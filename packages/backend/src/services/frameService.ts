@@ -89,14 +89,14 @@ export async function getFramesByUserId(
 
 export async function getFramesByGuildIds(
   guildIds: string[],
-  canvas_id: number,
+  canvasId: number,
 ): Promise<Frame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: {
-        in: guildIds.map((id) => BigInt(id)),
+        in: guildIds.map(BigInt),
       },
-      canvas_id: canvas_id,
+      canvas_id: canvasId,
       is_guild_owned: true,
     },
     select: {

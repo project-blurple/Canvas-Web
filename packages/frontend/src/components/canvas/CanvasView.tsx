@@ -795,7 +795,7 @@ export default function CanvasView() {
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: isReticleVisible ? "block" : "none",
+            display: isReticleVisible ? undefined : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),

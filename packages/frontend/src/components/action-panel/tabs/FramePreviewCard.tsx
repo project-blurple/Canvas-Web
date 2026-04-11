@@ -107,43 +107,46 @@ export function FramePreviewCard({
   const thumbHeight = isMobile ? MOBILE_THUMB_HEIGHT : DESKTOP_THUMB_HEIGHT;
   const thumbAspectRatio = thumbWidth / thumbHeight;
 
-  useEffect(() => {
-    const thumbnailCanvas = thumbnailCanvasRef.current;
-    if (!thumbnailCanvas || !sourceImage) return;
-    if (canvas.width <= 0 || canvas.height <= 0) return;
+  useEffect(
+    function cropFullCanvasIntoThumbnail() {
+      const thumbnailCanvas = thumbnailCanvasRef.current;
+      if (!thumbnailCanvas || !sourceImage) return;
+      if (canvas.width <= 0 || canvas.height <= 0) return;
 
-    const context = thumbnailCanvas.getContext("2d");
-    if (!context) return;
+      const context = thumbnailCanvas.getContext("2d");
+      if (!context) return;
 
-    const crop = getFrameCropRect(
+      const crop = getFrameCropRect(
+        frame,
+        canvas.width,
+        canvas.height,
+        thumbAspectRatio,
+      );
+
+      context.clearRect(0, 0, thumbWidth, thumbHeight);
+      context.imageSmoothingEnabled = false;
+      context.drawImage(
+        sourceImage,
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
+        0,
+        0,
+        thumbWidth,
+        thumbHeight,
+      );
+    },
+    [
       frame,
+      sourceImage,
       canvas.width,
       canvas.height,
       thumbAspectRatio,
-    );
-
-    context.clearRect(0, 0, thumbWidth, thumbHeight);
-    context.imageSmoothingEnabled = false;
-    context.drawImage(
-      sourceImage,
-      crop.x,
-      crop.y,
-      crop.width,
-      crop.height,
-      0,
-      0,
-      thumbWidth,
       thumbHeight,
-    );
-  }, [
-    frame,
-    sourceImage,
-    canvas.width,
-    canvas.height,
-    thumbAspectRatio,
-    thumbHeight,
-    thumbWidth,
-  ]);
+      thumbWidth,
+    ],
+  );
 
   return (
     <CardBody onClick={onClick}>

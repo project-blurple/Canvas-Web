@@ -30,7 +30,7 @@ export function useFrame({
       }
 
       const response = await axios.get<FrameRequest.ResBody>(
-        `${config.apiUrl}/api/v1/frame/${frameId}`,
+        `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}`,
       );
       return response.data;
     }
@@ -64,14 +64,13 @@ export function useFrame({
           },
         },
       );
-      console.log("Guild frames response:", response.data);
       return response.data;
     }
 
     return [];
   };
 
-  return useQuery({
+  return useQuery<FrameRequest.ResBody>({
     queryKey: ["frame", frameId, canvasId, userId, guildIds],
     queryFn: getFrame,
     refetchOnMount: false,

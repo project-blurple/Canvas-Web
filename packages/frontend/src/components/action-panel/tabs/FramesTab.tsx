@@ -1,5 +1,6 @@
 import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import Link from "next/link";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useFrame } from "@/hooks/queries/useFrame";
@@ -11,6 +12,7 @@ import {
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
+import BotCommandCard from "./BotCommandCard";
 import { FramePreviewCard } from "./FramePreviewCard";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -67,9 +69,9 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
       <FramesTabBlock active={active}>
         <ActionPanelTabBody>
           <FramesContainer>
-            <Heading>Your Frames</Heading>
+            <Heading>Your frames</Heading>
             <p>
-              <a href="/signin">Sign in</a> to view frames
+              <Link href="/signin">Sign in</Link> to view frames
             </p>
           </FramesContainer>
         </ActionPanelTabBody>
@@ -80,9 +82,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const guildFrameMap: { [key: string]: Frame[] } = guildFrames.reduce(
     (map, frame) => {
       const ownerId = frame.ownerId;
-      if (!map[ownerId]) {
-        map[ownerId] = [];
-      }
+      map[ownerId] ??= [];
       map[ownerId].push(frame);
       return map;
     },
@@ -97,10 +97,6 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     },
   );
 
-  function setFrame(frame: Frame) {
-    setSelectedFrame(frame);
-  }
-
   return (
     <FramesTabBlock active={active}>
       <ScrollBlock>
@@ -113,7 +109,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                 frame={frame}
                 sourceImage={sourceImage}
                 isMobile={isMobile}
-                onClick={() => setFrame(frame)}
+                onClick={() => setSelectedFrame(frame)}
               />
             ))}
           </FramesContainer>
@@ -128,7 +124,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                     frame={frame}
                     sourceImage={sourceImage}
                     isMobile={isMobile}
-                    onClick={() => setFrame(frame)}
+                    onClick={() => setSelectedFrame(frame)}
                   />
                 ))}
             </FramesContainer>
@@ -138,7 +134,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
       {selectedFrame && (
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
-          {/* <BotCommandCard command="/frame create" /> */}
+          <BotCommandCard command="/frame create" />
         </ActionPanelTabBody>
       )}
     </FramesTabBlock>

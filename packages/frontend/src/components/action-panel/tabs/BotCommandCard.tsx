@@ -50,7 +50,7 @@ export default function BotCommandCard({ command }: { command: string }) {
   );
 }
 
-export function PlaceBotCommandCard() {
+export function BotPlaceCommandCard() {
   const { adjustedCoords: coordinates } = useCanvasContext();
   const { color } = useSelectedColorContext();
 

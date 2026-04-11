@@ -16,7 +16,7 @@ import {
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
-import { PlaceBotCommandCard } from "./BotCommandCard";
+import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
 const ColorPicker = styled("div")`
@@ -185,7 +185,7 @@ export default function PlacePixelTab({
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>
         )}
-        {!readOnly && isLarge && <PlaceBotCommandCard />}
+        {!readOnly && isLarge && <BotPlaceCommandCard />}
       </ActionPanelTabBody>
     </PlacePixelTabBlock>
   );

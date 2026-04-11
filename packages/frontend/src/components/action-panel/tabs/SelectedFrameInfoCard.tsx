@@ -3,7 +3,6 @@ import { styled } from "@mui/material";
 import { User, Users } from "lucide-react";
 
 const Wrapper = styled("div")`
-  // kinda stolen from SelectedColorInfoCard.tsx
   align-items: baseline;
   color: oklch(var(--discord-white-oklch) / 60%);
   display: grid;
@@ -25,18 +24,19 @@ const OwnerInfo = styled("p")`
 export default function FrameInfoCard({ frame }: { frame?: Frame }) {
   if (!frame) return <Wrapper>No frame selected</Wrapper>;
 
+  const ownerInfo =
+    frame.ownerGuild ? { icon: <Users />, label: frame.ownerGuild.name }
+    : frame.ownerUser ? { icon: <User />, label: frame.ownerUser.username }
+    : null;
+
   return (
     <Wrapper>
       <Heading>{frame.name}</Heading>
-      {frame.ownerGuild ?
+      {ownerInfo && (
         <OwnerInfo>
-          <Users /> {frame.ownerGuild.name}
+          {ownerInfo.icon} {ownerInfo.label}
         </OwnerInfo>
-      : frame.ownerUser ?
-        <OwnerInfo>
-          <User /> {frame.ownerUser.username}
-        </OwnerInfo>
-      : null}
+      )}
     </Wrapper>
   );
 }
