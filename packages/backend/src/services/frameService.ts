@@ -1,9 +1,39 @@
 import { Frame } from "@blurple-canvas-web/types";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 
-// biome-ignore lint/suspicious/noExplicitAny: extracting from below
-function frameFromDb(frame: any): Frame {
+const frameSelect = {
+  id: true,
+  canvas_id: true,
+  owner_id: true,
+  is_guild_owned: true,
+  owner_user: {
+    select: {
+      user_id: true,
+      username: true,
+      profile_picture_url: true,
+    },
+  },
+  owner_guild: {
+    select: {
+      guild_id: true,
+      name: true,
+    },
+  },
+  name: true,
+  x_0: true,
+  y_0: true,
+  x_1: true,
+  y_1: true,
+  style_id: true,
+} satisfies Prisma.frameSelect;
+
+type FrameDbRecord = Prisma.frameGetPayload<{
+  select: typeof frameSelect;
+}>;
+
+function frameFromDb(frame: FrameDbRecord): Frame {
   return {
     id: frame.id,
     canvasId: frame.canvas_id,
@@ -37,19 +67,7 @@ export async function getFrameById(frameId: string): Promise<Frame> {
     where: {
       id: frameId,
     },
-    select: {
-      id: true,
-      canvas_id: true,
-      owner_id: true,
-      is_guild_owned: true,
-      owner_user: true,
-      owner_guild: true,
-      name: true,
-      x_0: true,
-      y_0: true,
-      x_1: true,
-      y_1: true,
-    },
+    select: frameSelect,
   });
 
   if (!frame) {
@@ -61,27 +79,15 @@ export async function getFrameById(frameId: string): Promise<Frame> {
 
 export async function getFramesByUserId(
   userId: string,
-  canvas_id: number,
+  canvasId: number,
 ): Promise<Frame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: BigInt(userId),
-      canvas_id: canvas_id,
+      canvas_id: canvasId,
       is_guild_owned: false,
     },
-    select: {
-      id: true,
-      canvas_id: true,
-      owner_id: true,
-      is_guild_owned: true,
-      owner_user: true,
-      owner_guild: true,
-      name: true,
-      x_0: true,
-      y_0: true,
-      x_1: true,
-      y_1: true,
-    },
+    select: frameSelect,
   });
 
   return frames.map(frameFromDb);
@@ -99,19 +105,7 @@ export async function getFramesByGuildIds(
       canvas_id: canvasId,
       is_guild_owned: true,
     },
-    select: {
-      id: true,
-      canvas_id: true,
-      owner_id: true,
-      is_guild_owned: true,
-      owner_user: true,
-      owner_guild: true,
-      name: true,
-      x_0: true,
-      y_0: true,
-      x_1: true,
-      y_1: true,
-    },
+    select: frameSelect,
   });
 
   return frames.map(frameFromDb);
