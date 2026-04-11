@@ -5,6 +5,7 @@ const config = {
   port: process.env.PORT || 3000,
   discordServerInvite:
     process.env.DISCORD_SERVER_INVITE || "https://projectblurple.com",
+  showBotCommands: process.env.SHOW_BOT_COMMANDS === "true",
 } as const;
 
 export default config;
