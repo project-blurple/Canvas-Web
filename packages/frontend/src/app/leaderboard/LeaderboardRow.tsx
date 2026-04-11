@@ -119,8 +119,8 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       </UsernameCell>
       <PixelCountCell>
         <PixelCountCellContents>
-          <PixelCount>entry.totalPixels.toLocaleString()</PixelCount>
-          <PixelCountLabel>"pixels placed"</PixelCountLabel>
+          <PixelCount>{entry.totalPixels.toLocaleString()}</PixelCount>
+          <PixelCountLabel>pixels placed</PixelCountLabel>
         </PixelCountCellContents>
       </PixelCountCell>
     </tr>
