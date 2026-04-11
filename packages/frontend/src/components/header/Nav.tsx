@@ -110,8 +110,8 @@ export default function Nav() {
         anchorEl={anchorElement}
         open={isOpen}
         onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "navigation-menu-button",
+        slotProps={{
+          list: { "aria-labelledby": "navigation-menu-button" },
         }}
       >
         {links.map(({ href, label }) => (
