@@ -55,10 +55,10 @@ function frameFromDb(frame: FrameDbRecord): Frame {
         }
       : undefined,
     name: frame.name,
-    x_0: frame.x_0,
-    y_0: frame.y_0,
-    x_1: frame.x_1,
-    y_1: frame.y_1,
+    x0: frame.x_0,
+    y0: frame.y_0,
+    x1: frame.x_1,
+    y1: frame.y_1,
   };
 }
 

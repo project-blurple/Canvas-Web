@@ -9,8 +9,8 @@ export interface Frame {
   ownerUser?: DiscordUserProfile;
   ownerGuild?: DiscordGuildRecord;
   name: string;
-  x_0: number;
-  y_0: number;
-  x_1: number;
-  y_1: number;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
 }

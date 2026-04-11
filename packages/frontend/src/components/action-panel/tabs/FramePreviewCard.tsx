@@ -49,10 +49,10 @@ interface FramePreviewCardProps {
 }
 
 export function normalizeFrameBounds(frame: Frame) {
-  const left = Math.min(frame.x_0, frame.x_1);
-  const right = Math.max(frame.x_0, frame.x_1);
-  const top = Math.min(frame.y_0, frame.y_1);
-  const bottom = Math.max(frame.y_0, frame.y_1);
+  const left = Math.min(frame.x0, frame.x1);
+  const right = Math.max(frame.x0, frame.x1);
+  const top = Math.min(frame.y0, frame.y1);
+  const bottom = Math.max(frame.y0, frame.y1);
 
   return {
     left,
