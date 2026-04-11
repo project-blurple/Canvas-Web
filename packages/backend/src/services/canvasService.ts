@@ -5,10 +5,8 @@ import {
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
-import { canvas } from "@prisma/client";
 import { PNG } from "pngjs";
-
-import { prisma } from "@/client";
+import { canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { PlacePixelArray } from "@/models/bodyModels";
