@@ -79,17 +79,17 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     );
   }
 
-  const guildFrameMap: { [key: string]: Frame[] } = guildFrames.reduce(
-    (map, frame) => {
+  const groupedByOwnerId = guildFrames.reduce<Record<string, Frame[]>>(
+    (acc, frame) => {
       const ownerId = frame.ownerId;
-      map[ownerId] ??= [];
-      map[ownerId].push(frame);
-      return map;
+      acc[ownerId] ??= [];
+      acc[ownerId].push(frame);
+      return acc;
     },
-    {} as { [key: string]: Frame[] },
+    {},
   );
 
-  const sortedGuildFrameMap = Object.entries(guildFrameMap).sort(
+  const sortedGuildFrameMap = Object.entries(groupedByOwnerId).sort(
     ([, framesA], [, framesB]) => {
       const ownerGuildA = framesA[0]?.ownerGuild?.name || "";
       const ownerGuildB = framesB[0]?.ownerGuild?.name || "";

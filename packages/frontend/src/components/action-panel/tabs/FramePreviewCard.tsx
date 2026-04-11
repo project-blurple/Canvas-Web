@@ -9,10 +9,20 @@ const DESKTOP_THUMB_HEIGHT = 900;
 const MOBILE_THUMB_WIDTH = 500;
 const MOBILE_THUMB_HEIGHT = 500;
 
-const CardBody = styled("div")`
-  background: oklch(from var(--discord-white) l c h / 10%);
+const CardBody = styled("button")`
+  border: none;
+  background-color: oklch(from var(--discord-white) l c h / 12%);
   border-radius: 0.5rem;
   cursor: pointer;
+  transition: background-color var(--transition-duration-fast) ease;
+
+  :hover {
+    background-color: oklch(from var(--discord-white) l c h / 24%);
+  }
+
+  :active {
+    background-color: oklch(from var(--discord-white) l c h / 6%);
+  }
 `;
 
 const Thumbnail = styled("canvas", {
@@ -25,9 +35,7 @@ const Thumbnail = styled("canvas", {
   width: 100%;
 `;
 
-const FrameTitle = styled("p")`
-  font-size: 1rem;
-  font-weight: 500;
+const FrameTitle = styled("h3")`
   margin: 0;
   padding: 0.25rem 0.5rem;
   white-space: nowrap;
