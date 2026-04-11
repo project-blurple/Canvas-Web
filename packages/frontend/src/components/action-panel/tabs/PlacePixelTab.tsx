@@ -1,7 +1,12 @@
-import { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import {
+  DiscordUserProfile,
+  Palette,
+  PaletteColor,
+} from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import {
+  useAudioContext,
   useAuthContext,
   useCanvasContext,
   useSelectedColorContext,
@@ -78,6 +83,7 @@ export default function PlacePixelTab({
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
+  const { playSounds } = useAudioContext();
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -100,8 +106,7 @@ export default function PlacePixelTab({
     [remPixels],
   );
 
-  const { color: selectedColor, setColor: setSelectedColor } =
-    useSelectedColorContext();
+  const { color: selectedColor, setColor } = useSelectedColorContext();
 
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -131,6 +136,16 @@ export default function PlacePixelTab({
       !selectedColor.global &&
       isUserInServer(user, selectedColor?.guildId)) ??
     false;
+
+  function setSelectedColor(color: PaletteColor | null) {
+    if (playSounds) {
+      void new Audio("/audio/pick_color.ogg").play().catch(() => {
+        // Ignore playback failures from browser autoplay rules.
+      });
+    }
+
+    setColor(color);
+  }
 
   return (
     <PlacePixelTabBlock active={active} ref={PlacePixelTabBlockRef}>

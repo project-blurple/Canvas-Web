@@ -24,7 +24,7 @@ interface PlacePixelButtonProps {
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
   const { color } = useSelectedColorContext();
-  const { cooldownExpiryJingle } = useAudioContext();
+  const { playSounds, cooldownExpiryJingle } = useAudioContext();
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -61,6 +61,12 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
 
   const handlePixelRequest = () => {
     if (!coords || !color) return;
+
+    if (playSounds) {
+      void new Audio("/audio/place_pixel.ogg").play().catch(() => {
+        // Ignore playback failures from browser autoplay rules.
+      });
+    }
 
     const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel`;
 
