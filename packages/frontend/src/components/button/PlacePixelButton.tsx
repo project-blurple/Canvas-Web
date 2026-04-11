@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 
 import config from "@/config";
 import {
+  useAudioContext,
   useAuthContext,
   useCanvasContext,
   useSelectedColorContext,
@@ -23,6 +24,7 @@ interface PlacePixelButtonProps {
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
   const { color } = useSelectedColorContext();
+  const { cooldownExpiryJingle } = useAudioContext();
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
@@ -30,10 +32,14 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { user, signOut } = useAuthContext();
 
   const handleCooldownExpired = useCallback(() => {
+    if (!cooldownExpiryJingle) {
+      return;
+    }
+
     void new Audio("/audio/cooldown_notification.ogg").play().catch(() => {
       // Ignore playback failures from browser autoplay rules.
     });
-  }, []);
+  }, [cooldownExpiryJingle]);
 
   // cooldown timer
   useEffect(() => {
