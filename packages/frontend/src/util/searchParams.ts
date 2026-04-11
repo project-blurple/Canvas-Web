@@ -47,7 +47,6 @@ export default function createPixelUrl({
   const parameters = new Map<string, string>();
 
   const params = [
-    { key: SEARCH_PARAM_KEYS.canvasId.canonical, value: canvasId?.toString() },
     { key: SEARCH_PARAM_KEYS.x.canonical, value: coords?.x.toString() },
     { key: SEARCH_PARAM_KEYS.y.canonical, value: coords?.y.toString() },
     { key: SEARCH_PARAM_KEYS.z.canonical, value: zoom?.toFixed(3) },
@@ -69,6 +68,10 @@ export default function createPixelUrl({
   }
 
   const url = new URL(config.baseUrl);
+
+  if (canvasId !== undefined) {
+    url.pathname = `/canvas/${canvasId}`;
+  }
 
   url.search = Array.from(parameters.entries())
     .map(([key, value]) => `${key}=${value}`)

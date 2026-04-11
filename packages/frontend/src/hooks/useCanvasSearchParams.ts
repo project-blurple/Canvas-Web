@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { extractSearchParam } from "@/util/searchParams";
 
 export interface CanvasSearchParams {
@@ -25,11 +25,20 @@ function parseFloatParam(value: string | null): number | null {
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+function parsePathParam(value: string | string[] | undefined): number | null {
+  if (typeof value !== "string" || value.length === 0) return null;
+
+  return parseIntParam(value);
+}
+
 export function useCanvasSearchParams(): CanvasSearchParams {
+  const params = useParams<{ canvasId?: string | string[] }>();
   const searchParams = useSearchParams();
 
   return {
-    canvasId: parseIntParam(extractSearchParam(searchParams, "canvasId")),
+    canvasId:
+      parsePathParam(params.canvasId) ??
+      parseIntParam(extractSearchParam(searchParams, "canvasId")),
     x: parseIntParam(extractSearchParam(searchParams, "x")),
     y: parseIntParam(extractSearchParam(searchParams, "y")),
     zoom: parseFloatParam(extractSearchParam(searchParams, "z")),
