@@ -124,19 +124,19 @@ function leaderboardRecordToTableRow(user?: LeaderboardEntry): JSX.Element {
 
 export default function Leaderboard() {
   const { canvas } = useCanvasContext();
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const {
     data: { total, page: currentPage, size, entries: leaderboard } = {
       total: undefined,
-      page: page + 1,
+      page: page,
       size: 10,
       entries: [],
     },
     isLoading: leaderboardIsLoading,
-  } = useLeaderboard(canvas.id, page + 1);
+  } = useLeaderboard(canvas.id, page);
 
   useEffect(() => {
-    if (canvas.id) setPage(0);
+    if (canvas.id) setPage(1);
   }, [canvas.id]);
 
   return (
@@ -162,12 +162,12 @@ export default function Leaderboard() {
         </tbody>
       </Table>
       <Pagination
-        page={page + 1}
+        page={page}
         siblingCount={0}
         boundaryCount={0}
         showFirstButton
         showLastButton
-        onChange={(_, value) => setPage(value - 1)}
+        onChange={(_, value) => setPage(value)}
         count={total ? Math.ceil(total / size) : currentPage}
         color="primary"
         size="large"
