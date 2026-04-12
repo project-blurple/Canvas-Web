@@ -148,7 +148,7 @@ export async function userHasRoleInGuild(
 }
 
 export async function isCanvasAdmin(userId: string): Promise<boolean> {
-  const guildId = config.discord.adminGuild;
+  const guildId = config.discord.managementGuild;
   const roleId = config.discord.adminRole;
   const botToken = config.discord.botToken;
 
@@ -160,7 +160,7 @@ export async function isCanvasAdmin(userId: string): Promise<boolean> {
 }
 
 export async function isCanvasModerator(userId: string): Promise<boolean> {
-  const guildId = config.discord.adminGuild;
+  const guildId = config.discord.managementGuild;
   const roleId = config.discord.moderatorRole;
   const botToken = config.discord.botToken;
 

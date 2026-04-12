@@ -34,7 +34,7 @@ const config = {
     clientId: requiredEnv("DISCORD_CLIENT_ID"),
     clientSecret: requiredEnv("DISCORD_CLIENT_SECRET"),
     botToken: process.env.DISCORD_BOT_TOKEN,
-    adminGuild: process.env.DISCORD_ADMIN_GUILD_ID,
+    managementGuild: process.env.DISCORD_MANAGEMENT_GUILD_ID,
     adminRole: process.env.DISCORD_ADMIN_ROLE_ID,
     moderatorRole: process.env.DISCORD_MODERATOR_ROLE_ID,
   },
