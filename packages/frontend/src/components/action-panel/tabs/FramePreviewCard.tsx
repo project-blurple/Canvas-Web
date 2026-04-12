@@ -2,6 +2,7 @@ import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef } from "react";
 import { useCanvasContext } from "@/contexts";
+import { clamp } from "@/util";
 
 const FRAME_FILL_RATIO = 0.9;
 const DESKTOP_THUMB_WIDTH = 1600;
@@ -97,8 +98,8 @@ function getFrameCropRect(
   let cropX = centerX - cropWidth / 2;
   let cropY = centerY - cropHeight / 2;
 
-  cropX = Math.max(0, Math.min(cropX, canvasWidth - cropWidth));
-  cropY = Math.max(0, Math.min(cropY, canvasHeight - cropHeight));
+  cropX = clamp(cropX, 0, canvasWidth - cropWidth);
+  cropY = clamp(cropY, 0, canvasHeight - cropHeight);
 
   return { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
 }

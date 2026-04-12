@@ -37,7 +37,7 @@ const TabBar = styled("ul")`
   list-style-type: none;
 `;
 
-const Tab = styled("li")<{ active?: boolean }>`
+const TabStyle = styled("li")<{ active?: boolean }>`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -97,7 +97,34 @@ export const Heading = styled("h2")`
 enum TABS {
   LOOK = "Look",
   PLACE = "Place",
-  FRAMES = "Frames",
+  FRAME = "Frame",
+}
+
+function Tab({
+  key,
+  label,
+  currentTab,
+  onSwitchTab,
+}: {
+  key: TABS;
+  label: string;
+  currentTab: TABS;
+  onSwitchTab: (tab: TABS) => void;
+}) {
+  const isActive = currentTab === key;
+
+  return (
+    <TabStyle
+      active={isActive}
+      onClick={() => onSwitchTab(key)}
+      onKeyUp={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSwitchTab(key);
+      }}
+      tabIndex={0}
+    >
+      {label}
+    </TabStyle>
+  );
 }
 
 export default function ActionPanel() {
@@ -120,52 +147,37 @@ export default function ActionPanel() {
     }
 
     // hiding reticle if we are on frames tab
-    setIsReticleVisible(newTab !== TABS.FRAMES);
+    setIsReticleVisible(newTab !== TABS.FRAME);
   };
 
   return (
     <Wrapper>
       <TabBar>
         <Tab
-          active={currentTab === TABS.PLACE}
-          onClick={() => onSwitchTab(TABS.PLACE)}
-          onKeyUp={(event) => {
-            if (event.key === "Enter" || event.key === " ")
-              onSwitchTab(TABS.PLACE);
-          }}
-          tabIndex={0}
-        >
-          Place
-        </Tab>
+          key={TABS.PLACE}
+          label="Place"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
         <Tab
-          active={currentTab === TABS.LOOK}
-          onClick={() => onSwitchTab(TABS.LOOK)}
-          onKeyUp={(event) => {
-            if (event.key === "Enter" || event.key === " ")
-              onSwitchTab(TABS.LOOK);
-          }}
-          tabIndex={0}
-        >
-          Look
-        </Tab>
+          key={TABS.LOOK}
+          label="Look"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
         <Tab
-          active={currentTab === TABS.FRAMES}
-          onClick={() => onSwitchTab(TABS.FRAMES)}
-          onKeyUp={(event) => {
-            if (event.key === "Enter" || event.key === " ")
-              onSwitchTab(TABS.FRAMES);
-          }}
-          tabIndex={0}
-        >
-          Frames
-        </Tab>
+          key={TABS.FRAME}
+          label="Frame"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
       </TabBar>
       <PlacePixelTab
         active={currentTab === TABS.PLACE}
         eventId={canvas.eventId}
       />
       <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
-      <FramesTab active={currentTab === TABS.FRAMES} canvasId={canvas.id} />
+      <FramesTab active={currentTab === TABS.FRAME} canvasId={canvas.id} />
     </Wrapper>
   );
 }
