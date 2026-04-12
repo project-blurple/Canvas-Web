@@ -130,17 +130,13 @@ export default function PixelInfoTab({
             open={tooltipIsOpen}
           >
             <DynamicButton
-              color={
-                !isLoading && pixelHistory.length > 0 ?
-                  pixelHistory[0].color
-                : null
-              }
+              color={pixelHistory?.[0]?.color ?? null}
               onAction={() => {
                 openTooltip();
                 navigator.clipboard.writeText(pixelURL);
               }}
             >
-              Copy link to share pixel
+              Copy pixel link
               <CoordinateLabel>
                 ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
               </CoordinateLabel>

@@ -396,21 +396,24 @@ export default function CanvasView() {
   const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
 
-  useEffect(() => {
-    if (hasAppliedInitialCanvasRef.current) return;
+  useEffect(
+    function switchToCanvasFromSearchParams() {
+      if (hasAppliedInitialCanvasRef.current) return;
 
-    const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
-    if (targetCanvasId === null || targetCanvasId === canvas.id) {
+      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
+      if (targetCanvasId === null || targetCanvasId === canvas.id) {
+        hasAppliedInitialCanvasRef.current = true;
+        return;
+      }
+
       hasAppliedInitialCanvasRef.current = true;
-      return;
-    }
-
-    hasAppliedInitialCanvasRef.current = true;
-    void setCanvas(targetCanvasId).catch(() => {
-      // If URL canvas does not exist, keep default canvas and never apply URL pan/zoom.
-      hasAppliedInitialViewRef.current = true;
-    });
-  }, [canvas.id, setCanvas]);
+      void setCanvas(targetCanvasId).catch(() => {
+        // If URL canvas does not exist, keep default canvas and never apply URL pan/zoom.
+        hasAppliedInitialViewRef.current = true;
+      });
+    },
+    [canvas.id, setCanvas],
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
   useEffect(() => {

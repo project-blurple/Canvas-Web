@@ -96,9 +96,9 @@ export default function createPixelUrl({
     url.pathname = `/canvas/${encodeURIComponent(canvasId)}`;
   }
 
-  parameters.forEach((value, key) => {
+  for (const [key, value] of parameters) {
     url.searchParams.set(key, value);
-  });
+  }
 
   return url.toString();
 }
@@ -109,12 +109,10 @@ export function extractSearchParam(
 ): string | null {
   if (!searchParams) return null;
 
-  for (const variant of getSearchParamVariants(key)) {
+  const variantUsed = getSearchParamVariants(key).find((variant) => {
     const value = searchParams.get(variant);
-    if (value !== null && value.length > 0) {
-      return value;
-    }
-  }
+    return value !== null && value.length > 0;
+  });
 
-  return null;
+  return variantUsed ? searchParams.get(variantUsed) : null;
 }
