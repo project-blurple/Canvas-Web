@@ -33,6 +33,7 @@ const config = {
   discord: {
     clientId: requiredEnv("DISCORD_CLIENT_ID"),
     clientSecret: requiredEnv("DISCORD_CLIENT_SECRET"),
+    botToken: process.env.DISCORD_BOT_TOKEN,
   },
   /**
    * Placed pixels are typically attributed to guilds they were place in.

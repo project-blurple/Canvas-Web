@@ -6,5 +6,6 @@ declare namespace NodeJS {
     PORT?: string;
     NODE_ENV?: string;
     DISCORD_CLIENT_ID?: string;
+    DISCORD_BOT_TOKEN?: string;
   }
 }
