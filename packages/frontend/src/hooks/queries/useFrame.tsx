@@ -10,71 +10,88 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
 
-export function useFrame({
-  frameId,
-  canvasId,
-  userId,
-  guildIds,
-}: {
-  frameId?: Frame["id"];
-  canvasId?: Frame["canvasId"];
+interface UseUserFramesParams {
+  canvasId: Frame["canvasId"];
   userId?: DiscordUserProfile["id"];
+}
+
+interface UseFrameByIdParams {
+  frameId?: Frame["id"];
+}
+
+interface UseGuildFramesParams {
+  canvasId: Frame["canvasId"];
   guildIds?: DiscordGuildRecord["guild_id"][];
-}) {
-  const getFrame = async (): Promise<Frame[]> => {
-    if (frameId) {
-      if (canvasId || userId || guildIds) {
-        throw new Error(
-          "Cannot specify multiple query parameters with frameId",
-        );
-      }
+}
 
-      const response = await axios.get<FrameRequest.ResBody>(
-        `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}`,
-      );
-      return response.data;
-    }
+export function useFrameById({ frameId }: UseFrameByIdParams) {
+  const getFrame = async (): Promise<FrameRequest.FrameByIdResBody | null> => {
+    if (!frameId) return null;
 
-    if (!canvasId) {
-      throw new Error(
-        "Must specify canvasId when querying by userId or guildIds",
-      );
-    }
+    const response = await axios.get<FrameRequest.FrameByIdResBody>(
+      `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}`,
+    );
 
-    if ((userId && guildIds) || (!userId && !guildIds)) {
-      return [];
-    }
-
-    if (userId) {
-      const response = await axios.get<FrameRequest.ResBody>(
-        `${config.apiUrl}/api/v1/frame/user/${userId}/${canvasId}`,
-      );
-      return response.data;
-    }
-
-    if (guildIds) {
-      const response = await axios.get<FrameRequest.ResBody>(
-        `${config.apiUrl}/api/v1/frame/guilds/${canvasId}`,
-        {
-          params: {
-            guildIds: guildIds,
-          },
-          paramsSerializer: {
-            indexes: null,
-          },
-        },
-      );
-      return response.data;
-    }
-
-    return [];
+    return response.data;
   };
 
-  return useQuery<FrameRequest.ResBody>({
-    queryKey: ["frame", frameId, canvasId, userId, guildIds],
+  return useQuery<FrameRequest.FrameByIdResBody | null>({
+    queryKey: ["frame", "id", frameId],
     queryFn: getFrame,
+    enabled: Boolean(frameId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    placeholderData: [] as FrameRequest.ResBody,
+    placeholderData: null,
+  });
+}
+
+export const useFrameFromId = useFrameById;
+
+export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
+  const getFrames = async (): Promise<FrameRequest.UserFramesResBody> => {
+    if (!userId) return [];
+
+    const response = await axios.get<FrameRequest.UserFramesResBody>(
+      `${config.apiUrl}/api/v1/frame/user/${userId}/${canvasId}`,
+    );
+    return response.data;
+  };
+
+  return useQuery<FrameRequest.UserFramesResBody>({
+    queryKey: ["frame", "user", canvasId, userId],
+    queryFn: getFrames,
+    enabled: Boolean(userId),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    placeholderData: [],
+  });
+}
+
+export function useGuildFrames({ canvasId, guildIds }: UseGuildFramesParams) {
+  const getFrames = async (): Promise<FrameRequest.GuildFramesResBody> => {
+    if (!guildIds || guildIds.length === 0) return [];
+
+    const response = await axios.get<FrameRequest.GuildFramesResBody>(
+      `${config.apiUrl}/api/v1/frame/guilds/${canvasId}`,
+      {
+        params: {
+          guildIds: guildIds,
+        },
+        paramsSerializer: {
+          indexes: null,
+        },
+      },
+    );
+
+    return response.data;
+  };
+
+  return useQuery<FrameRequest.GuildFramesResBody>({
+    queryKey: ["frame", "guild", canvasId, guildIds],
+    queryFn: getFrames,
+    enabled: Boolean(guildIds?.length),
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    placeholderData: [],
   });
 }

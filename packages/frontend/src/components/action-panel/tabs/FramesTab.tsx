@@ -1,9 +1,9 @@
-import { Frame } from "@blurple-canvas-web/types";
+import { GuildFrame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
-import { useFrame } from "@/hooks/queries/useFrame";
+import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { decodeUserGuildsBase64 } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
@@ -46,11 +46,11 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const sourceImage = useCanvasImage(canvasId);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
-  const { data: userFrames = [] } = useFrame({
+  const { data: userFrames = [] } = useUserFrames({
     canvasId: canvasId,
     userId: user?.id,
   });
-  const { data: guildFrames = [] } = useFrame({
+  const { data: guildFrames = [] } = useGuildFrames({
     canvasId: canvasId,
     guildIds: guildIds,
   });
@@ -70,7 +70,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     );
   }
 
-  const groupedByOwnerId = guildFrames.reduce<Record<string, Frame[]>>(
+  const groupedByOwnerId = guildFrames.reduce<Record<string, GuildFrame[]>>(
     (acc, frame) => {
       const ownerId = frame.ownerId;
       acc[ownerId] ??= [];
@@ -82,8 +82,14 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
 
   const sortedGuildFrameMap = Object.entries(groupedByOwnerId).sort(
     ([, framesA], [, framesB]) => {
-      const ownerGuildA = framesA[0]?.ownerGuild?.name || "";
-      const ownerGuildB = framesB[0]?.ownerGuild?.name || "";
+      const firstFrameA = framesA[0];
+      const firstFrameB = framesB[0];
+      if (!firstFrameA || !firstFrameB) {
+        return 0;
+      }
+
+      const ownerGuildA = firstFrameA.ownerGuild.name;
+      const ownerGuildB = firstFrameB.ownerGuild.name;
       return ownerGuildA.localeCompare(ownerGuildB);
     },
   );
@@ -105,21 +111,28 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
               ))
             : <p>You have no frames</p>}
           </FramesContainer>
-          {sortedGuildFrameMap.map(([ownerId, frames]) => (
-            <FramesContainer key={ownerId}>
-              <Heading>{frames[0]?.ownerGuild?.name}</Heading>
-              {frames
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map((frame) => (
-                  <FramePreviewCard
-                    key={frame.id}
-                    frame={frame}
-                    sourceImage={sourceImage}
-                    onClick={() => setSelectedFrame(frame)}
-                  />
-                ))}
-            </FramesContainer>
-          ))}
+          {sortedGuildFrameMap.map(([ownerId, frames]) => {
+            const firstFrame = frames[0];
+            if (!firstFrame) {
+              return null;
+            }
+
+            return (
+              <FramesContainer key={ownerId}>
+                <Heading>{firstFrame.ownerGuild.name}</Heading>
+                {frames
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((frame) => (
+                    <FramePreviewCard
+                      key={frame.id}
+                      frame={frame}
+                      sourceImage={sourceImage}
+                      onClick={() => setSelectedFrame(frame)}
+                    />
+                  ))}
+              </FramesContainer>
+            );
+          })}
         </ActionPanelTabBody>
       </ScrollBlock>
       {selectedFrame && (

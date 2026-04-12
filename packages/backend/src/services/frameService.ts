@@ -1,4 +1,4 @@
-import { Frame } from "@blurple-canvas-web/types";
+import { Frame, GuildFrame, UserFrame } from "@blurple-canvas-web/types";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
@@ -62,6 +62,32 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 }
 
+function asUserFrame(frame: Frame): UserFrame {
+  if (!frame.ownerUser || frame.ownerGuild || frame.isGuildOwned) {
+    throw new Error(`Frame ${frame.id} is missing a valid user owner`);
+  }
+
+  return {
+    ...frame,
+    isGuildOwned: false,
+    ownerUser: frame.ownerUser,
+    ownerGuild: undefined,
+  };
+}
+
+function asGuildFrame(frame: Frame): GuildFrame {
+  if (!frame.ownerGuild || frame.ownerUser || !frame.isGuildOwned) {
+    throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
+  }
+
+  return {
+    ...frame,
+    isGuildOwned: true,
+    ownerUser: undefined,
+    ownerGuild: frame.ownerGuild,
+  };
+}
+
 export async function getFrameById(frameId: string): Promise<Frame> {
   const frame = await prisma.frame.findUnique({
     where: {
@@ -80,7 +106,7 @@ export async function getFrameById(frameId: string): Promise<Frame> {
 export async function getFramesByUserId(
   userId: string,
   canvasId: number,
-): Promise<Frame[]> {
+): Promise<UserFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: BigInt(userId),
@@ -90,13 +116,13 @@ export async function getFramesByUserId(
     select: frameSelect,
   });
 
-  return frames.map(frameFromDb);
+  return frames.map((frame) => asUserFrame(frameFromDb(frame)));
 }
 
 export async function getFramesByGuildIds(
   guildIds: string[],
   canvasId: number,
-): Promise<Frame[]> {
+): Promise<GuildFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: {
@@ -108,5 +134,5 @@ export async function getFramesByGuildIds(
     select: frameSelect,
   });
 
-  return frames.map(frameFromDb);
+  return frames.map((frame) => asGuildFrame(frameFromDb(frame)));
 }

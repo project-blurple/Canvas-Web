@@ -25,18 +25,22 @@ export default function FrameInfoCard({ frame }: { frame?: Frame }) {
   if (!frame) return <Wrapper>No frame selected</Wrapper>;
 
   const ownerInfo =
-    frame.ownerGuild ? { icon: <Users />, label: frame.ownerGuild.name }
-    : frame.ownerUser ? { icon: <User />, label: frame.ownerUser.username }
-    : null;
+    frame.isGuildOwned ?
+      {
+        icon: <Users />,
+        label: frame.ownerGuild?.name ?? "Unknown guild",
+      }
+    : {
+        icon: <User />,
+        label: frame.ownerUser?.username ?? "Unknown user",
+      };
 
   return (
     <Wrapper>
       <Heading>{frame.name}</Heading>
-      {ownerInfo && (
-        <OwnerInfo>
-          {ownerInfo.icon} {ownerInfo.label}
-        </OwnerInfo>
-      )}
+      <OwnerInfo>
+        {ownerInfo.icon} {ownerInfo.label}
+      </OwnerInfo>
     </Wrapper>
   );
 }

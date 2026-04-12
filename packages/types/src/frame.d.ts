@@ -14,3 +14,21 @@ export interface Frame {
   x1: number;
   y1: number;
 }
+
+export type UserFrame = Omit<
+  Frame,
+  "isGuildOwned" | "ownerUser" | "ownerGuild"
+> & {
+  isGuildOwned: false;
+  ownerUser: DiscordUserProfile;
+  ownerGuild?: undefined;
+};
+
+export type GuildFrame = Omit<
+  Frame,
+  "isGuildOwned" | "ownerUser" | "ownerGuild"
+> & {
+  isGuildOwned: true;
+  ownerUser?: undefined;
+  ownerGuild: DiscordGuildRecord;
+};
