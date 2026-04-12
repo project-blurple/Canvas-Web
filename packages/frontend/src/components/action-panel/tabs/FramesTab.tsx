@@ -12,7 +12,7 @@ import {
   TabBlock,
 } from "./ActionPanelTabBody";
 import BotCommandCard from "./BotCommandCard";
-import { FrameThumbCard } from "./FrameThumbCard";
+import { FramePreviewList } from "./FramePreviewList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
 const FramesTabBlock = styled(TabBlock)`
@@ -22,17 +22,6 @@ const FramesTabBlock = styled(TabBlock)`
 const FramesContainer = styled("div")`
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-
-  ${({ theme }) => theme.breakpoints.down("md")} {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-
-    > h2 {
-      grid-column: 1 / -1;
-    }
-  }
 `;
 
 interface FramesTabProps {
@@ -101,14 +90,11 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
           <FramesContainer>
             <Heading>Your Frames</Heading>
             {userFrames.length !== 0 ?
-              userFrames.map((frame) => (
-                <FrameThumbCard
-                  key={frame.id}
-                  frame={frame}
-                  sourceImage={sourceImage}
-                  onClick={() => setSelectedFrame(frame)}
-                />
-              ))
+              <FramePreviewList
+                items={userFrames}
+                sourceImage={sourceImage}
+                onSelectFrame={setSelectedFrame}
+              />
             : <p>You have no frames</p>}
           </FramesContainer>
           {sortedGuildFrameMap.map(([ownerId, frames]) => {
@@ -120,16 +106,13 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
             return (
               <FramesContainer key={ownerId}>
                 <Heading>{firstFrame.ownerGuild.name}</Heading>
-                {frames
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((frame) => (
-                    <FrameThumbCard
-                      key={frame.id}
-                      frame={frame}
-                      sourceImage={sourceImage}
-                      onClick={() => setSelectedFrame(frame)}
-                    />
-                  ))}
+                <FramePreviewList
+                  items={[...frames].sort((a, b) =>
+                    a.name.localeCompare(b.name),
+                  )}
+                  sourceImage={sourceImage}
+                  onSelectFrame={setSelectedFrame}
+                />
               </FramesContainer>
             );
           })}

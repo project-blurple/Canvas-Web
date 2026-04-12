@@ -10,11 +10,9 @@ const DESKTOP_THUMB_HEIGHT = 900;
 const MOBILE_THUMB_WIDTH = 500;
 const MOBILE_THUMB_HEIGHT = 500;
 
-const CardBody = styled("button")`
-  border: none;
+const CardBody = styled("div")`
   background-color: oklch(from var(--discord-white) l c h / 12%);
   border-radius: 0.5rem;
-  cursor: pointer;
   transition: background-color var(--transition-duration-fast) ease;
 
   :hover {
@@ -58,7 +56,6 @@ const FrameTitle = styled("h3")`
 interface FrameThumbCardProps {
   frame: Frame;
   sourceImage: CanvasImageSource | null;
-  onClick?: () => void;
 }
 
 export function normalizeFrameBounds(frame: Frame) {
@@ -116,11 +113,7 @@ function getFrameCropRect(
   return { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
 }
 
-export function FrameThumbCard({
-  frame,
-  sourceImage,
-  onClick,
-}: FrameThumbCardProps) {
+export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
   const { canvas } = useCanvasContext();
   const mobileCanvasRef = useRef<HTMLCanvasElement>(null);
   const desktopCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -176,7 +169,7 @@ export function FrameThumbCard({
   );
 
   return (
-    <CardBody onClick={onClick}>
+    <CardBody>
       <MobileThumbnailCanvas
         ref={mobileCanvasRef}
         width={MOBILE_THUMB_WIDTH}
