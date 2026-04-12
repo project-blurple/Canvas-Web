@@ -94,14 +94,16 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
         <ActionPanelTabBody>
           <FramesContainer>
             <Heading>Your Frames</Heading>
-            {userFrames.map((frame) => (
-              <FramePreviewCard
-                key={frame.id}
-                frame={frame}
-                sourceImage={sourceImage}
-                onClick={() => setSelectedFrame(frame)}
-              />
-            ))}
+            {userFrames.length !== 0 ?
+              userFrames.map((frame) => (
+                <FramePreviewCard
+                  key={frame.id}
+                  frame={frame}
+                  sourceImage={sourceImage}
+                  onClick={() => setSelectedFrame(frame)}
+                />
+              ))
+            : <p>You have no frames</p>}
           </FramesContainer>
           {sortedGuildFrameMap.map(([ownerId, frames]) => (
             <FramesContainer key={ownerId}>
