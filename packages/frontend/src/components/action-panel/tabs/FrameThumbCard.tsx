@@ -55,7 +55,7 @@ const FrameTitle = styled("h3")`
   white-space: nowrap;
 `;
 
-interface FramePreviewCardProps {
+interface FrameThumbCardProps {
   frame: Frame;
   sourceImage: CanvasImageSource | null;
   onClick?: () => void;
@@ -116,27 +116,27 @@ function getFrameCropRect(
   return { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
 }
 
-export function FramePreviewCard({
+export function FrameThumbCard({
   frame,
   sourceImage,
   onClick,
-}: FramePreviewCardProps) {
+}: FrameThumbCardProps) {
   const { canvas } = useCanvasContext();
   const mobileCanvasRef = useRef<HTMLCanvasElement>(null);
   const desktopCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(
-    function drawResponsivePreviewCanvases() {
+    function drawResponsiveThumbCanvases() {
       if (!sourceImage) return;
       if (canvas.width <= 0 || canvas.height <= 0) return;
 
-      const drawPreviewToCanvas = (
-        previewCanvas: HTMLCanvasElement | null,
+      const drawThumbToCanvas = (
+        thumbCanvas: HTMLCanvasElement | null,
         thumbWidth: number,
         thumbHeight: number,
       ) => {
-        if (!previewCanvas) return;
-        const context = previewCanvas.getContext("2d");
+        if (!thumbCanvas) return;
+        const context = thumbCanvas.getContext("2d");
         if (!context) return;
 
         const crop = getFrameCropRect(
@@ -161,12 +161,12 @@ export function FramePreviewCard({
         );
       };
 
-      drawPreviewToCanvas(
+      drawThumbToCanvas(
         mobileCanvasRef.current,
         MOBILE_THUMB_WIDTH,
         MOBILE_THUMB_HEIGHT,
       );
-      drawPreviewToCanvas(
+      drawThumbToCanvas(
         desktopCanvasRef.current,
         DESKTOP_THUMB_WIDTH,
         DESKTOP_THUMB_HEIGHT,
@@ -181,13 +181,13 @@ export function FramePreviewCard({
         ref={mobileCanvasRef}
         width={MOBILE_THUMB_WIDTH}
         height={MOBILE_THUMB_HEIGHT}
-        aria-label={`${frame.name} frame preview`}
+        aria-label={`${frame.name} frame thumbnail`}
       />
       <DesktopThumbnailCanvas
         ref={desktopCanvasRef}
         width={DESKTOP_THUMB_WIDTH}
         height={DESKTOP_THUMB_HEIGHT}
-        aria-label={`${frame.name} frame preview`}
+        aria-label={`${frame.name} frame thumbnail`}
       />
       <FrameTitle>{frame.name}</FrameTitle>
     </CardBody>

@@ -15,7 +15,7 @@ import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
 import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
-import { normalizeFrameBounds } from "../action-panel/tabs/FramePreviewCard";
+import { normalizeFrameBounds } from "../action-panel/tabs/FrameThumbCard";
 import { Button } from "../button";
 import {
   addPoints,

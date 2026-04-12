@@ -12,7 +12,7 @@ import {
   TabBlock,
 } from "./ActionPanelTabBody";
 import BotCommandCard from "./BotCommandCard";
-import { FramePreviewCard } from "./FramePreviewCard";
+import { FrameThumbCard } from "./FrameThumbCard";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
 const FramesTabBlock = styled(TabBlock)`
@@ -102,7 +102,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
             <Heading>Your Frames</Heading>
             {userFrames.length !== 0 ?
               userFrames.map((frame) => (
-                <FramePreviewCard
+                <FrameThumbCard
                   key={frame.id}
                   frame={frame}
                   sourceImage={sourceImage}
@@ -123,7 +123,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                 {frames
                   .sort((a, b) => a.name.localeCompare(b.name))
                   .map((frame) => (
-                    <FramePreviewCard
+                    <FrameThumbCard
                       key={frame.id}
                       frame={frame}
                       sourceImage={sourceImage}
