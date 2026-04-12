@@ -1,5 +1,6 @@
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
+import config from "@/config";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
@@ -40,6 +41,8 @@ const StyledCopyIcon = styled(CopyIcon)`
 `;
 
 export default function BotCommandCard({ command }: { command: string }) {
+  if (config.showBotCommands === false) return null;
+
   return (
     <Wrapper>
       <code>{command}</code>
