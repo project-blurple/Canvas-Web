@@ -27,11 +27,11 @@ export default function FrameInfoCard({ frame }: { frame?: Frame }) {
   const ownerInfo =
     frame.isGuildOwned ?
       {
-        icon: <Users />,
+        icon: <Users aria-hidden />,
         label: frame.ownerGuild?.name ?? "Unknown guild",
       }
     : {
-        icon: <User />,
+        icon: <User aria-hidden />,
         label: frame.ownerUser?.username ?? "Unknown user",
       };
 

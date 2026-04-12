@@ -27,24 +27,25 @@ const CardBody = styled("button")`
 `;
 
 const ThumbnailCanvas = styled("canvas")`
-  aspect-ratio: 1 / 1;
   border-radius: 0.375rem;
+  display: block;
   image-rendering: pixelated;
   width: 100%;
+`;
 
-  &.desktop-thumb {
+const DesktopThumbnailCanvas = styled(ThumbnailCanvas)`
+  aspect-ratio: 16 / 9;
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
     display: none;
   }
+`;
 
-  @media (min-width: 50rem) {
-    &.mobile-thumb {
-      display: none;
-    }
+const MobileThumbnailCanvas = styled(ThumbnailCanvas)`
+  aspect-ratio: 1 / 1;
 
-    &.desktop-thumb {
-      aspect-ratio: 16 / 9;
-      display: block;
-    }
+  ${({ theme }) => theme.breakpoints.up("md")} {
+    display: none;
   }
 `;
 
@@ -176,15 +177,13 @@ export function FramePreviewCard({
 
   return (
     <CardBody onClick={onClick}>
-      <ThumbnailCanvas
-        className="mobile-thumb"
+      <MobileThumbnailCanvas
         ref={mobileCanvasRef}
         width={MOBILE_THUMB_WIDTH}
         height={MOBILE_THUMB_HEIGHT}
         aria-label={`${frame.name} frame preview`}
       />
-      <ThumbnailCanvas
-        className="desktop-thumb"
+      <DesktopThumbnailCanvas
         ref={desktopCanvasRef}
         width={DESKTOP_THUMB_WIDTH}
         height={DESKTOP_THUMB_HEIGHT}

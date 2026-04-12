@@ -27,7 +27,7 @@ const frameSelect = {
   x_1: true,
   y_1: true,
   style_id: true,
-} satisfies Prisma.frameSelect;
+} as const satisfies Prisma.frameSelect;
 
 type FrameDbRecord = Prisma.frameGetPayload<{
   select: typeof frameSelect;

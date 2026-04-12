@@ -24,7 +24,7 @@ const FramesContainer = styled("div")`
   flex-direction: column;
   gap: 0.5rem;
 
-  @media (max-width: 767px) {
+  ${({ theme }) => theme.breakpoints.down("md")} {
     display: grid;
     gap: 1rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
