@@ -3,7 +3,6 @@
 import {
   CanvasInfo,
   CanvasInfoRequest,
-  Frame,
   Point,
 } from "@blurple-canvas-web/types";
 import axios from "axios";
@@ -23,6 +22,7 @@ import { addPoints, tupleToPoint } from "@/components/canvas/point";
 import config from "@/config";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
+import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 interface CanvasContextType {
   adjustedCoords: Point | null;
@@ -30,11 +30,9 @@ interface CanvasContextType {
   containerRef: RefObject<HTMLDivElement | null>;
   coords: Point | null;
   isReticleVisible: boolean;
-  selectedFrame: Frame | null;
   zoom: number;
   setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
   setCoords: Dispatch<SetStateAction<Point | null>>;
-  setSelectedFrame: Dispatch<SetStateAction<Frame | null>>;
   setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
   setZoom: Dispatch<SetStateAction<number>>;
 }
@@ -55,12 +53,10 @@ export const CanvasContext = createContext<CanvasContextType>({
   containerRef: { current: null },
   coords: null,
   isReticleVisible: false,
-  selectedFrame: null,
   zoom: 1,
   setCoords: () => {},
   setCanvas: async () => {},
   setZoom: () => {},
-  setSelectedFrame: () => {},
   setIsReticleVisible: () => {},
 });
 
@@ -77,8 +73,6 @@ export const CanvasProvider = ({
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasContextType["coords"]>(null);
-  const [selectedFrame, setSelectedFrame] =
-    useState<CanvasContextType["selectedFrame"]>(null);
   const [isReticleVisible, setIsReticleVisible] =
     useState<CanvasContextType["isReticleVisible"]>(true);
   const [zoom, setZoom] = useState(1);
@@ -96,6 +90,7 @@ export const CanvasProvider = ({
   }, [activeCanvas.startCoordinates, selectedCoords]);
 
   const { setColor: setSelectedColor } = useSelectedColorContext();
+  const { setFrame: setSelectedFrame } = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {
@@ -121,7 +116,7 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [router, setSelectedColor, mainCanvasInfo.id],
+    [router, setSelectedColor, setSelectedFrame, mainCanvasInfo.id],
   );
 
   return (
@@ -132,11 +127,9 @@ export const CanvasProvider = ({
         isReticleVisible: isReticleVisible && selectedCoords !== null,
         containerRef: containerRef,
         coords: selectedCoords,
-        selectedFrame: selectedFrame,
         zoom: zoom,
         setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
-        setSelectedFrame: setSelectedFrame,
         setIsReticleVisible: setIsReticleVisible,
         setZoom: setZoom,
       }}

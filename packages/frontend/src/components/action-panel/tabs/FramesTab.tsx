@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import Link from "next/link";
 import { useState } from "react";
 import { DynamicButton } from "@/components/button";
-import { useAuthContext, useCanvasContext } from "@/contexts";
+import { useAuthContext, useSelectedFrameContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { createPixelUrl, decodeUserGuildsBase64 } from "@/util";
@@ -34,7 +34,8 @@ interface FramesTabProps {
 
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
-  const { selectedFrame, setSelectedFrame } = useCanvasContext();
+  const { frame: selectedFrame, setFrame: setSelectedFrame } =
+    useSelectedFrameContext();
   const sourceImage = useCanvasImage(canvasId);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;

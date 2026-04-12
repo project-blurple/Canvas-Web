@@ -10,7 +10,11 @@ import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import config from "@/config";
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import {
+  useCanvasContext,
+  useSelectedColorContext,
+  useSelectedFrameContext,
+} from "@/contexts";
 import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
@@ -369,16 +373,15 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
+  const { frame, setFrame } = useSelectedFrameContext();
   const {
     canvas,
     containerRef,
     coords,
     isReticleVisible,
-    selectedFrame,
     zoom,
     setCanvas,
     setCoords,
-    setSelectedFrame,
     setZoom,
   } = useCanvasContext();
   const sourceImage = useCanvasImage(canvas.id);
@@ -526,7 +529,7 @@ export default function CanvasView() {
         initialFrameFromSearchParams &&
         initialFrameFromSearchParams.canvasId === canvas.id
       ) {
-        setSelectedFrame(initialFrameFromSearchParams);
+        setFrame(initialFrameFromSearchParams);
       }
 
       // Frame lookup resolved for the initial frame URL, so do not try again.
@@ -536,7 +539,7 @@ export default function CanvasView() {
       canvas.id,
       initialFrameFromSearchParams,
       isInitialFrameFromSearchParamsLoading,
-      setSelectedFrame,
+      setFrame,
     ],
   );
 
@@ -775,12 +778,12 @@ export default function CanvasView() {
   );
 
   useEffect(() => {
-    if (!selectedFrame || selectedFrame.canvasId !== canvas.id) return;
+    if (!frame || frame.canvasId !== canvas.id) return;
     const container = containerRef.current;
     if (!container) return;
 
     const frameView = getViewForFrame({
-      frame: selectedFrame,
+      frame: frame,
       canvas,
       container,
       initialZoom,
@@ -797,7 +800,7 @@ export default function CanvasView() {
     canvas,
     containerRef,
     initialZoom,
-    selectedFrame,
+    frame,
     setCoords,
     clampOffset,
     setZoom,
