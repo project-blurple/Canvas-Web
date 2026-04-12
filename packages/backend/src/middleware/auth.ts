@@ -6,6 +6,10 @@ import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";
 import { prisma } from "@/client";
 import config from "@/config";
+import {
+  isCanvasAdmin,
+  isCanvasModerator,
+} from "@/services/discordGuildService";
 import { getProfilePictureUrlFromHash } from "@/services/discordProfileService";
 
 const discordStrategy = new DiscordStrategy(
@@ -26,6 +30,10 @@ const discordStrategy = new DiscordStrategy(
 
       const guildString = filteredGuildIds.map((guild) => guild.id).join(" ");
       const guildStringBase64 = Buffer.from(guildString).toString("base64");
+      const [userIsCanvasAdmin, userIsCanvasModerator] = await Promise.all([
+        isCanvasAdmin(profile.id),
+        isCanvasModerator(profile.id),
+      ]);
 
       const user: DiscordUserProfile = {
         id: profile.id,
@@ -35,6 +43,8 @@ const discordStrategy = new DiscordStrategy(
           profile.avatar,
         ),
         guildIdsBase64: guildStringBase64,
+        isCanvasAdmin: userIsCanvasAdmin,
+        isCanvasModerator: userIsCanvasModerator,
       };
 
       done(null, user);

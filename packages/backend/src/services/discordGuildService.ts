@@ -1,5 +1,8 @@
+import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import config from "@/config";
 import BadRequestError from "@/errors/BadRequestError";
 import BotNotInGuildError from "@/errors/BotNotInGuildError";
+import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 
@@ -126,4 +129,60 @@ export async function getGuildPermissionsForUser(
     administrator,
     manage_guild: manageGuild,
   };
+}
+
+export async function userHasRoleInGuild(
+  guildId: string,
+  userId: string,
+  roleId: string,
+  botToken: string,
+): Promise<boolean> {
+  await ensureBotInGuild(guildId, botToken);
+
+  const member = await discordRequest<DiscordGuildMember>({
+    endpoint: `/guilds/${guildId}/members/${userId}`,
+    botToken,
+  });
+
+  return member.roles.includes(roleId);
+}
+
+export async function isCanvasAdmin(userId: string): Promise<boolean> {
+  const guildId = config.discord.adminGuild;
+  const roleId = config.discord.adminRole;
+  const botToken = config.discord.botToken;
+
+  if (!guildId || !roleId || !botToken) {
+    return false;
+  }
+
+  return userHasRoleInGuild(guildId, userId, roleId, botToken);
+}
+
+export async function isCanvasModerator(userId: string): Promise<boolean> {
+  const guildId = config.discord.adminGuild;
+  const roleId = config.discord.moderatorRole;
+  const botToken = config.discord.botToken;
+
+  if (!guildId || !roleId || !botToken) {
+    return false;
+  }
+
+  return userHasRoleInGuild(guildId, userId, roleId, botToken);
+}
+
+export function ensureCanvasAdmin(user: DiscordUserProfile): void {
+  if (!user.isCanvasAdmin) {
+    throw new ForbiddenError(
+      "You do not have permission to perform this action",
+    );
+  }
+}
+
+export function ensureCanvasModerator(user: DiscordUserProfile): void {
+  if (!user.isCanvasModerator) {
+    throw new ForbiddenError(
+      "You do not have permission to perform this action",
+    );
+  }
 }
