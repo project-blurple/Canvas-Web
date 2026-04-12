@@ -101,24 +101,24 @@ enum TABS {
 }
 
 function Tab({
-  key,
+  tabKey,
   label,
   currentTab,
   onSwitchTab,
 }: {
-  key: TABS;
+  tabKey: TABS;
   label: string;
   currentTab: TABS;
   onSwitchTab: (tab: TABS) => void;
 }) {
-  const isActive = currentTab === key;
+  const isActive = currentTab === tabKey;
 
   return (
     <TabStyle
       active={isActive}
-      onClick={() => onSwitchTab(key)}
+      onClick={() => onSwitchTab(tabKey)}
       onKeyUp={(event) => {
-        if (event.key === "Enter" || event.key === " ") onSwitchTab(key);
+        if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
       tabIndex={0}
     >
@@ -154,19 +154,19 @@ export default function ActionPanel() {
     <Wrapper>
       <TabBar>
         <Tab
-          key={TABS.PLACE}
+          tabKey={TABS.PLACE}
           label="Place"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}
         />
         <Tab
-          key={TABS.LOOK}
+          tabKey={TABS.LOOK}
           label="Look"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}
         />
         <Tab
-          key={TABS.FRAME}
+          tabKey={TABS.FRAME}
           label="Frame"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}

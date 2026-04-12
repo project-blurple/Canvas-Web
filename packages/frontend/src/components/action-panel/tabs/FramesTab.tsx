@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useFrame } from "@/hooks/queries/useFrame";
-import { useScreenDimensions } from "@/hooks/useScreenDimensions";
 import { decodeUserGuildsBase64 } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
@@ -20,26 +19,20 @@ const FramesTabBlock = styled(TabBlock)`
   grid-template-rows: 1fr auto;
 `;
 
-const FramesContainer = styled("div", {
-  shouldForwardProp: (prop) => prop !== "isMobile",
-})<{ isMobile?: boolean }>`
+const FramesContainer = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
 
-  ${({ isMobile }) =>
-    isMobile &&
-    `
-      @media (max-width: 767px) {
-        display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+  @media (max-width: 767px) {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
-        > h2 {
-          grid-column: 1 / -1;
-        }
-      }
-    `}
+    > h2 {
+      grid-column: 1 / -1;
+    }
+  }
 `;
 
 interface FramesTabProps {
@@ -51,8 +44,6 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
   const { selectedFrame, setSelectedFrame } = useCanvasContext();
   const sourceImage = useCanvasImage(canvasId);
-  const { width } = useScreenDimensions();
-  const isMobile = width < 768;
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
   const { data: userFrames = [] } = useFrame({
@@ -101,20 +92,19 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     <FramesTabBlock active={active}>
       <ScrollBlock>
         <ActionPanelTabBody>
-          <FramesContainer isMobile={isMobile}>
+          <FramesContainer>
             <Heading>Your Frames</Heading>
             {userFrames.map((frame) => (
               <FramePreviewCard
                 key={frame.id}
                 frame={frame}
                 sourceImage={sourceImage}
-                isMobile={isMobile}
                 onClick={() => setSelectedFrame(frame)}
               />
             ))}
           </FramesContainer>
           {sortedGuildFrameMap.map(([ownerId, frames]) => (
-            <FramesContainer key={ownerId} isMobile={isMobile}>
+            <FramesContainer key={ownerId}>
               <Heading>{frames[0]?.ownerGuild?.name}</Heading>
               {frames
                 .sort((a, b) => a.name.localeCompare(b.name))
@@ -123,7 +113,6 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
                     key={frame.id}
                     frame={frame}
                     sourceImage={sourceImage}
-                    isMobile={isMobile}
                     onClick={() => setSelectedFrame(frame)}
                   />
                 ))}
