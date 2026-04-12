@@ -1,16 +1,19 @@
 import { GuildFrame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
+import { useState } from "react";
+import { DynamicButton } from "@/components/button";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
-import { decodeUserGuildsBase64 } from "@/util";
+import { createPixelUrl, decodeUserGuildsBase64 } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
+import ActionPanelTooltip from "./ActionPanelTooltip";
 import BotCommandCard from "./BotCommandCard";
 import { FramePreviewList } from "./FramePreviewList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
@@ -43,6 +46,10 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     canvasId: canvasId,
     guildIds: guildIds,
   });
+
+  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
+  const closeTooltip = () => setTooltipIsOpen(false);
+  const openTooltip = () => setTooltipIsOpen(true);
 
   if (!user) {
     return (
@@ -83,6 +90,14 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     },
   );
 
+  const frameUrl =
+    (selectedFrame &&
+      createPixelUrl({
+        canvasId: canvasId,
+        frameId: selectedFrame.id,
+      })) ??
+    "";
+
   return (
     <FramesTabBlock active={active}>
       <ScrollBlock>
@@ -122,6 +137,21 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           <BotCommandCard command="/frame create" />
+          <ActionPanelTooltip
+            title="Copied"
+            onClose={closeTooltip}
+            open={tooltipIsOpen}
+          >
+            <DynamicButton
+              color={null}
+              onAction={() => {
+                openTooltip();
+                navigator.clipboard.writeText(frameUrl);
+              }}
+            >
+              Copy frame link
+            </DynamicButton>
+          </ActionPanelTooltip>
         </ActionPanelTabBody>
       )}
     </FramesTabBlock>
