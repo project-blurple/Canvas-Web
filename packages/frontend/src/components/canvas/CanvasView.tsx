@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import config from "@/config";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
 import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
+import { useFrameById } from "@/hooks/queries/useFrame";
 import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
@@ -221,58 +222,82 @@ function clampZoom(zoom: number, initialZoom: number) {
   return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
 }
 
+interface CanvasTargetView {
+  targetZoom: number;
+  offset: Point;
+  targetPoint: Point;
+}
+
 function getInitialViewFromSearchParams({
   params,
+  frame,
   canvas,
   container,
   initialZoom,
 }: {
   params: CanvasSearchParams;
+  frame: Frame | null;
   canvas: CanvasInfo;
   container: HTMLDivElement;
   initialZoom: number;
-}) {
-  const canvasX = params.x;
-  const canvasY = params.y;
+}): CanvasTargetView | null {
+  if (params.frameId) {
+    if (
+      !frame ||
+      frame.canvasId !== canvas.id ||
+      frame.id.toUpperCase() !== params.frameId.toUpperCase()
+    )
+      return null;
 
-  if (canvasX === null || canvasY === null) return null;
+    return getViewForFrame({
+      frame,
+      canvas,
+      container,
+      initialZoom,
+    });
+  } else {
+    const canvasX = params.x;
+    const canvasY = params.y;
 
-  const zoomFromQuery = params.zoom;
-  const hasPixelDimensions =
-    params.pixelWidth !== null || params.pixelHeight !== null;
+    if (canvasX === null || canvasY === null) return null;
 
-  let targetZoom = initialZoom;
+    const zoomFromQuery = params.zoom;
+    const hasPixelDimensions =
+      params.pixelWidth !== null || params.pixelHeight !== null;
 
-  if (zoomFromQuery !== null) {
-    targetZoom = clampZoom(zoomFromQuery, initialZoom);
-  } else if (hasPixelDimensions) {
-    const widthBasedZoom =
-      params.pixelWidth !== null ?
-        container.clientWidth / params.pixelWidth
-      : Number.POSITIVE_INFINITY;
+    let targetZoom = initialZoom;
 
-    const heightBasedZoom =
-      params.pixelHeight !== null ?
-        container.clientHeight / params.pixelHeight
-      : Number.POSITIVE_INFINITY;
+    if (zoomFromQuery !== null) {
+      targetZoom = clampZoom(zoomFromQuery, initialZoom);
+    } else if (hasPixelDimensions) {
+      const widthBasedZoom =
+        params.pixelWidth !== null ?
+          container.clientWidth / params.pixelWidth
+        : Number.POSITIVE_INFINITY;
 
-    const fitZoom = Math.min(widthBasedZoom, heightBasedZoom);
-    targetZoom = clampZoom(fitZoom, initialZoom);
+      const heightBasedZoom =
+        params.pixelHeight !== null ?
+          container.clientHeight / params.pixelHeight
+        : Number.POSITIVE_INFINITY;
+
+      const fitZoom = Math.min(widthBasedZoom, heightBasedZoom);
+      targetZoom = clampZoom(fitZoom, initialZoom);
+    }
+
+    const [startX, startY] = canvas.startCoordinates;
+
+    const targetPoint = {
+      x: clamp(canvasX - startX, 0, canvas.width - 1),
+      y: clamp(canvasY - startY, 0, canvas.height - 1),
+    };
+
+    const offset = {
+      x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
+      y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
+    };
+
+    return { targetZoom, offset, targetPoint };
   }
-
-  const [startX, startY] = canvas.startCoordinates;
-
-  const targetPoint = {
-    x: clamp(canvasX - startX, 0, canvas.width - 1),
-    y: clamp(canvasY - startY, 0, canvas.height - 1),
-  };
-
-  const offset = {
-    x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
-    y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
-  };
-
-  return { targetZoom, offset, targetPoint };
 }
 
 // Arbitrary value applied to the deltaY of the wheel zoom function to make it feel right
@@ -315,7 +340,7 @@ function getViewForFrame({
   canvas: CanvasInfo;
   container: HTMLDivElement;
   initialZoom: number;
-}) {
+}): CanvasTargetView {
   const frameBounds = normalizeFrameBounds(frame);
   const targetZoom = clampZoom(
     Math.min(
@@ -353,6 +378,7 @@ export default function CanvasView() {
     zoom,
     setCanvas,
     setCoords,
+    setSelectedFrame,
     setZoom,
   } = useCanvasContext();
   const sourceImage = useCanvasImage(canvas.id);
@@ -377,6 +403,18 @@ export default function CanvasView() {
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
   const [isSafari, setIsSafari] = useState(false);
+
+  const canvasSearchParams = useCanvasSearchParams();
+  const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
+  const {
+    data: initialFrameFromSearchParams,
+    isLoading: isInitialFrameFromSearchParamsLoading,
+  } = useFrameById({
+    frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
+  });
+  const hasAppliedInitialCanvasRef = useRef(false);
+  const hasAppliedInitialViewRef = useRef(false);
+  const hasAppliedInitialFrameRef = useRef(false);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -407,6 +445,7 @@ export default function CanvasView() {
         if (container) {
           const initialView = getInitialViewFromSearchParams({
             params,
+            frame: initialFrameFromSearchParams ?? null,
             canvas,
             container,
             initialZoom: zoom,
@@ -424,7 +463,9 @@ export default function CanvasView() {
         }
 
         // Ensure this only runs once on page load, even if params are missing/invalid.
-        hasAppliedInitialViewRef.current = true;
+        if (!params.frameId) {
+          hasAppliedInitialViewRef.current = true;
+        }
       }
 
       if (!appliedInitialView) {
@@ -437,13 +478,8 @@ export default function CanvasView() {
       setIsLaunching(false);
       clearOverlay();
     },
-    [canvas.id],
+    [canvas.id, initialFrameFromSearchParams],
   );
-
-  const canvasSearchParams = useCanvasSearchParams();
-  const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
-  const hasAppliedInitialCanvasRef = useRef(false);
-  const hasAppliedInitialViewRef = useRef(false);
 
   useEffect(
     function switchToCanvasFromSearchParams() {
@@ -457,8 +493,7 @@ export default function CanvasView() {
 
       hasAppliedInitialCanvasRef.current = true;
       void setCanvas(targetCanvasId).catch(() => {
-        // If URL canvas does not exist, keep default canvas and never apply URL pan/zoom.
-        hasAppliedInitialViewRef.current = true;
+        // If URL canvas does not exist, keep default canvas.
       });
     },
     [canvas.id, setCanvas],
@@ -472,6 +507,38 @@ export default function CanvasView() {
       handleLoadImage(sourceImage);
     }
   }, [canvas.id, sourceImage, handleLoadImage]);
+
+  useEffect(
+    function applyInitialFrameFromSearchParams() {
+      if (hasAppliedInitialFrameRef.current) return;
+
+      const params = initialCanvasSearchParamsRef.current;
+      if (!params.frameId) return;
+
+      const shouldApplyForCurrentCanvas =
+        params.canvasId === null || params.canvasId === canvas.id;
+      if (!shouldApplyForCurrentCanvas) return;
+
+      // Wait for frame lookup before deciding whether initial frame view can be applied.
+      if (isInitialFrameFromSearchParamsLoading) return;
+
+      if (
+        initialFrameFromSearchParams &&
+        initialFrameFromSearchParams.canvasId === canvas.id
+      ) {
+        setSelectedFrame(initialFrameFromSearchParams);
+      }
+
+      // Frame lookup resolved for the initial frame URL, so do not try again.
+      hasAppliedInitialFrameRef.current = true;
+    },
+    [
+      canvas.id,
+      initialFrameFromSearchParams,
+      isInitialFrameFromSearchParamsLoading,
+      setSelectedFrame,
+    ],
+  );
 
   useEffect(() => {
     // Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
