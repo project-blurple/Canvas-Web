@@ -7,6 +7,7 @@ import {
 
 const execAsync = promisify(exec);
 let container: StartedPostgreSqlContainer;
+
 export async function setup() {
   container = await new PostgreSqlContainer("postgres:13.3-alpine").start();
 
@@ -15,6 +16,7 @@ export async function setup() {
     env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
   });
 }
+
 export async function teardown() {
   await container.stop();
 }
