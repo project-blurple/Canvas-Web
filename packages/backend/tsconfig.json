@@ -15,6 +15,7 @@
   "exclude": ["node_modules"],
   "include": ["src/**/*"],
   "ts-node": {
+    "files": true,
     // This is required to use path aliases with nodemon
     "require": ["tsconfig-paths/register"]
   }

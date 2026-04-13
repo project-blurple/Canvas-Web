@@ -1,4 +1,4 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
@@ -64,8 +64,12 @@ export function dateToString(date: Date, utc?: boolean) {
   return luxonDate.toLocaleString(format);
 }
 
-export function decodeUserGuildsBase64(user: DiscordUserProfile) {
-  const base64 = user.guildIdsBase64 ?? "";
-  const guildIds = Buffer.from(base64, "base64").toString("utf-8");
-  return guildIds.split(" ");
+export function getUserGuildIds(user: DiscordUserProfile) {
+  return Object.keys(getUserGuildFlags(user));
+}
+
+export function getUserGuildFlags(
+  user: DiscordUserProfile,
+): Record<string, GuildData> {
+  return user.guilds ?? {};
 }

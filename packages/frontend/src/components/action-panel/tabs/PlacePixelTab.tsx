@@ -7,7 +7,7 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette } from "@/hooks";
-import { decodeUserGuildsBase64 } from "@/util";
+import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
@@ -60,7 +60,7 @@ export const partitionPalette = (palette: Palette) => {
 };
 
 function isUserInServer(user: DiscordUserProfile, serverId: string) {
-  const guildIds = decodeUserGuildsBase64(user);
+  const guildIds = getUserGuildIds(user);
   return guildIds.includes(serverId);
 }
 

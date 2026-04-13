@@ -1,7 +1,6 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
 import config from "@/config";
 import BadRequestError from "@/errors/BadRequestError";
-import BotNotInGuildError from "@/errors/BotNotInGuildError";
 import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
@@ -12,12 +11,10 @@ const MANAGE_GUILD_PERMISSION = 0x20n;
 
 interface DiscordGuild {
   id: string;
+  name: string;
   owner_id: string;
-}
-
-interface DiscordGuildRole {
-  id: string;
-  permissions: string;
+  permissions?: string;
+  approximate_member_count?: number;
 }
 
 interface DiscordGuildMember {
@@ -34,22 +31,22 @@ export interface GuildPermissionsSummary {
 
 interface DiscordRequestOptions {
   endpoint: string;
-  botToken: string;
+  authorization: string;
 }
 
 async function discordRequest<T>({
   endpoint,
-  botToken,
+  authorization,
 }: DiscordRequestOptions): Promise<T> {
   const response = await fetch(`${DISCORD_API_BASE_URL}${endpoint}`, {
     headers: {
-      Authorization: `Bot ${botToken}`,
+      Authorization: authorization,
     },
   });
 
   if (response.status === 401 || response.status === 403) {
     throw new UnauthorizedError(
-      "Discord bot token is invalid or missing permissions",
+      "Discord token is invalid or missing permissions",
     );
   }
 
@@ -66,64 +63,33 @@ async function discordRequest<T>({
   return (await response.json()) as T;
 }
 
-async function ensureBotInGuild(
-  guildId: string,
-  botToken: string,
-): Promise<DiscordGuild> {
-  try {
-    return await discordRequest<DiscordGuild>({
-      endpoint: `/guilds/${guildId}`,
-      botToken,
-    });
-  } catch (error) {
-    if (error instanceof NotFoundError) {
-      throw new BotNotInGuildError(guildId);
-    }
-
-    throw error;
-  }
+function asBearerToken(accessToken: string): string {
+  return `Bearer ${accessToken}`;
 }
 
 export async function getGuildPermissionsForUser(
   guildId: string,
-  userId: string,
-  botToken: string,
+  accessToken: string,
 ): Promise<GuildPermissionsSummary> {
-  const guild = await ensureBotInGuild(guildId, botToken);
+  const guilds = await discordRequest<DiscordGuild[]>({
+    endpoint: "/users/@me/guilds?with_counts=true",
+    authorization: asBearerToken(accessToken),
+  });
 
-  const [member, roles] = await Promise.all([
-    discordRequest<DiscordGuildMember>({
-      endpoint: `/guilds/${guildId}/members/${userId}`,
-      botToken,
-    }),
-    discordRequest<DiscordGuildRole[]>({
-      endpoint: `/guilds/${guildId}/roles`,
-      botToken,
-    }),
-  ]);
+  const guild = guilds.find((currentGuild) => currentGuild.id === guildId);
 
-  if (guild.owner_id === userId) {
-    return {
-      administrator: true,
-      manage_guild: true,
-    };
+  if (!guild) {
+    throw new NotFoundError(
+      `Discord resource not found: /users/@me/guilds/${guildId}`,
+    );
   }
 
-  const rolePermissionsById = new Map(
-    roles.map((role) => [role.id, BigInt(role.permissions)]),
-  );
-
-  const everyonePermissions = rolePermissionsById.get(guild.id) ?? 0n;
-  const combinedPermissions = member.roles.reduce((permissions, roleId) => {
-    return permissions | (rolePermissionsById.get(roleId) ?? 0n);
-  }, everyonePermissions);
-
+  const permissions = BigInt(guild.permissions ?? "0");
   const administrator =
-    (combinedPermissions & ADMINISTRATOR_PERMISSION) ===
-    ADMINISTRATOR_PERMISSION;
+    (permissions & ADMINISTRATOR_PERMISSION) === ADMINISTRATOR_PERMISSION;
   const manageGuild =
     administrator ||
-    (combinedPermissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
+    (permissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
 
   return {
     administrator,
@@ -133,42 +99,77 @@ export async function getGuildPermissionsForUser(
 
 export async function userHasRoleInGuild(
   guildId: string,
-  userId: string,
   roleId: string,
-  botToken: string,
+  accessToken: string,
 ): Promise<boolean> {
-  await ensureBotInGuild(guildId, botToken);
+  let member: DiscordGuildMember;
 
-  const member = await discordRequest<DiscordGuildMember>({
-    endpoint: `/guilds/${guildId}/members/${userId}`,
-    botToken,
-  });
+  try {
+    member = await discordRequest<DiscordGuildMember>({
+      endpoint: `/users/@me/guilds/${guildId}/member`,
+      authorization: asBearerToken(accessToken),
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return false;
+    }
+
+    throw error;
+  }
 
   return member.roles.includes(roleId);
 }
 
-export async function isCanvasAdmin(userId: string): Promise<boolean> {
+export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
   const guildId = config.discord.managementGuild;
   const roleId = config.discord.adminRole;
-  const botToken = config.discord.botToken;
 
-  if (!guildId || !roleId || !botToken) {
+  if (!guildId || !roleId || !accessToken) {
     return false;
   }
 
-  return userHasRoleInGuild(guildId, userId, roleId, botToken);
+  return userHasRoleInGuild(guildId, roleId, accessToken);
 }
 
-export async function isCanvasModerator(userId: string): Promise<boolean> {
+export async function isCanvasModerator(accessToken: string): Promise<boolean> {
   const guildId = config.discord.managementGuild;
   const roleId = config.discord.moderatorRole;
-  const botToken = config.discord.botToken;
 
-  if (!guildId || !roleId || !botToken) {
+  if (!guildId || !roleId || !accessToken) {
     return false;
   }
 
-  return userHasRoleInGuild(guildId, userId, roleId, botToken);
+  return userHasRoleInGuild(guildId, roleId, accessToken);
+}
+
+export async function getCurrentUserGuildFlags(
+  accessToken: string,
+): Promise<Record<string, GuildData>> {
+  const guilds = await discordRequest<DiscordGuild[]>({
+    endpoint: "/users/@me/guilds?with_counts=true",
+    authorization: asBearerToken(accessToken),
+  });
+
+  return Object.fromEntries(
+    guilds.map((guild) => {
+      const permissions = BigInt(guild.permissions ?? "0");
+      const administrator =
+        (permissions & ADMINISTRATOR_PERMISSION) === ADMINISTRATOR_PERMISSION;
+      const manageGuild =
+        administrator ||
+        (permissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
+
+      return [
+        guild.id,
+        {
+          name: guild.name,
+          memberCount: guild.approximate_member_count ?? null,
+          administrator,
+          manageGuild,
+        },
+      ];
+    }),
+  );
 }
 
 export function ensureCanvasAdmin(user: DiscordUserProfile): void {

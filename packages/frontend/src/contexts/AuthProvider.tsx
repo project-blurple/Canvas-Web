@@ -8,9 +8,11 @@ import {
   ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import config from "@/config";
+import { useUserData } from "@/hooks";
 
 interface AuthContextType {
   user: DiscordUserProfile | null;
@@ -31,10 +33,38 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, profile }: AuthProviderProps) {
   const [user, setUser] = useState(profile);
+  const { data: userData } = useUserData(user);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !userData?.guilds) {
+      return;
+    }
+
+    setUser((currentUser) => {
+      if (!currentUser || currentUser.guilds) {
+        return currentUser;
+      }
+
+      return {
+        ...currentUser,
+        guilds: userData.guilds,
+      };
+    });
+  }, [user, userData]);
 
   const signOut = useCallback<AuthContextType["signOut"]>(() => {
     // Delete the session cookie
-    axios.post(`${config.apiUrl}/api/v1/discord/logout`).catch(console.error);
+    axios
+      .post(`${config.apiUrl}/api/v1/discord/logout`, undefined, {
+        withCredentials: true,
+      })
+      .catch(console.error);
 
     Cookies.remove("profile");
     setUser(null);

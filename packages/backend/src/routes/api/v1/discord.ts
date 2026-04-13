@@ -1,16 +1,16 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import passport from "passport";
 
 import config from "@/config";
 import { UnauthorizedError } from "@/errors";
 import ApiError from "@/errors/ApiError";
-import { getGuildPermissionsForUser } from "@/services/discordGuildService";
-import { saveDiscordProfile } from "@/services/discordProfileService";
 import {
-  getDiscordBotToken,
-  validateSnowflake,
-} from "@/utils/discordRouteUtils";
+  getCurrentUserGuildFlags,
+  getGuildPermissionsForUser,
+} from "@/services/discordGuildService";
+import { saveDiscordProfile } from "@/services/discordProfileService";
+import { validateSnowflake } from "@/utils/discordRouteUtils";
 
 export const discordRouter = Router();
 
@@ -26,15 +26,41 @@ discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
     }
 
     validateSnowflake(guildId, "guildId");
-    validateSnowflake(profile.id, "userId");
+    const accessToken = req.session.discordAccessToken;
+    if (!accessToken) {
+      throw new UnauthorizedError("Discord access token is missing");
+    }
 
-    const permissions = await getGuildPermissionsForUser(
-      guildId,
-      profile.id,
-      getDiscordBotToken(),
-    );
+    const permissions = await getGuildPermissionsForUser(guildId, accessToken);
 
     res.status(200).json(permissions);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+discordRouter.get("/guilds/permissions-map", async (req, res) => {
+  try {
+    const profile = req.user as DiscordUserProfile;
+
+    if (!profile?.id) {
+      throw new UnauthorizedError("User is not authenticated");
+    }
+
+    const accessToken = req.session.discordAccessToken;
+    if (!accessToken) {
+      throw new UnauthorizedError("Discord access token is missing");
+    }
+
+    const guildFlags =
+      req.session.discordGuildFlags ??
+      (await getCurrentUserGuildFlags(accessToken));
+
+    req.session.discordGuildFlags = guildFlags;
+
+    res.status(200).json({
+      guilds: guildFlags,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -60,6 +86,17 @@ discordRouter.get(
   }),
   (req, res) => {
     const discordProfile = req.user as DiscordUserProfile;
+    const authInfo = req.authInfo as
+      | {
+          discordAccessToken?: string;
+          discordGuildFlags?: Record<string, GuildData>;
+        }
+      | undefined;
+
+    if (authInfo?.discordAccessToken) {
+      req.session.discordAccessToken = authInfo.discordAccessToken;
+      req.session.discordGuildFlags = authInfo.discordGuildFlags;
+    }
 
     res.cookie("profile", JSON.stringify(discordProfile), {
       httpOnly: false, // Allow the frontend to read the cookie
