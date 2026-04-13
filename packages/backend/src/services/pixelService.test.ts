@@ -2,14 +2,11 @@ import { fail } from "node:assert";
 import { prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
-import {
+import seedAll, {
   seedBlacklist,
   seedCanvases,
   seedColors,
-  seedDiscordProfiles,
   seedEvents,
-  seedGuilds,
-  seedPixels,
   seedUsers,
 } from "@/test";
 
@@ -203,13 +200,7 @@ describe("Get Cooldown Tests", () => {
 describe("Place Pixel Tests", () => {
   beforeEach(async () => {
     vi.useFakeTimers();
-    await seedEvents();
-    await seedUsers();
-    await seedDiscordProfiles();
-    await seedGuilds();
-    await seedCanvases();
-    await seedColors();
-    await seedPixels();
+    await seedAll();
   });
 
   afterEach(() => {
