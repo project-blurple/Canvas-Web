@@ -16,10 +16,10 @@ const prismaProxy = new Proxy({} as InstanceType<typeof PrismaClient>, {
         "Prisma client accessed outside of an active test transaction.",
       );
     }
+    const tx = transactionClient;
 
     if (prop === "$transaction") {
       return async (arg: unknown) => {
-        const tx = transactionClient!;
         const id = `sp_${++savePointCounter}`;
         await tx.$executeRawUnsafe(`SAVEPOINT ${id};`);
         try {
@@ -40,7 +40,7 @@ const prismaProxy = new Proxy({} as InstanceType<typeof PrismaClient>, {
       return () => Promise.resolve();
     }
 
-    const value = transactionClient![prop as keyof Prisma.TransactionClient];
+    const value = transactionClient[prop as keyof Prisma.TransactionClient];
     return typeof value === "function" ? value.bind(transactionClient) : value;
   },
 });
