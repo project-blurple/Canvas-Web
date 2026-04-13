@@ -1,7 +1,11 @@
 import { Frame, GuildFrame, UserFrame } from "@blurple-canvas-web/types";
-import { Prisma } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
+
+type FrameSelect = NonNullable<
+  Parameters<PrismaClient["frame"]["findMany"]>[0]
+>["select"];
 
 const frameSelect = {
   id: true,
@@ -27,11 +31,18 @@ const frameSelect = {
   x_1: true,
   y_1: true,
   style_id: true,
-} as const satisfies Prisma.frameSelect;
+} as const satisfies FrameSelect;
 
-type FrameDbRecord = Prisma.frameGetPayload<{
-  select: typeof frameSelect;
-}>;
+async function findFrameForType(frameId: string) {
+  return prisma.frame.findUnique({
+    where: {
+      id: frameId,
+    },
+    select: frameSelect,
+  });
+}
+
+type FrameDbRecord = NonNullable<Awaited<ReturnType<typeof findFrameForType>>>;
 
 function frameFromDb(frame: FrameDbRecord): Frame {
   const baseFrame = {
