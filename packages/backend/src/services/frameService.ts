@@ -34,58 +34,63 @@ type FrameDbRecord = Prisma.frameGetPayload<{
 }>;
 
 function frameFromDb(frame: FrameDbRecord): Frame {
-  return {
+  const baseFrame = {
     id: frame.id,
     canvasId: frame.canvas_id,
     ownerId: frame.owner_id.toString(),
-    isGuildOwned: frame.is_guild_owned,
-    ownerUser:
-      frame.owner_user ?
-        {
-          id: frame.owner_user?.user_id.toString(),
-          username: frame.owner_user?.username,
-          profilePictureUrl: frame.owner_user?.profile_picture_url,
-        }
-      : undefined,
-    ownerGuild:
-      frame.owner_guild ?
-        {
-          guild_id: frame.owner_guild?.guild_id.toString(),
-          name: frame.owner_guild?.name,
-        }
-      : undefined,
     name: frame.name,
     x0: frame.x_0,
     y0: frame.y_0,
     x1: frame.x_1,
     y1: frame.y_1,
   };
+
+  if (frame.is_guild_owned) {
+    return {
+      ...baseFrame,
+      isGuildOwned: true,
+      ownerGuild:
+        frame.owner_guild ?
+          {
+            guild_id: frame.owner_guild.guild_id.toString(),
+            name: frame.owner_guild.name,
+          }
+        : (() => {
+            throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
+          })(),
+    };
+  }
+
+  return {
+    ...baseFrame,
+    isGuildOwned: false,
+    ownerUser:
+      frame.owner_user ?
+        {
+          id: frame.owner_user.user_id.toString(),
+          username: frame.owner_user.username,
+          profilePictureUrl: frame.owner_user.profile_picture_url,
+        }
+      : (() => {
+          throw new Error(`Frame ${frame.id} is missing a valid user owner`);
+        })(),
+  };
 }
 
 function asUserFrame(frame: Frame): UserFrame {
-  if (!frame.ownerUser || frame.ownerGuild || frame.isGuildOwned) {
+  if (frame.isGuildOwned) {
     throw new Error(`Frame ${frame.id} is missing a valid user owner`);
   }
 
-  return {
-    ...frame,
-    isGuildOwned: false,
-    ownerUser: frame.ownerUser,
-    ownerGuild: undefined,
-  };
+  return frame;
 }
 
 function asGuildFrame(frame: Frame): GuildFrame {
-  if (!frame.ownerGuild || frame.ownerUser || !frame.isGuildOwned) {
+  if (!frame.isGuildOwned) {
     throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
   }
 
-  return {
-    ...frame,
-    isGuildOwned: true,
-    ownerUser: undefined,
-    ownerGuild: frame.ownerGuild,
-  };
+  return frame;
 }
 
 export async function getFrameById(frameId: string): Promise<Frame> {

@@ -76,6 +76,7 @@ export function useGuildFrames({ canvasId, guildIds }: UseGuildFramesParams) {
           guildIds: guildIds,
         },
         paramsSerializer: {
+          // This is needed to send the guildIds as repeated query parameters (e.g., guildIds=1&guildIds=2) instead of a comma-separated list (e.g., guildIds=1,2)
           indexes: null,
         },
       },
