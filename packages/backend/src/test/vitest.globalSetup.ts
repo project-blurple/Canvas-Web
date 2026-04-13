@@ -11,9 +11,9 @@ export async function setup() {
   container = await new PostgreSqlContainer("postgres:13.3-alpine").start();
 
   process.env.DATABASE_URL = container.getConnectionUri();
-  await execAsync(
-    `DATABASE_URL=${process.env.DATABASE_URL} npx prisma db push`,
-  );
+  await execAsync("npx prisma db push", {
+    env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+  });
 }
 export async function teardown() {
   await container.stop();
