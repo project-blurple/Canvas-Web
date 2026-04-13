@@ -9,6 +9,7 @@ export default defineConfig({
     env: {
       DISCORD_CLIENT_ID: "test-client-id",
       DISCORD_CLIENT_SECRET: "test-client-secret",
+      WEB_PLACING_ENABLED: "true", // Ensure the POST /api/v1/canvas/:id/pixel endpoint is enabled
     },
   },
   resolve: {
