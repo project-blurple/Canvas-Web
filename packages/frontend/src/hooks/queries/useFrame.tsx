@@ -45,8 +45,6 @@ export function useFrameById({ frameId }: UseFrameByIdParams) {
   });
 }
 
-export const useFrameFromId = useFrameById;
-
 export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
   const getFrames = async (): Promise<FrameRequest.UserFramesResBody> => {
     if (!userId) return [];

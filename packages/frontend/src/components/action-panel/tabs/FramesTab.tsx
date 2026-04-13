@@ -92,12 +92,12 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   );
 
   const frameUrl =
-    (selectedFrame &&
+    selectedFrame ?
       createPixelUrl({
         canvasId: canvasId,
         frameId: selectedFrame.id,
-      })) ??
-    "";
+      })
+    : "";
 
   return (
     <FramesTabBlock active={active}>
