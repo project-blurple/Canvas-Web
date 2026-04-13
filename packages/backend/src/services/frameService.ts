@@ -1,11 +1,9 @@
 import { Frame, GuildFrame, UserFrame } from "@blurple-canvas-web/types";
-import type { PrismaClient } from "@prisma/client";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 
-type FrameSelect = NonNullable<
-  Parameters<PrismaClient["frame"]["findMany"]>[0]
->["select"];
+type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
+type FrameSelect = NonNullable<FrameFindManyArgs>["select"];
 
 const frameSelect = {
   id: true,
