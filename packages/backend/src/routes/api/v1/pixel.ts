@@ -61,6 +61,10 @@ pixelRouter.get<CanvasIdParam>("/history", async (req, res) => {
  */
 pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
   try {
+    if (!config.botPlacingEnabled) {
+      throw new ForbiddenError("Bot placing is disabled");
+    }
+
     const canvasId = await parseCanvasId(req.params);
 
     const apiKey = req.header("x-api-key");

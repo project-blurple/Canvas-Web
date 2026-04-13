@@ -7,10 +7,10 @@ const repeatedHistory = {
   user_id: 1,
 };
 
-export default function () {
+export default async function () {
   // Add some history to both canvases, while making sure it is consistent with the pixels
   // They're all being placed by user_id: 1 with 6 pixels on canvas 1 and 6 pixels on canvas 2.
-  prisma.history.createMany({
+  await prisma.history.createMany({
     data: [
       { ...repeatedHistory, timestamp: new Date(1), canvas_id: 1 },
       { ...repeatedHistory, timestamp: new Date(2), canvas_id: 1 },

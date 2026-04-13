@@ -9,8 +9,8 @@ import {
 } from "./discordProfileService";
 
 describe("discordProfileService", () => {
-  beforeEach(() => {
-    seedDiscordProfiles();
+  beforeEach(async () => {
+    await seedDiscordProfiles();
   });
 
   describe("getDiscordProfile", () => {

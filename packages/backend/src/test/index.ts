@@ -18,18 +18,15 @@ export { default as seedHistory } from "./seedHistory";
 export { default as seedPixels } from "./seedPixels";
 export { default as seedUsers } from "./seedUsers";
 
-// This is a code felony. Thoughts on implementing a builder?
-export default function seedPrismock() {
-  // TODO: Josh
-  // info
-  // participation
-  seedBlacklist();
-  seedCanvases();
-  seedColors();
-  seedDiscordProfiles();
-  seedEvents();
-  seedGuilds();
-  seedHistory();
-  seedPixels();
-  seedUsers();
+export default async function seedAll() {
+  // Ordered to respect foreign key constraints
+  await seedEvents();
+  await seedUsers();
+  await seedGuilds();
+  await seedDiscordProfiles();
+  await seedCanvases();
+  await seedColors();
+  await seedBlacklist();
+  await seedPixels();
+  await seedHistory();
 }
