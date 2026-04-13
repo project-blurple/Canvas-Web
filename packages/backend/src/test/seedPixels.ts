@@ -1,10 +1,10 @@
 import { prisma } from "@/client";
 
-export default function () {
+export default async function () {
   // Initialise both canvases of size 4 to have the same pixel arrangement of:
   // [ 1, 2 ]
   // [ 3, 1 ]
-  prisma.pixel.createMany({
+  await prisma.pixel.createMany({
     data: [
       {
         canvas_id: 1,
