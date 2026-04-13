@@ -6,5 +6,6 @@ declare namespace NodeJS {
     PORT?: string;
     NODE_ENV?: string;
     DISCORD_CLIENT_ID?: string;
+    BOT_PLACING_ENABLED?: string;
   }
 }

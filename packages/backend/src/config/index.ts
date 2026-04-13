@@ -40,6 +40,8 @@ const config = {
    */
   webGuildId: 0,
   webPlacingEnabled: process.env.WEB_PLACING_ENABLED === "true",
+  // Keep bot placing enabled by default unless explicitly disabled.
+  botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
