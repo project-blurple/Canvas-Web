@@ -289,11 +289,11 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
   return path;
 }
 
-function clearCanvasFromFileSystem(canvasId: number): void {
+async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE[canvasId];
 
   if (cachedCanvas?.isLocked) {
-    fs.rmSync(cachedCanvas.canvasPath);
+    await fs.promises.rm(cachedCanvas.canvasPath);
     console.debug(`Cleared canvas ${canvasId} from file system`);
   }
 }
@@ -307,7 +307,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
 
-  var cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE[canvasId];
   if (cachedCanvas) {
     if (cachedCanvas.isLocked !== canvas.locked) {
       console.debug(
@@ -316,7 +316,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
       clearCanvasFromFileSystem(canvasId);
     } else {
       console.debug(`Cache hit for canvas ${canvasId}`);
-      return CANVAS_CACHE[canvasId];
+      return cachedCanvas;
     }
   } else {
     console.debug(`Cache miss for canvas ${canvasId}`);
