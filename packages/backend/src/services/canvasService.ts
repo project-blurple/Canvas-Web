@@ -201,13 +201,7 @@ export async function getCurrentCanvas(): Promise<[number, CachedCanvas]> {
  * @returns The cached canvas
  */
 export async function getCanvasPng(canvasId: number): Promise<CachedCanvas> {
-  if (!CANVAS_CACHE[canvasId]) {
-    console.debug(`Cache miss for canvas ${canvasId}`);
-    return getAndCacheCanvas(canvasId);
-  }
-
-  console.debug(`Cache hit for canvas ${canvasId}`);
-  return CANVAS_CACHE[canvasId];
+  return getOrFetchCacheCanvas(canvasId);
 }
 
 /**
@@ -295,13 +289,37 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
   return path;
 }
 
-async function getAndCacheCanvas(canvasId: number): Promise<CachedCanvas> {
+function clearCanvasFromFileSystem(canvasId: number): void {
+  const cachedCanvas = CANVAS_CACHE[canvasId];
+
+  if (cachedCanvas?.isLocked) {
+    fs.rmSync(cachedCanvas.canvasPath);
+    console.debug(`Cleared canvas ${canvasId} from file system`);
+  }
+}
+
+async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
   const canvas = await prisma.canvas.findFirst({
     where: { id: canvasId },
   });
 
   if (!canvas) {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  var cachedCanvas = CANVAS_CACHE[canvasId];
+  if (cachedCanvas) {
+    if (cachedCanvas.isLocked !== canvas.locked) {
+      console.debug(
+        `Canvas ${canvasId} lock status has changed. Updating cache...`,
+      );
+      clearCanvasFromFileSystem(canvasId);
+    } else {
+      console.debug(`Cache hit for canvas ${canvasId}`);
+      return CANVAS_CACHE[canvasId];
+    }
+  } else {
+    console.debug(`Cache miss for canvas ${canvasId}`);
   }
 
   const pixels = await getCanvasPixels(canvasId);
