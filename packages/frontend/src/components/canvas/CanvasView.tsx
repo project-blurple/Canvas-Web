@@ -134,10 +134,7 @@ const CanvasImageWrapper = styled("div", {
   }
 
   img:not(:first-child) {
-    block-size: 100%;
-    inline-size: 100%;
-    inset-block-start: 0;
-    inset-inline-start: 0;
+    inset: 0;
     position: absolute;
   }
 `;
@@ -885,6 +882,7 @@ export default function CanvasView() {
           />
         </ReticleContainer>
         <CanvasImageWrapper
+          aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
           isLoading={isLoading}
           isLaunching={isLaunching}
