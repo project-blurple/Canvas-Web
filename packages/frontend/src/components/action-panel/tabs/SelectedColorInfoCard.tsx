@@ -18,18 +18,18 @@ const Heading = styled("h3")`
 
 const Subtitle = styled("p")`
   font-size: 1rem;
-  grid-column: 1/-1;
+  grid-column: 1 / -1;
   letter-spacing: 0.005em;
   margin-block-start: 0.25rem;
 
   &,
   a {
-    color: oklch(from var(--discord-white) l c h / 60%);
+    color: oklch(from currentColor l c h / 60%);
   }
 `;
 
 const Code = styled("code")`
-  color: oklch(from var(--discord-white) l c h / 60%);
+  color: oklch(from currentColor l c h / 60%);
   line-height: 1.1;
 `;
 
@@ -51,21 +51,21 @@ export default function ColorInfoCard({
   const guildName = color.guildName ?? "a partnered server";
 
   const text =
-    canvas.allColorsGlobal ? "This color is from"
-    : !userInServer ? "This color can be used in"
-    : "You can use this color in";
+    canvas.allColorsGlobal ? `${colorName} is from`
+    : !userInServer ? `${colorName} can be used in`
+    : `You can use ${colorName} in`;
 
   return (
     <Wrapper>
-      <div>
-        <Heading>{colorName}</Heading>
-      </div>
+      <Heading>{colorName}</Heading>
       <Code>{colorCode}</Code>
       {!color.global && (
         <Subtitle>
           {text}{" "}
           {invite ?
-            <a href={invite}>{guildName}</a>
+            <a href={invite} target="_blank" rel="noreferrer">
+              {guildName}
+            </a>
           : guildName}
         </Subtitle>
       )}

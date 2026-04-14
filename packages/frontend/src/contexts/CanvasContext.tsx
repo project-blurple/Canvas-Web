@@ -6,13 +6,16 @@ import {
   Point,
 } from "@blurple-canvas-web/types";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 import {
   createContext,
   Dispatch,
+  RefObject,
   SetStateAction,
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { addPoints, tupleToPoint } from "@/components/canvas/point";
@@ -21,14 +24,18 @@ import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 
 interface CanvasContextType {
-  canvas: CanvasInfo;
-  coords: Point | null;
   adjustedCoords: Point | null;
-  setCanvas: (canvasId: CanvasInfo["id"]) => void;
+  canvas: CanvasInfo;
+  containerRef: RefObject<HTMLDivElement | null>;
+  coords: Point | null;
+  zoom: number;
+  setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
   setCoords: Dispatch<SetStateAction<Point | null>>;
+  setZoom: Dispatch<SetStateAction<number>>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
+  adjustedCoords: null,
   canvas: {
     id: -1,
     name: "",
@@ -40,10 +47,12 @@ export const CanvasContext = createContext<CanvasContextType>({
     webPlacingEnabled: false,
     allColorsGlobal: false,
   },
+  containerRef: { current: null },
   coords: null,
-  adjustedCoords: null,
+  zoom: 1,
   setCoords: () => {},
-  setCanvas: () => {},
+  setCanvas: async () => {},
+  setZoom: () => {},
 });
 
 interface CanvasProviderProps {
@@ -55,9 +64,12 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
+  const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasContextType["coords"]>(null);
+  const [zoom, setZoom] = useState(1);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -81,6 +93,12 @@ export const CanvasProvider = ({
       setSelectedColor(null);
       setSelectedCoords(null);
 
+      const url = new URL(window.location.href);
+      url.pathname =
+        canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
+      url.search = "";
+      router.replace(`${url.pathname}${url.search}${url.hash}`);
+
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
       // already been placed.
@@ -89,17 +107,20 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [setSelectedColor],
+    [router, setSelectedColor, mainCanvasInfo.id],
   );
 
   return (
     <CanvasContext.Provider
       value={{
-        coords: selectedCoords,
         adjustedCoords,
         canvas: activeCanvas,
+        containerRef: containerRef,
+        coords: selectedCoords,
+        zoom: zoom,
         setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
+        setZoom: setZoom,
       }}
     >
       {children}

@@ -1,11 +1,13 @@
 "use client";
 
-import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
+import { CanvasInfo, PlacePixelSocket, Point } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import config from "@/config";
 import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import { useCanvasSearchParams } from "@/hooks";
+import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
 import { Button } from "../button";
@@ -197,8 +199,8 @@ function calculateTouchOffsetDelta(
     x: movementDelta2.x,
     y: movementDelta2.y,
   });
-  const oldMagitude = distanceBetweenPoints(oldPosition1, oldPosition2);
-  const newMagitude = distanceBetweenPoints(newPosition1, newPosition2);
+  const oldMagnitude = distanceBetweenPoints(oldPosition1, oldPosition2);
+  const newMagnitude = distanceBetweenPoints(newPosition1, newPosition2);
   const relativePosition = dividePoint(
     addPoints(newPosition1, newPosition2),
     2,
@@ -207,8 +209,66 @@ function calculateTouchOffsetDelta(
     x: movementDelta1.x + movementDelta2.x / 2,
     y: movementDelta1.y + movementDelta2.y / 2,
   };
-  const scale = newMagitude / oldMagitude;
+  const scale = newMagnitude / oldMagnitude;
   return { offsetDelta, scale, centerOffset: relativePosition };
+}
+
+function clampZoom(zoom: number, initialZoom: number) {
+  return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
+}
+
+function getInitialViewFromSearchParams({
+  params,
+  canvas,
+  container,
+  initialZoom,
+}: {
+  params: CanvasSearchParams;
+  canvas: CanvasInfo;
+  container: HTMLDivElement;
+  initialZoom: number;
+}) {
+  const canvasX = params.x;
+  const canvasY = params.y;
+
+  if (canvasX === null || canvasY === null) return null;
+
+  const zoomFromQuery = params.zoom;
+  const hasPixelDimensions =
+    params.pixelWidth !== null || params.pixelHeight !== null;
+
+  let targetZoom = initialZoom;
+
+  if (zoomFromQuery !== null) {
+    targetZoom = clampZoom(zoomFromQuery, initialZoom);
+  } else if (hasPixelDimensions) {
+    const widthBasedZoom =
+      params.pixelWidth !== null ?
+        container.clientWidth / params.pixelWidth
+      : Number.POSITIVE_INFINITY;
+
+    const heightBasedZoom =
+      params.pixelHeight !== null ?
+        container.clientHeight / params.pixelHeight
+      : Number.POSITIVE_INFINITY;
+
+    const fitZoom = Math.min(widthBasedZoom, heightBasedZoom);
+    targetZoom = clampZoom(fitZoom, initialZoom);
+  }
+
+  const [startX, startY] = canvas.startCoordinates;
+
+  const targetPoint = {
+    x: clamp(canvasX - startX, 0, canvas.width - 1),
+    y: clamp(canvasY - startY, 0, canvas.height - 1),
+  };
+
+  const offset = {
+    x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
+    y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
+  };
+
+  return { targetZoom, offset, targetPoint };
 }
 
 // Arbitrary value applied to the deltaY of the wheel zoom function to make it feel right
@@ -242,16 +302,15 @@ function calculateReticleOffset(coords: Point | null): Point {
 
 export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, coords, setCoords } = useCanvasContext();
+  const { canvas, containerRef, coords, zoom, setCanvas, setCoords, setZoom } =
+    useCanvasContext();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLaunching, setIsLaunching] = useState(true);
-  const [zoom, setZoom] = useState(1);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
@@ -286,14 +345,76 @@ export default function CanvasView() {
       ctx.drawImage(image, 0, 0, image.width, image.height);
       offscreenCanvasRef.current = offscreenCanvas;
       setInitialZoom(zoom);
-      setZoom(zoom);
+
+      let appliedInitialView = false;
+      const params = initialCanvasSearchParamsRef.current;
+      const shouldApplyInitialViewForCurrentCanvas =
+        params.canvasId === null || params.canvasId === canvas.id;
+
+      if (
+        !hasAppliedInitialViewRef.current &&
+        shouldApplyInitialViewForCurrentCanvas
+      ) {
+        const container = containerRef.current;
+
+        if (container) {
+          const initialView = getInitialViewFromSearchParams({
+            params,
+            canvas,
+            container,
+            initialZoom: zoom,
+          });
+
+          if (initialView) {
+            setZoom(initialView.targetZoom);
+            setOffset(initialView.offset);
+            setCoords({
+              x: initialView.targetPoint.x,
+              y: initialView.targetPoint.y,
+            });
+            appliedInitialView = true;
+          }
+        }
+
+        // Ensure this only runs once on page load, even if params are missing/invalid.
+        hasAppliedInitialViewRef.current = true;
+      }
+
+      if (!appliedInitialView) {
+        setZoom(zoom);
+        setOffset(ORIGIN);
+      }
+
       setVelocity(ORIGIN);
-      setOffset(ORIGIN);
       setIsLoading(false);
       setIsLaunching(false);
       clearOverlay();
     },
     [canvas.id],
+  );
+
+  const canvasSearchParams = useCanvasSearchParams();
+  const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
+  const hasAppliedInitialCanvasRef = useRef(false);
+  const hasAppliedInitialViewRef = useRef(false);
+
+  useEffect(
+    function switchToCanvasFromSearchParams() {
+      if (hasAppliedInitialCanvasRef.current) return;
+
+      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
+      if (targetCanvasId === null || targetCanvasId === canvas.id) {
+        hasAppliedInitialCanvasRef.current = true;
+        return;
+      }
+
+      hasAppliedInitialCanvasRef.current = true;
+      void setCanvas(targetCanvasId).catch(() => {
+        // If URL canvas does not exist, keep default canvas and never apply URL pan/zoom.
+        hasAppliedInitialViewRef.current = true;
+      });
+    },
+    [canvas.id, setCanvas],
   );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
@@ -520,7 +641,7 @@ export default function CanvasView() {
 
     return () =>
       containerRef.current?.removeEventListener("wheel", handleWheel);
-  }, [handleZoom]);
+  }, [handleZoom, containerRef]);
 
   /********************************
    * PANNING FUNCTIONALITY.       *
