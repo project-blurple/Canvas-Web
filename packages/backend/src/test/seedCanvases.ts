@@ -7,8 +7,8 @@ export const testCanvas = {
   start_coordinates: [1, 1],
 };
 
-export default function () {
-  prisma.canvas.create({
+export default async function () {
+  await prisma.canvas.create({
     data: {
       ...testCanvas,
       id: 1,
@@ -18,7 +18,7 @@ export default function () {
       cooldown_length: 30,
     },
   });
-  prisma.canvas.create({
+  await prisma.canvas.create({
     data: {
       ...testCanvas,
       id: 9,
