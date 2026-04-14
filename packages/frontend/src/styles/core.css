@@ -118,6 +118,14 @@
   button {
     touch-action: manipulation;
   }
+
+  :is(ol, ul)[role="list"] {
+    list-style-type: none;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
 }
 
 @layer fonts {
@@ -140,7 +148,7 @@
 }
 
 @layer core {
-  :root {
+  html {
     --discord-blurple: oklch(57.74% 0.209 273.85);
     --discord-green: oklch(85.48% 0.197 150.16);
     --discord-yellow: oklch(92.18% 0.157 99.87);
@@ -156,9 +164,14 @@
     --discord-legacy-actually-black: oklch(0% 0 0);
 
     --font-body:
+      system-ui, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
+      Ubuntu, sans-serif;
+    --font-display:
       "Mona Sans", system-ui, -apple-system, BlinkMacSystemFont, "Inter",
       "Segoe UI", Roboto, Ubuntu, sans-serif;
-    --font-monospace: "Monaspace Neon", ui-monospace, Consolas, monospace;
+    --font-monospace:
+      "Monaspace Neon", ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+      Liberation Mono, monospace;
     --border-color: oklch(from var(--discord-white) l c h / 15%);
     --card-border: var(--border-color) solid max(0.125rem, 1px);
     --card-border-radius: 1.5rem;
@@ -218,7 +231,7 @@
    * https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech
    */
   @supports (font-tech(variations)) {
-    :root {
+    html {
       --text-slnt: 0;
       font-variation-settings: "slnt" var(--text-slnt);
     }
