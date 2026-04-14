@@ -53,10 +53,6 @@ const CanvasContainer = styled("div")`
   & {
     user-select: none;
   }
-
-  .loader {
-    position: absolute;
-  }
 `;
 
 const ReticleContainer = styled("div")`
@@ -900,7 +896,7 @@ export default function CanvasView() {
           />
         </CanvasImageWrapper>
       </div>
-      {isLoading && <CircularProgress className="loader" />}
+      {isLoading && <CircularProgress style={{ position: "absolute" }} />}
     </CanvasContainer>
   );
 }
