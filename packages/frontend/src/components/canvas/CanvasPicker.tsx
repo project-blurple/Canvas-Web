@@ -44,16 +44,13 @@ const Select = styled(NativeSelect)`
   }
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      content: unset;
-    }
     &:hover:not(.${nativeSelectClasses.disabled}) {
       background-color: var(--discord-legacy-greyple);
     }
   }
 
-  &::before,
-  &::after {
+  &::before {
+    /* Remove MUI artifact */
     content: unset;
   }
 
@@ -77,7 +74,8 @@ export default function CanvasPicker() {
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
 
   const isLoading =
-    canvasListIsLoading || mainCanvasIsLoading || currentEventIsLoading;
+    false &&
+    (canvasListIsLoading || mainCanvasIsLoading || currentEventIsLoading);
 
   const currentCanvases = canvases.filter(
     ({ id, eventId }) => id !== mainCanvas?.id && eventId === currentEvent?.id,
