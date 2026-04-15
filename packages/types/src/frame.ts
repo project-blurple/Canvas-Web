@@ -1,6 +1,6 @@
 import { DiscordGuildRecord } from "./discordGuildRecord";
 import { DiscordUserProfile } from "./discordUserProfile";
-import { ValuesOf } from "./utils/index";
+import { ValueOf } from "./utils/index";
 
 export const FrameOwnerType = {
   User: "user",
@@ -8,7 +8,7 @@ export const FrameOwnerType = {
   System: "system",
 } as const;
 
-export type FrameOwnerType = ValuesOf<typeof FrameOwnerType>;
+export type FrameOwnerType = ValueOf<typeof FrameOwnerType>;
 
 export interface BaseFrame {
   id: string;

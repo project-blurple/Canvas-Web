@@ -1,1 +1,1 @@
-export type ValuesOf<T> = T extends object ? T[keyof T] : never;
+export type ValueOf<T> = T extends object ? T[keyof T] : never;
