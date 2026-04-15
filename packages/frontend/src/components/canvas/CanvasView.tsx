@@ -716,6 +716,8 @@ export default function CanvasView() {
         );
       });
       setZoom(clampedZoom);
+
+      setFrame(null);
     },
     [initialZoom],
   );
@@ -826,8 +828,10 @@ export default function CanvasView() {
       const scaledOffsetDelta = multiplyPoint(offsetDelta, zoomRef.current);
       setVelocity({ x: scaledOffsetDelta.x, y: scaledOffsetDelta.y });
       updateOffset(scaledOffsetDelta);
+
+      setFrame(null);
     },
-    [updateOffset],
+    [updateOffset, setFrame],
   );
 
   /**
