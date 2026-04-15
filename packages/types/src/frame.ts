@@ -22,21 +22,21 @@ export interface BaseFrame {
 
 export interface UserOwnedFrame extends BaseFrame {
   owner: {
-    type: (typeof FrameOwnerType)["User"];
+    type: typeof FrameOwnerType.User;
     user: DiscordUserProfile;
   };
 }
 
 export interface GuildOwnedFrame extends BaseFrame {
   owner: {
-    type: (typeof FrameOwnerType)["Guild"];
+    type: typeof FrameOwnerType.Guild;
     guild: DiscordGuildRecord;
   };
 }
 
 export interface SystemOwnedFrame extends BaseFrame {
   owner: {
-    type: (typeof FrameOwnerType)["System"];
+    type: typeof FrameOwnerType.System;
     name: "Blurple Canvas";
   };
 }
