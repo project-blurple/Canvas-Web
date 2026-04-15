@@ -1,9 +1,16 @@
-import { GuildFrame } from "@blurple-canvas-web/types";
+import type {
+  GuildOwnedFrame,
+  SystemOwnedFrame,
+} from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
 import { useState } from "react";
 import { DynamicButton } from "@/components/button";
-import { useAuthContext, useSelectedFrameContext } from "@/contexts";
+import {
+  useAuthContext,
+  useCanvasContext,
+  useSelectedFrameContext,
+} from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { createPixelUrl, decodeUserGuildsBase64 } from "@/util";
@@ -36,6 +43,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
   const { frame: selectedFrame, setFrame: setSelectedFrame } =
     useSelectedFrameContext();
+  const { canvas } = useCanvasContext();
   const sourceImage = useCanvasImage(canvasId);
 
   const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
@@ -67,15 +75,14 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     );
   }
 
-  const groupedByOwnerId = guildFrames.reduce<Record<string, GuildFrame[]>>(
-    (acc, frame) => {
-      const ownerId = frame.ownerId;
-      acc[ownerId] ??= [];
-      acc[ownerId].push(frame);
-      return acc;
-    },
-    {},
-  );
+  const groupedByOwnerId = guildFrames.reduce<
+    Record<string, GuildOwnedFrame[]>
+  >((acc, frame) => {
+    const ownerId = frame.owner.guild.guild_id;
+    acc[ownerId] ??= [];
+    acc[ownerId].push(frame);
+    return acc;
+  }, {});
 
   const sortedGuildFrameMap = Object.entries(groupedByOwnerId).sort(
     ([, framesA], [, framesB]) => {
@@ -85,11 +92,25 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
         return 0;
       }
 
-      const ownerGuildA = firstFrameA.ownerGuild.name;
-      const ownerGuildB = firstFrameB.ownerGuild.name;
+      const ownerGuildA = firstFrameA.owner.guild.name;
+      const ownerGuildB = firstFrameB.owner.guild.name;
       return ownerGuildA.localeCompare(ownerGuildB);
     },
   );
+
+  const inbuiltFullCanvasFrame: SystemOwnedFrame = {
+    id: `system-${canvas.id.toString()}`,
+    canvasId: canvas.id,
+    name: canvas.name,
+    x0: 0,
+    y0: 0,
+    x1: canvas.width,
+    y1: canvas.height,
+    owner: {
+      type: "SYSTEM",
+      name: "Blurple Canvas",
+    },
+  };
 
   const frameUrl =
     selectedFrame ?
@@ -113,6 +134,14 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
               />
             : <p>You have no frames</p>}
           </FramesContainer>
+          <FramesContainer>
+            <Heading>Blurple Canvas</Heading>
+            <FramePreviewList
+              items={[inbuiltFullCanvasFrame]}
+              sourceImage={sourceImage}
+              onSelectFrame={setSelectedFrame}
+            />
+          </FramesContainer>
           {sortedGuildFrameMap.map(([ownerId, frames]) => {
             const firstFrame = frames[0];
             if (!firstFrame) {
@@ -121,7 +150,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
 
             return (
               <FramesContainer key={ownerId}>
-                <Heading>{firstFrame.ownerGuild.name}</Heading>
+                <Heading>{firstFrame.owner.guild.name}</Heading>
                 <FramePreviewList
                   items={[...frames].sort((a, b) =>
                     a.name.localeCompare(b.name),
@@ -138,21 +167,23 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           <BotCommandCard command="/frame create" />
-          <ActionPanelTooltip
-            title="Copied"
-            onClose={closeTooltip}
-            open={tooltipIsOpen}
-          >
-            <DynamicButton
-              color={null}
-              onAction={() => {
-                openTooltip();
-                navigator.clipboard.writeText(frameUrl);
-              }}
+          {selectedFrame.owner.type !== "SYSTEM" && (
+            <ActionPanelTooltip
+              title="Copied"
+              onClose={closeTooltip}
+              open={tooltipIsOpen}
             >
-              Copy frame link
-            </DynamicButton>
-          </ActionPanelTooltip>
+              <DynamicButton
+                color={null}
+                onAction={() => {
+                  openTooltip();
+                  navigator.clipboard.writeText(frameUrl);
+                }}
+              >
+                Copy frame link
+              </DynamicButton>
+            </ActionPanelTooltip>
+          )}
         </ActionPanelTabBody>
       )}
     </FramesTabBlock>

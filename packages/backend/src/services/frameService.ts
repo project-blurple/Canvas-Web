@@ -1,4 +1,8 @@
-import { Frame, GuildFrame, UserFrame } from "@blurple-canvas-web/types";
+import type {
+  Frame,
+  GuildOwnedFrame,
+  UserOwnedFrame,
+} from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 
@@ -46,7 +50,6 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   const baseFrame = {
     id: frame.id,
     canvasId: frame.canvas_id,
-    ownerId: frame.owner_id.toString(),
     name: frame.name,
     x0: frame.x_0,
     y0: frame.y_0,
@@ -55,50 +58,57 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 
   if (frame.is_guild_owned) {
+    if (!frame.owner_guild) {
+      throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
+    }
+
     return {
       ...baseFrame,
-      isGuildOwned: true,
-      ownerGuild:
-        frame.owner_guild ?
-          {
-            guild_id: frame.owner_guild.guild_id.toString(),
-            name: frame.owner_guild.name,
-          }
-        : (() => {
-            throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
-          })(),
+      owner: {
+        type: "GUILD",
+        guild: {
+          guild_id: frame.owner_guild.guild_id.toString(),
+          name: frame.owner_guild.name,
+        },
+      },
     };
   }
 
+  if (!frame.owner_user) {
+    throw new Error(`Frame ${frame.id} is missing a valid user owner`);
+  }
   return {
     ...baseFrame,
-    isGuildOwned: false,
-    ownerUser:
-      frame.owner_user ?
-        {
-          id: frame.owner_user.user_id.toString(),
-          username: frame.owner_user.username,
-          profilePictureUrl: frame.owner_user.profile_picture_url,
-        }
-      : (() => {
-          throw new Error(`Frame ${frame.id} is missing a valid user owner`);
-        })(),
+    owner: {
+      type: "USER",
+      user: {
+        id: frame.owner_user.user_id.toString(),
+        username: frame.owner_user.username,
+        profilePictureUrl: frame.owner_user.profile_picture_url,
+      },
+    },
   };
 }
 
-function asUserFrame(frame: Frame): UserFrame {
-  if (frame.isGuildOwned) {
+function isUserOwnedFrame(frame: Frame): frame is UserOwnedFrame {
+  return frame.owner.type === "USER";
+}
+
+function isGuildOwnedFrame(frame: Frame): frame is GuildOwnedFrame {
+  return frame.owner.type === "GUILD";
+}
+
+function asUserFrame(frame: Frame): UserOwnedFrame {
+  if (!isUserOwnedFrame(frame)) {
     throw new Error(`Frame ${frame.id} is missing a valid user owner`);
   }
-
   return frame;
 }
 
-function asGuildFrame(frame: Frame): GuildFrame {
-  if (!frame.isGuildOwned) {
+function asGuildFrame(frame: Frame): GuildOwnedFrame {
+  if (!isGuildOwnedFrame(frame)) {
     throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
   }
-
   return frame;
 }
 
@@ -120,7 +130,7 @@ export async function getFrameById(frameId: string): Promise<Frame> {
 export async function getFramesByUserId(
   userId: string,
   canvasId: number,
-): Promise<UserFrame[]> {
+): Promise<UserOwnedFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: BigInt(userId),
@@ -136,7 +146,7 @@ export async function getFramesByUserId(
 export async function getFramesByGuildIds(
   guildIds: string[],
   canvasId: number,
-): Promise<GuildFrame[]> {
+): Promise<GuildOwnedFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
       owner_id: {

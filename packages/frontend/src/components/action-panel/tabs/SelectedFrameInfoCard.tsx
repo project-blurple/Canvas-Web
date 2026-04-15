@@ -1,6 +1,6 @@
-import { Frame } from "@blurple-canvas-web/types";
+import type { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { User, Users } from "lucide-react";
+import { Paintbrush, User, Users } from "lucide-react";
 
 const Wrapper = styled("div")`
   align-items: baseline;
@@ -24,16 +24,25 @@ const OwnerInfo = styled("p")`
 export default function FrameInfoCard({ frame }: { frame?: Frame }) {
   if (!frame) return <Wrapper>No frame selected</Wrapper>;
 
-  const ownerInfo =
-    frame.isGuildOwned ?
-      {
-        icon: <Users aria-hidden />,
-        label: frame.ownerGuild?.name ?? "Unknown guild",
-      }
-    : {
-        icon: <User aria-hidden />,
-        label: frame.ownerUser?.username ?? "Unknown user",
-      };
+  const ownerInfo = (() => {
+    switch (frame.owner.type) {
+      case "GUILD":
+        return {
+          icon: <Users aria-hidden />,
+          label: frame.owner.guild.name ?? "Unknown guild",
+        };
+      case "USER":
+        return {
+          icon: <User aria-hidden />,
+          label: frame.owner.user.username ?? "Unknown user",
+        };
+      default:
+        return {
+          icon: <Paintbrush aria-hidden />, // TODO: replace with Canvas icon?
+          label: "Blurple Canvas",
+        };
+    }
+  })();
 
   return (
     <Wrapper>

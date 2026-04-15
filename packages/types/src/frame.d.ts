@@ -1,10 +1,11 @@
 import { DiscordGuildRecord } from "./discordGuildRecord";
 import { DiscordUserProfile } from "./discordUserProfile";
 
+export type FrameOwnerType = "USER" | "GUILD" | "SYSTEM";
+
 export interface BaseFrame {
   id: string;
   canvasId: number;
-  ownerId: string;
   name: string;
   x0: number;
   y0: number;
@@ -12,16 +13,25 @@ export interface BaseFrame {
   y1: number;
 }
 
-export interface UserFrame extends BaseFrame {
-  isGuildOwned: false;
-  ownerUser: DiscordUserProfile;
-  ownerGuild?: undefined;
+export interface UserOwnedFrame extends BaseFrame {
+  owner: {
+    type: "USER";
+    user: DiscordUserProfile;
+  };
 }
 
-export interface GuildFrame extends BaseFrame {
-  isGuildOwned: true;
-  ownerUser?: undefined;
-  ownerGuild: DiscordGuildRecord;
+export interface GuildOwnedFrame extends BaseFrame {
+  owner: {
+    type: "GUILD";
+    guild: DiscordGuildRecord;
+  };
 }
 
-export type Frame = UserFrame | GuildFrame;
+export interface SystemOwnedFrame extends BaseFrame {
+  owner: {
+    type: "SYSTEM";
+    name: "Blurple Canvas";
+  };
+}
+
+export type Frame = UserOwnedFrame | GuildOwnedFrame | SystemOwnedFrame;
