@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import dotenv from "dotenv";
+import dotenvx from "@dotenvx/dotenvx";
 
-dotenv.config();
+dotenvx.config();
 
 function requiredEnv(key: keyof NodeJS.ProcessEnv): string {
   const value = process.env[key];
