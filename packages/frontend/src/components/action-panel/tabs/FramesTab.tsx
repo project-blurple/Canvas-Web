@@ -107,7 +107,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     x1: canvas.width,
     y1: canvas.height,
     owner: {
-      type: "SYSTEM",
+      type: "system",
       name: "Blurple Canvas",
     },
   };
@@ -167,7 +167,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           <BotCommandCard command="/frame create" />
-          {selectedFrame.owner.type !== "SYSTEM" && (
+          {selectedFrame.owner.type !== "system" && (
             <ActionPanelTooltip
               title="Copied"
               onClose={closeTooltip}

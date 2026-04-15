@@ -1,5 +1,6 @@
-import type {
+import {
   Frame,
+  FrameOwnerType,
   GuildOwnedFrame,
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
@@ -65,7 +66,7 @@ function frameFromDb(frame: FrameDbRecord): Frame {
     return {
       ...baseFrame,
       owner: {
-        type: "GUILD",
+        type: FrameOwnerType.Guild,
         guild: {
           guild_id: frame.owner_guild.guild_id.toString(),
           name: frame.owner_guild.name,
@@ -80,7 +81,7 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   return {
     ...baseFrame,
     owner: {
-      type: "USER",
+      type: FrameOwnerType.User,
       user: {
         id: frame.owner_user.user_id.toString(),
         username: frame.owner_user.username,
@@ -91,11 +92,11 @@ function frameFromDb(frame: FrameDbRecord): Frame {
 }
 
 function isUserOwnedFrame(frame: Frame): frame is UserOwnedFrame {
-  return frame.owner.type === "USER";
+  return frame.owner.type === FrameOwnerType.User;
 }
 
 function isGuildOwnedFrame(frame: Frame): frame is GuildOwnedFrame {
-  return frame.owner.type === "GUILD";
+  return frame.owner.type === FrameOwnerType.Guild;
 }
 
 function asUserFrame(frame: Frame): UserOwnedFrame {

@@ -1,7 +1,14 @@
 import { DiscordGuildRecord } from "./discordGuildRecord";
 import { DiscordUserProfile } from "./discordUserProfile";
+import { ValuesOf } from "./utils/index";
 
-export type FrameOwnerType = "USER" | "GUILD" | "SYSTEM";
+export const FrameOwnerType = {
+  User: "user",
+  Guild: "guild",
+  System: "system",
+} as const;
+
+export type FrameOwnerType = ValuesOf<typeof FrameOwnerType>;
 
 export interface BaseFrame {
   id: string;
@@ -15,21 +22,21 @@ export interface BaseFrame {
 
 export interface UserOwnedFrame extends BaseFrame {
   owner: {
-    type: "USER";
+    type: (typeof FrameOwnerType)["User"];
     user: DiscordUserProfile;
   };
 }
 
 export interface GuildOwnedFrame extends BaseFrame {
   owner: {
-    type: "GUILD";
+    type: (typeof FrameOwnerType)["Guild"];
     guild: DiscordGuildRecord;
   };
 }
 
 export interface SystemOwnedFrame extends BaseFrame {
   owner: {
-    type: "SYSTEM";
+    type: (typeof FrameOwnerType)["System"];
     name: "Blurple Canvas";
   };
 }

@@ -26,12 +26,12 @@ export default function FrameInfoCard({ frame }: { frame?: Frame }) {
 
   const ownerInfo = (() => {
     switch (frame.owner.type) {
-      case "GUILD":
+      case "guild":
         return {
           icon: <Users aria-hidden />,
           label: frame.owner.guild.name ?? "Unknown guild",
         };
-      case "USER":
+      case "user":
         return {
           icon: <User aria-hidden />,
           label: frame.owner.user.username ?? "Unknown user",
