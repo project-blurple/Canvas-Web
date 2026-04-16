@@ -34,8 +34,13 @@ interface DiscordRequestOptions {
   authorization: string;
 }
 
-type CanvasAdminUser = DiscordUserProfile & { isCanvasAdmin: true };
-type CanvasModeratorUser = DiscordUserProfile & { isCanvasModerator: true };
+interface CanvasAdminUser extends DiscordUserProfile {
+  isCanvasAdmin: true;
+}
+
+interface CanvasModeratorUser extends DiscordUserProfile {
+  isCanvasModerator: true;
+}
 
 async function discordRequest<T>({
   endpoint,
