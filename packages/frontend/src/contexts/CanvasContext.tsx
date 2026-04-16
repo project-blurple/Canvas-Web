@@ -90,7 +90,7 @@ export const CanvasProvider = ({
   }, [activeCanvas.startCoordinates, selectedCoords]);
 
   const { setColor: setSelectedColor } = useSelectedColorContext();
-  const { setFrame: setSelectedFrame } = useSelectedFrameContext();
+  const [, setSelectedFrame] = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {

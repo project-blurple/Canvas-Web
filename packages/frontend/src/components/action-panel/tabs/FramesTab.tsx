@@ -41,8 +41,7 @@ interface FramesTabProps {
 
 export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { user } = useAuthContext();
-  const { frame: selectedFrame, setFrame: setSelectedFrame } =
-    useSelectedFrameContext();
+  const [selectedFrame, setSelectedFrame] = useSelectedFrameContext();
   const { canvas } = useCanvasContext();
   const sourceImage = useCanvasImage(canvasId);
 

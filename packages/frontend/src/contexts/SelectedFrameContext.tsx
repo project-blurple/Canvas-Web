@@ -9,15 +9,15 @@ import {
   useState,
 } from "react";
 
-interface SelectedFrameContextType {
-  frame: Frame | null;
-  setFrame: Dispatch<SetStateAction<Frame | null>>;
-}
+type SelectedFrameContextType = [
+  Frame | null,
+  Dispatch<SetStateAction<Frame | null>>,
+];
 
-const SelectedFrameContext = createContext<SelectedFrameContextType>({
-  frame: null,
-  setFrame: () => {},
-});
+const SelectedFrameContext = createContext<SelectedFrameContextType>([
+  null,
+  () => {},
+]);
 
 export const SelectedFrameProvider = ({
   children,
@@ -25,15 +25,10 @@ export const SelectedFrameProvider = ({
   children: React.ReactNode;
 }) => {
   const [selectedFrame, setSelectedFrame] =
-    useState<SelectedFrameContextType["frame"]>(null);
+    useState<SelectedFrameContextType[0]>(null);
 
   return (
-    <SelectedFrameContext.Provider
-      value={{
-        frame: selectedFrame,
-        setFrame: setSelectedFrame,
-      }}
-    >
+    <SelectedFrameContext.Provider value={[selectedFrame, setSelectedFrame]}>
       {children}
     </SelectedFrameContext.Provider>
   );
