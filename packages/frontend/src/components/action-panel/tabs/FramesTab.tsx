@@ -13,7 +13,7 @@ import {
 } from "@/contexts";
 import { useCanvasImage } from "@/hooks";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
-import { createPixelUrl, decodeUserGuildsBase64 } from "@/util";
+import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
@@ -45,7 +45,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
   const { canvas } = useCanvasContext();
   const sourceImage = useCanvasImage(canvasId);
 
-  const guildIds = user ? decodeUserGuildsBase64(user) : undefined;
+  const guildIds = Object.keys(user?.guilds ?? {});
   const { data: userFrames = [] } = useUserFrames({
     canvasId: canvasId,
     userId: user?.id,
