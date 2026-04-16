@@ -174,13 +174,13 @@ export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
         ref={mobileCanvasRef}
         width={MOBILE_THUMB_WIDTH}
         height={MOBILE_THUMB_HEIGHT}
-        aria-label={`${frame.name} frame thumbnail`}
+        aria-hidden
       />
       <DesktopThumbnailCanvas
         ref={desktopCanvasRef}
         width={DESKTOP_THUMB_WIDTH}
         height={DESKTOP_THUMB_HEIGHT}
-        aria-label={`${frame.name} frame thumbnail`}
+        aria-hidden
       />
       <FrameTitle>{frame.name}</FrameTitle>
     </CardBody>

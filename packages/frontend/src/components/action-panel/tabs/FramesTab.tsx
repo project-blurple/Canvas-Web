@@ -152,7 +152,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
               <FramesContainer key={ownerId}>
                 <Heading>{firstFrame.owner.guild.name}</Heading>
                 <FramePreviewList
-                  items={[...frames].sort((a, b) =>
+                  items={frames.toSorted((a, b) =>
                     a.name.localeCompare(b.name),
                   )}
                   sourceImage={sourceImage}

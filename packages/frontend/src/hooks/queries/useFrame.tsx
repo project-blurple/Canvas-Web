@@ -50,7 +50,7 @@ export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
     if (!userId) return [];
 
     const response = await axios.get<FrameRequest.UserFramesResBody>(
-      `${config.apiUrl}/api/v1/frame/user/${userId}/${canvasId}`,
+      `${config.apiUrl}/api/v1/frame/user/${encodeURIComponent(userId)}/${encodeURIComponent(canvasId)}`,
     );
     return response.data;
   };
@@ -70,10 +70,10 @@ export function useGuildFrames({ canvasId, guildIds }: UseGuildFramesParams) {
     if (!guildIds || guildIds.length === 0) return [];
 
     const response = await axios.get<FrameRequest.GuildFramesResBody>(
-      `${config.apiUrl}/api/v1/frame/guilds/${canvasId}`,
+      `${config.apiUrl}/api/v1/frame/guilds/${encodeURIComponent(canvasId)}`,
       {
         params: {
-          guildIds: guildIds,
+          guildIds: guildIds.map(encodeURIComponent),
         },
         paramsSerializer: {
           // This is needed to send the guildIds as repeated query parameters (e.g., guildIds=1&guildIds=2) instead of a comma-separated list (e.g., guildIds=1,2)

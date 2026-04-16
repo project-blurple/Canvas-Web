@@ -525,10 +525,7 @@ export default function CanvasView() {
       // Wait for frame lookup before deciding whether initial frame view can be applied.
       if (isInitialFrameFromSearchParamsLoading) return;
 
-      if (
-        initialFrameFromSearchParams &&
-        initialFrameFromSearchParams.canvasId === canvas.id
-      ) {
+      if (initialFrameFromSearchParams?.canvasId === canvas.id) {
         setFrame(initialFrameFromSearchParams);
       }
 

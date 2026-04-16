@@ -91,26 +91,16 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 }
 
-function isUserOwnedFrame(frame: Frame): frame is UserOwnedFrame {
-  return frame.owner.type === FrameOwnerType.User;
-}
-
-function isGuildOwnedFrame(frame: Frame): frame is GuildOwnedFrame {
-  return frame.owner.type === FrameOwnerType.Guild;
-}
-
-function asUserFrame(frame: Frame): UserOwnedFrame {
-  if (!isUserOwnedFrame(frame)) {
-    throw new Error(`Frame ${frame.id} is missing a valid user owner`);
+function asUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
+  if (frame.owner.type !== FrameOwnerType.User) {
+    throw new Error(`Expected user-owned frame, got ${frame.owner.type}`);
   }
-  return frame;
 }
 
-function asGuildFrame(frame: Frame): GuildOwnedFrame {
-  if (!isGuildOwnedFrame(frame)) {
-    throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
+function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
+  if (frame.owner.type !== FrameOwnerType.Guild) {
+    throw new Error(`Expected guild-owned frame, got ${frame.owner.type}`);
   }
-  return frame;
 }
 
 export async function getFrameById(frameId: string): Promise<Frame> {
@@ -141,7 +131,11 @@ export async function getFramesByUserId(
     select: frameSelect,
   });
 
-  return frames.map((frame) => asUserFrame(frameFromDb(frame)));
+  return frames.map((frame) => {
+    const mapped = frameFromDb(frame);
+    asUserFrame(mapped);
+    return mapped;
+  });
 }
 
 export async function getFramesByGuildIds(
@@ -159,5 +153,9 @@ export async function getFramesByGuildIds(
     select: frameSelect,
   });
 
-  return frames.map((frame) => asGuildFrame(frameFromDb(frame)));
+  return frames.map((frame) => {
+    const mapped = frameFromDb(frame);
+    asGuildFrame(mapped);
+    return mapped;
+  });
 }

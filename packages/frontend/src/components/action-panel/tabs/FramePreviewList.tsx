@@ -17,10 +17,6 @@ const FrameList = styled("ul")`
   }
 `;
 
-const FrameListItem = styled("li")`
-  list-style: none;
-`;
-
 const FrameButton = styled("button")`
   background: none;
   border: none;
@@ -44,11 +40,11 @@ export function FramePreviewList({
   return (
     <FrameList>
       {items.map((frame) => (
-        <FrameListItem key={frame.id}>
+        <li key={frame.id}>
           <FrameButton type="button" onClick={() => onSelectFrame(frame)}>
             <FrameThumbCard frame={frame} sourceImage={sourceImage} />
           </FrameButton>
-        </FrameListItem>
+        </li>
       ))}
     </FrameList>
   );
