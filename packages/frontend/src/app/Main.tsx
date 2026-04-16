@@ -11,10 +11,11 @@ const Wrapper = styled("main")`
     --action-panel-width: 19rem;
     --navbar-height: 4rem;
     column-gap: 1rem;
-    row-gap: 0.5rem;
+    row-gap: 0;
 
     display: grid;
-    grid-template-rows: auto 1fr;
+    // Restricts the height of the page to the viewport
+    grid-template-rows: var(--navbar-height) calc(100dvh - var(--navbar-height));
     height: 100dvh;
 
     ${({ theme }) => theme.breakpoints.up("lg")} {

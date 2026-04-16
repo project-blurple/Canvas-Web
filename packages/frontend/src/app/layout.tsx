@@ -4,7 +4,11 @@ import axios from "axios";
 import type { Metadata, Viewport } from "next";
 
 import config from "@/config";
-import { QueryClientProvider, SelectedColorProvider } from "@/contexts";
+import {
+  QueryClientProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
 import "../styles/core.css";
 import {
   CanvasInfo,
@@ -88,9 +92,11 @@ export default async function RootLayout({
           <QueryClientProvider>
             <AuthProvider profile={profile}>
               <SelectedColorProvider>
-                <CanvasProvider mainCanvasInfo={canvasInfo}>
-                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                </CanvasProvider>
+                <SelectedFrameProvider>
+                  <CanvasProvider mainCanvasInfo={canvasInfo}>
+                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  </CanvasProvider>
+                </SelectedFrameProvider>
               </SelectedColorProvider>
             </AuthProvider>
           </QueryClientProvider>

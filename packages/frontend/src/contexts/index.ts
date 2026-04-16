@@ -5,3 +5,7 @@ export {
   SelectedColorProvider,
   useSelectedColorContext,
 } from "./SelectedColorContext";
+export {
+  SelectedFrameProvider,
+  useSelectedFrameContext,
+} from "./SelectedFrameContext";

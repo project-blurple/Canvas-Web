@@ -16,8 +16,8 @@ const StyledButton = styled(ButtonBase, {
     --dynamic-bg-color: var(--discord-blurple);
     background-color: var(--dynamic-bg-color);
 
-    :hover,
-    :focus-visible {
+    &:hover,
+    &:focus-visible {
       ${({ backgroundColorStr }) =>
         backgroundColorStr &&
         css`

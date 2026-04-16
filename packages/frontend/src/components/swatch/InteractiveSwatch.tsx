@@ -6,17 +6,16 @@ import { SwatchBase } from "./SwatchBase";
 const StyledSwatchBase = styled(SwatchBase)`
   cursor: pointer;
   border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
-  transition:
-    opacity var(--transition-duration-fast) ease,
-    outline-width var(--transition-duration-fast) ease,
-    border-color var(--transition-duration-fast) ease;
+  transition: var(--transition-duration-fast) ease;
+  transition-property: opacity, outline-width, border-color;
 
-  :hover:not(.disabled, .selected) {
-    opacity: 85%;
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(.disabled, .selected) {
+      opacity: 85%;
+    }
   }
 
-  :focus,
-  :focus-visible {
+  &:focus-visible {
     outline: var(--focus-outline);
   }
 

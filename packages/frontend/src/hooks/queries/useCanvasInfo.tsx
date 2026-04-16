@@ -13,7 +13,7 @@ export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
     return response.data;
   };
 
-  return useQuery({
+  return useQuery<CanvasInfoRequest.ResBody>({
     queryKey: ["canvasInfo", canvasId],
     queryFn: getMainCanvasInfo,
     refetchOnMount: false,
