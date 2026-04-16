@@ -1,44 +1,21 @@
 "use client";
 
-import {
-  CanvasInfo,
-  CanvasInfoRequest,
-  Point,
-} from "@blurple-canvas-web/types";
+import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import {
-  createContext,
-  Dispatch,
-  RefObject,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { addPoints, tupleToPoint } from "@/components/canvas/point";
+import { createContext, useCallback, useContext, useState } from "react";
 import config from "@/config";
 import { socket } from "@/socket";
+import { useCanvasViewContext } from "./CanvasViewContext";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 interface CanvasContextType {
-  adjustedCoords: Point | null;
   canvas: CanvasInfo;
-  containerRef: RefObject<HTMLDivElement | null>;
-  coords: Point | null;
-  isReticleVisible: boolean;
-  zoom: number;
   setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
-  setCoords: Dispatch<SetStateAction<Point | null>>;
-  setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
-  setZoom: Dispatch<SetStateAction<number>>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
-  adjustedCoords: null,
   canvas: {
     id: -1,
     name: "",
@@ -50,14 +27,7 @@ export const CanvasContext = createContext<CanvasContextType>({
     webPlacingEnabled: false,
     allColorsGlobal: false,
   },
-  containerRef: { current: null },
-  coords: null,
-  isReticleVisible: false,
-  zoom: 1,
-  setCoords: () => {},
   setCanvas: async () => {},
-  setZoom: () => {},
-  setIsReticleVisible: () => {},
 });
 
 interface CanvasProviderProps {
@@ -71,26 +41,10 @@ export const CanvasProvider = ({
 }: CanvasProviderProps) => {
   const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
-  const [selectedCoords, setSelectedCoords] =
-    useState<CanvasContextType["coords"]>(null);
-  const [isReticleVisible, setIsReticleVisible] =
-    useState<CanvasContextType["isReticleVisible"]>(true);
-  const [zoom, setZoom] = useState(1);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const { setCoords } = useCanvasViewContext();
 
-  const adjustedCoords = useMemo(() => {
-    if (selectedCoords) {
-      return addPoints(
-        selectedCoords,
-        tupleToPoint(activeCanvas.startCoordinates),
-      );
-    }
-
-    return null;
-  }, [activeCanvas.startCoordinates, selectedCoords]);
-
-  const { setColor: setSelectedColor } = useSelectedColorContext();
-  const [, setSelectedFrame] = useSelectedFrameContext();
+  const { setColor } = useSelectedColorContext();
+  const [, setFrame] = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {
@@ -98,9 +52,9 @@ export const CanvasProvider = ({
         `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
       );
       setActiveCanvas(response.data);
-      setSelectedColor(null);
-      setSelectedCoords(null);
-      setSelectedFrame(null);
+      setColor(null);
+      setCoords(null);
+      setFrame(null);
 
       const url = new URL(window.location.href);
       url.pathname =
@@ -116,22 +70,14 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [router, setSelectedColor, setSelectedFrame, mainCanvasInfo.id],
+    [router, setColor, setFrame, setCoords, mainCanvasInfo.id],
   );
 
   return (
     <CanvasContext.Provider
       value={{
-        adjustedCoords,
         canvas: activeCanvas,
-        isReticleVisible: isReticleVisible && selectedCoords !== null,
-        containerRef: containerRef,
-        coords: selectedCoords,
-        zoom: zoom,
-        setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
-        setIsReticleVisible: setIsReticleVisible,
-        setZoom: setZoom,
       }}
     >
       {children}

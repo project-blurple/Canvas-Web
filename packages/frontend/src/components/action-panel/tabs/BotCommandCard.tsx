@@ -2,7 +2,7 @@ import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import config from "@/config";
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import { useCanvasViewContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: center;
@@ -58,7 +58,7 @@ export default function BotCommandCard({ command }: { command: string }) {
 }
 
 export function BotPlaceCommandCard() {
-  const { adjustedCoords: coordinates } = useCanvasContext();
+  const { adjustedCoords: coordinates } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
 
   if (!(coordinates && color)) return null;
