@@ -35,22 +35,13 @@ export function AuthProvider({ children, profile }: AuthProviderProps) {
   const [user, setUser] = useState(profile);
   const { data: userData } = useUserData(user);
 
-  useEffect(() => {
-    if (!user || !userData?.guilds) {
-      return;
-    }
-
-    setUser((currentUser) => {
-      if (!currentUser || currentUser.guilds) {
-        return currentUser;
-      }
-
-      return {
-        ...currentUser,
+  const resolvedUser =
+    user && !user.guilds && userData?.guilds ?
+      {
+        ...user,
         guilds: userData.guilds,
-      };
-    });
-  }, [user, userData]);
+      }
+    : user;
 
   const signOut = useCallback<AuthContextType["signOut"]>(() => {
     // Delete the session cookie
@@ -65,7 +56,7 @@ export function AuthProvider({ children, profile }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, signOut }}>
+    <AuthContext.Provider value={{ user: resolvedUser, signOut }}>
       {children}
     </AuthContext.Provider>
   );

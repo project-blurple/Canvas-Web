@@ -91,11 +91,17 @@ export async function getGuildPermissionsForUser(
   return getPermissions(permissions);
 }
 
-export async function userHasRoleInGuild(
-  guildId: string,
-  roleId: string,
-  accessToken: string,
-): Promise<boolean> {
+interface userHasRoleInGuildProps {
+  guildId: string;
+  roleId: string;
+  accessToken: string;
+}
+
+export async function userHasRoleInGuild({
+  guildId,
+  roleId,
+  accessToken,
+}: userHasRoleInGuildProps): Promise<boolean> {
   let member: DiscordGuildMember;
 
   try {
@@ -122,7 +128,7 @@ export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRoleInGuild(guildId, roleId, accessToken);
+  return userHasRoleInGuild({ guildId, roleId, accessToken });
 }
 
 export async function isCanvasModerator(accessToken: string): Promise<boolean> {
@@ -133,7 +139,7 @@ export async function isCanvasModerator(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRoleInGuild(guildId, roleId, accessToken);
+  return userHasRoleInGuild({ guildId, roleId, accessToken });
 }
 
 export async function getCurrentUserGuildFlags(
