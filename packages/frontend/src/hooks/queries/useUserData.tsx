@@ -9,15 +9,15 @@ interface UserDataResponse {
   guilds: DiscordUserProfile["guilds"];
 }
 
-export function useUserData(user: DiscordUserProfile | null) {
-  const getUserData = async () => {
-    const response = await axios.get<UserDataResponse>(
-      `${config.apiUrl}/api/v1/discord/guilds/permissions-map`,
-      { withCredentials: true },
-    );
-    return response.data;
-  };
+async function getUserData(): Promise<UserDataResponse> {
+  const response = await axios.get<UserDataResponse>(
+    `${config.apiUrl}/api/v1/discord/guilds/permissions-map`,
+    { withCredentials: true },
+  );
+  return response.data;
+}
 
+export function useUserData(user: DiscordUserProfile | null) {
   return useQuery({
     queryKey: ["discord/user-data", user?.id],
     queryFn: getUserData,

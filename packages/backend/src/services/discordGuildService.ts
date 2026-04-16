@@ -34,6 +34,9 @@ interface DiscordRequestOptions {
   authorization: string;
 }
 
+type CanvasAdminUser = DiscordUserProfile & { isCanvasAdmin: true };
+type CanvasModeratorUser = DiscordUserProfile & { isCanvasModerator: true };
+
 async function discordRequest<T>({
   endpoint,
   authorization,
@@ -80,21 +83,12 @@ export async function getGuildPermissionsForUser(
 
   if (!guild) {
     throw new NotFoundError(
-      `Discord resource not found: /users/@me/guilds/${guildId}`,
+      `Discord resource not found: /users/@me/guilds/${encodeURIComponent(guildId)}`,
     );
   }
 
   const permissions = BigInt(guild.permissions ?? "0");
-  const administrator =
-    (permissions & ADMINISTRATOR_PERMISSION) === ADMINISTRATOR_PERMISSION;
-  const manageGuild =
-    administrator ||
-    (permissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
-
-  return {
-    administrator,
-    manage_guild: manageGuild,
-  };
+  return getPermissions(permissions);
 }
 
 export async function userHasRoleInGuild(
@@ -106,7 +100,7 @@ export async function userHasRoleInGuild(
 
   try {
     member = await discordRequest<DiscordGuildMember>({
-      endpoint: `/users/@me/guilds/${guildId}/member`,
+      endpoint: `/users/@me/guilds/${encodeURIComponent(guildId)}/member`,
       authorization: asBearerToken(accessToken),
     });
   } catch (error) {
@@ -121,8 +115,8 @@ export async function userHasRoleInGuild(
 }
 
 export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
-  const guildId = config.discord.managementGuild;
-  const roleId = config.discord.adminRole;
+  const guildId = config.discord.discordManagementGuild;
+  const roleId = config.discord.discordAdminRole;
 
   if (!guildId || !roleId || !accessToken) {
     return false;
@@ -132,8 +126,8 @@ export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
 }
 
 export async function isCanvasModerator(accessToken: string): Promise<boolean> {
-  const guildId = config.discord.managementGuild;
-  const roleId = config.discord.moderatorRole;
+  const guildId = config.discord.discordManagementGuild;
+  const roleId = config.discord.discordModeratorRole;
 
   if (!guildId || !roleId || !accessToken) {
     return false;
@@ -153,12 +147,8 @@ export async function getCurrentUserGuildFlags(
   return Object.fromEntries(
     guilds.map((guild) => {
       const permissions = BigInt(guild.permissions ?? "0");
-      const administrator =
-        (permissions & ADMINISTRATOR_PERMISSION) === ADMINISTRATOR_PERMISSION;
-      const manageGuild =
-        administrator ||
-        (permissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
-
+      const { administrator, manage_guild: manageGuild } =
+        getPermissions(permissions);
       return [
         guild.id,
         {
@@ -172,7 +162,22 @@ export async function getCurrentUserGuildFlags(
   );
 }
 
-export function ensureCanvasAdmin(user: DiscordUserProfile): void {
+function getPermissions(permissions: bigint): GuildPermissionsSummary {
+  const administrator =
+    (permissions & ADMINISTRATOR_PERMISSION) === ADMINISTRATOR_PERMISSION;
+  const manageGuild =
+    administrator ||
+    (permissions & MANAGE_GUILD_PERMISSION) === MANAGE_GUILD_PERMISSION;
+
+  return {
+    administrator,
+    manage_guild: manageGuild,
+  };
+}
+
+export function assertCanvasAdmin(
+  user: DiscordUserProfile,
+): asserts user is CanvasAdminUser {
   if (!user.isCanvasAdmin) {
     throw new ForbiddenError(
       "You do not have permission to perform this action",
@@ -180,7 +185,9 @@ export function ensureCanvasAdmin(user: DiscordUserProfile): void {
   }
 }
 
-export function ensureCanvasModerator(user: DiscordUserProfile): void {
+export function assertCanvasModerator(
+  user: DiscordUserProfile,
+): asserts user is CanvasModeratorUser {
   if (!user.isCanvasModerator) {
     throw new ForbiddenError(
       "You do not have permission to perform this action",

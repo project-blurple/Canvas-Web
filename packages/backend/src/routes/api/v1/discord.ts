@@ -10,7 +10,7 @@ import {
   getGuildPermissionsForUser,
 } from "@/services/discordGuildService";
 import { saveDiscordProfile } from "@/services/discordProfileService";
-import { validateSnowflake } from "@/utils/discordRouteUtils";
+import { assertIsSnowflake } from "@/utils/discordRouteUtils";
 
 export const discordRouter = Router();
 
@@ -25,7 +25,7 @@ discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
       throw new UnauthorizedError("User is not authenticated");
     }
 
-    validateSnowflake(guildId, "guildId");
+    assertIsSnowflake(guildId, "guildId");
     const accessToken = req.session.discordAccessToken;
     if (!accessToken) {
       throw new UnauthorizedError("Discord access token is missing");

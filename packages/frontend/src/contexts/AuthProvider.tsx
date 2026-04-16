@@ -36,12 +36,6 @@ export function AuthProvider({ children, profile }: AuthProviderProps) {
   const { data: userData } = useUserData(user);
 
   useEffect(() => {
-    if (!user) {
-      return;
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (!user || !userData?.guilds) {
       return;
     }
