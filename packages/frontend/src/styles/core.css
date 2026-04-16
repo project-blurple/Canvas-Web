@@ -164,9 +164,6 @@
     --discord-legacy-actually-black: oklch(0% 0 0);
 
     --font-body:
-      system-ui, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto,
-      Ubuntu, sans-serif;
-    --font-display:
       "Mona Sans", system-ui, -apple-system, BlinkMacSystemFont, "Inter",
       "Segoe UI", Roboto, Ubuntu, sans-serif;
     --font-monospace:

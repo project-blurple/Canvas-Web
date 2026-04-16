@@ -7,7 +7,7 @@ import {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import config from "@/config";
 import {
@@ -400,7 +400,21 @@ export default function CanvasView() {
   const overlayCountRef = useRef(0);
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
-  const [isSafari, setIsSafari] = useState(false);
+
+  /**
+   * Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
+   * If the user spoof their user agent, this is not my problem.
+   * @see https://bugs.webkit.org/show_bug.cgi?id=27684
+   */
+  const isWebKit = useMemo(() => {
+    const { userAgent: ua, vendor } = navigator;
+    const isProbablyWebKit =
+      vendor === "Apple Computer, Inc." ||
+      ua.includes("AppleWebKit/") ||
+      ua.includes("Safari/");
+    const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
+    return isProbablyWebKit && isNotChromium;
+  }, []);
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -534,17 +548,6 @@ export default function CanvasView() {
       setFrame,
     ],
   );
-
-  useEffect(() => {
-    // Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
-    // If the user spoof their user agent, this is not my problem.
-    // Bug in question https://bugs.webkit.org/show_bug.cgi?id=27684
-    setIsSafari(
-      navigator.userAgent.includes("Safari/") &&
-        !navigator.userAgent.includes("Chrome/") &&
-        !navigator.userAgent.includes("Chromium/"),
-    );
-  });
 
   /********************************
    * SOCKET FUNCTIONALITY.       *
@@ -985,7 +988,7 @@ export default function CanvasView() {
           transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
           // Only apply transition when zooming is triggered by wheel event
           transition:
-            !isSafari && isZooming ?
+            !isWebKit && isZooming ?
               "transform var(--transition-duration-fast) ease-out"
             : undefined,
         }}
