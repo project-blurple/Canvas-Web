@@ -1008,7 +1008,7 @@ export default function CanvasView() {
             />
           )}
           <Reticle
-            src="./images/reticle.png"
+            src="/images/reticle.png"
             alt="Reticle"
             className="reticle"
             style={{
