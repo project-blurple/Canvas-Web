@@ -70,6 +70,8 @@ export default function FrameEditPanel({
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
 
+  const isCreateMode = !selectedFrame;
+
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
@@ -108,7 +110,7 @@ export default function FrameEditPanel({
       <ScrollBlock>
         <ActionPanelTabBody>
           <EditContainer>
-            <Heading>{selectedFrame ? "Edit frame" : "Create frame"}</Heading>
+            <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
             <TextField
               label="Name"
               variant="outlined"
@@ -125,7 +127,7 @@ export default function FrameEditPanel({
                   setSelectedOwner(value);
                 }
               }}
-              disabled={!!selectedFrame} // Can't change owner after frame is created
+              disabled={!isCreateMode} // Can't change owner after frame is created
             >
               <ToggleButton value={FrameOwnerType.User}>You</ToggleButton>
               <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
@@ -138,7 +140,7 @@ export default function FrameEditPanel({
                   label="Server"
                   onChange={(e) => setSelectedGuildId(e.target.value as string)}
                   MenuProps={SelectMenuProps}
-                  disabled={!!selectedFrame} // Can't change owner after frame is created
+                  disabled={!isCreateMode} // Can't change owner after frame is created
                 >
                   {guildsWithFrames.length > 0 && (
                     <ListSubheader>Servers with frames</ListSubheader>
