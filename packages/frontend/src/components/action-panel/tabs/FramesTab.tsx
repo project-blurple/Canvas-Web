@@ -1,6 +1,7 @@
 import { ValueOf } from "@blurple-canvas-web/types/src/utils";
 import { styled } from "@mui/material";
 import { useState } from "react";
+import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabBlock } from "./ActionPanelTabBody";
 
@@ -10,7 +11,7 @@ const FramesTabBlock = styled(TabBlock)`
 
 export const FRAME_PANEL_STATE = {
   Info: "info",
-  Create: "create",
+  Edit: "edit",
 };
 
 export type FramePanelState = ValueOf<typeof FRAME_PANEL_STATE>;
@@ -28,8 +29,8 @@ export default function FramesTab({ active }: FramesTabProps) {
     <FramesTabBlock active={active}>
       {activePanel === FRAME_PANEL_STATE.Info ?
         <FrameInfoPanel setActivePanel={setActivePanel} />
-      : activePanel === FRAME_PANEL_STATE.Create ?
-        <div>Create frame panel</div>
+      : activePanel === FRAME_PANEL_STATE.Edit ?
+        <FrameEditPanel setActivePanel={setActivePanel} />
       : null}
     </FramesTabBlock>
   );
