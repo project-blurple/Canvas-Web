@@ -4,11 +4,8 @@ import {
   GuildOwnedFrame,
 } from "@blurple-canvas-web/types/src/frame";
 import {
-  FormControl,
+  Autocomplete,
   InputLabel,
-  ListSubheader,
-  MenuItem,
-  Select,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -35,9 +32,12 @@ const EditContainer = styled("div")`
   gap: 0.5rem;
 `;
 
-const SelectMenuProps = {};
-
 type GuildEntry = [string, GuildData];
+type GuildOption = {
+  guildId: string;
+  guild: GuildData;
+  group: string;
+};
 
 function splitGuildsByFramePresence(
   managedGuildEntries: GuildEntry[],
@@ -93,10 +93,34 @@ export default function FrameEditPanel({
     guildIds: managedGuildEntries.map(([guildId]) => guildId),
   });
 
-  const [guildsWithFrames, otherManagedGuilds] = useMemo(
-    () => splitGuildsByFramePresence(managedGuildEntries, guildFrames),
-    [managedGuildEntries, guildFrames],
-  );
+  const guildOptions = useMemo<GuildOption[]>(() => {
+    const [guildsWithFrames, otherManagedGuilds] = splitGuildsByFramePresence(
+      managedGuildEntries,
+      guildFrames,
+    );
+
+    const withFrames = guildsWithFrames.map(([guildId, guild]) => ({
+      guildId,
+      guild,
+      group: "Servers with frames",
+    }));
+
+    const withoutFramesGroup =
+      guildsWithFrames.length > 0 ?
+        "Other servers you manage"
+      : "Servers you manage";
+
+    const withoutFrames = otherManagedGuilds.map(([guildId, guild]) => ({
+      guildId,
+      guild,
+      group: withoutFramesGroup,
+    }));
+
+    return [...withFrames, ...withoutFrames];
+  }, [managedGuildEntries, guildFrames]);
+
+  const selectedGuildOption =
+    guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
 
   if (!user) {
     // Shouldn't be able to get to this tab without being logged in,
@@ -133,38 +157,23 @@ export default function FrameEditPanel({
               <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
             </ToggleButtonGroup>
             {selectedOwner === FrameOwnerType.Guild && (
-              <FormControl fullWidth>
-                <InputLabel>Server</InputLabel>
-                <Select
-                  value={selectedGuildId}
-                  label="Server"
-                  onChange={(e) => setSelectedGuildId(e.target.value as string)}
-                  MenuProps={SelectMenuProps}
-                  disabled={!isCreateMode} // Can't change owner after frame is created
-                >
-                  {guildsWithFrames.length > 0 && (
-                    <ListSubheader>Servers with frames</ListSubheader>
-                  )}
-                  {guildsWithFrames.map(([guildId, guild]) => (
-                    <MenuItem key={guildId} value={guildId}>
-                      {guild.name}
-                    </MenuItem>
-                  ))}
-
-                  {otherManagedGuilds.length > 0 && (
-                    <ListSubheader>
-                      {guildsWithFrames.length > 0 ?
-                        "Other servers you manage"
-                      : "Servers you manage"}
-                    </ListSubheader>
-                  )}
-                  {otherManagedGuilds.map(([guildId, guild]) => (
-                    <MenuItem key={guildId} value={guildId}>
-                      {guild.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+              <Autocomplete
+                options={guildOptions}
+                value={selectedGuildOption}
+                groupBy={(option) => option.group}
+                getOptionLabel={(option) => option.guild.name}
+                isOptionEqualToValue={(option, value) =>
+                  option.guildId === value.guildId
+                }
+                onChange={(_, value) =>
+                  setSelectedGuildId(value?.guildId ?? "")
+                }
+                disabled={!isCreateMode} // Can't change owner after frame is created
+                fullWidth
+                renderInput={(params) => (
+                  <TextField {...params} label="Server" />
+                )}
+              />
             )}
           </EditContainer>
         </ActionPanelTabBody>
