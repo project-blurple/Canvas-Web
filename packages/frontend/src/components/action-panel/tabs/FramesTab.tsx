@@ -9,12 +9,12 @@ const FramesTabBlock = styled(TabBlock)`
   grid-template-rows: 1fr auto;
 `;
 
-export const FRAME_PANEL_STATE = {
+export const FramePanelState = {
   Info: "info",
   Edit: "edit",
 };
 
-export type FramePanelState = ValueOf<typeof FRAME_PANEL_STATE>;
+export type FramePanelState = ValueOf<typeof FramePanelState>;
 
 interface FramesTabProps {
   active?: boolean;
@@ -22,14 +22,14 @@ interface FramesTabProps {
 
 export default function FramesTab({ active }: FramesTabProps) {
   const [activePanel, setActivePanel] = useState<FramePanelState>(
-    FRAME_PANEL_STATE.Info,
+    FramePanelState.Info,
   );
 
   return (
     <FramesTabBlock active={active}>
-      {activePanel === FRAME_PANEL_STATE.Info ?
+      {activePanel === FramePanelState.Info ?
         <FrameInfoPanel setActivePanel={setActivePanel} />
-      : activePanel === FRAME_PANEL_STATE.Edit ?
+      : activePanel === FramePanelState.Edit ?
         <FrameEditPanel setActivePanel={setActivePanel} />
       : null}
     </FramesTabBlock>
