@@ -1,6 +1,5 @@
 import { GuildOwnedFrame, SystemOwnedFrame } from "@blurple-canvas-web/types";
 import { Link, styled } from "@mui/material";
-import { Heading } from "lucide-react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -8,6 +7,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
+import { Heading } from "../action-panel/ActionPanel";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
 
