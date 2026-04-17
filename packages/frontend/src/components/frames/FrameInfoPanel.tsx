@@ -1,3 +1,5 @@
+import { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
+import { Frame } from "@blurple-canvas-web/types/src/frame";
 import { useState } from "react";
 import {
   useAuthContext,
@@ -15,6 +17,28 @@ import { FramePanelState } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
+
+function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
+  if (frame.owner.type === "system") {
+    return false;
+  }
+
+  if (frame.owner.type === "user") {
+    return frame.owner.user.id === user.id;
+  }
+
+  if (frame.owner.type === "guild") {
+    const guildId = frame.owner.guild.guild_id;
+    const userGuildData = user.guilds?.[guildId];
+    if (userGuildData !== undefined) {
+      if (userGuildData.administrator || userGuildData.manageGuild) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
 
 export default function FrameInfoPanel({
   setActivePanel,
@@ -35,11 +59,8 @@ export default function FrameInfoPanel({
       })
     : "";
 
-  const userHasPermsToEditSelectedFrame = // TODO: implement guild perms check too
-    selectedFrame &&
-    user &&
-    selectedFrame.owner.type === "user" &&
-    selectedFrame.owner.user.id === user.id;
+  const userHasPermsToEditSelectedFrame =
+    selectedFrame && user && userCanEditFrame(user, selectedFrame);
 
   return (
     <>

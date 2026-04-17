@@ -125,6 +125,7 @@ export default function FrameEditPanel({
                   setSelectedOwner(value);
                 }
               }}
+              disabled={!!selectedFrame} // Can't change owner after frame is created
             >
               <ToggleButton value={FrameOwnerType.User}>You</ToggleButton>
               <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
@@ -137,6 +138,7 @@ export default function FrameEditPanel({
                   label="Server"
                   onChange={(e) => setSelectedGuildId(e.target.value as string)}
                   MenuProps={SelectMenuProps}
+                  disabled={!!selectedFrame} // Can't change owner after frame is created
                 >
                   {guildsWithFrames.length > 0 && (
                     <ListSubheader>Servers with frames</ListSubheader>
