@@ -177,7 +177,7 @@ export default function ActionPanel() {
         eventId={canvas.eventId}
       />
       <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
-      <FramesTab active={currentTab === TABS.FRAME} canvasId={canvas.id} />
+      <FramesTab active={currentTab === TABS.FRAME} />
     </Wrapper>
   );
 }

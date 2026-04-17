@@ -1,70 +1,36 @@
+import { ValueOf } from "@blurple-canvas-web/types/src/utils";
 import { styled } from "@mui/material";
 import { useState } from "react";
-import { DynamicButton } from "@/components/button";
-import FrameList from "@/components/frames/FrameList";
-import { useSelectedFrameContext } from "@/contexts";
-import { createPixelUrl } from "@/util";
-import {
-  ActionPanelTabBody,
-  ScrollBlock,
-  TabBlock,
-} from "./ActionPanelTabBody";
-import ActionPanelTooltip from "./ActionPanelTooltip";
-import BotCommandCard from "./BotCommandCard";
-import FrameInfoCard from "./SelectedFrameInfoCard";
+import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
+import { TabBlock } from "./ActionPanelTabBody";
 
 const FramesTabBlock = styled(TabBlock)`
   grid-template-rows: 1fr auto;
 `;
 
+export const FRAME_PANEL_STATE = {
+  Info: "info",
+  Create: "create",
+};
+
+export type FramePanelState = ValueOf<typeof FRAME_PANEL_STATE>;
+
 interface FramesTabProps {
   active?: boolean;
-  canvasId: number;
 }
 
-export default function FramesTab({ active, canvasId }: FramesTabProps) {
-  const { frame: selectedFrame } = useSelectedFrameContext();
-
-  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
-  const closeTooltip = () => setTooltipIsOpen(false);
-  const openTooltip = () => setTooltipIsOpen(true);
-
-  const frameUrl =
-    selectedFrame ?
-      createPixelUrl({
-        canvasId: canvasId,
-        frameId: selectedFrame.id,
-      })
-    : "";
+export default function FramesTab({ active }: FramesTabProps) {
+  const [activePanel, setActivePanel] = useState<FramePanelState>(
+    FRAME_PANEL_STATE.Info,
+  );
 
   return (
     <FramesTabBlock active={active}>
-      <ScrollBlock>
-        <FrameList />
-      </ScrollBlock>
-      {selectedFrame && (
-        <ActionPanelTabBody>
-          <FrameInfoCard frame={selectedFrame} />
-          <BotCommandCard command="/frame create" />
-          {selectedFrame.owner.type !== "system" && (
-            <ActionPanelTooltip
-              title="Copied"
-              onClose={closeTooltip}
-              open={tooltipIsOpen}
-            >
-              <DynamicButton
-                color={null}
-                onAction={() => {
-                  openTooltip();
-                  navigator.clipboard.writeText(frameUrl);
-                }}
-              >
-                Copy frame link
-              </DynamicButton>
-            </ActionPanelTooltip>
-          )}
-        </ActionPanelTabBody>
-      )}
+      {activePanel === FRAME_PANEL_STATE.Info ?
+        <FrameInfoPanel setActivePanel={setActivePanel} />
+      : activePanel === FRAME_PANEL_STATE.Create ?
+        <div>Create frame panel</div>
+      : null}
     </FramesTabBlock>
   );
 }
