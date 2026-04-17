@@ -11,13 +11,15 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
+import { useCanvasImage } from "@/hooks/useCanvasImage";
+import { normalizeFrameBounds } from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
@@ -25,11 +27,22 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelState } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
+import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const EditContainer = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+`;
+
+const PreviewContainer = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const EditPreviewCanvas = styled(PreviewCanvas)`
+  height: auto;
 `;
 
 type GuildEntry = [string, GuildData];
@@ -69,6 +82,8 @@ export default function FrameEditPanel({
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
+  const sourceImage = useCanvasImage(canvas.id);
+  const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const isCreateMode = !selectedFrame;
 
@@ -121,6 +136,37 @@ export default function FrameEditPanel({
 
   const selectedGuildOption =
     guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
+
+  const selectedFrameBounds =
+    selectedFrame ? normalizeFrameBounds(selectedFrame) : null;
+
+  useEffect(
+    function drawSelectedFramePreview() {
+      if (!selectedFrame) return;
+      if (!sourceImage) return;
+
+      const previewCanvas = previewCanvasRef.current;
+      if (!previewCanvas) return;
+
+      const bounds = normalizeFrameBounds(selectedFrame);
+      const previewWidth = Math.max(1, Math.round(bounds.width));
+      const previewHeight = Math.max(1, Math.round(bounds.height));
+
+      drawSourceRectToCanvas(
+        previewCanvas,
+        sourceImage,
+        {
+          x: bounds.left,
+          y: bounds.top,
+          width: bounds.width,
+          height: bounds.height,
+        },
+        previewWidth,
+        previewHeight,
+      );
+    },
+    [selectedFrame, sourceImage],
+  );
 
   if (!user) {
     // Shouldn't be able to get to this tab without being logged in,
@@ -176,6 +222,20 @@ export default function FrameEditPanel({
               />
             )}
           </EditContainer>
+          <PreviewContainer>
+            <Heading>Preview</Heading>
+            {selectedFrameBounds ?
+              <EditPreviewCanvas
+                ref={previewCanvasRef}
+                width={Math.max(1, Math.round(selectedFrameBounds.width))}
+                height={Math.max(1, Math.round(selectedFrameBounds.height))}
+                style={{
+                  aspectRatio: `${Math.max(1, selectedFrameBounds.width)} / ${Math.max(1, selectedFrameBounds.height)}`,
+                }}
+                aria-label="Selected frame preview"
+              />
+            : <p>Select a frame to preview it.</p>}
+          </PreviewContainer>
         </ActionPanelTabBody>
       </ScrollBlock>
       <ActionPanelTabBody>

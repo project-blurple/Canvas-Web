@@ -1,4 +1,8 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import {
+  DiscordUserProfile,
+  Frame,
+  GuildData,
+} from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
@@ -72,4 +76,20 @@ export function getUserGuildFlags(
   user: DiscordUserProfile,
 ): Record<string, GuildData> {
   return user.guilds ?? {};
+}
+
+export function normalizeFrameBounds(frame: Frame) {
+  const left = Math.min(frame.x0, frame.x1);
+  const right = Math.max(frame.x0, frame.x1);
+  const top = Math.min(frame.y0, frame.y1);
+  const bottom = Math.max(frame.y0, frame.y1);
+
+  return {
+    left,
+    right,
+    top,
+    bottom,
+    width: Math.max(1, right - left),
+    height: Math.max(1, bottom - top),
+  };
 }
