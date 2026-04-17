@@ -368,7 +368,7 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const [frame, setFrame] = useSelectedFrameContext();
+  const { frame, setFrame } = useSelectedFrameContext();
   const {
     canvas,
     containerRef,
