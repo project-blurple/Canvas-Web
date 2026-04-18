@@ -1,3 +1,4 @@
+import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
 import { FrameGuildIdsQueryModel, parseCanvasId } from "@/models/paramModels";
@@ -55,7 +56,13 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
 
 frameRouter.post("/:frameId/edit", async (req, res) => {
   try {
+    if (!req.user || !req.session.discordAccessToken) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
     editFrame(
+      req.user as DiscordUserProfile,
+      req.session.discordAccessToken,
       req.params.frameId,
       req.body.name,
       req.body.x0,
@@ -71,7 +78,15 @@ frameRouter.post("/:frameId/edit", async (req, res) => {
 
 frameRouter.post("/:frameId/delete", async (req, res) => {
   try {
-    await deleteFrame(req.params.frameId);
+    if (!req.user || !req.session.discordAccessToken) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
+    await deleteFrame(
+      req.user as DiscordUserProfile,
+      req.session.discordAccessToken,
+      req.params.frameId,
+    );
     res.status(200).json({ message: "Frame deleted successfully" });
   } catch (error) {
     ApiError.sendError(res, error);
@@ -80,7 +95,13 @@ frameRouter.post("/:frameId/delete", async (req, res) => {
 
 frameRouter.post("/create", async (req, res) => {
   try {
+    if (!req.user || !req.session.discordAccessToken) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
     await createFrame(
+      req.user as DiscordUserProfile,
+      req.session.discordAccessToken,
       req.body.canvasId,
       req.body.name,
       req.body.ownerId,

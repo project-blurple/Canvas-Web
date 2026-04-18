@@ -1,11 +1,13 @@
 import {
+  DiscordUserProfile,
   Frame,
   FrameOwnerType,
   GuildOwnedFrame,
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
-import { NotFoundError } from "@/errors";
+import { ForbiddenError, NotFoundError } from "@/errors";
+import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
 type FrameSelect = NonNullable<FrameFindManyArgs>["select"];
@@ -160,7 +162,48 @@ export async function getFramesByGuildIds(
   });
 }
 
+async function assertUserHasPermissionsForFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  isGuildOwned: boolean,
+  ownerId: string,
+) {
+  if (isGuildOwned) {
+    const permissions = await getGuildPermissionsForUser(ownerId, accessToken);
+
+    if (!permissions.administrator && !permissions.manage_guild) {
+      throw new ForbiddenError(
+        "You do not have permission to modify frames for this guild",
+      );
+    }
+  } else {
+    if (ownerId !== user.id) {
+      throw new ForbiddenError("You are not the owner of this frame");
+    }
+  }
+}
+
+async function assertUserHasPermissionsForFrameObject(
+  user: DiscordUserProfile,
+  accessToken: string,
+  frame: Frame,
+) {
+  if (frame.owner.type === FrameOwnerType.System) {
+    throw new ForbiddenError("System-owned frames cannot be edited");
+  }
+  return assertUserHasPermissionsForFrame(
+    user,
+    accessToken,
+    frame.owner.type === FrameOwnerType.Guild,
+    frame.owner.type === FrameOwnerType.Guild ?
+      frame.owner.guild.guild_id
+    : frame.owner.user.id,
+  );
+}
+
 export async function editFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
   frameId: string,
   name: string,
   x0: number,
@@ -169,13 +212,37 @@ export async function editFrame(
   y1: number,
 ) {
   console.log("Editing frame", { frameId, name, x0, y0, x1, y1 });
+
+  const frame = await getFrameById(frameId);
+
+  if (!frame) {
+    throw new NotFoundError("Frame not found");
+  }
+
+  assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+  console.log("User has valid permissions");
 }
 
-export async function deleteFrame(frameId: string) {
+export async function deleteFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  frameId: string,
+) {
   console.log("Deleting frame", { frameId });
+
+  const frame = await getFrameById(frameId);
+
+  if (!frame) {
+    throw new NotFoundError("Frame not found");
+  }
+
+  assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+  console.log("User has valid permissions");
 }
 
 export async function createFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
   canvasId: number,
   name: string,
   ownerId: string,
@@ -195,4 +262,7 @@ export async function createFrame(
     x1,
     y1,
   });
+
+  assertUserHasPermissionsForFrame(user, accessToken, isGuildOwned, ownerId);
+  console.log("User has valid permissions");
 }
