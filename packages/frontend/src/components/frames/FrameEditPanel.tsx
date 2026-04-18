@@ -149,25 +149,42 @@ export default function FrameEditPanel({
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
-  const { containerRef, offset, zoom } = useCanvasViewContext();
+  const {
+    containerRef,
+    offset,
+    zoom,
+    selectedBounds: frameBounds,
+    setSelectedBounds: setFrameBounds,
+  } = useCanvasViewContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
-  const [frameBounds, setFrameBounds] = useState<ViewBounds>(
-    selectedFrame ?
-      normalizeFrameBounds(selectedFrame)
-    : fitViewBoundsToFillRatio(
-        getCurrentViewBounds({
-          canvas,
-          containerRef,
-          offset,
-          zoom,
-        }),
-        FRAME_FILL_RATIO,
-      ),
-  );
+
+  const didInitBoundsRef = useRef(false);
+
+  useEffect(() => {
+    if (didInitBoundsRef.current) return;
+
+    if (selectedFrame) {
+      setFrameBounds(normalizeFrameBounds(selectedFrame));
+    } else {
+      setFrameBounds(
+        fitViewBoundsToFillRatio(
+          getCurrentViewBounds({
+            canvas,
+            containerRef,
+            offset,
+            zoom,
+          }),
+          FRAME_FILL_RATIO,
+        ),
+      );
+    }
+
+    didInitBoundsRef.current = true;
+  }, [selectedFrame, canvas, containerRef, offset, zoom, setFrameBounds]);
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
     selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
@@ -224,7 +241,7 @@ export default function FrameEditPanel({
       const previewCanvas = previewCanvasRef.current;
       if (!previewCanvas) return;
 
-      if (frameBounds.width === 0 || frameBounds.height === 0) {
+      if (!frameBounds || frameBounds.width === 0 || frameBounds.height === 0) {
         return;
       }
 

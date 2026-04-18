@@ -12,6 +12,7 @@ import {
   useState,
 } from "react";
 import { addPoints, ORIGIN, tupleToPoint } from "@/components/canvas/point";
+import { ViewBounds } from "@/util";
 import { useCanvasContext } from "./CanvasContext";
 
 interface CanvasViewContextType {
@@ -20,10 +21,12 @@ interface CanvasViewContextType {
   coords: Point | null;
   isReticleVisible: boolean;
   offset: Point;
+  selectedBounds: ViewBounds | null;
   zoom: number;
   setCoords: Dispatch<SetStateAction<Point | null>>;
   setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
   setOffset: Dispatch<SetStateAction<Point>>;
+  setSelectedBounds: Dispatch<SetStateAction<ViewBounds | null>>;
   setZoom: Dispatch<SetStateAction<number>>;
 }
 
@@ -33,10 +36,12 @@ export const CanvasViewContext = createContext<CanvasViewContextType>({
   coords: null,
   isReticleVisible: false,
   offset: ORIGIN,
+  selectedBounds: null,
   zoom: 1,
   setCoords: () => {},
   setIsReticleVisible: () => {},
   setOffset: () => {},
+  setSelectedBounds: () => {},
   setZoom: () => {},
 });
 
@@ -53,6 +58,8 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
+  const [selectedBounds, setSelectedBounds] =
+    useState<CanvasViewContextType["selectedBounds"]>(null);
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -70,10 +77,12 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
         coords: selectedCoords,
         isReticleVisible: isReticleVisible && selectedCoords !== null,
         offset: offset,
+        selectedBounds,
         zoom: zoom,
         setCoords: setSelectedCoords,
         setIsReticleVisible: setIsReticleVisible,
         setOffset: setOffset,
+        setSelectedBounds: setSelectedBounds,
         setZoom: setZoom,
       }}
     >
