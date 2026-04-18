@@ -13,6 +13,21 @@ const OverlayReticle = styled("img")`
   image-rendering: pixelated;
 `;
 
+const OverlayShade = styled("svg")`
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+`;
+
+const OverlayDesaturateShade = styled("svg")`
+  inset: 0;
+  mix-blend-mode: saturation;
+  pointer-events: none;
+  position: absolute;
+  z-index: 1;
+`;
+
 function calculateReticleOffsetForPoint(
   point: Point,
   reticleSize: number,
@@ -25,14 +40,29 @@ function calculateReticleOffsetForPoint(
 }
 
 export default function SelectedBoundsOverlay({
+  canvasWidth,
+  canvasHeight,
   selectedBounds,
   reticleScale,
   reticleSize,
 }: {
+  canvasWidth: number;
+  canvasHeight: number;
   selectedBounds: ViewBounds | null;
   reticleScale: number;
   reticleSize: number;
 }) {
+  const overlayCutoutPath = useMemo(() => {
+    if (!selectedBounds) return null;
+
+    const left = Math.max(0, Math.min(canvasWidth, selectedBounds.left));
+    const top = Math.max(0, Math.min(canvasHeight, selectedBounds.top));
+    const right = Math.max(left, Math.min(canvasWidth, selectedBounds.right));
+    const bottom = Math.max(top, Math.min(canvasHeight, selectedBounds.bottom));
+
+    return `M0 0H${canvasWidth}V${canvasHeight}H0Z M${left} ${top}H${right}V${bottom}H${left}Z`;
+  }, [canvasWidth, canvasHeight, selectedBounds]);
+
   const selectedBoundsCorners = useMemo(() => {
     if (!selectedBounds) return [];
 
@@ -69,6 +99,36 @@ export default function SelectedBoundsOverlay({
 
   return (
     <>
+      {overlayCutoutPath && (
+        <OverlayShade
+          aria-hidden
+          width={canvasWidth}
+          height={canvasHeight}
+          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+        >
+          <path
+            d={overlayCutoutPath}
+            fill="#000000"
+            fillOpacity={0.25}
+            fillRule="evenodd"
+          />
+        </OverlayShade>
+      )}
+      {overlayCutoutPath && (
+        <OverlayDesaturateShade
+          aria-hidden
+          width={canvasWidth}
+          height={canvasHeight}
+          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+        >
+          <path
+            d={overlayCutoutPath}
+            fill="#808080"
+            fillRule="evenodd"
+            fillOpacity={0.25}
+          />
+        </OverlayDesaturateShade>
+      )}
       {selectedBoundsCorners.map((corner) => (
         <OverlayReticleContainer
           key={`selected-bounds-corner-${corner.key}`}

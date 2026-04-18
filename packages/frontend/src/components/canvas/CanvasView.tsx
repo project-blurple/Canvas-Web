@@ -987,6 +987,7 @@ export default function CanvasView() {
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
         style={{
+          isolation: "isolate",
           transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
           // Only apply transition when zooming is triggered by wheel event
           transition:
@@ -1029,6 +1030,8 @@ export default function CanvasView() {
           />
         </ReticleContainer>
         <SelectedBoundsOverlay
+          canvasWidth={canvas.width}
+          canvasHeight={canvas.height}
           selectedBounds={selectedBounds}
           reticleScale={RETICLE_SCALE}
           reticleSize={RETICLE_SIZE}
