@@ -76,6 +76,7 @@ function getCurrentViewBounds({
 function fitViewBoundsToFillRatio(
   viewBounds: ViewBounds,
   frameFillRatio: number,
+  canvas: CanvasInfo,
 ): ViewBounds {
   const centerX = (viewBounds.left + viewBounds.right) / 2;
   const centerY = (viewBounds.top + viewBounds.bottom) / 2;
@@ -87,8 +88,8 @@ function fitViewBoundsToFillRatio(
 
   const clampedLeft = Math.max(0, Math.floor(left));
   const clampedTop = Math.max(0, Math.floor(top));
-  const clampedRight = Math.min(viewBounds.right * 2, Math.ceil(right));
-  const clampedBottom = Math.min(viewBounds.bottom * 2, Math.ceil(bottom));
+  const clampedRight = Math.min(canvas.width, Math.ceil(right));
+  const clampedBottom = Math.min(canvas.height, Math.ceil(bottom));
 
   return {
     left: clampedLeft,
@@ -139,6 +140,7 @@ export const SelectedBoundsProvider = ({
           zoom,
         }),
         fillRatio,
+        canvas,
       ),
     );
   }

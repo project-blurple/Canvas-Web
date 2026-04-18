@@ -10,3 +10,4 @@ export type * from "./pixelHistory";
 export type * from "./pixelInfo";
 export type * from "./point";
 export type * from "./statistics";
+export * from "./utils";

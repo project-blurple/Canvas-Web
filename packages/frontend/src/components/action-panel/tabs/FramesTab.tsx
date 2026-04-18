@@ -1,4 +1,4 @@
-import { ValueOf } from "@blurple-canvas-web/types/src/utils";
+import { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";

@@ -1,5 +1,4 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
-import { Frame } from "@blurple-canvas-web/types/src/frame";
+import { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
 import { useState } from "react";
 import {
   useAuthContext,

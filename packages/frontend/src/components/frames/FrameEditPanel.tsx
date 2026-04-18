@@ -1,8 +1,8 @@
-import { GuildData } from "@blurple-canvas-web/types";
 import {
   FrameOwnerType,
+  GuildData,
   GuildOwnedFrame,
-} from "@blurple-canvas-web/types/src/frame";
+} from "@blurple-canvas-web/types";
 import {
   Autocomplete,
   Dialog,

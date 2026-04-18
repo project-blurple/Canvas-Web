@@ -217,7 +217,7 @@ export async function editFrame(
     throw new NotFoundError("Frame not found");
   }
 
-  assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+  await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
 
   await prisma.frame.update({
     where: {
@@ -244,7 +244,7 @@ export async function deleteFrame(
     throw new NotFoundError("Frame not found");
   }
 
-  assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+  await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
 
   await prisma.frame.delete({
     where: {
@@ -287,7 +287,12 @@ export async function createFrame(
   x1: number,
   y1: number,
 ) {
-  assertUserHasPermissionsForFrame(user, accessToken, isGuildOwned, ownerId);
+  await assertUserHasPermissionsForFrame(
+    user,
+    accessToken,
+    isGuildOwned,
+    ownerId,
+  );
 
   const id = await generateUniqueFrameId();
 
