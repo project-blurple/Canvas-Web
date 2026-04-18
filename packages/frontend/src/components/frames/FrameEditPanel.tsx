@@ -16,7 +16,9 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
+import config from "@/config";
 import {
   useAuthContext,
   useCanvasContext,
@@ -272,8 +274,100 @@ export default function FrameEditPanel({
     closeEditor();
   };
 
-  const handleDeleteAction = () => {
+  const handleDeleteButtonAction = () => {
     setIsDeleteConfirmOpen(true);
+  };
+
+  const handleSaveAction = () => {
+    try {
+      if (!frameId || !frameBounds) return;
+
+      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/edit`;
+
+      const body = {
+        name: frameName,
+        x0: frameBounds.left,
+        y0: frameBounds.top,
+        x1: frameBounds.right,
+        y1: frameBounds.bottom,
+      };
+
+      axios
+        .post(requestUrl, body, {
+          withCredentials: true,
+        })
+        .catch((e) => {
+          console.error(e);
+          if (e.response?.status === 401) {
+            alert("Your session has expired. Please log in again.");
+            return;
+          }
+
+          alert("Failed to save frame changes");
+        });
+    } finally {
+      closeEditor();
+    }
+  };
+
+  const handleDeleteAction = () => {
+    setIsDeleteConfirmOpen(false);
+
+    try {
+      if (!frameId) return;
+
+      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/delete`;
+
+      axios
+        .post(requestUrl, null, {
+          withCredentials: true,
+        })
+        .catch((e) => {
+          console.error(e);
+          if (e.response?.status === 401) {
+            alert("Your session has expired. Please log in again.");
+            return;
+          }
+
+          alert("Failed to delete frame");
+        });
+    } finally {
+      closeEditor();
+    }
+  };
+
+  const handleCreateAction = () => {
+    try {
+      const requestUrl = `${config.apiUrl}/api/v1/frame/create`;
+
+      const body = {
+        canvasId: canvas.id,
+        name: frameName,
+        ownerId:
+          selectedOwner === FrameOwnerType.User ? user?.id : selectedGuildId,
+        isGuildOwned: selectedOwner === FrameOwnerType.Guild,
+        x0: frameBounds?.left ?? 0,
+        y0: frameBounds?.top ?? 0,
+        x1: frameBounds ? frameBounds.right : canvas.width,
+        y1: frameBounds ? frameBounds.bottom : canvas.height,
+      };
+
+      axios
+        .post(requestUrl, body, {
+          withCredentials: true,
+        })
+        .catch((e) => {
+          console.error(e);
+          if (e.response?.status === 401) {
+            alert("Your session has expired. Please log in again.");
+            return;
+          }
+
+          alert("Failed to create frame");
+        });
+    } finally {
+      closeEditor();
+    }
   };
 
   useEffect(
@@ -398,24 +492,30 @@ export default function FrameEditPanel({
       </ScrollBlock>
       <ActionPanelTabBody>
         <ButtonRow>
-          <DynamicButton
-            color={hexStringToPixelColor(frameId)}
-            onAction={() => {
-              // save frame here
-              closeEditor();
-            }}
-            disabled={!frameName || !frameBounds}
-          >
-            Save
-          </DynamicButton>
-          {!isCreateMode && (
-            <DynamicButton
+          {!isCreateMode ?
+            <>
+              <DynamicButton
+                color={hexStringToPixelColor(frameId)}
+                onAction={handleSaveAction}
+                disabled={!frameName || !frameBounds || !hasUnsavedChanges}
+              >
+                Save
+              </DynamicButton>
+              <DynamicButton
+                color={hexStringToPixelColor(frameId)}
+                onAction={handleDeleteButtonAction}
+              >
+                Delete
+              </DynamicButton>
+            </>
+          : <DynamicButton
               color={hexStringToPixelColor(frameId)}
-              onAction={handleDeleteAction}
+              onAction={handleCreateAction}
+              disabled={!frameName || !frameBounds}
             >
-              Delete
+              Create
             </DynamicButton>
-          )}
+          }
         </ButtonRow>
         <DynamicButton color={null} onAction={handleBackAction}>
           Back
@@ -478,11 +578,7 @@ export default function FrameEditPanel({
           </DynamicButton>
           <DynamicButton
             color={hexStringToPixelColor(frameId)}
-            onAction={() => {
-              setIsDeleteConfirmOpen(false);
-              // delete frame here
-              closeEditor();
-            }}
+            onAction={handleDeleteAction}
           >
             Delete
           </DynamicButton>

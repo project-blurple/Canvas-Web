@@ -180,7 +180,10 @@ export default function PlacePixelTab({
         )}
         {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
-          <DynamicAnchorButton color={selectedColor} href={serverInvite}>
+          <DynamicAnchorButton
+            color={selectedColor?.rgba || null}
+            href={serverInvite}
+          >
             {!userInServer ? "Join" : "Open"}{" "}
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>

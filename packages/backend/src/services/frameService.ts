@@ -159,3 +159,40 @@ export async function getFramesByGuildIds(
     return mapped;
   });
 }
+
+export async function editFrame(
+  frameId: string,
+  name: string,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  console.log("Editing frame", { frameId, name, x0, y0, x1, y1 });
+}
+
+export async function deleteFrame(frameId: string) {
+  console.log("Deleting frame", { frameId });
+}
+
+export async function createFrame(
+  canvasId: number,
+  name: string,
+  ownerId: string,
+  isGuildOwned: boolean,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  console.log("Creating frame", {
+    canvasId,
+    name,
+    ownerId,
+    isGuildOwned,
+    x0,
+    y0,
+    x1,
+    y1,
+  });
+}

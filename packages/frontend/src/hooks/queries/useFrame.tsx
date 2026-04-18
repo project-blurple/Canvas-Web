@@ -9,6 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
+import { ViewBounds } from "@/util";
 
 interface UseUserFramesParams {
   canvasId: Frame["canvasId"];
