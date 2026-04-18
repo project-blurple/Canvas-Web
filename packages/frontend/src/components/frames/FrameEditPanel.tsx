@@ -16,6 +16,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useMemo, useRef, useState } from "react";
 import config from "@/config";
@@ -122,6 +123,7 @@ export default function FrameEditPanel({
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
+  const queryClient = useQueryClient();
   const {
     clearSelectedBounds,
     setCanEdit,
@@ -129,7 +131,8 @@ export default function FrameEditPanel({
     setSelectedBounds: setFrameBounds,
     setBoundsToCurrentView,
   } = useSelectedBoundsContext();
-  const { frame: selectedFrame } = useSelectedFrameContext();
+  const { frame: selectedFrame, setFrame: setSelectedFrame } =
+    useSelectedFrameContext();
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -265,6 +268,17 @@ export default function FrameEditPanel({
     clearSelectedBounds();
   };
 
+  const refreshFrameQueries = async () => {
+    if (user) {
+      await queryClient.invalidateQueries({
+        queryKey: ["frame", "user", canvas.id, user.id],
+      });
+    }
+    await queryClient.invalidateQueries({
+      queryKey: ["frame", "guilds", canvas.id],
+    });
+  };
+
   const handleBackAction = () => {
     if (hasUnsavedChanges) {
       setIsBackConfirmOpen(true);
@@ -278,7 +292,7 @@ export default function FrameEditPanel({
     setIsDeleteConfirmOpen(true);
   };
 
-  const handleSaveAction = () => {
+  const handleSaveAction = async () => {
     try {
       if (!frameId || !frameBounds) return;
 
@@ -292,25 +306,25 @@ export default function FrameEditPanel({
         y1: frameBounds.bottom,
       };
 
-      axios
-        .post(requestUrl, body, {
-          withCredentials: true,
-        })
-        .catch((e) => {
-          console.error(e);
-          if (e.response?.status === 401) {
-            alert("Your session has expired. Please log in again.");
-            return;
-          }
+      await axios.post(requestUrl, body, {
+        withCredentials: true,
+      });
 
-          alert("Failed to save frame changes");
-        });
+      await refreshFrameQueries();
+    } catch (e) {
+      console.error(e);
+      if ((e as { response?: { status?: number } }).response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      alert("Failed to save frame changes");
     } finally {
       closeEditor();
     }
   };
 
-  const handleDeleteAction = () => {
+  const handleDeleteAction = async () => {
     setIsDeleteConfirmOpen(false);
 
     try {
@@ -318,25 +332,26 @@ export default function FrameEditPanel({
 
       const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/delete`;
 
-      axios
-        .post(requestUrl, null, {
-          withCredentials: true,
-        })
-        .catch((e) => {
-          console.error(e);
-          if (e.response?.status === 401) {
-            alert("Your session has expired. Please log in again.");
-            return;
-          }
+      await axios.post(requestUrl, null, {
+        withCredentials: true,
+      });
 
-          alert("Failed to delete frame");
-        });
+      await refreshFrameQueries();
+    } catch (e) {
+      console.error(e);
+      if ((e as { response?: { status?: number } }).response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      alert("Failed to delete frame");
     } finally {
+      setSelectedFrame(null);
       closeEditor();
     }
   };
 
-  const handleCreateAction = () => {
+  const handleCreateAction = async () => {
     try {
       const requestUrl = `${config.apiUrl}/api/v1/frame/create`;
 
@@ -352,19 +367,19 @@ export default function FrameEditPanel({
         y1: frameBounds ? frameBounds.bottom : canvas.height,
       };
 
-      axios
-        .post(requestUrl, body, {
-          withCredentials: true,
-        })
-        .catch((e) => {
-          console.error(e);
-          if (e.response?.status === 401) {
-            alert("Your session has expired. Please log in again.");
-            return;
-          }
+      await axios.post(requestUrl, body, {
+        withCredentials: true,
+      });
 
-          alert("Failed to create frame");
-        });
+      await refreshFrameQueries();
+    } catch (e) {
+      console.error(e);
+      if ((e as { response?: { status?: number } }).response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      alert("Failed to create frame");
     } finally {
       closeEditor();
     }

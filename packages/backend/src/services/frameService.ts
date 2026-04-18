@@ -211,8 +211,6 @@ export async function editFrame(
   x1: number,
   y1: number,
 ) {
-  console.log("Editing frame", { frameId, name, x0, y0, x1, y1 });
-
   const frame = await getFrameById(frameId);
 
   if (!frame) {
@@ -220,7 +218,6 @@ export async function editFrame(
   }
 
   assertUserHasPermissionsForFrameObject(user, accessToken, frame);
-  console.log("User has valid permissions");
 
   await prisma.frame.update({
     where: {
@@ -234,8 +231,6 @@ export async function editFrame(
       y_1: y1,
     },
   });
-
-  console.log("Frame edited");
 }
 
 export async function deleteFrame(
@@ -243,8 +238,6 @@ export async function deleteFrame(
   accessToken: string,
   frameId: string,
 ) {
-  console.log("Deleting frame", { frameId });
-
   const frame = await getFrameById(frameId);
 
   if (!frame) {
@@ -252,15 +245,12 @@ export async function deleteFrame(
   }
 
   assertUserHasPermissionsForFrameObject(user, accessToken, frame);
-  console.log("User has valid permissions");
 
   await prisma.frame.delete({
     where: {
       id: frameId,
     },
   });
-
-  console.log("Frame deleted");
 }
 
 async function generateUniqueFrameId(): Promise<string> {
@@ -297,19 +287,7 @@ export async function createFrame(
   x1: number,
   y1: number,
 ) {
-  console.log("Creating frame", {
-    canvasId,
-    name,
-    ownerId,
-    isGuildOwned,
-    x0,
-    y0,
-    x1,
-    y1,
-  });
-
   assertUserHasPermissionsForFrame(user, accessToken, isGuildOwned, ownerId);
-  console.log("User has valid permissions");
 
   const id = await generateUniqueFrameId();
 
@@ -326,6 +304,4 @@ export async function createFrame(
       y_1: y1,
     },
   });
-
-  console.log("Frame created with ID", id);
 }
