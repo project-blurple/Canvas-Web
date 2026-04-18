@@ -265,6 +265,7 @@ export default function FrameEditPanel({
     // Shouldn't be able to get to this tab without being logged in,
     // but this prevents that at the least
     setActivePanel(FramePanelState.Info);
+    setFrameBounds(null);
     return null;
   }
 
@@ -336,6 +337,7 @@ export default function FrameEditPanel({
           color={null}
           onAction={() => {
             setActivePanel(FramePanelState.Info);
+            setFrameBounds(null);
           }}
         >
           Back
