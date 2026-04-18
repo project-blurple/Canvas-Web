@@ -5,6 +5,7 @@ import type { Metadata, Viewport } from "next";
 
 import config from "@/config";
 import {
+  CanvasViewProvider,
   QueryClientProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
@@ -80,28 +81,36 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  return (
+    <html lang="en">
+      <body>
+        <LayoutProviders>{children}</LayoutProviders>
+      </body>
+    </html>
+  );
+}
+
+async function LayoutProviders({ children }: { children: React.ReactNode }) {
   const [profile, canvasInfo] = await Promise.all([
     getServerSideProfile(),
     getServerSideCanvasInfo(),
   ]);
 
   return (
-    <html lang="en">
-      <body>
-        <AppRouterCacheProvider>
-          <QueryClientProvider>
-            <AuthProvider profile={profile}>
-              <SelectedColorProvider>
-                <SelectedFrameProvider>
-                  <CanvasProvider mainCanvasInfo={canvasInfo}>
-                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </CanvasProvider>
-                </SelectedFrameProvider>
-              </SelectedColorProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </AppRouterCacheProvider>
-      </body>
-    </html>
+    <AppRouterCacheProvider>
+      <QueryClientProvider>
+        <AuthProvider profile={profile}>
+          <SelectedColorProvider>
+            <SelectedFrameProvider>
+              <CanvasProvider mainCanvasInfo={canvasInfo}>
+                <CanvasViewProvider>
+                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                </CanvasViewProvider>
+              </CanvasProvider>
+            </SelectedFrameProvider>
+          </SelectedColorProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppRouterCacheProvider>
   );
 }

@@ -2,7 +2,7 @@ import { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useState } from "react";
 import { DynamicButton } from "@/components/button";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
@@ -76,8 +76,8 @@ export default function PixelInfoTab({
   active = false,
   canvasId,
 }: PixelInfoTabProps) {
-  const { adjustedCoords, canvas, containerRef, coords, zoom } =
-    useCanvasContext();
+  const { canvas } = useCanvasContext();
+  const { adjustedCoords, containerRef, coords, zoom } = useCanvasViewContext();
   const { data, isLoading } = usePixelHistory(canvasId, coords);
 
   const pixelHistory = data?.pixelHistory ?? [];

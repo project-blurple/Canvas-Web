@@ -3,7 +3,11 @@
 import { PaletteColor } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useState } from "react";
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import {
+  useCanvasContext,
+  useCanvasViewContext,
+  useSelectedColorContext,
+} from "@/contexts";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
@@ -132,7 +136,8 @@ export default function ActionPanel() {
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
 
   const { color, setColor } = useSelectedColorContext();
-  const { canvas, setIsReticleVisible } = useCanvasContext();
+  const { canvas } = useCanvasContext();
+  const { setIsReticleVisible } = useCanvasViewContext();
 
   const onSwitchTab = (newTab: TABS) => {
     // switching tabs

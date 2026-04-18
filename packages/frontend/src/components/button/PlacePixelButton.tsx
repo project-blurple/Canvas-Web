@@ -7,6 +7,7 @@ import config from "@/config";
 import {
   useAuthContext,
   useCanvasContext,
+  useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
 import { Button } from "./Button";
@@ -21,7 +22,8 @@ interface PlacePixelButtonProps {
 }
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
-  const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
+  const { canvas } = useCanvasContext();
+  const { coords, adjustedCoords, setCoords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
