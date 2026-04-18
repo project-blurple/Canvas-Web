@@ -32,6 +32,23 @@ export const FrameGuildIdsQueryModel = z.object({
     ),
 });
 
+const FrameIdParamModel = z.object({
+  frameId: z.string().length(6),
+});
+
+export const FrameDataParamModel = z.object({
+  name: z.string().min(1).max(100),
+  x0: z.coerce.number().int().nonnegative(),
+  y0: z.coerce.number().int().nonnegative(),
+  x1: z.coerce.number().int().positive(),
+  y1: z.coerce.number().int().positive(),
+});
+
+export const FrameOwnerParamModel = z.object({
+  ownerId: z.string(),
+  isGuildOwned: z.boolean(),
+});
+
 export interface CanvasIdParam {
   canvasId: string;
   [key: string]: string;
@@ -49,4 +66,21 @@ export async function parseCanvasId(
   }
 
   return result.data.canvasId;
+}
+
+export interface FrameIdParam {
+  frameId: string;
+  [key: string]: string;
+}
+
+export async function parseFrameId(params: FrameIdParam): Promise<string> {
+  const result = await FrameIdParamModel.safeParseAsync(params);
+  if (!result.success) {
+    throw new BadRequestError(
+      `${params.frameId} is not a valid frame ID`,
+      result.error.issues,
+    );
+  }
+
+  return result.data.frameId;
 }

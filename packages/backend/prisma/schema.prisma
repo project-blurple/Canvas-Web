@@ -104,7 +104,6 @@ model frame {
   y_0            Int
   y_1            Int
   style_id       Int?
-  user           user?                 @relation(fields: [owner_id], references: [id])
 }
 
 model guild {
@@ -187,7 +186,6 @@ model user {
   user_stats        user_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
-  frame             frame[]
 }
 
 model session {

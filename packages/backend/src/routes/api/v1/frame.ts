@@ -1,7 +1,13 @@
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
-import { FrameGuildIdsQueryModel, parseCanvasId } from "@/models/paramModels";
+import {
+  FrameDataParamModel,
+  FrameGuildIdsQueryModel,
+  FrameOwnerParamModel,
+  parseCanvasId,
+  parseFrameId,
+} from "@/models/paramModels";
 import {
   createFrame,
   deleteFrame,
@@ -60,15 +66,25 @@ frameRouter.post("/:frameId/edit", async (req, res) => {
       throw new ApiError("Unauthorized", 401);
     }
 
-    editFrame(
+    const frameId = await parseFrameId(req.params);
+
+    const bodyQueryResult = await FrameDataParamModel.safeParseAsync(req.body);
+    if (!bodyQueryResult.success) {
+      throw new BadRequestError(
+        "Invalid body parameters",
+        bodyQueryResult.error.issues,
+      );
+    }
+
+    await editFrame(
       req.user as DiscordUserProfile,
       req.session.discordAccessToken,
-      req.params.frameId,
-      req.body.name,
-      req.body.x0,
-      req.body.y0,
-      req.body.x1,
-      req.body.y1,
+      frameId,
+      bodyQueryResult.data.name,
+      bodyQueryResult.data.x0,
+      bodyQueryResult.data.y0,
+      bodyQueryResult.data.x1,
+      bodyQueryResult.data.y1,
     );
     res.status(200).json({ message: "Frame edited successfully" });
   } catch (error) {
@@ -82,10 +98,12 @@ frameRouter.post("/:frameId/delete", async (req, res) => {
       throw new ApiError("Unauthorized", 401);
     }
 
+    const frameId = await parseFrameId(req.params);
+
     await deleteFrame(
       req.user as DiscordUserProfile,
       req.session.discordAccessToken,
-      req.params.frameId,
+      frameId,
     );
     res.status(200).json({ message: "Frame deleted successfully" });
   } catch (error) {
@@ -99,17 +117,37 @@ frameRouter.post("/create", async (req, res) => {
       throw new ApiError("Unauthorized", 401);
     }
 
+    const canvasId = await parseCanvasId(req.body);
+
+    const bodyQueryResult = await FrameDataParamModel.safeParseAsync(req.body);
+    if (!bodyQueryResult.success) {
+      throw new BadRequestError(
+        "Invalid body parameters",
+        bodyQueryResult.error.issues,
+      );
+    }
+
+    const ownerQueryResult = await FrameOwnerParamModel.safeParseAsync(
+      req.body,
+    );
+    if (!ownerQueryResult.success) {
+      throw new BadRequestError(
+        "Invalid body parameters",
+        ownerQueryResult.error.issues,
+      );
+    }
+
     await createFrame(
       req.user as DiscordUserProfile,
       req.session.discordAccessToken,
-      req.body.canvasId,
-      req.body.name,
-      req.body.ownerId,
-      req.body.isGuildOwned,
-      req.body.x0,
-      req.body.y0,
-      req.body.x1,
-      req.body.y1,
+      canvasId,
+      bodyQueryResult.data.name,
+      ownerQueryResult.data.ownerId,
+      ownerQueryResult.data.isGuildOwned,
+      bodyQueryResult.data.x0,
+      bodyQueryResult.data.y0,
+      bodyQueryResult.data.x1,
+      bodyQueryResult.data.y1,
     );
     res.status(201).json({ message: "Frame created successfully" });
   } catch (error) {
