@@ -78,6 +78,8 @@ export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
           thumbWidth / thumbHeight,
         );
 
+        if (!crop) return;
+
         drawSourceRectToCanvas(
           thumbCanvas,
           sourceImage,

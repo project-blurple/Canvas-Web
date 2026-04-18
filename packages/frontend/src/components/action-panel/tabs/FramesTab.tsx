@@ -11,6 +11,7 @@ const FramesTabBlock = styled(TabBlock)`
 
 export const FramePanelState = {
   Info: "info",
+  Create: "create",
   Edit: "edit",
 };
 
@@ -29,8 +30,14 @@ export default function FramesTab({ active }: FramesTabProps) {
     <FramesTabBlock active={active}>
       {activePanel === FramePanelState.Info ?
         <FrameInfoPanel setActivePanel={setActivePanel} />
-      : activePanel === FramePanelState.Edit ?
-        <FrameEditPanel setActivePanel={setActivePanel} />
+      : (
+        activePanel === FramePanelState.Edit ||
+        activePanel === FramePanelState.Create
+      ) ?
+        <FrameEditPanel
+          setActivePanel={setActivePanel}
+          isCreateMode={activePanel === FramePanelState.Create}
+        />
       : null}
     </FramesTabBlock>
   );

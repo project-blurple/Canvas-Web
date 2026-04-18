@@ -28,7 +28,11 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelState } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
-import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
+import {
+  drawSourceRectToCanvas,
+  FRAME_FILL_RATIO,
+  PreviewCanvas,
+} from "./FramePreview";
 
 const EditContainer = styled("div")`
   display: flex;
@@ -53,7 +57,7 @@ type GuildOption = {
   group: string;
 };
 
-export function getCurrentViewBounds({
+function getCurrentViewBounds({
   canvas,
   containerRef,
   offset,
@@ -76,6 +80,33 @@ export function getCurrentViewBounds({
   const clampedTop = Math.max(0, Math.floor(top));
   const clampedRight = Math.min(canvas.width, Math.ceil(right));
   const clampedBottom = Math.min(canvas.height, Math.ceil(bottom));
+
+  return {
+    left: clampedLeft,
+    top: clampedTop,
+    right: clampedRight,
+    bottom: clampedBottom,
+    width: clampedRight - clampedLeft,
+    height: clampedBottom - clampedTop,
+  };
+}
+
+function fitViewBoundsToFillRatio(
+  viewBounds: ViewBounds,
+  frameFillRatio: number,
+): ViewBounds {
+  const centerX = (viewBounds.left + viewBounds.right) / 2;
+  const centerY = (viewBounds.top + viewBounds.bottom) / 2;
+
+  const left = centerX - (centerX - viewBounds.left) * frameFillRatio;
+  const right = centerX + (viewBounds.right - centerX) * frameFillRatio;
+  const top = centerY - (centerY - viewBounds.top) * frameFillRatio;
+  const bottom = centerY + (viewBounds.bottom - centerY) * frameFillRatio;
+
+  const clampedLeft = Math.max(0, Math.floor(left));
+  const clampedTop = Math.max(0, Math.floor(top));
+  const clampedRight = Math.min(viewBounds.right * 2, Math.ceil(right));
+  const clampedBottom = Math.min(viewBounds.bottom * 2, Math.ceil(bottom));
 
   return {
     left: clampedLeft,
@@ -111,8 +142,10 @@ function splitGuildsByFramePresence(
 
 export default function FrameEditPanel({
   setActivePanel,
+  isCreateMode,
 }: {
   setActivePanel: (panel: FramePanelState) => void;
+  isCreateMode: boolean;
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -121,18 +154,19 @@ export default function FrameEditPanel({
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
-  const isCreateMode = !selectedFrame;
-
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
   const [frameBounds, setFrameBounds] = useState<ViewBounds>(
     selectedFrame ?
       normalizeFrameBounds(selectedFrame)
-    : getCurrentViewBounds({
-        canvas,
-        containerRef,
-        offset,
-        zoom,
-      }),
+    : fitViewBoundsToFillRatio(
+        getCurrentViewBounds({
+          canvas,
+          containerRef,
+          offset,
+          zoom,
+        }),
+        FRAME_FILL_RATIO,
+      ),
   );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
@@ -182,9 +216,6 @@ export default function FrameEditPanel({
 
   const selectedGuildOption =
     guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
-
-  const selectedFrameBounds =
-    selectedFrame ? normalizeFrameBounds(selectedFrame) : null;
 
   useEffect(
     function drawSelectedFramePreview() {
@@ -269,13 +300,13 @@ export default function FrameEditPanel({
           </EditContainer>
           <PreviewContainer>
             <Heading>Preview</Heading>
-            {selectedFrameBounds ?
+            {frameBounds ?
               <EditPreviewCanvas
                 ref={previewCanvasRef}
-                width={Math.max(1, Math.round(selectedFrameBounds.width))}
-                height={Math.max(1, Math.round(selectedFrameBounds.height))}
+                width={Math.max(1, Math.round(frameBounds.width))}
+                height={Math.max(1, Math.round(frameBounds.height))}
                 style={{
-                  aspectRatio: `${Math.max(1, selectedFrameBounds.width)} / ${Math.max(1, selectedFrameBounds.height)}`,
+                  aspectRatio: `${Math.max(1, frameBounds.width)} / ${Math.max(1, frameBounds.height)}`,
                 }}
                 aria-label="Selected frame preview"
               />

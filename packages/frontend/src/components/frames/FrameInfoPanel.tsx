@@ -106,7 +106,7 @@ export default function FrameInfoPanel({
           <DynamicButton
             color={null}
             onAction={() => {
-              setActivePanel(FramePanelState.Edit);
+              setActivePanel(FramePanelState.Create);
             }}
           >
             Create frame
