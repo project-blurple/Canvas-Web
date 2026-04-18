@@ -5,8 +5,8 @@ import {
   GuildOwnedFrame,
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
-import { prisma } from "@/client";
-import { ForbiddenError, NotFoundError } from "@/errors";
+import { Prisma, prisma } from "@/client";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -201,6 +201,34 @@ async function assertUserHasPermissionsForFrameObject(
   );
 }
 
+async function assertCoordsAreWithinCanvas(
+  canvasId: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  const canvas = await prisma.canvas.findUnique({
+    where: {
+      id: canvasId,
+    },
+    select: {
+      width: true,
+      height: true,
+    },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError("Canvas not found");
+  }
+
+  if (x0 < 0 || y0 < 0 || x1 > canvas.width || y1 > canvas.height) {
+    throw new BadRequestError(
+      "Frame coordinates must be within the bounds of the canvas",
+    );
+  }
+}
+
 export async function editFrame(
   user: DiscordUserProfile,
   accessToken: string,
@@ -214,6 +242,8 @@ export async function editFrame(
   const frame = await getFrameById(frameId);
 
   await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+
+  await assertCoordsAreWithinCanvas(frame.canvasId, x0, y0, x1, y1);
 
   await prisma.frame.update({
     where: {
@@ -245,28 +275,6 @@ export async function deleteFrame(
   });
 }
 
-async function generateUniqueFrameId(): Promise<string> {
-  // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
-  // These are like hex colour codes!
-
-  while (true) {
-    const id = Math.floor(Math.random() * 0xffffff)
-      .toString(16)
-      .padStart(6, "0");
-    const existing = await prisma.frame.findUnique({
-      where: {
-        id,
-      },
-      select: {
-        id: true,
-      },
-    });
-    if (!existing) {
-      return id;
-    }
-  }
-}
-
 export async function createFrame(
   user: DiscordUserProfile,
   accessToken: string,
@@ -286,19 +294,38 @@ export async function createFrame(
     ownerId,
   );
 
-  const id = await generateUniqueFrameId();
+  await assertCoordsAreWithinCanvas(canvasId, x0, y0, x1, y1);
 
-  await prisma.frame.create({
-    data: {
-      id,
-      canvas_id: canvasId,
-      name,
-      owner_id: BigInt(ownerId),
-      is_guild_owned: isGuildOwned,
-      x_0: x0,
-      y_0: y0,
-      x_1: x1,
-      y_1: y1,
-    },
-  });
+  while (true) {
+    // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
+    // These are like hex colour codes!
+    const id = Math.floor(Math.random() * 0x1000000)
+      .toString(16)
+      .padStart(6, "0");
+
+    try {
+      await prisma.frame.create({
+        data: {
+          id,
+          canvas_id: canvasId,
+          name,
+          owner_id: BigInt(ownerId),
+          is_guild_owned: isGuildOwned,
+          x_0: x0,
+          y_0: y0,
+          x_1: x1,
+          y_1: y1,
+        },
+      });
+      return;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002"
+      ) {
+        continue;
+      }
+      throw error;
+    }
+  }
 }

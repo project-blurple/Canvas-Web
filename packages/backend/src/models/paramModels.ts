@@ -36,14 +36,31 @@ const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
 });
 
-export const FrameDataParamModel = z.object({
-  name: z.string().min(1).max(100),
-  x0: z.coerce.number().int().nonnegative(),
-  y0: z.coerce.number().int().nonnegative(),
-  x1: z.coerce.number().int().positive(),
-  y1: z.coerce.number().int().positive(),
-});
+export const FrameDataParamModel = z
+  .object({
+    name: z.string().min(1).max(100),
+    x0: z.coerce.number().int().nonnegative(),
+    y0: z.coerce.number().int().nonnegative(),
+    x1: z.coerce.number().int().positive(),
+    y1: z.coerce.number().int().positive(),
+  })
+  .superRefine(({ x0, y0, x1, y1 }, ctx) => {
+    if (x1 <= x0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["x1"],
+        message: "x1 must be greater than x0",
+      });
+    }
 
+    if (y1 <= y0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["y1"],
+        message: "y1 must be greater than y0",
+      });
+    }
+  });
 export const FrameOwnerParamModel = z.object({
   ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
   isGuildOwned: z.boolean(),

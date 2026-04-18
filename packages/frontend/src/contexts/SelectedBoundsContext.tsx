@@ -50,8 +50,19 @@ function getCurrentViewBounds({
   offset,
   zoom,
 }: CurrentViewProps): ViewBounds {
-  const containerWidth = containerRef.current?.clientWidth ?? 0;
-  const containerHeight = containerRef.current?.clientHeight ?? 0;
+  if (!containerRef.current) {
+    return {
+      left: 0,
+      top: 0,
+      right: canvas.width,
+      bottom: canvas.height,
+      width: canvas.width,
+      height: canvas.height,
+    };
+  }
+
+  const containerWidth = containerRef.current.clientWidth ?? 0;
+  const containerHeight = containerRef.current.clientHeight ?? 0;
 
   const left = canvas.width / 2 + (-containerWidth / 2 - offset.x) / zoom;
   const right = canvas.width / 2 + (containerWidth / 2 - offset.x) / zoom;
