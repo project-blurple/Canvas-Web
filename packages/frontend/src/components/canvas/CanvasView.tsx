@@ -13,6 +13,7 @@ import config from "@/config";
 import {
   useCanvasContext,
   useCanvasViewContext,
+  useSelectedBoundsContext,
   useSelectedColorContext,
   useSelectedFrameContext,
 } from "@/contexts";
@@ -369,13 +370,13 @@ export default function CanvasView() {
 
   const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
+  const { selectedBounds } = useSelectedBoundsContext();
   const { canvas, setCanvas } = useCanvasContext();
   const {
     containerRef,
     coords,
     isReticleVisible,
     offset,
-    selectedBounds,
     zoom,
     setCoords,
     setOffset,

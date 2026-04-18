@@ -7,6 +7,7 @@ import config from "@/config";
 import {
   CanvasViewProvider,
   QueryClientProvider,
+  SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
@@ -100,15 +101,17 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider>
       <QueryClientProvider>
         <AuthProvider profile={profile}>
-          <SelectedColorProvider>
-            <SelectedFrameProvider>
-              <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <CanvasViewProvider>
-                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                </CanvasViewProvider>
-              </CanvasProvider>
-            </SelectedFrameProvider>
-          </SelectedColorProvider>
+          <CanvasProvider mainCanvasInfo={canvasInfo}>
+            <CanvasViewProvider>
+              <SelectedColorProvider>
+                <SelectedFrameProvider>
+                  <SelectedBoundsProvider>
+                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  </SelectedBoundsProvider>
+                </SelectedFrameProvider>
+              </SelectedColorProvider>
+            </CanvasViewProvider>
+          </CanvasProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>

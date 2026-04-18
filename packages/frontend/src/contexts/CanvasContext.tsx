@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState } from "react";
 import config from "@/config";
 import { socket } from "@/socket";
-import { useCanvasViewContext } from "./CanvasViewContext";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
 
@@ -41,7 +40,6 @@ export const CanvasProvider = ({
 }: CanvasProviderProps) => {
   const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
-  const { setCoords } = useCanvasViewContext();
 
   const { setColor } = useSelectedColorContext();
   const { setFrame } = useSelectedFrameContext();
@@ -53,7 +51,6 @@ export const CanvasProvider = ({
       );
       setActiveCanvas(response.data);
       setColor(null);
-      setCoords(null);
       setFrame(null);
 
       const url = new URL(window.location.href);
@@ -70,7 +67,7 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [router, setColor, setFrame, setCoords, mainCanvasInfo.id],
+    [router, setColor, setFrame, mainCanvasInfo.id],
   );
 
   return (

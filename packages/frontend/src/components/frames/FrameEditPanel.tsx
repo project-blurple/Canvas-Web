@@ -16,6 +16,7 @@ import {
   useAuthContext,
   useCanvasContext,
   useCanvasViewContext,
+  useSelectedBoundsContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
@@ -59,67 +60,6 @@ type GuildOption = {
   group: string;
 };
 
-function getCurrentViewBounds({
-  canvas,
-  containerRef,
-  offset,
-  zoom,
-}: {
-  canvas: CanvasInfo;
-  containerRef: RefObject<HTMLDivElement | null>;
-  offset: Point;
-  zoom: number;
-}): ViewBounds {
-  const containerWidth = containerRef.current?.clientWidth ?? 0;
-  const containerHeight = containerRef.current?.clientHeight ?? 0;
-
-  const left = canvas.width / 2 + (-containerWidth / 2 - offset.x) / zoom;
-  const right = canvas.width / 2 + (containerWidth / 2 - offset.x) / zoom;
-  const top = canvas.height / 2 + (-containerHeight / 2 - offset.y) / zoom;
-  const bottom = canvas.height / 2 + (containerHeight / 2 - offset.y) / zoom;
-
-  const clampedLeft = Math.max(0, Math.floor(left));
-  const clampedTop = Math.max(0, Math.floor(top));
-  const clampedRight = Math.min(canvas.width, Math.ceil(right));
-  const clampedBottom = Math.min(canvas.height, Math.ceil(bottom));
-
-  return {
-    left: clampedLeft,
-    top: clampedTop,
-    right: clampedRight,
-    bottom: clampedBottom,
-    width: clampedRight - clampedLeft,
-    height: clampedBottom - clampedTop,
-  };
-}
-
-function fitViewBoundsToFillRatio(
-  viewBounds: ViewBounds,
-  frameFillRatio: number,
-): ViewBounds {
-  const centerX = (viewBounds.left + viewBounds.right) / 2;
-  const centerY = (viewBounds.top + viewBounds.bottom) / 2;
-
-  const left = centerX - (centerX - viewBounds.left) * frameFillRatio;
-  const right = centerX + (viewBounds.right - centerX) * frameFillRatio;
-  const top = centerY - (centerY - viewBounds.top) * frameFillRatio;
-  const bottom = centerY + (viewBounds.bottom - centerY) * frameFillRatio;
-
-  const clampedLeft = Math.max(0, Math.floor(left));
-  const clampedTop = Math.max(0, Math.floor(top));
-  const clampedRight = Math.min(viewBounds.right * 2, Math.ceil(right));
-  const clampedBottom = Math.min(viewBounds.bottom * 2, Math.ceil(bottom));
-
-  return {
-    left: clampedLeft,
-    top: clampedTop,
-    right: clampedRight,
-    bottom: clampedBottom,
-    width: clampedRight - clampedLeft,
-    height: clampedBottom - clampedTop,
-  };
-}
-
 function splitGuildsByFramePresence(
   managedGuildEntries: GuildEntry[],
   guildFrames: GuildOwnedFrame[],
@@ -152,12 +92,10 @@ export default function FrameEditPanel({
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const {
-    containerRef,
-    offset,
-    zoom,
     selectedBounds: frameBounds,
     setSelectedBounds: setFrameBounds,
-  } = useCanvasViewContext();
+    setBoundsToCurrentView,
+  } = useSelectedBoundsContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -172,21 +110,11 @@ export default function FrameEditPanel({
     if (selectedFrame) {
       setFrameBounds(normalizeFrameBounds(selectedFrame));
     } else {
-      setFrameBounds(
-        fitViewBoundsToFillRatio(
-          getCurrentViewBounds({
-            canvas,
-            containerRef,
-            offset,
-            zoom,
-          }),
-          FRAME_FILL_RATIO,
-        ),
-      );
+      setBoundsToCurrentView(FRAME_FILL_RATIO);
     }
 
     didInitBoundsRef.current = true;
-  }, [selectedFrame, canvas, containerRef, offset, zoom, setFrameBounds]);
+  }, [selectedFrame, setFrameBounds, setBoundsToCurrentView]);
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
     selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
