@@ -1,4 +1,4 @@
-import { GuildData } from "@blurple-canvas-web/types";
+import { CanvasInfo, GuildData, Point } from "@blurple-canvas-web/types";
 import {
   FrameOwnerType,
   GuildOwnedFrame,
@@ -11,15 +11,16 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { RefObject, useEffect, useMemo, useRef, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
+  useCanvasViewContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { normalizeFrameBounds } from "@/util";
+import { normalizeFrameBounds, ViewBounds } from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
@@ -52,6 +53,40 @@ type GuildOption = {
   group: string;
 };
 
+export function getCurrentViewBounds({
+  canvas,
+  containerRef,
+  offset,
+  zoom,
+}: {
+  canvas: CanvasInfo;
+  containerRef: RefObject<HTMLDivElement | null>;
+  offset: Point;
+  zoom: number;
+}): ViewBounds {
+  const containerWidth = containerRef.current?.clientWidth ?? 0;
+  const containerHeight = containerRef.current?.clientHeight ?? 0;
+
+  const left = canvas.width / 2 + (-containerWidth / 2 - offset.x) / zoom;
+  const right = canvas.width / 2 + (containerWidth / 2 - offset.x) / zoom;
+  const top = canvas.height / 2 + (-containerHeight / 2 - offset.y) / zoom;
+  const bottom = canvas.height / 2 + (containerHeight / 2 - offset.y) / zoom;
+
+  const clampedLeft = Math.max(0, Math.floor(left));
+  const clampedTop = Math.max(0, Math.floor(top));
+  const clampedRight = Math.min(canvas.width, Math.ceil(right));
+  const clampedBottom = Math.min(canvas.height, Math.ceil(bottom));
+
+  return {
+    left: clampedLeft,
+    top: clampedTop,
+    right: clampedRight,
+    bottom: clampedBottom,
+    width: clampedRight - clampedLeft,
+    height: clampedBottom - clampedTop,
+  };
+}
+
 function splitGuildsByFramePresence(
   managedGuildEntries: GuildEntry[],
   guildFrames: GuildOwnedFrame[],
@@ -81,6 +116,7 @@ export default function FrameEditPanel({
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
+  const { containerRef, offset, zoom } = useCanvasViewContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -88,6 +124,16 @@ export default function FrameEditPanel({
   const isCreateMode = !selectedFrame;
 
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
+  const [frameBounds, setFrameBounds] = useState<ViewBounds>(
+    selectedFrame ?
+      normalizeFrameBounds(selectedFrame)
+    : getCurrentViewBounds({
+        canvas,
+        containerRef,
+        offset,
+        zoom,
+      }),
+  );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
     selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
@@ -142,30 +188,29 @@ export default function FrameEditPanel({
 
   useEffect(
     function drawSelectedFramePreview() {
-      if (!selectedFrame) return;
       if (!sourceImage) return;
 
       const previewCanvas = previewCanvasRef.current;
       if (!previewCanvas) return;
 
-      const bounds = normalizeFrameBounds(selectedFrame);
-      const previewWidth = Math.max(1, Math.round(bounds.width));
-      const previewHeight = Math.max(1, Math.round(bounds.height));
+      if (frameBounds.width === 0 || frameBounds.height === 0) {
+        return;
+      }
 
       drawSourceRectToCanvas(
         previewCanvas,
         sourceImage,
         {
-          x: bounds.left,
-          y: bounds.top,
-          width: bounds.width,
-          height: bounds.height,
+          x: frameBounds.left,
+          y: frameBounds.top,
+          width: frameBounds.width,
+          height: frameBounds.height,
         },
-        previewWidth,
-        previewHeight,
+        frameBounds.width,
+        frameBounds.height,
       );
     },
-    [selectedFrame, sourceImage],
+    [sourceImage, frameBounds],
   );
 
   if (!user) {

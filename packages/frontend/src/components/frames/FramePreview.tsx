@@ -28,6 +28,10 @@ export function getFrameCropRect(
   const centerX = (bounds.left + bounds.right) / 2;
   const centerY = (bounds.top + bounds.bottom) / 2;
 
+  if (bounds.width === 0 || bounds.height === 0) {
+    return null;
+  }
+
   // Expand the frame bounds so the frame occupies ~90% of the resulting thumbnail.
   let cropWidth = bounds.width / FRAME_FILL_RATIO;
   let cropHeight = bounds.height / FRAME_FILL_RATIO;

@@ -370,8 +370,16 @@ export default function CanvasView() {
   const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
   const { canvas, setCanvas } = useCanvasContext();
-  const { containerRef, coords, isReticleVisible, zoom, setCoords, setZoom } =
-    useCanvasViewContext();
+  const {
+    containerRef,
+    coords,
+    isReticleVisible,
+    zoom,
+    setCoords,
+    setZoom,
+    offset,
+    setOffset,
+  } = useCanvasViewContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -381,7 +389,6 @@ export default function CanvasView() {
   zoomRef.current = zoom;
 
   const [initialZoom, setInitialZoom] = useState(1);
-  const [offset, setOffset] = useState(ORIGIN);
   const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
   const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
@@ -794,6 +801,7 @@ export default function CanvasView() {
     setCoords,
     clampOffset,
     setZoom,
+    setOffset,
   ]);
 
   const updateOffset = useCallback(
@@ -806,7 +814,7 @@ export default function CanvasView() {
         return clampOffset(newOffset, zoomRef.current);
       });
     },
-    [clampOffset],
+    [clampOffset, setOffset],
   );
 
   const handlePan = useCallback(

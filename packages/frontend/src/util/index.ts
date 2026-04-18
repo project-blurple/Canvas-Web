@@ -7,6 +7,15 @@ import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
 
+export type ViewBounds = {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+};
+
 /**
  * Return the value clamped so that it is within the range [min, max].
  */
@@ -78,7 +87,7 @@ export function getUserGuildFlags(
   return user.guilds ?? {};
 }
 
-export function normalizeFrameBounds(frame: Frame) {
+export function normalizeFrameBounds(frame: Frame): ViewBounds {
   const left = Math.min(frame.x0, frame.x1);
   const right = Math.max(frame.x0, frame.x1);
   const top = Math.min(frame.y0, frame.y1);
@@ -89,7 +98,7 @@ export function normalizeFrameBounds(frame: Frame) {
     right,
     top,
     bottom,
-    width: Math.max(1, right - left),
-    height: Math.max(1, bottom - top),
+    width: right - left,
+    height: bottom - top,
   };
 }
