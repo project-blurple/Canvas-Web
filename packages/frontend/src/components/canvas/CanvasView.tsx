@@ -8,7 +8,7 @@ import {
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
 import {
   useCanvasContext,
@@ -374,11 +374,12 @@ export default function CanvasView() {
     containerRef,
     coords,
     isReticleVisible,
+    offset,
+    selectedBounds,
     zoom,
     setCoords,
-    setZoom,
-    offset,
     setOffset,
+    setZoom,
   } = useCanvasViewContext();
   const sourceImage = useCanvasImage(canvas.id);
 
@@ -1027,6 +1028,11 @@ export default function CanvasView() {
             }}
           />
         </ReticleContainer>
+        <SelectedBoundsOverlay
+          selectedBounds={selectedBounds}
+          reticleScale={RETICLE_SCALE}
+          reticleSize={RETICLE_SIZE}
+        />
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
