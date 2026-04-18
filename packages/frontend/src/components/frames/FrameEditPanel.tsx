@@ -30,11 +30,7 @@ import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelState } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
 import { addPoints, tupleToPoint } from "../canvas/point";
-import {
-  drawSourceRectToCanvas,
-  FRAME_FILL_RATIO,
-  PreviewCanvas,
-} from "./FramePreview";
+import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const EditContainer = styled("div")`
   display: flex;
@@ -111,7 +107,7 @@ export default function FrameEditPanel({
     if (selectedFrame) {
       setFrameBounds(normalizeFrameBounds(selectedFrame));
     } else {
-      setBoundsToCurrentView(FRAME_FILL_RATIO);
+      setBoundsToCurrentView(0.75);
     }
 
     setCanEdit(true);

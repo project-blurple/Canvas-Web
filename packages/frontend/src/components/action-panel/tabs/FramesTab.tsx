@@ -1,6 +1,6 @@
 import { ValueOf } from "@blurple-canvas-web/types/src/utils";
 import { styled } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabBlock } from "./ActionPanelTabBody";
@@ -19,12 +19,17 @@ export type FramePanelState = ValueOf<typeof FramePanelState>;
 
 interface FramesTabProps {
   active?: boolean;
+  setTabsLocked: (locked: boolean) => void;
 }
 
-export default function FramesTab({ active }: FramesTabProps) {
+export default function FramesTab({ active, setTabsLocked }: FramesTabProps) {
   const [activePanel, setActivePanel] = useState<FramePanelState>(
     FramePanelState.Info,
   );
+
+  useEffect(() => {
+    setTabsLocked(activePanel !== FramePanelState.Info);
+  }, [activePanel, setTabsLocked]);
 
   return (
     <FramesTabBlock active={active}>
