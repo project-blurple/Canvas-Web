@@ -178,18 +178,23 @@ export default function FrameEditPanel({
         return;
       }
 
-      drawSourceRectToCanvas(
-        previewCanvas,
-        sourceImage,
-        {
-          x: frameBounds.left,
-          y: frameBounds.top,
-          width: frameBounds.width,
-          height: frameBounds.height,
-        },
-        frameBounds.width,
-        frameBounds.height,
-      );
+      const timeoutId = window.setTimeout(() => {
+        drawSourceRectToCanvas(
+          previewCanvas,
+          sourceImage,
+          {
+            x: frameBounds.left,
+            y: frameBounds.top,
+            width: frameBounds.width,
+            height: frameBounds.height,
+          },
+          frameBounds.width,
+          frameBounds.height,
+        );
+        // Minor debouncing to avoid redrawing on every single pixel change when resizing frame
+      }, 50);
+
+      return () => window.clearTimeout(timeoutId);
     },
     [sourceImage, frameBounds],
   );
