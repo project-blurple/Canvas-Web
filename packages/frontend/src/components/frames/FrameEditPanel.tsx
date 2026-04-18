@@ -1,4 +1,4 @@
-import { CanvasInfo, GuildData, Point } from "@blurple-canvas-web/types";
+import { GuildData } from "@blurple-canvas-web/types";
 import {
   FrameOwnerType,
   GuildOwnedFrame,
@@ -11,17 +11,16 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { RefObject, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
-  useCanvasViewContext,
   useSelectedBoundsContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { normalizeFrameBounds, ViewBounds } from "@/util";
+import { normalizeFrameBounds } from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
