@@ -48,6 +48,8 @@ function clamp(value: number, min: number, max: number) {
 }
 
 type CornerKey = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type EdgeKey = "top" | "right" | "bottom" | "left";
+type HandleKey = CornerKey | EdgeKey;
 
 function getCornerCursor(corner: CornerKey): "nwse-resize" | "nesw-resize" {
   if (corner === "top-left" || corner === "bottom-right") {
@@ -55,6 +57,14 @@ function getCornerCursor(corner: CornerKey): "nwse-resize" | "nesw-resize" {
   }
 
   return "nesw-resize";
+}
+
+function getEdgeCursor(edge: EdgeKey): "ns-resize" | "ew-resize" {
+  if (edge === "top" || edge === "bottom") {
+    return "ns-resize";
+  }
+
+  return "ew-resize";
 }
 
 function getCornerHandleAnchor(point: Point, corner: CornerKey): Point {
@@ -73,9 +83,9 @@ function getCornerHandleAnchor(point: Point, corner: CornerKey): Point {
   return point;
 }
 
-function resizeBoundsFromCorner({
+function resizeBoundsFromHandle({
   startBounds,
-  corner,
+  handle,
   deltaX,
   deltaY,
   canvasWidth,
@@ -84,7 +94,7 @@ function resizeBoundsFromCorner({
   minHeight,
 }: {
   startBounds: ViewBounds;
-  corner: CornerKey;
+  handle: HandleKey;
   deltaX: number;
   deltaY: number;
   canvasWidth: number;
@@ -97,7 +107,7 @@ function resizeBoundsFromCorner({
   let right = startBounds.right;
   let bottom = startBounds.bottom;
 
-  if (corner === "top-left" || corner === "bottom-left") {
+  if (handle === "top-left" || handle === "bottom-left" || handle === "left") {
     left = clamp(
       Math.round(startBounds.left + deltaX),
       0,
@@ -105,7 +115,11 @@ function resizeBoundsFromCorner({
     );
   }
 
-  if (corner === "top-right" || corner === "bottom-right") {
+  if (
+    handle === "top-right" ||
+    handle === "bottom-right" ||
+    handle === "right"
+  ) {
     right = clamp(
       Math.round(startBounds.right + deltaX),
       startBounds.left + minWidth,
@@ -113,7 +127,7 @@ function resizeBoundsFromCorner({
     );
   }
 
-  if (corner === "top-left" || corner === "top-right") {
+  if (handle === "top-left" || handle === "top-right" || handle === "top") {
     top = clamp(
       Math.round(startBounds.top + deltaY),
       0,
@@ -121,7 +135,11 @@ function resizeBoundsFromCorner({
     );
   }
 
-  if (corner === "bottom-left" || corner === "bottom-right") {
+  if (
+    handle === "bottom-left" ||
+    handle === "bottom-right" ||
+    handle === "bottom"
+  ) {
     bottom = clamp(
       Math.round(startBounds.bottom + deltaY),
       startBounds.top + minHeight,
@@ -163,7 +181,7 @@ export default function SelectedBoundsOverlay({
   zoom: number;
 }) {
   const dragStateRef = useRef<{
-    corner: CornerKey;
+    handle: HandleKey;
     pointerId: number;
     startBounds: ViewBounds;
     startClientX: number;
@@ -216,8 +234,43 @@ export default function SelectedBoundsOverlay({
     }));
   }, [selectedBounds, reticleSize, reticleScale]);
 
-  function handleCornerPointerDown(
-    corner: CornerKey,
+  const selectedBoundsEdges = useMemo(() => {
+    if (!selectedBounds) return [];
+
+    return [
+      {
+        key: "top",
+        left: selectedBounds.left,
+        top: selectedBounds.top,
+        width: selectedBounds.width,
+        height: 0,
+      },
+      {
+        key: "right",
+        left: selectedBounds.right,
+        top: selectedBounds.top,
+        width: 0,
+        height: selectedBounds.height,
+      },
+      {
+        key: "bottom",
+        left: selectedBounds.left,
+        top: selectedBounds.bottom,
+        width: selectedBounds.width,
+        height: 0,
+      },
+      {
+        key: "left",
+        left: selectedBounds.left,
+        top: selectedBounds.top,
+        width: 0,
+        height: selectedBounds.height,
+      },
+    ];
+  }, [selectedBounds]);
+
+  function handleHandlePointerDown(
+    handle: HandleKey,
     event: PointerEvent<HTMLDivElement>,
   ) {
     if (!canEdit) return;
@@ -228,7 +281,7 @@ export default function SelectedBoundsOverlay({
 
     event.currentTarget.setPointerCapture(event.pointerId);
     dragStateRef.current = {
-      corner,
+      handle,
       pointerId: event.pointerId,
       startBounds: selectedBounds,
       startClientX: event.clientX,
@@ -236,7 +289,7 @@ export default function SelectedBoundsOverlay({
     };
   }
 
-  function handleCornerPointerMove(event: PointerEvent<HTMLDivElement>) {
+  function handleHandlePointerMove(event: PointerEvent<HTMLDivElement>) {
     const dragState = dragStateRef.current;
     if (!dragState) return;
     if (dragState.pointerId !== event.pointerId) return;
@@ -248,9 +301,9 @@ export default function SelectedBoundsOverlay({
     const deltaY = (event.clientY - dragState.startClientY) / zoom;
 
     setSelectedBounds(
-      resizeBoundsFromCorner({
+      resizeBoundsFromHandle({
         startBounds: dragState.startBounds,
-        corner: dragState.corner,
+        handle: dragState.handle,
         deltaX,
         deltaY,
         canvasWidth,
@@ -261,7 +314,7 @@ export default function SelectedBoundsOverlay({
     );
   }
 
-  function handleCornerPointerUp(event: PointerEvent<HTMLDivElement>) {
+  function handleHandlePointerUp(event: PointerEvent<HTMLDivElement>) {
     const dragState = dragStateRef.current;
     if (!dragState) return;
     if (dragState.pointerId !== event.pointerId) return;
@@ -305,6 +358,36 @@ export default function SelectedBoundsOverlay({
           />
         </OverlayDesaturateShade>
       )}
+      {selectedBoundsEdges.map((edge) => {
+        const edgeThickness = 14 / zoom;
+
+        return (
+          <CornerHitTarget
+            key={`selected-bounds-edge-hit-${edge.key}`}
+            onPointerDown={(event) =>
+              handleHandlePointerDown(edge.key as EdgeKey, event)
+            }
+            onPointerMove={handleHandlePointerMove}
+            onPointerUp={handleHandlePointerUp}
+            onPointerCancel={handleHandlePointerUp}
+            style={{
+              cursor: canEdit ? getEdgeCursor(edge.key as EdgeKey) : "default",
+              pointerEvents: canEdit ? "auto" : "none",
+              touchAction: "none",
+              left: edge.left - edgeThickness / 2,
+              top: edge.top - edgeThickness / 2,
+              width:
+                edge.key === "top" || edge.key === "bottom" ?
+                  edge.width + edgeThickness
+                : edgeThickness,
+              height:
+                edge.key === "left" || edge.key === "right" ?
+                  edge.height + edgeThickness
+                : edgeThickness,
+            }}
+          />
+        );
+      })}
       {selectedBoundsCorners.map((corner) => {
         const hitSize = 20 / zoom;
         const hitAnchor = getCornerHandleAnchor(
@@ -316,11 +399,11 @@ export default function SelectedBoundsOverlay({
           <CornerHitTarget
             key={`selected-bounds-corner-hit-${corner.key}`}
             onPointerDown={(event) =>
-              handleCornerPointerDown(corner.key as CornerKey, event)
+              handleHandlePointerDown(corner.key as CornerKey, event)
             }
-            onPointerMove={handleCornerPointerMove}
-            onPointerUp={handleCornerPointerUp}
-            onPointerCancel={handleCornerPointerUp}
+            onPointerMove={handleHandlePointerMove}
+            onPointerUp={handleHandlePointerUp}
+            onPointerCancel={handleHandlePointerUp}
             style={{
               cursor:
                 canEdit ? getCornerCursor(corner.key as CornerKey) : "default",
