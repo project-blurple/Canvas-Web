@@ -221,6 +221,21 @@ export async function editFrame(
 
   assertUserHasPermissionsForFrameObject(user, accessToken, frame);
   console.log("User has valid permissions");
+
+  await prisma.frame.update({
+    where: {
+      id: frameId,
+    },
+    data: {
+      name,
+      x_0: x0,
+      y_0: y0,
+      x_1: x1,
+      y_1: y1,
+    },
+  });
+
+  console.log("Frame edited");
 }
 
 export async function deleteFrame(
@@ -238,6 +253,36 @@ export async function deleteFrame(
 
   assertUserHasPermissionsForFrameObject(user, accessToken, frame);
   console.log("User has valid permissions");
+
+  await prisma.frame.delete({
+    where: {
+      id: frameId,
+    },
+  });
+
+  console.log("Frame deleted");
+}
+
+async function generateUniqueFrameId(): Promise<string> {
+  // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
+  // These are like hex colour codes!
+
+  while (true) {
+    const id = Math.floor(Math.random() * 0xffffff)
+      .toString(16)
+      .padStart(6, "0");
+    const existing = await prisma.frame.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+      },
+    });
+    if (!existing) {
+      return id;
+    }
+  }
 }
 
 export async function createFrame(
@@ -265,4 +310,22 @@ export async function createFrame(
 
   assertUserHasPermissionsForFrame(user, accessToken, isGuildOwned, ownerId);
   console.log("User has valid permissions");
+
+  const id = await generateUniqueFrameId();
+
+  await prisma.frame.create({
+    data: {
+      id,
+      canvas_id: canvasId,
+      name,
+      owner_id: BigInt(ownerId),
+      is_guild_owned: isGuildOwned,
+      x_0: x0,
+      y_0: y0,
+      x_1: x1,
+      y_1: y1,
+    },
+  });
+
+  console.log("Frame created with ID", id);
 }

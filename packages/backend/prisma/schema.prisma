@@ -104,8 +104,7 @@ model frame {
   y_0            Int
   y_1            Int
   style_id       Int?
-  user           user?                 @relation(fields: [userId], references: [id])
-  userId         BigInt?
+  user           user?                 @relation(fields: [owner_id], references: [id])
 }
 
 model guild {
