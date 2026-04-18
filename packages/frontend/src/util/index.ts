@@ -2,6 +2,7 @@ import {
   DiscordUserProfile,
   Frame,
   GuildData,
+  PixelColor,
 } from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
@@ -101,4 +102,20 @@ export function normalizeFrameBounds(frame: Frame): ViewBounds {
     width: right - left,
     height: bottom - top,
   };
+}
+
+export function hexStringToPixelColor(hex: string | null): PixelColor | null {
+  if (hex === null) {
+    return null;
+  }
+
+  const normalized = hex.startsWith("#") ? hex : `#${hex}`;
+  if (!/^#([0-9A-Fa-f]{6})$/.test(normalized)) {
+    return null;
+  }
+
+  const r = parseInt(normalized.slice(1, 3), 16);
+  const g = parseInt(normalized.slice(3, 5), 16);
+  const b = parseInt(normalized.slice(5, 7), 16);
+  return [r, g, b, 255];
 }

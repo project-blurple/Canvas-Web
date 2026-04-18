@@ -130,7 +130,7 @@ export default function PixelInfoTab({
             open={tooltipIsOpen}
           >
             <DynamicButton
-              color={pixelHistory?.[0]?.color ?? null}
+              color={pixelHistory?.[0]?.color.rgba ?? null}
               onAction={() => {
                 openTooltip();
                 navigator.clipboard.writeText(pixelURL);

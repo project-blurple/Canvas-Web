@@ -20,7 +20,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { normalizeFrameBounds } from "@/util";
+import { hexStringToPixelColor, normalizeFrameBounds } from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
@@ -97,6 +97,9 @@ export default function FrameEditPanel({
   const sourceImage = useCanvasImage(canvas.id);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
 
+  const [frameId] = useState<string | null>(
+    selectedFrame ? selectedFrame.id : null,
+  );
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
 
   const didInitBoundsRef = useRef(false);
@@ -211,9 +214,10 @@ export default function FrameEditPanel({
             <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
             <TextField
               label="Name"
-              variant="outlined"
-              value={frameName}
               onChange={(e) => setFrameName(e.target.value)}
+              required
+              value={frameName}
+              variant="outlined"
             />
             <InputLabel>Owned by</InputLabel>
             <ToggleButtonGroup
@@ -283,6 +287,12 @@ export default function FrameEditPanel({
         </ActionPanelTabBody>
       </ScrollBlock>
       <ActionPanelTabBody>
+        <DynamicButton
+          color={hexStringToPixelColor(frameId)}
+          onAction={() => {}}
+        >
+          Save
+        </DynamicButton>
         <DynamicButton
           color={null}
           onAction={() => {

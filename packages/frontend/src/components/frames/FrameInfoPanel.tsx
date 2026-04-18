@@ -6,7 +6,7 @@ import {
   useCanvasContext,
   useSelectedFrameContext,
 } from "@/contexts";
-import { createPixelUrl } from "@/util";
+import { createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
   ScrollBlock,
@@ -89,7 +89,7 @@ export default function FrameInfoPanel({
               open={tooltipIsOpen}
             >
               <DynamicButton
-                color={null}
+                color={hexStringToPixelColor(selectedFrame.id)}
                 onAction={() => {
                   setTooltipIsOpen(true);
                   navigator.clipboard.writeText(frameUrl);
