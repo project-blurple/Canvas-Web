@@ -57,6 +57,19 @@ const EditPreviewCanvas = styled(PreviewCanvas)`
   height: auto;
 `;
 
+const ButtonRow = styled("div")`
+  background: transparent;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0;
+  width: 100%;
+
+  > * {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+`;
+
 type GuildEntry = [string, GuildData];
 type GuildOption = {
   guildId: string;
@@ -123,6 +136,7 @@ export default function FrameEditPanel({
   );
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
   const [isBackConfirmOpen, setIsBackConfirmOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDirtyTrackingReady, setIsDirtyTrackingReady] = useState(false);
 
   const initialFrameNameRef = useRef(selectedFrame?.name ?? "");
@@ -258,6 +272,10 @@ export default function FrameEditPanel({
     closeEditor();
   };
 
+  const handleDeleteAction = () => {
+    setIsDeleteConfirmOpen(true);
+  };
+
   useEffect(
     function drawSelectedFramePreview() {
       if (!sourceImage) return;
@@ -379,16 +397,26 @@ export default function FrameEditPanel({
         </ActionPanelTabBody>
       </ScrollBlock>
       <ActionPanelTabBody>
-        <DynamicButton
-          color={hexStringToPixelColor(frameId)}
-          onAction={() => {
-            // save frame here
-            closeEditor();
-          }}
-          disabled={!frameName || !frameBounds}
-        >
-          Save
-        </DynamicButton>
+        <ButtonRow>
+          <DynamicButton
+            color={hexStringToPixelColor(frameId)}
+            onAction={() => {
+              // save frame here
+              closeEditor();
+            }}
+            disabled={!frameName || !frameBounds}
+          >
+            Save
+          </DynamicButton>
+          {!isCreateMode && (
+            <DynamicButton
+              color={hexStringToPixelColor(frameId)}
+              onAction={handleDeleteAction}
+            >
+              Delete
+            </DynamicButton>
+          )}
+        </ButtonRow>
         <DynamicButton color={null} onAction={handleBackAction}>
           Back
         </DynamicButton>
@@ -423,6 +451,40 @@ export default function FrameEditPanel({
             }}
           >
             Discard
+          </DynamicButton>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        aria-labelledby="frame-edit-delete-dialog-title"
+        aria-describedby="frame-edit-delete-dialog-description"
+      >
+        <DialogTitle id="frame-edit-delete-dialog-title">
+          Delete frame?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="frame-edit-delete-dialog-description">
+            This will permanently delete this frame. Are you sure you want to
+            continue?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <DynamicButton
+            color={null}
+            onAction={() => setIsDeleteConfirmOpen(false)}
+          >
+            Cancel
+          </DynamicButton>
+          <DynamicButton
+            color={hexStringToPixelColor(frameId)}
+            onAction={() => {
+              setIsDeleteConfirmOpen(false);
+              // delete frame here
+              closeEditor();
+            }}
+          >
+            Delete
           </DynamicButton>
         </DialogActions>
       </Dialog>
