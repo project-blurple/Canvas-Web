@@ -26,8 +26,10 @@ import {
   ActionPanelTabBody,
   ScrollBlock,
 } from "../action-panel/tabs/ActionPanelTabBody";
+import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelState } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
+import { addPoints, tupleToPoint } from "../canvas/point";
 import {
   drawSourceRectToCanvas,
   FRAME_FILL_RATIO,
@@ -314,6 +316,22 @@ export default function FrameEditPanel({
                   <TextField {...params} label="Server" />
                 )}
               />
+            )}
+            {frameBounds && (
+              <>
+                <CoordinatesCard
+                  coordinates={addPoints(
+                    { x: frameBounds.left, y: frameBounds.top },
+                    tupleToPoint(canvas.startCoordinates),
+                  )}
+                />
+                <CoordinatesCard
+                  coordinates={addPoints(
+                    { x: frameBounds.right, y: frameBounds.bottom },
+                    tupleToPoint(canvas.startCoordinates),
+                  )}
+                />
+              </>
             )}
           </EditContainer>
           <PreviewContainer>
