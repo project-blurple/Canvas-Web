@@ -275,7 +275,7 @@ export default function FrameEditPanel({
       });
     }
     await queryClient.invalidateQueries({
-      queryKey: ["frame", "guilds", canvas.id],
+      queryKey: ["frame", "guild", canvas.id],
     });
   };
 
@@ -321,6 +321,7 @@ export default function FrameEditPanel({
       alert("Failed to save frame changes");
       return;
     }
+    setSelectedFrame(null);
     closeEditor();
   };
 
