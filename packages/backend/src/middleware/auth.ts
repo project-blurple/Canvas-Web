@@ -126,6 +126,8 @@ export function initializeAuth(app: Express) {
     session({
       cookie: {
         maxAge: 24 * 60 * 60 * 1000, // 1 day (in ms)
+        sameSite: "lax",
+        secure: config.environment !== "development",
       },
       // having a random secret would mess with persistent sessions
       secret: config.expressSessionSecret,
