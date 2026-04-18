@@ -1,17 +1,78 @@
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
-import { Express } from "express";
+import {
+  type Express,
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";
 import { prisma } from "@/client";
 import config from "@/config";
+import { ForbiddenError } from "@/errors";
 import {
   getCurrentUserGuildFlags,
   isCanvasAdmin,
   isCanvasModerator,
 } from "@/services/discordGuildService";
 import { getProfilePictureUrlFromHash } from "@/services/discordProfileService";
+
+const csrfCookieName = "XSRF-TOKEN";
+const csrfHeaderNames = ["x-xsrf-token", "x-csrf-token"];
+const safeMethods = new Set(["GET", "HEAD", "OPTIONS"]);
+
+function getCsrfTokenFromRequest(req: Request) {
+  for (const headerName of csrfHeaderNames) {
+    const token = req.headers[headerName];
+
+    if (typeof token === "string" && token.length > 0) {
+      return token;
+    }
+  }
+
+  return null;
+}
+
+function ensureCsrfProtection(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = randomBytes(32).toString("hex");
+  }
+
+  res.cookie(csrfCookieName, req.session.csrfToken, {
+    httpOnly: false,
+    sameSite: "lax",
+    secure: config.environment !== "development",
+    path: "/",
+  });
+
+  if (safeMethods.has(req.method)) {
+    next();
+    return;
+  }
+
+  const requestToken = getCsrfTokenFromRequest(req);
+  if (!requestToken) {
+    next(new ForbiddenError("Missing CSRF token"));
+    return;
+  }
+
+  const sessionToken = req.session.csrfToken;
+  const requestTokenBuffer = Buffer.from(requestToken);
+  const sessionTokenBuffer = Buffer.from(sessionToken);
+
+  if (
+    requestTokenBuffer.length !== sessionTokenBuffer.length ||
+    !timingSafeEqual(requestTokenBuffer, sessionTokenBuffer)
+  ) {
+    next(new ForbiddenError("Invalid CSRF token"));
+    return;
+  }
+
+  next();
+}
 
 const discordStrategy = new DiscordStrategy(
   {
@@ -80,4 +141,5 @@ export function initializeAuth(app: Express) {
 
   app.use(passport.initialize());
   app.use(passport.session());
+  app.use(ensureCsrfProtection);
 }
