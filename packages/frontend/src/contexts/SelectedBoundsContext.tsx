@@ -15,16 +15,24 @@ import { useCanvasViewContext } from "./CanvasViewContext";
 
 interface SelectedBoundsContextType {
   canEdit: boolean;
+  minHeight: number;
+  minWidth: number;
   selectedBounds: ViewBounds | null;
+  clearSelectedBounds: () => void;
   setCanEdit: Dispatch<SetStateAction<boolean>>;
+  setMinimumBounds: (width: number, height: number) => void;
   setSelectedBounds: Dispatch<SetStateAction<ViewBounds | null>>;
   setBoundsToCurrentView: (fillRatio: number) => void;
 }
 
 export const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   canEdit: false,
+  minHeight: 5,
+  minWidth: 5,
   selectedBounds: null,
+  clearSelectedBounds: () => {},
   setCanEdit: () => {},
+  setMinimumBounds: () => {},
   setSelectedBounds: () => {},
   setBoundsToCurrentView: () => {},
 });
@@ -42,8 +50,6 @@ function getCurrentViewBounds({
   offset,
   zoom,
 }: CurrentViewProps): ViewBounds {
-  console.log(containerRef);
-
   const containerWidth = containerRef.current?.clientWidth ?? 0;
   const containerHeight = containerRef.current?.clientHeight ?? 0;
 
@@ -105,9 +111,23 @@ export const SelectedBoundsProvider = ({
     useState<SelectedBoundsContextType["selectedBounds"]>(null);
   const [canEdit, setCanEdit] =
     useState<SelectedBoundsContextType["canEdit"]>(false);
+  const [minHeight, setMinHeight] =
+    useState<SelectedBoundsContextType["minHeight"]>(5);
+  const [minWidth, setMinWidth] =
+    useState<SelectedBoundsContextType["minWidth"]>(5);
+
+  function setMinimumBounds(width: number, height: number) {
+    setMinWidth(width);
+    setMinHeight(height);
+  }
 
   const { canvas } = useCanvasContext();
   const { containerRef, offset, zoom } = useCanvasViewContext();
+
+  function clearSelectedBounds() {
+    setSelectedBounds(null);
+    setCanEdit(false);
+  }
 
   function setBoundsToCurrentView(fillRatio: number) {
     setSelectedBounds(
@@ -126,11 +146,15 @@ export const SelectedBoundsProvider = ({
   return (
     <SelectedBoundsContext.Provider
       value={{
+        canEdit,
+        minHeight,
+        minWidth,
         selectedBounds,
+        clearSelectedBounds,
         setSelectedBounds,
         setBoundsToCurrentView,
-        canEdit,
         setCanEdit,
+        setMinimumBounds,
       }}
     >
       {children}

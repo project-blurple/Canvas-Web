@@ -91,6 +91,8 @@ export default function FrameEditPanel({
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const {
+    clearSelectedBounds,
+    setCanEdit,
     selectedBounds: frameBounds,
     setSelectedBounds: setFrameBounds,
     setBoundsToCurrentView,
@@ -112,8 +114,10 @@ export default function FrameEditPanel({
       setBoundsToCurrentView(FRAME_FILL_RATIO);
     }
 
+    setCanEdit(true);
+
     didInitBoundsRef.current = true;
-  }, [selectedFrame, setFrameBounds, setBoundsToCurrentView]);
+  }, [selectedFrame, setFrameBounds, setBoundsToCurrentView, setCanEdit]);
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
     selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
@@ -194,7 +198,7 @@ export default function FrameEditPanel({
     // Shouldn't be able to get to this tab without being logged in,
     // but this prevents that at the least
     setActivePanel(FramePanelState.Info);
-    setFrameBounds(null);
+    clearSelectedBounds();
     return null;
   }
 
@@ -282,7 +286,7 @@ export default function FrameEditPanel({
           color={null}
           onAction={() => {
             setActivePanel(FramePanelState.Info);
-            setFrameBounds(null);
+            clearSelectedBounds();
           }}
         >
           Back
