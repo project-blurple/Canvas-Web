@@ -213,10 +213,6 @@ export async function editFrame(
 ) {
   const frame = await getFrameById(frameId);
 
-  if (!frame) {
-    throw new NotFoundError("Frame not found");
-  }
-
   await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
 
   await prisma.frame.update({
@@ -239,10 +235,6 @@ export async function deleteFrame(
   frameId: string,
 ) {
   const frame = await getFrameById(frameId);
-
-  if (!frame) {
-    throw new NotFoundError("Frame not found");
-  }
 
   await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
 

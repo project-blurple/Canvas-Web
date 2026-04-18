@@ -417,13 +417,14 @@ export default function FrameEditPanel({
     [sourceImage, frameBounds],
   );
 
-  if (!user) {
-    // Shouldn't be able to get to this tab without being logged in,
-    // but this prevents that at the least
-    setActivePanel(FramePanelState.Info);
-    clearSelectedBounds();
-    return null;
-  }
+  useEffect(() => {
+    if (!user) {
+      // Shouldn't be able to get to this tab without being logged in,
+      // but this prevents that at the least
+      setActivePanel(FramePanelState.Info);
+      clearSelectedBounds();
+    }
+  }, [user, setActivePanel, clearSelectedBounds]);
 
   return (
     <>
@@ -526,7 +527,11 @@ export default function FrameEditPanel({
           : <DynamicButton
               color={hexStringToPixelColor(frameId)}
               onAction={handleCreateAction}
-              disabled={!frameName || !frameBounds}
+              disabled={
+                !frameName ||
+                !frameBounds ||
+                (!selectedGuildId && selectedOwner === FrameOwnerType.Guild)
+              }
             >
               Create
             </DynamicButton>

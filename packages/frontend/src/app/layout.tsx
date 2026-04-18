@@ -101,17 +101,17 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider>
       <QueryClientProvider>
         <AuthProvider profile={profile}>
-          <CanvasProvider mainCanvasInfo={canvasInfo}>
-            <CanvasViewProvider>
-              <SelectedColorProvider>
-                <SelectedFrameProvider>
+          <SelectedColorProvider>
+            <SelectedFrameProvider>
+              <CanvasProvider mainCanvasInfo={canvasInfo}>
+                <CanvasViewProvider>
                   <SelectedBoundsProvider>
                     <ThemeProvider theme={Theme}>{children}</ThemeProvider>
                   </SelectedBoundsProvider>
-                </SelectedFrameProvider>
-              </SelectedColorProvider>
-            </CanvasViewProvider>
-          </CanvasProvider>
+                </CanvasViewProvider>
+              </CanvasProvider>
+            </SelectedFrameProvider>
+          </SelectedColorProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>

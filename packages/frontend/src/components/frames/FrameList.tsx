@@ -1,5 +1,6 @@
 import { GuildOwnedFrame, SystemOwnedFrame } from "@blurple-canvas-web/types";
-import { Link, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import Link from "next/link";
 import {
   useAuthContext,
   useCanvasContext,

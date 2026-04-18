@@ -33,7 +33,7 @@ export const FrameGuildIdsQueryModel = z.object({
 });
 
 const FrameIdParamModel = z.object({
-  frameId: z.string().length(6),
+  frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
 });
 
 export const FrameDataParamModel = z.object({
@@ -45,7 +45,7 @@ export const FrameDataParamModel = z.object({
 });
 
 export const FrameOwnerParamModel = z.object({
-  ownerId: z.string(),
+  ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
   isGuildOwned: z.boolean(),
 });
 

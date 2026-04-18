@@ -1,7 +1,7 @@
 import { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { PointerEvent, useMemo, useRef } from "react";
-import { ViewBounds } from "@/util";
+import { clamp, ViewBounds } from "@/util";
 
 const OverlayReticleContainer = styled("div")`
   position: absolute;
@@ -41,10 +41,6 @@ function calculateReticleOffsetForPoint(
     x: (point.x - (reticleSize - 1) / 2) / reticleScale,
     y: (point.y - (reticleSize - 1) / 2) / reticleScale,
   };
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
 }
 
 type CornerKey = "top-left" | "top-right" | "bottom-left" | "bottom-right";
