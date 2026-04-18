@@ -319,9 +319,9 @@ export default function FrameEditPanel({
       }
 
       alert("Failed to save frame changes");
-    } finally {
-      closeEditor();
+      return;
     }
+    closeEditor();
   };
 
   const handleDeleteAction = async () => {
@@ -380,9 +380,9 @@ export default function FrameEditPanel({
       }
 
       alert("Failed to create frame");
-    } finally {
-      closeEditor();
+      return;
     }
+    closeEditor();
   };
 
   useEffect(
