@@ -90,6 +90,7 @@ export default function DynamicButton({
       backgroundColorStr={backgroundColorStr}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
+      disabled={disabled}
       {...props}
     >
       <DynamicButtonContent>{children}</DynamicButtonContent>

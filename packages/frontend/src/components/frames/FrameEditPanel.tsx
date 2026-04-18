@@ -289,7 +289,12 @@ export default function FrameEditPanel({
       <ActionPanelTabBody>
         <DynamicButton
           color={hexStringToPixelColor(frameId)}
-          onAction={() => {}}
+          onAction={() => {
+            // save frame here
+            setActivePanel(FramePanelState.Info);
+            clearSelectedBounds();
+          }}
+          disabled={!frameName || !frameBounds}
         >
           Save
         </DynamicButton>
