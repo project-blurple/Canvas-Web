@@ -55,12 +55,28 @@ function getCornerCursor(corner: CornerKey): "nwse-resize" | "nesw-resize" {
   return "nesw-resize";
 }
 
+function getCornerRotation(corner: CornerKey): number {
+  if (corner === "top-right") return 90;
+  if (corner === "bottom-right") return 180;
+  if (corner === "bottom-left") return -90;
+
+  return 0;
+}
+
 function getEdgeCursor(edge: EdgeKey): "ns-resize" | "ew-resize" {
   if (edge === "top" || edge === "bottom") {
     return "ns-resize";
   }
 
   return "ew-resize";
+}
+
+function getEdgeRotation(edge: EdgeKey): number {
+  if (edge === "top") return 90;
+  if (edge === "right") return 180;
+  if (edge === "bottom") return -90;
+
+  return 0;
 }
 
 function getCornerHandleAnchor(point: Point, corner: CornerKey): Point {
@@ -265,6 +281,44 @@ export default function SelectedBoundsOverlay({
     ];
   }, [selectedBounds]);
 
+  const selectedBoundsEdgeReticles = useMemo(() => {
+    if (!selectedBounds) return [];
+
+    const right = Math.max(selectedBounds.left, selectedBounds.right - 1);
+    const bottom = Math.max(selectedBounds.top, selectedBounds.bottom - 1);
+    const centerX = selectedBounds.left + (selectedBounds.width - 1) / 2;
+    const centerY = selectedBounds.top + (selectedBounds.height - 1) / 2;
+
+    const edges = [
+      {
+        key: "top",
+        point: { x: centerX, y: selectedBounds.top },
+      },
+      {
+        key: "right",
+        point: { x: right, y: centerY },
+      },
+      {
+        key: "bottom",
+        point: { x: centerX, y: bottom },
+      },
+      {
+        key: "left",
+        point: { x: selectedBounds.left, y: centerY },
+      },
+    ];
+
+    return edges.map((edge) => ({
+      key: edge.key,
+      point: edge.point,
+      offset: calculateReticleOffsetForPoint(
+        edge.point,
+        reticleSize,
+        reticleScale,
+      ),
+    }));
+  }, [selectedBounds, reticleSize, reticleScale]);
+
   function handleHandlePointerDown(
     handle: HandleKey,
     event: PointerEvent<HTMLDivElement>,
@@ -423,10 +477,34 @@ export default function SelectedBoundsOverlay({
           }}
         >
           <OverlayReticle
-            src="/images/reticle.png"
+            src="/images/boundsCorner.png"
             alt=""
             aria-hidden
             style={{
+              transform: `rotate(${getCornerRotation(corner.key as CornerKey)}deg)`,
+              width: reticleSize,
+              height: reticleSize,
+              minWidth: reticleSize,
+              minHeight: reticleSize,
+            }}
+          />
+        </OverlayReticleContainer>
+      ))}
+      {selectedBoundsEdgeReticles.map((edge) => (
+        <OverlayReticleContainer
+          key={`selected-bounds-edge-${edge.key}`}
+          style={{
+            pointerEvents: "none",
+            scale: reticleScale,
+            transform: `translate(${edge.offset.x}px, ${edge.offset.y}px)`,
+          }}
+        >
+          <OverlayReticle
+            src="/images/boundsEdge.png"
+            alt=""
+            aria-hidden
+            style={{
+              transform: `rotate(${getEdgeRotation(edge.key as EdgeKey)}deg)`,
               width: reticleSize,
               height: reticleSize,
               minWidth: reticleSize,
