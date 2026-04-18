@@ -5,6 +5,11 @@ import {
 } from "@blurple-canvas-web/types/src/frame";
 import {
   Autocomplete,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   InputLabel,
   TextField,
   ToggleButton,
@@ -20,7 +25,11 @@ import {
 } from "@/contexts";
 import { useGuildFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { hexStringToPixelColor, normalizeFrameBounds } from "@/util";
+import {
+  hexStringToPixelColor,
+  normalizeFrameBounds,
+  ViewBounds,
+} from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
@@ -54,6 +63,18 @@ type GuildOption = {
   guild: GuildData;
   group: string;
 };
+
+function areBoundsEqual(a: ViewBounds | null, b: ViewBounds | null) {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+
+  return (
+    a.left === b.left &&
+    a.top === b.top &&
+    a.right === b.right &&
+    a.bottom === b.bottom
+  );
+}
 
 function splitGuildsByFramePresence(
   managedGuildEntries: GuildEntry[],
@@ -101,6 +122,19 @@ export default function FrameEditPanel({
     selectedFrame ? selectedFrame.id : null,
   );
   const [frameName, setFrameName] = useState(selectedFrame?.name ?? "");
+  const [isBackConfirmOpen, setIsBackConfirmOpen] = useState(false);
+  const [isDirtyTrackingReady, setIsDirtyTrackingReady] = useState(false);
+
+  const initialFrameNameRef = useRef(selectedFrame?.name ?? "");
+  const initialOwnerRef = useRef<FrameOwnerType>(
+    selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
+  );
+  const initialGuildIdRef = useRef(
+    selectedFrame && selectedFrame.owner.type === "guild" ?
+      selectedFrame.owner.guild.guild_id
+    : "",
+  );
+  const initialBoundsRef = useRef<ViewBounds | null>(null);
 
   const didInitBoundsRef = useRef(false);
 
@@ -127,6 +161,30 @@ export default function FrameEditPanel({
       selectedFrame.owner.guild.guild_id
     : "",
   );
+
+  useEffect(() => {
+    if (!frameBounds) return;
+    if (isDirtyTrackingReady) return;
+
+    initialFrameNameRef.current = frameName;
+    initialOwnerRef.current = selectedOwner;
+    initialGuildIdRef.current = selectedGuildId;
+    initialBoundsRef.current = {
+      left: frameBounds.left,
+      top: frameBounds.top,
+      right: frameBounds.right,
+      bottom: frameBounds.bottom,
+      width: frameBounds.width,
+      height: frameBounds.height,
+    };
+    setIsDirtyTrackingReady(true);
+  }, [
+    frameBounds,
+    frameName,
+    selectedOwner,
+    selectedGuildId,
+    isDirtyTrackingReady,
+  ]);
 
   const managedGuildEntries = Object.entries(user?.guilds ?? {})
     .filter(([, guild]) => guild.administrator || guild.manageGuild)
@@ -165,6 +223,40 @@ export default function FrameEditPanel({
 
   const selectedGuildOption =
     guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!isDirtyTrackingReady) return false;
+
+    const nameChanged = frameName !== initialFrameNameRef.current;
+    const ownerChanged = selectedOwner !== initialOwnerRef.current;
+    const guildChanged = selectedGuildId !== initialGuildIdRef.current;
+    const boundsChanged = !areBoundsEqual(
+      frameBounds,
+      initialBoundsRef.current,
+    );
+
+    return nameChanged || ownerChanged || guildChanged || boundsChanged;
+  }, [
+    isDirtyTrackingReady,
+    frameName,
+    selectedOwner,
+    selectedGuildId,
+    frameBounds,
+  ]);
+
+  const closeEditor = () => {
+    setActivePanel(FramePanelState.Info);
+    clearSelectedBounds();
+  };
+
+  const handleBackAction = () => {
+    if (hasUnsavedChanges) {
+      setIsBackConfirmOpen(true);
+      return;
+    }
+
+    closeEditor();
+  };
 
   useEffect(
     function drawSelectedFramePreview() {
@@ -291,23 +383,49 @@ export default function FrameEditPanel({
           color={hexStringToPixelColor(frameId)}
           onAction={() => {
             // save frame here
-            setActivePanel(FramePanelState.Info);
-            clearSelectedBounds();
+            closeEditor();
           }}
           disabled={!frameName || !frameBounds}
         >
           Save
         </DynamicButton>
-        <DynamicButton
-          color={null}
-          onAction={() => {
-            setActivePanel(FramePanelState.Info);
-            clearSelectedBounds();
-          }}
-        >
+        <DynamicButton color={null} onAction={handleBackAction}>
           Back
         </DynamicButton>
       </ActionPanelTabBody>
+      <Dialog
+        open={isBackConfirmOpen}
+        onClose={() => setIsBackConfirmOpen(false)}
+        aria-labelledby="frame-edit-discard-dialog-title"
+        aria-describedby="frame-edit-discard-dialog-description"
+      >
+        <DialogTitle id="frame-edit-discard-dialog-title">
+          Discard changes?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="frame-edit-discard-dialog-description">
+            You have unsaved changes to this frame. Are you sure you want to go
+            back and discard them?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <DynamicButton
+            color={null}
+            onAction={() => setIsBackConfirmOpen(false)}
+          >
+            Keep editing
+          </DynamicButton>
+          <DynamicButton
+            color={null}
+            onAction={() => {
+              setIsBackConfirmOpen(false);
+              closeEditor();
+            }}
+          >
+            Discard
+          </DynamicButton>
+        </DialogActions>
+      </Dialog>
     </>
   );
 }
