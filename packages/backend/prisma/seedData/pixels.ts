@@ -148,7 +148,7 @@ async function* historySeedData2024Batches(): AsyncGenerator<
 
   for await (const line of readLines(historySeedDataPath)) {
     if (isHeader) {
-      if (normalizeCsvHeader(line) !== "user_id,x,y,color_id,timestamp,id") {
+      if (normalizeCsvHeader(line) !== "user_id,x,y,color_id,timestamp") {
         throw new Error(
           `Unexpected CSV header in ${historySeedDataPath.pathname}`,
         );
