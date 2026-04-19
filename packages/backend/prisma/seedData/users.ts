@@ -11,8 +11,12 @@ export function discordUserProfileSeedData(): DiscordUserProfileSeedData[] {
     {
       user_id: 204778476102877187n,
       username: "rocked03",
-      profile_picture_url:
-        "https://cdn.discordapp.com/avatars/204778476102877187/5ef6b55e834e4fbd80a16ccac63b214b.webp?size=32",
+      profile_picture_url: "https://discord.com/assets/788f05731f8aa02e.png",
+    },
+    {
+      user_id: 546792825023365121n,
+      username: "Blurple Canvas",
+      profile_picture_url: "https://discord.com/assets/788f05731f8aa02e.png",
     },
   ];
 

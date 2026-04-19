@@ -13,6 +13,7 @@ import {
   guildSeedData,
   infoSeedData,
   participationSeedData,
+  pixelSeedData,
   userSeedData,
 } from "./seedData";
 
@@ -209,73 +210,9 @@ async function main() {
     console.log("Seeded participation");
   }
 
+  // === PIXEL ===
   if (seedings.includes("pixel")) {
-    const canvases = await prisma.canvas.findMany();
-    const history = await prisma.history.findMany({
-      orderBy: {
-        timestamp: "desc",
-      },
-    });
-
-    const canvasMap = new Map<number, Map<number, Map<number, number>>>();
-    for (const canvas of canvases) {
-      const rowMap = new Map<number, Map<number, number>>();
-
-      for (let y = 0; y < canvas.height; y++)
-        rowMap.set(y, new Map<number, number>());
-      canvasMap.set(canvas.id, rowMap);
-    }
-
-    for (const record of history) {
-      const rowMap = canvasMap.get(record.canvas_id);
-      if (!rowMap) {
-        console.warn(
-          `No canvas found for pixel record with canvas_id ${record.canvas_id}`,
-        );
-        continue;
-      }
-
-      const colMap = rowMap.get(record.y);
-      if (!colMap) {
-        console.warn(
-          `No row found for pixel record with canvas_id ${record.canvas_id} at y ${record.y}`,
-        );
-        continue;
-      }
-
-      if (!colMap.has(record.x)) {
-        // console.log(`Setting pixel for canvas ${record.canvas_id} at (${record.x}, ${record.y}) to color ${record.color_id}`);
-        colMap.set(record.x, record.color_id);
-      }
-    }
-
-    const pixels: Array<{
-      canvas_id: number;
-      x: number;
-      y: number;
-      color_id: number;
-    }> = [];
-
-    for (const canvas of canvases) {
-      const rowMap = canvasMap.get(canvas.id);
-      if (!rowMap) continue;
-
-      for (let y = 0; y < canvas.height; y++) {
-        const colMap = rowMap.get(y);
-        if (!colMap) continue;
-
-        for (let x = 0; x < canvas.width; x++) {
-          pixels.push({
-            canvas_id: canvas.id,
-            x,
-            y,
-            color_id: colMap.get(x) ?? 1,
-          });
-        }
-      }
-    }
-
-    await prisma.pixel.createMany({ data: pixels });
+    await prisma.pixel.createMany({ data: pixelSeedData() });
     console.log("Seeded pixel");
   }
 }
