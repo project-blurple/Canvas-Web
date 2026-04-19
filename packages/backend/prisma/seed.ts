@@ -1,15 +1,16 @@
-// @ts-ignore
+// @ts-expect-error
 import console from "node:console";
-// @ts-ignore
+// @ts-expect-error
 import process from "node:process";
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../build/client/generated/client.js";
+
 const prisma = new PrismaClient();
 
 const OVERRIDE = true;
 const USERS = 50_000 + Math.floor(Math.random() * 50_000);
 
 async function main() {
-  const seedings: Prisma.ModelName[] = [
+  const allSeedings = [
     "blacklist",
     "canvas",
     "color",
@@ -25,20 +26,22 @@ async function main() {
     "pixel",
     "user",
     "session",
-  ];
+  ] as const;
+  type Seeding = (typeof allSeedings)[number];
+  const seedings: Seeding[] = [...allSeedings];
 
   if (!OVERRIDE)
     for (const seeding of seedings) {
-      // @ts-ignore
-      const count = await prisma[seeding].count() as number | undefined | null;
-      if (count && count >= 1)
-        seedings.splice(seedings.indexOf(seeding), 1);
+      const count = (await prisma[seeding].count()) as
+        | number
+        | undefined
+        | null;
+      if (count && count >= 1) seedings.splice(seedings.indexOf(seeding), 1);
     }
 
-  if (seedings.length === 0)
-    return;
+  if (seedings.length === 0) return;
 
-  const order: Prisma.ModelName[] = [
+  const order: Seeding[] = [
     "pixel",
     "participation",
     "info",
@@ -58,7 +61,6 @@ async function main() {
   await prisma.$transaction([
     ...seedings
       .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-      // @ts-ignore
       .map((seeding) => prisma[seeding].deleteMany()),
   ]);
 
@@ -175,10 +177,12 @@ async function main() {
     await prisma.user.createMany({
       data: Array.from(userIds).map((userId) => ({
         id: userId,
-        current_canvas_id: Math.random() < 0.25
-          ? Math.random() < 0.5
-            ? undefined : 1901
-            : 1902,
+        current_canvas_id:
+          Math.random() < 0.25 ?
+            Math.random() < 0.5 ?
+              undefined
+            : 1901
+          : 1902,
       })),
     });
     console.log("Seeded user");
@@ -188,10 +192,14 @@ async function main() {
 
   if (seedings.includes("blacklist")) {
     await prisma.blacklist.createMany({
-      data: Array.from(userIds).slice(0, 5).map((userId) => ({
-        user_id: userId,
-        date_added: new Date(Date.now() + Math.floor(Math.random() * 100_000)),
-      })),
+      data: Array.from(userIds)
+        .slice(0, 5)
+        .map((userId) => ({
+          user_id: userId,
+          date_added: new Date(
+            Date.now() + Math.floor(Math.random() * 100_000),
+          ),
+        })),
     });
     console.log("Seeded blacklist");
   }
@@ -235,16 +243,24 @@ async function main() {
   if (seedings.includes("cooldown")) {
     await prisma.cooldown.createMany({
       data: [
-        ...Array.from(userIds).slice(3, -4).map((userId) => ({
-          user_id: userId,
-          canvas_id: 1901,
-          cooldown_time: new Date(Date.now() + Math.floor((Math.random() - 0.5) * 30_000)),
-        })),
-        ...Array.from(userIds).slice(5, -2).map((userId) => ({
-          user_id: userId,
-          canvas_id: 1902,
-          cooldown_time: new Date(Date.now() + Math.floor((Math.random() - 0.5) * 30_000))
-        })),
+        ...Array.from(userIds)
+          .slice(3, -4)
+          .map((userId) => ({
+            user_id: userId,
+            canvas_id: 1901,
+            cooldown_time: new Date(
+              Date.now() + Math.floor((Math.random() - 0.5) * 30_000),
+            ),
+          })),
+        ...Array.from(userIds)
+          .slice(5, -2)
+          .map((userId) => ({
+            user_id: userId,
+            canvas_id: 1902,
+            cooldown_time: new Date(
+              Date.now() + Math.floor((Math.random() - 0.5) * 30_000),
+            ),
+          })),
       ],
     });
     console.log("Seeded cooldown");
@@ -289,43 +305,51 @@ async function main() {
         {
           id: 1002,
           manager_role: 2001,
-          invite: "fr"
+          invite: "fr",
         },
       ],
     });
     console.log("Seeded guild");
   }
 
-
   if (seedings.includes("history")) {
     await prisma.history.createMany({
       data: [
         ...Array.from({ length: 1000 }).map(() => ({
-          user_id: Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
+          user_id:
+            Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
           canvas_id: 1901,
           x: Math.floor(Math.random() * 50),
           y: Math.floor(Math.random() * 50),
           color_id: [2, 3, 4, 101, 102][Math.floor(Math.random() * 5)],
-          timestamp: new Date(Date.now() - Math.floor((Math.random()) * 1_000_000)),
+          timestamp: new Date(
+            Date.now() - Math.floor(Math.random() * 1_000_000),
+          ),
           guild_id: null,
         })),
         ...Array.from({ length: 8000 }).map(() => ({
-          user_id: Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
+          user_id:
+            Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
           canvas_id: 1902,
           x: Math.floor(Math.random() * 100),
           y: Math.floor(Math.random() * 100),
           color_id: [2, 3, 4, 101, 102][Math.floor(Math.random() * 5)],
-          timestamp: new Date(Date.now() - Math.floor((Math.random()) * 500_000)),
+          timestamp: new Date(Date.now() - Math.floor(Math.random() * 500_000)),
           guild_id: null,
         })),
-        ...Array.from({ length: 150 + Math.floor(Math.random() * 150) }).map(() => ({
-          user_id: Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
-          canvas_id: 1902,
-          x: 0,
-          y: 0,
-          color_id: [2, 3][Math.floor(Math.random() * 2)],
-          timestamp: new Date(Date.now() - Math.floor((Math.random()) * 200_000)),
-        })),
+        ...Array.from({ length: 150 + Math.floor(Math.random() * 150) }).map(
+          () => ({
+            user_id:
+              Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
+            canvas_id: 1902,
+            x: 0,
+            y: 0,
+            color_id: [2, 3][Math.floor(Math.random() * 2)],
+            timestamp: new Date(
+              Date.now() - Math.floor(Math.random() * 200_000),
+            ),
+          }),
+        ),
       ],
     });
     console.log("Seeded history");
@@ -375,8 +399,8 @@ async function main() {
     const canvases = await prisma.canvas.findMany();
     const history = await prisma.history.findMany({
       orderBy: {
-        timestamp: "desc"
-      }
+        timestamp: "desc",
+      },
     });
 
     const canvasMap = new Map<number, Map<number, Map<number, number>>>();
@@ -391,13 +415,17 @@ async function main() {
     for (const record of history) {
       const rowMap = canvasMap.get(record.canvas_id);
       if (!rowMap) {
-        console.warn(`No canvas found for pixel record with canvas_id ${record.canvas_id}`);
+        console.warn(
+          `No canvas found for pixel record with canvas_id ${record.canvas_id}`,
+        );
         continue;
       }
 
       const colMap = rowMap.get(record.y);
       if (!colMap) {
-        console.warn(`No row found for pixel record with canvas_id ${record.canvas_id} at y ${record.y}`);
+        console.warn(
+          `No row found for pixel record with canvas_id ${record.canvas_id} at y ${record.y}`,
+        );
         continue;
       }
 
@@ -407,7 +435,12 @@ async function main() {
       }
     }
 
-    const pixels: Prisma.pixelCreateManyInput[] = [];
+    const pixels: Array<{
+      canvas_id: number;
+      x: number;
+      y: number;
+      color_id: number;
+    }> = [];
 
     for (const canvas of canvases) {
       const rowMap = canvasMap.get(canvas.id);
