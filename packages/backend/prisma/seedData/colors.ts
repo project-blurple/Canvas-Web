@@ -1,4 +1,4 @@
-export const colorSeedData: {
+interface ColorSeedData {
   id: number;
   code: string;
   emoji_name: string;
@@ -6,7 +6,10 @@ export const colorSeedData: {
   global: boolean;
   name: string;
   rgba: [number, number, number, number];
-}[] = [
+}
+
+// These are all the colors available in the 2024 event
+export const colorSeedData: ColorSeedData[] = [
   {
     id: 0,
     code: "ptnr",

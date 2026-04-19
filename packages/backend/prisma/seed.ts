@@ -7,11 +7,13 @@ import {
   canvasSeedData,
   colorSeedData,
   discordGuildRecordSeedData,
+  discordUserProfileSeedData,
   eventSeedData,
   frameSeedData,
   guildSeedData,
   infoSeedData,
   participationSeedData,
+  userSeedData,
 } from "./seedData";
 
 const prisma = new PrismaClient();
@@ -79,19 +81,18 @@ async function main() {
   while (userIds.size < userNumber)
     userIds.add(Math.floor(Math.random() * 900_000) + 100_000);
 
+  const userData = discordUserProfileSeedData();
+
   // === COLOR ===
   if (seedings.includes("color")) {
     await prisma.color.createMany({ data: colorSeedData });
     console.log("Seeded color");
   }
 
+  // === DISCORD_USER_PROFILE ===
   if (seedings.includes("discord_user_profile")) {
     await prisma.discord_user_profile.createMany({
-      data: Array.from(userIds).map((userId) => ({
-        user_id: userId,
-        username: `User ${userId}`,
-        profile_picture_url: "https://discord.com/assets/788f05731f8aa02e.png",
-      })),
+      data: userData,
     });
     console.log("Seeded discord_user_profile");
   }
@@ -108,18 +109,9 @@ async function main() {
     console.log("Seeded event");
   }
 
+  // === USER ===
   if (seedings.includes("user")) {
-    await prisma.user.createMany({
-      data: Array.from(userIds).map((userId) => ({
-        id: userId,
-        current_canvas_id:
-          Math.random() < 0.25 ?
-            Math.random() < 0.5 ?
-              undefined
-            : 1901
-          : 1902,
-      })),
-    });
+    await prisma.user.createMany({ data: userSeedData(userData) });
     console.log("Seeded user");
   }
 
