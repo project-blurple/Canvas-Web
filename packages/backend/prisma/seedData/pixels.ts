@@ -1,10 +1,37 @@
 import { createReadStream } from "node:fs";
-import { createInterface } from "node:readline";
 import { canvasSeedData } from "./events.ts";
 
 const pixelSeedDataPath = new URL("./pixelData2024.csv", import.meta.url);
 const historySeedDataPath = new URL("./historyData2024.csv", import.meta.url);
 const SEED_BATCH_SIZE = 2000;
+
+function normalizeCsvHeader(line: string): string {
+  return line
+    .replace(/^\uFEFF/, "")
+    .replaceAll('"', "")
+    .trim();
+}
+
+async function* readLines(path: URL): AsyncGenerator<string> {
+  const fileStream = createReadStream(path, { encoding: "utf8" });
+  let buffer = "";
+
+  for await (const chunk of fileStream) {
+    buffer += chunk;
+
+    let lineBreakIndex = buffer.indexOf("\n");
+    while (lineBreakIndex !== -1) {
+      const line = buffer.slice(0, lineBreakIndex).replace(/\r$/, "");
+      yield line;
+      buffer = buffer.slice(lineBreakIndex + 1);
+      lineBreakIndex = buffer.indexOf("\n");
+    }
+  }
+
+  if (buffer.length > 0) {
+    yield buffer.replace(/\r$/, "");
+  }
+}
 
 interface PixelSeedData {
   canvas_id: number;
@@ -25,17 +52,12 @@ function parsePixelSeedData(line: string): PixelSeedData {
 }
 
 async function* pixelSeedData2024Batches(): AsyncGenerator<PixelSeedData[]> {
-  const fileStream = createReadStream(pixelSeedDataPath, { encoding: "utf8" });
-  const lineReader = createInterface({
-    input: fileStream,
-    crlfDelay: Infinity,
-  });
   const batch: PixelSeedData[] = [];
   let isHeader = true;
 
-  for await (const line of lineReader) {
+  for await (const line of readLines(pixelSeedDataPath)) {
     if (isHeader) {
-      if (line !== "x,y,color_id") {
+      if (normalizeCsvHeader(line) !== "x,y,color_id") {
         throw new Error(
           `Unexpected CSV header in ${pixelSeedDataPath.pathname}`,
         );
@@ -121,19 +143,12 @@ function parseHistorySeedData(line: string): HistorySeedData {
 async function* historySeedData2024Batches(): AsyncGenerator<
   HistorySeedData[]
 > {
-  const fileStream = createReadStream(historySeedDataPath, {
-    encoding: "utf8",
-  });
-  const lineReader = createInterface({
-    input: fileStream,
-    crlfDelay: Infinity,
-  });
   const batch: HistorySeedData[] = [];
   let isHeader = true;
 
-  for await (const line of lineReader) {
+  for await (const line of readLines(historySeedDataPath)) {
     if (isHeader) {
-      if (line !== "user_id,x,y,color_id,timestamp,id") {
+      if (normalizeCsvHeader(line) !== "user_id,x,y,color_id,timestamp,id") {
         throw new Error(
           `Unexpected CSV header in ${historySeedDataPath.pathname}`,
         );
