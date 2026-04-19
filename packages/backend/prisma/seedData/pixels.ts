@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { canvasSeedData } from "./events";
 
 const pixelSeedDataPath = new URL("./pixelData2024.csv", import.meta.url);
+const historySeedDataPath = new URL("./historyData2024.csv", import.meta.url);
 
 interface PixelSeedData {
   canvas_id: number;
@@ -54,4 +55,44 @@ export function pixelSeedData(): PixelSeedData[] {
   }
 
   return seedData;
+}
+
+interface HistorySeedData {
+  user_id: bigint;
+  canvas_id: number;
+  x: number;
+  y: number;
+  color_id: number;
+  timestamp: Date;
+}
+
+function historySeedData2024(): HistorySeedData[] {
+  const csv: string = readFileSync(historySeedDataPath, "utf8").trim();
+  const lines: string[] = csv.split(/\r?\n/);
+  const header = lines[0] ?? "";
+  const rows = lines.slice(1);
+
+  if (header !== '"user_id","x","y","color_id","timestamp","id"') {
+    throw new Error(`Unexpected CSV header in ${historySeedDataPath.pathname}`);
+  }
+
+  return rows
+    .filter((line: string) => line.length > 0)
+    .map((line: string) => {
+      const [userId, x, y, colorId, timestamp] = line.split(",");
+
+      return {
+        user_id: BigInt(userId),
+        canvas_id: 2024,
+        x: Number(x),
+        y: Number(y),
+        color_id: Number(colorId),
+        timestamp: new Date(Number(timestamp)),
+      };
+    });
+}
+
+export function historySeedData(): HistorySeedData[] {
+  // Only seeding 2024 history, as the rest remain blank
+  return historySeedData2024();
 }

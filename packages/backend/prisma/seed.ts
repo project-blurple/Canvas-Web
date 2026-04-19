@@ -11,6 +11,7 @@ import {
   eventSeedData,
   frameSeedData,
   guildSeedData,
+  historySeedData,
   infoSeedData,
   participationSeedData,
   pixelSeedData,
@@ -118,14 +119,12 @@ async function main() {
 
   /// === SESSION ===
   if (seedings.includes("session")) {
-    // await prisma.session.createMany({ data: [] });
     // Sessions are generated dynamically based on user activity, so we don't need to seed any initial data for them
     console.log("Seeded session");
   }
 
   // === BLACKLIST ===
   if (seedings.includes("blacklist")) {
-    // await prisma.blacklist.createMany({ data: [] });
     // Leaving empty to start. Users can be added to the blacklist through the mod panel.
     console.log("Seeded blacklist");
   }
@@ -138,7 +137,6 @@ async function main() {
 
   // === COOLDOWN ===
   if (seedings.includes("cooldown")) {
-    // await prisma.cooldown.createMany({ data: [] });
     // Cooldowns are generated dynamically based on user activity, so we don't need to seed any initial data for them
     console.log("Seeded cooldown");
   }
@@ -155,46 +153,9 @@ async function main() {
     console.log("Seeded guild");
   }
 
+  // === HISTORY ===
   if (seedings.includes("history")) {
-    await prisma.history.createMany({
-      data: [
-        ...Array.from({ length: 1000 }).map(() => ({
-          user_id:
-            Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
-          canvas_id: 1901,
-          x: Math.floor(Math.random() * 50),
-          y: Math.floor(Math.random() * 50),
-          color_id: [2, 3, 4, 101, 102][Math.floor(Math.random() * 5)],
-          timestamp: new Date(
-            Date.now() - Math.floor(Math.random() * 1_000_000),
-          ),
-          guild_id: null,
-        })),
-        ...Array.from({ length: 8000 }).map(() => ({
-          user_id:
-            Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
-          canvas_id: 1902,
-          x: Math.floor(Math.random() * 100),
-          y: Math.floor(Math.random() * 100),
-          color_id: [2, 3, 4, 101, 102][Math.floor(Math.random() * 5)],
-          timestamp: new Date(Date.now() - Math.floor(Math.random() * 500_000)),
-          guild_id: null,
-        })),
-        ...Array.from({ length: 150 + Math.floor(Math.random() * 150) }).map(
-          () => ({
-            user_id:
-              Array.from(userIds)[Math.floor(Math.random() * userIds.size)],
-            canvas_id: 1902,
-            x: 0,
-            y: 0,
-            color_id: [2, 3][Math.floor(Math.random() * 2)],
-            timestamp: new Date(
-              Date.now() - Math.floor(Math.random() * 200_000),
-            ),
-          }),
-        ),
-      ],
-    });
+    await prisma.history.createMany({ data: historySeedData() });
     console.log("Seeded history");
   }
 

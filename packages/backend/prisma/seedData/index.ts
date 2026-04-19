@@ -6,5 +6,5 @@ export {
   guildSeedData,
   participationSeedData,
 } from "./guilds.ts";
-export { pixelSeedData } from "./pixels.ts";
+export { historySeedData, pixelSeedData } from "./pixels.ts";
 export { discordUserProfileSeedData, userSeedData } from "./users.ts";
