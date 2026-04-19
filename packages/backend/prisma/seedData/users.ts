@@ -33,7 +33,7 @@ export function discordUserProfileSeedData(): DiscordUserProfileSeedData[] {
 }
 
 interface UserSeedData {
-  id: number;
+  id: bigint;
   current_canvas_id?: number; // used by the bot, not supported in the web app
 }
 
@@ -41,7 +41,7 @@ export function userSeedData(
   discordUsers: DiscordUserProfileSeedData[],
 ): UserSeedData[] {
   const users: UserSeedData[] = discordUsers.map((discordUser) => ({
-    id: Number(discordUser.user_id),
+    id: discordUser.user_id,
   }));
 
   return users;

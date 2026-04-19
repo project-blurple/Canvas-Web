@@ -1,7 +1,6 @@
-// @ts-expect-error
 import console from "node:console";
-// @ts-expect-error
 import process from "node:process";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../build/client/generated/client.js";
 import {
   canvasSeedData,
@@ -16,13 +15,34 @@ import {
   participationSeedData,
   pixelSeedData,
   userSeedData,
-} from "./seedData";
+} from "./seedData/index.ts";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(process.env.DATABASE_URL ?? ""),
+});
 
-const OVERRIDE = true;
+const seedStartedAt = Date.now();
+
+function logWithTiming(message: string): void {
+  const elapsedMs = Date.now() - seedStartedAt;
+  console.log(`[+${elapsedMs}ms] ${message}`);
+}
+
+async function runSeedingStep(
+  step: string,
+  action?: () => Promise<void>,
+): Promise<void> {
+  const startedAt = Date.now();
+  logWithTiming(`Seeding ${step}...`);
+  if (action) await action();
+  logWithTiming(`Seeded ${step} (${Date.now() - startedAt}ms)`);
+}
+
+const OVERRIDE = false;
 
 async function main() {
+  logWithTiming("Starting database seed");
+
   const allSeedings = [
     "blacklist",
     "canvas",
@@ -52,7 +72,12 @@ async function main() {
       if (count && count >= 1) seedings.splice(seedings.indexOf(seeding), 1);
     }
 
-  if (seedings.length === 0) return;
+  if (seedings.length === 0) {
+    logWithTiming("No seedings to run");
+    return;
+  }
+
+  logWithTiming(`Seedings to run: ${seedings.join(", ")}`);
 
   const order: Seeding[] = [
     "pixel",
@@ -71,105 +96,120 @@ async function main() {
     "discord_user_profile",
     "color",
   ];
-  await prisma.$transaction([
-    ...seedings
-      .sort((a, b) => order.indexOf(a) - order.indexOf(b))
-      .map((seeding) => prisma[seeding].deleteMany()),
-  ]);
+  await runSeedingStep("cleanup", async () => {
+    await prisma.$transaction([
+      ...seedings
+        .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+        .map((seeding) => prisma[seeding].deleteMany()),
+    ]);
+  });
 
   const userData = discordUserProfileSeedData();
 
   // === COLOR ===
   if (seedings.includes("color")) {
-    await prisma.color.createMany({ data: colorSeedData });
-    console.log("Seeded color");
+    await runSeedingStep("color", async () => {
+      await prisma.color.createMany({ data: colorSeedData });
+    });
   }
 
   // === DISCORD_USER_PROFILE ===
   if (seedings.includes("discord_user_profile")) {
-    await prisma.discord_user_profile.createMany({
-      data: userData,
+    await runSeedingStep("discord_user_profile", async () => {
+      await prisma.discord_user_profile.createMany({
+        data: userData,
+      });
     });
-    console.log("Seeded discord_user_profile");
   }
 
   // === DISCORD_GUILD_RECORD ===
   if (seedings.includes("discord_guild_record")) {
-    await prisma.discord_guild_record.createMany(discordGuildRecordSeedData());
-    console.log("Seeded discord_guild_record");
+    await runSeedingStep("discord_guild_record", async () => {
+      await prisma.discord_guild_record.createMany({
+        data: discordGuildRecordSeedData(),
+      });
+    });
   }
 
   // === EVENT ===
   if (seedings.includes("event")) {
-    await prisma.event.createMany({ data: eventSeedData });
-    console.log("Seeded event");
+    await runSeedingStep("event", async () => {
+      await prisma.event.createMany({ data: eventSeedData });
+    });
   }
 
   // === USER ===
   if (seedings.includes("user")) {
-    await prisma.user.createMany({ data: userSeedData(userData) });
-    console.log("Seeded user");
+    await runSeedingStep("user", async () => {
+      await prisma.user.createMany({ data: userSeedData(userData) });
+    });
   }
 
   /// === SESSION ===
   if (seedings.includes("session")) {
-    // Sessions are generated dynamically based on user activity, so we don't need to seed any initial data for them
-    console.log("Seeded session");
+    await runSeedingStep("session");
   }
 
   // === BLACKLIST ===
   if (seedings.includes("blacklist")) {
-    // Leaving empty to start. Users can be added to the blacklist through the mod panel.
-    console.log("Seeded blacklist");
+    await runSeedingStep("blacklist");
   }
 
   // === CANVAS ===
   if (seedings.includes("canvas")) {
-    await prisma.canvas.createMany({ data: canvasSeedData });
-    console.log("Seeded canvas");
+    await runSeedingStep("canvas", async () => {
+      await prisma.canvas.createMany({ data: canvasSeedData });
+    });
   }
 
   // === COOLDOWN ===
   if (seedings.includes("cooldown")) {
-    // Cooldowns are generated dynamically based on user activity, so we don't need to seed any initial data for them
-    console.log("Seeded cooldown");
+    await runSeedingStep("cooldown");
   }
 
   // === FRAME ===
   if (seedings.includes("frame")) {
-    await prisma.frame.createMany({ data: frameSeedData });
-    console.log("Seeded frame");
+    await runSeedingStep("frame", async () => {
+      await prisma.frame.createMany({ data: frameSeedData });
+    });
   }
 
   // === GUILD ===
   if (seedings.includes("guild")) {
-    await prisma.guild.createMany({ data: guildSeedData() });
-    console.log("Seeded guild");
+    await runSeedingStep("guild", async () => {
+      await prisma.guild.createMany({ data: guildSeedData() });
+    });
   }
 
   // === HISTORY ===
   if (seedings.includes("history")) {
-    await prisma.history.createMany({ data: historySeedData() });
-    console.log("Seeded history");
+    await runSeedingStep("history", async () => {
+      await prisma.history.createMany({ data: historySeedData() });
+    });
   }
 
   // === INFO ===
   if (seedings.includes("info")) {
-    await prisma.info.create({ data: infoSeedData });
-    console.log("Seeded info");
+    await runSeedingStep("info", async () => {
+      await prisma.info.create({ data: infoSeedData });
+    });
   }
 
   // === PARTICIPATION ===
   if (seedings.includes("participation")) {
-    await prisma.participation.createMany({ data: participationSeedData() });
-    console.log("Seeded participation");
+    await runSeedingStep("participation", async () => {
+      await prisma.participation.createMany({ data: participationSeedData() });
+    });
   }
 
   // === PIXEL ===
   if (seedings.includes("pixel")) {
-    await prisma.pixel.createMany({ data: pixelSeedData() });
-    console.log("Seeded pixel");
+    await runSeedingStep("pixel", async () => {
+      await prisma.pixel.createMany({ data: pixelSeedData() });
+    });
   }
+
+  logWithTiming("Database seed completed");
 }
 
 main()

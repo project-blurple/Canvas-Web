@@ -1,6 +1,5 @@
-// @ts-expect-error
 import { readFileSync } from "node:fs";
-import { canvasSeedData } from "./events";
+import { canvasSeedData } from "./events.ts";
 
 const pixelSeedDataPath = new URL("./pixelData2024.csv", import.meta.url);
 const historySeedDataPath = new URL("./historyData2024.csv", import.meta.url);
@@ -72,7 +71,7 @@ function historySeedData2024(): HistorySeedData[] {
   const header = lines[0] ?? "";
   const rows = lines.slice(1);
 
-  if (header !== '"user_id","x","y","color_id","timestamp","id"') {
+  if (header !== "user_id,x,y,color_id,timestamp,id") {
     throw new Error(`Unexpected CSV header in ${historySeedDataPath.pathname}`);
   }
 
@@ -87,7 +86,7 @@ function historySeedData2024(): HistorySeedData[] {
         x: Number(x),
         y: Number(y),
         color_id: Number(colorId),
-        timestamp: new Date(Number(timestamp)),
+        timestamp: new Date(timestamp),
       };
     });
 }

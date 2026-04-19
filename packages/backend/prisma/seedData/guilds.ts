@@ -1,4 +1,4 @@
-import { colorSeedData } from "./colors";
+import { colorSeedData } from "./colors.ts";
 
 const generatedGuildCount = 12;
 

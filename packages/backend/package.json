@@ -77,8 +77,5 @@
     "vite": "^8.0.8",
     "vitest": "^4.1.4",
     "vitest-environment-prisma-postgres": "^1.0.1"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 }

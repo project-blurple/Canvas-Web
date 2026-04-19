@@ -8,6 +8,9 @@ export default defineConfig({
   views: {
     path: "prisma/views",
   },
+  migrations: {
+    seed: "ts-node --esm prisma/seed.ts",
+  },
   datasource: {
     url: process.env.DATABASE_URL,
   },
