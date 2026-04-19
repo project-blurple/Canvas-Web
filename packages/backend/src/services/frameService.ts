@@ -15,19 +15,6 @@ const frameSelect = {
   canvas_id: true,
   owner_id: true,
   is_guild_owned: true,
-  owner_user: {
-    select: {
-      user_id: true,
-      username: true,
-      profile_picture_url: true,
-    },
-  },
-  owner_guild: {
-    select: {
-      guild_id: true,
-      name: true,
-    },
-  },
   name: true,
   x_0: true,
   y_0: true,
@@ -47,7 +34,84 @@ async function findFrameForType(frameId: string) {
 
 type FrameDbRecord = NonNullable<Awaited<ReturnType<typeof findFrameForType>>>;
 
-function frameFromDb(frame: FrameDbRecord): Frame {
+type UserOwnerRecord = {
+  user_id: bigint;
+  username: string;
+  profile_picture_url: string;
+};
+
+type GuildOwnerRecord = {
+  guild_id: bigint;
+  name: string;
+};
+
+type OwnerLookup = {
+  usersById: Map<bigint, UserOwnerRecord>;
+  guildsById: Map<bigint, GuildOwnerRecord>;
+};
+
+function collectOwnerIds(frames: FrameDbRecord[]) {
+  const userIds = new Set<bigint>();
+  const guildIds = new Set<bigint>();
+
+  for (const frame of frames) {
+    if (frame.is_guild_owned) {
+      guildIds.add(frame.owner_id);
+    } else {
+      userIds.add(frame.owner_id);
+    }
+  }
+
+  return {
+    userIds: [...userIds],
+    guildIds: [...guildIds],
+  };
+}
+
+async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
+  const { userIds, guildIds } = collectOwnerIds(frames);
+
+  const [users, guilds] = await Promise.all([
+    userIds.length ?
+      prisma.discord_user_profile.findMany({
+        where: {
+          user_id: {
+            in: userIds,
+          },
+        },
+        select: {
+          user_id: true,
+          username: true,
+          profile_picture_url: true,
+        },
+      })
+    : Promise.resolve([] as UserOwnerRecord[]),
+    guildIds.length ?
+      prisma.discord_guild_record.findMany({
+        where: {
+          guild_id: {
+            in: guildIds,
+          },
+        },
+        select: {
+          guild_id: true,
+          name: true,
+        },
+      })
+    : Promise.resolve([] as GuildOwnerRecord[]),
+  ]);
+
+  return {
+    usersById: new Map(
+      users.map((user: UserOwnerRecord) => [user.user_id, user]),
+    ),
+    guildsById: new Map(
+      guilds.map((guild: GuildOwnerRecord) => [guild.guild_id, guild]),
+    ),
+  };
+}
+
+function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
   const baseFrame = {
     id: frame.id,
     canvasId: frame.canvas_id,
@@ -59,8 +123,12 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 
   if (frame.is_guild_owned) {
-    if (!frame.owner_guild) {
-      throw new Error(`Frame ${frame.id} is missing a valid guild owner`);
+    const guildData = owners.guildsById.get(frame.owner_id);
+
+    if (!guildData) {
+      throw new Error(
+        `Guild owner with ID ${frame.owner_id} not found for frame ${frame.id}`,
+      );
     }
 
     return {
@@ -68,24 +136,29 @@ function frameFromDb(frame: FrameDbRecord): Frame {
       owner: {
         type: FrameOwnerType.Guild,
         guild: {
-          guild_id: frame.owner_guild.guild_id.toString(),
-          name: frame.owner_guild.name,
+          guild_id: guildData.guild_id.toString(),
+          name: guildData.name,
         },
       },
     };
   }
 
-  if (!frame.owner_user) {
-    throw new Error(`Frame ${frame.id} is missing a valid user owner`);
+  const userData = owners.usersById.get(frame.owner_id);
+
+  if (!userData) {
+    throw new Error(
+      `User owner with ID ${frame.owner_id} not found for frame ${frame.id}`,
+    );
   }
+
   return {
     ...baseFrame,
     owner: {
       type: FrameOwnerType.User,
       user: {
-        id: frame.owner_user.user_id.toString(),
-        username: frame.owner_user.username,
-        profilePictureUrl: frame.owner_user.profile_picture_url,
+        id: userData.user_id.toString(),
+        username: userData.username,
+        profilePictureUrl: userData.profile_picture_url,
       },
     },
   };
@@ -115,7 +188,8 @@ export async function getFrameById(frameId: string): Promise<Frame> {
     throw new NotFoundError("Frame not found");
   }
 
-  return frameFromDb(frame);
+  const owners = await loadOwnerLookup([frame]);
+  return frameFromDb(frame, owners);
 }
 
 export async function getFramesByUserId(
@@ -131,8 +205,10 @@ export async function getFramesByUserId(
     select: frameSelect,
   });
 
-  return frames.map((frame) => {
-    const mapped = frameFromDb(frame);
+  const owners = await loadOwnerLookup(frames);
+
+  return frames.map((frame: FrameDbRecord) => {
+    const mapped = frameFromDb(frame, owners);
     asUserFrame(mapped);
     return mapped;
   });
@@ -153,8 +229,10 @@ export async function getFramesByGuildIds(
     select: frameSelect,
   });
 
-  return frames.map((frame) => {
-    const mapped = frameFromDb(frame);
+  const owners = await loadOwnerLookup(frames);
+
+  return frames.map((frame: FrameDbRecord) => {
+    const mapped = frameFromDb(frame, owners);
     asGuildFrame(mapped);
     return mapped;
   });
