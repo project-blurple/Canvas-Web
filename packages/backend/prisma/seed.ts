@@ -38,7 +38,10 @@ async function runSeedingStep(
   logWithTiming(`Seeded ${step} (${Date.now() - startedAt}ms)`);
 }
 
-const OVERRIDE = false;
+const overwriteArg = process.argv.find((arg) => arg.startsWith("--overwrite="));
+const OVERWRITE = overwriteArg?.split("=")[1] === "true";
+
+console.log(`Database seeding started. OVERWRITE=${OVERWRITE}`);
 
 async function main() {
   logWithTiming("Starting database seed");
@@ -63,7 +66,7 @@ async function main() {
   type Seeding = (typeof allSeedings)[number];
   const seedings: Seeding[] = [...allSeedings];
 
-  if (!OVERRIDE)
+  if (!OVERWRITE)
     for (const seeding of seedings) {
       const count = (await prisma[seeding].count()) as
         | number
