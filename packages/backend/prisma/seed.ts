@@ -4,9 +4,12 @@ import console from "node:console";
 import process from "node:process";
 import { PrismaClient } from "../build/client/generated/client.js";
 import {
+  canvasSeedData,
   colorSeedData,
   discordGuildRecordSeedData,
+  eventSeedData,
   guildSeedData,
+  infoSeedData,
   participationSeedData,
 } from "./seedData";
 
@@ -98,18 +101,10 @@ async function main() {
     console.log("Seeded discord_guild_record");
   }
 
+  // === EVENT ===
   if (seedings.includes("event")) {
     await prisma.event.createMany({
-      data: [
-        {
-          id: 2024,
-          name: "Canvas 2024",
-        },
-        {
-          id: 2034,
-          name: "Testing Event",
-        },
-      ],
+      data: eventSeedData,
     });
     console.log("Seeded event");
   }
@@ -129,81 +124,30 @@ async function main() {
     console.log("Seeded user");
   }
 
-  /// session
+  /// === SESSION ===
+  if (seedings.includes("session")) {
+    // await prisma.session.createMany({ data: [] });
+    // Sessions are generated dynamically based on user activity, so we don't need to seed any initial data for them
+    console.log("Seeded session");
+  }
 
+  // === BLACKLIST ===
   if (seedings.includes("blacklist")) {
-    await prisma.blacklist.createMany({
-      data: Array.from(userIds)
-        .slice(0, 5)
-        .map((userId) => ({
-          user_id: userId,
-          date_added: new Date(
-            Date.now() + Math.floor(Math.random() * 100_000),
-          ),
-        })),
-    });
+    // await prisma.blacklist.createMany({ data: [] });
+    // Leaving empty to start. Users can be added to the blacklist through the mod panel.
     console.log("Seeded blacklist");
   }
 
+  // === CANVAS ===
   if (seedings.includes("canvas")) {
-    await prisma.canvas.createMany({
-      data: [
-        {
-          id: 1901,
-          name: "1st Canvas",
-          locked: true,
-          event_id: 1901,
-          width: 50,
-          height: 50,
-          cooldown_length: 30_000,
-          start_coordinates: [1, 1],
-        },
-        {
-          id: 1902,
-          name: "2nd Canvas",
-          locked: false,
-          event_id: 1902,
-          width: 100,
-          height: 100,
-          cooldown_length: 30_000,
-          start_coordinates: [1, 1],
-        },
-        {
-          id: 1801,
-          name: "1st Off-season",
-          locked: false,
-          width: 10,
-          height: 10,
-          cooldown_length: 5_000,
-        },
-      ],
-    });
+    await prisma.canvas.createMany({ data: canvasSeedData });
     console.log("Seeded canvas");
   }
 
+  // === COOLDOWN ===
   if (seedings.includes("cooldown")) {
-    await prisma.cooldown.createMany({
-      data: [
-        ...Array.from(userIds)
-          .slice(3, -4)
-          .map((userId) => ({
-            user_id: userId,
-            canvas_id: 1901,
-            cooldown_time: new Date(
-              Date.now() + Math.floor((Math.random() - 0.5) * 30_000),
-            ),
-          })),
-        ...Array.from(userIds)
-          .slice(5, -2)
-          .map((userId) => ({
-            user_id: userId,
-            canvas_id: 1902,
-            cooldown_time: new Date(
-              Date.now() + Math.floor((Math.random() - 0.5) * 30_000),
-            ),
-          })),
-      ],
-    });
+    // await prisma.cooldown.createMany({ data: [] });
+    // Cooldowns are generated dynamically based on user activity, so we don't need to seed any initial data for them
     console.log("Seeded cooldown");
   }
 
@@ -237,8 +181,9 @@ async function main() {
     console.log("Seeded frame");
   }
 
+  // === GUILD ===
   if (seedings.includes("guild")) {
-    await prisma.guild.createMany(guildSeedData());
+    await prisma.guild.createMany({ data: guildSeedData() });
     console.log("Seeded guild");
   }
 
@@ -285,25 +230,15 @@ async function main() {
     console.log("Seeded history");
   }
 
+  // === INFO ===
   if (seedings.includes("info")) {
-    await prisma.info.create({
-      data: {
-        title: "Lorem Ipsum",
-        canvas_admin: [589383722759880705n],
-        current_event_id: 1902,
-        cached_canvas_ids: [1901, 1902, 1801],
-        admin_server_id: 589383722759880705n,
-        current_emoji_server_id: 1373849215251382292n,
-        host_server_id: 1373849215251382292n,
-        default_canvas_id: 1902,
-        all_colors_global: false,
-      },
-    });
+    await prisma.info.create({ data: infoSeedData });
     console.log("Seeded info");
   }
 
+  // === PARTICIPATION ===
   if (seedings.includes("participation")) {
-    await prisma.participation.createMany(participationSeedData());
+    await prisma.participation.createMany({ data: participationSeedData() });
     console.log("Seeded participation");
   }
 
