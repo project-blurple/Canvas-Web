@@ -8,7 +8,7 @@ import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { initializeAuth } from "@/middleware/auth";
 import { initializeCache } from "@/services/canvasService";
-import { SocketHandler } from "./SockerHandler";
+import { SocketHandler } from "./SocketHandler";
 
 interface App {
   socketHandler: SocketHandler;
