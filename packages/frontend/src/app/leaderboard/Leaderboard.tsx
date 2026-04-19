@@ -1,9 +1,7 @@
 "use client";
 
-import { LeaderboardEntry } from "@blurple-canvas-web/types";
-import { Pagination, PaginationItem, Skeleton, styled } from "@mui/material";
-import { JSX, useEffect, useState } from "react";
-import Avatar from "@/components/Avatar";
+import { Pagination, PaginationItem, styled } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
