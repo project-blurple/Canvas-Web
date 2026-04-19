@@ -106,13 +106,6 @@ async function main() {
 
   const userData = discordUserProfileSeedData();
 
-  // === COLOR ===
-  if (seedings.includes("color")) {
-    await runSeedingStep("color", async () => {
-      await prisma.color.createMany({ data: colorSeedData });
-    });
-  }
-
   // === DISCORD_USER_PROFILE ===
   if (seedings.includes("discord_user_profile")) {
     await runSeedingStep("discord_user_profile", async () => {
@@ -122,7 +115,16 @@ async function main() {
     });
   }
 
-  // === DISCORD_GUILD_RECORD ===
+  // ====== User and Guild data ======
+
+  // USER
+  if (seedings.includes("user")) {
+    await runSeedingStep("user", async () => {
+      await prisma.user.createMany({ data: userSeedData(userData) });
+    });
+  }
+
+  // DISCORD_GUILD_RECORD
   if (seedings.includes("discord_guild_record")) {
     await runSeedingStep("discord_guild_record", async () => {
       await prisma.discord_guild_record.createMany({
@@ -131,81 +133,74 @@ async function main() {
     });
   }
 
-  // === EVENT ===
-  if (seedings.includes("event")) {
-    await runSeedingStep("event", async () => {
-      await prisma.event.createMany({ data: eventSeedData });
-    });
-  }
-
-  // === USER ===
-  if (seedings.includes("user")) {
-    await runSeedingStep("user", async () => {
-      await prisma.user.createMany({ data: userSeedData(userData) });
-    });
-  }
-
-  /// === SESSION ===
-  if (seedings.includes("session")) {
-    await runSeedingStep("session");
-  }
-
-  // === BLACKLIST ===
-  if (seedings.includes("blacklist")) {
-    await runSeedingStep("blacklist");
-  }
-
-  // === CANVAS ===
-  if (seedings.includes("canvas")) {
-    await runSeedingStep("canvas", async () => {
-      await prisma.canvas.createMany({ data: canvasSeedData });
-    });
-  }
-
-  // === COOLDOWN ===
-  if (seedings.includes("cooldown")) {
-    await runSeedingStep("cooldown");
-  }
-
-  // === FRAME ===
-  if (seedings.includes("frame")) {
-    await runSeedingStep("frame", async () => {
-      await prisma.frame.createMany({ data: frameSeedData });
-    });
-  }
-
-  // === GUILD ===
+  // GUILD
   if (seedings.includes("guild")) {
     await runSeedingStep("guild", async () => {
       await prisma.guild.createMany({ data: guildSeedData() });
     });
   }
 
-  // === HISTORY ===
-  if (seedings.includes("history")) {
-    await runSeedingStep("history", async () => {
-      await prisma.history.createMany({ data: historySeedData() });
+  // ====== Color data ======
+
+  // COLOR
+  if (seedings.includes("color")) {
+    await runSeedingStep("color", async () => {
+      await prisma.color.createMany({ data: colorSeedData });
     });
   }
 
-  // === INFO ===
+  // ====== Event data ======
+
+  // EVENT
+  if (seedings.includes("event")) {
+    await runSeedingStep("event", async () => {
+      await prisma.event.createMany({ data: eventSeedData });
+    });
+  }
+
+  // INFO
   if (seedings.includes("info")) {
     await runSeedingStep("info", async () => {
       await prisma.info.create({ data: infoSeedData });
     });
   }
 
-  // === PARTICIPATION ===
+  // CANVAS
+  if (seedings.includes("canvas")) {
+    await runSeedingStep("canvas", async () => {
+      await prisma.canvas.createMany({ data: canvasSeedData });
+    });
+  }
+
+  // PARTICIPATION
   if (seedings.includes("participation")) {
     await runSeedingStep("participation", async () => {
       await prisma.participation.createMany({ data: participationSeedData() });
     });
   }
 
-  // === PIXEL ===
+  // ====== Frame data ======
+
+  // FRAME
+  if (seedings.includes("frame")) {
+    await runSeedingStep("frame", async () => {
+      await prisma.frame.createMany({ data: frameSeedData });
+    });
+  }
+
+  // ====== Pixel data ======
+
+  // PIXEL
   if (seedings.includes("pixel")) {
     await runSeedingStep("pixel", async () => {
       await prisma.pixel.createMany({ data: pixelSeedData() });
+    });
+  }
+
+  // HISTORY
+  if (seedings.includes("history")) {
+    await runSeedingStep("history", async () => {
+      await prisma.history.createMany({ data: historySeedData() });
     });
   }
 
