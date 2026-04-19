@@ -1,5 +1,6 @@
 export { colorSeedData } from "./colors.ts";
 export { canvasSeedData, eventSeedData, infoSeedData } from "./events.ts";
+export { frameSeedData } from "./frames.ts";
 export {
   discordGuildRecordSeedData,
   guildSeedData,

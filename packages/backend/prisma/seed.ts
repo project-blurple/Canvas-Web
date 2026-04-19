@@ -8,6 +8,7 @@ import {
   colorSeedData,
   discordGuildRecordSeedData,
   eventSeedData,
+  frameSeedData,
   guildSeedData,
   infoSeedData,
   participationSeedData,
@@ -24,8 +25,8 @@ async function main() {
     "canvas",
     "color",
     "cooldown",
-    "discord_user_profile",
     "discord_guild_record",
+    "discord_user_profile",
     "event",
     "frame",
     "guild",
@@ -33,8 +34,8 @@ async function main() {
     "info",
     "participation",
     "pixel",
-    "user",
     "session",
+    "user",
   ] as const;
   type Seeding = (typeof allSeedings)[number];
   const seedings: Seeding[] = [...allSeedings];
@@ -78,10 +79,9 @@ async function main() {
   while (userIds.size < userNumber)
     userIds.add(Math.floor(Math.random() * 900_000) + 100_000);
 
+  // === COLOR ===
   if (seedings.includes("color")) {
-    await prisma.color.createMany({
-      data: colorSeedData,
-    });
+    await prisma.color.createMany({ data: colorSeedData });
     console.log("Seeded color");
   }
 
@@ -96,6 +96,7 @@ async function main() {
     console.log("Seeded discord_user_profile");
   }
 
+  // === DISCORD_GUILD_RECORD ===
   if (seedings.includes("discord_guild_record")) {
     await prisma.discord_guild_record.createMany(discordGuildRecordSeedData());
     console.log("Seeded discord_guild_record");
@@ -103,9 +104,7 @@ async function main() {
 
   // === EVENT ===
   if (seedings.includes("event")) {
-    await prisma.event.createMany({
-      data: eventSeedData,
-    });
+    await prisma.event.createMany({ data: eventSeedData });
     console.log("Seeded event");
   }
 
@@ -151,33 +150,9 @@ async function main() {
     console.log("Seeded cooldown");
   }
 
+  // === FRAME ===
   if (seedings.includes("frame")) {
-    await prisma.frame.createMany({
-      data: [
-        {
-          id: "901",
-          canvas_id: 1901,
-          owner_id: Array.from(userIds)[10],
-          is_guild_owned: false,
-          name: "First Frame",
-          x_0: 10,
-          x_1: 20,
-          y_0: 10,
-          y_1: 20,
-        },
-        {
-          id: "902",
-          canvas_id: 1902,
-          owner_id: Array.from(userIds)[10],
-          is_guild_owned: false,
-          name: "Second Frame",
-          x_0: 20,
-          x_1: 30,
-          y_0: 20,
-          y_1: 30,
-        },
-      ],
-    });
+    await prisma.frame.createMany({ data: frameSeedData });
     console.log("Seeded frame");
   }
 
