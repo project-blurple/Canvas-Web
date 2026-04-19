@@ -36,7 +36,9 @@
     "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm format && pnpm lint",
     "check:fix": "pnpm format:fix && pnpm lint:fix",
-    "clean": "rm -rf node_modules/ build/"
+    "clean": "rm -rf node_modules/ build/",
+    "prisma:push": "prisma db push",
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.61.0",
