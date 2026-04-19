@@ -3,7 +3,12 @@ import console from "node:console";
 // @ts-expect-error
 import process from "node:process";
 import { PrismaClient } from "../build/client/generated/client.js";
-import { colorSeedData } from "./seedData/colors";
+import {
+  colorSeedData,
+  discordGuildRecordSeedData,
+  guildSeedData,
+  participationSeedData,
+} from "./seedData";
 
 const prisma = new PrismaClient();
 
@@ -89,18 +94,7 @@ async function main() {
   }
 
   if (seedings.includes("discord_guild_record")) {
-    await prisma.discord_guild_record.createMany({
-      data: [
-        {
-          guild_id: 1001,
-          name: "Guild One",
-        },
-        {
-          guild_id: 1002,
-          name: "Guild Two",
-        },
-      ],
-    });
+    await prisma.discord_guild_record.createMany(discordGuildRecordSeedData());
     console.log("Seeded discord_guild_record");
   }
 
@@ -109,11 +103,11 @@ async function main() {
       data: [
         {
           id: 2024,
-          name: "2024",
+          name: "Canvas 2024",
         },
         {
-          id: 1902,
-          name: "Second Event",
+          id: 2034,
+          name: "Testing Event",
         },
       ],
     });
@@ -244,18 +238,7 @@ async function main() {
   }
 
   if (seedings.includes("guild")) {
-    await prisma.guild.createMany({
-      data: [
-        {
-          id: 1001,
-        },
-        {
-          id: 1002,
-          manager_role: 2001,
-          invite: "fr",
-        },
-      ],
-    });
+    await prisma.guild.createMany(guildSeedData());
     console.log("Seeded guild");
   }
 
@@ -320,25 +303,7 @@ async function main() {
   }
 
   if (seedings.includes("participation")) {
-    await prisma.participation.createMany({
-      data: [
-        {
-          guild_id: 1001,
-          event_id: 1901,
-          color_id: 101,
-        },
-        {
-          guild_id: 1001,
-          event_id: 1902,
-          color_id: 101,
-        },
-        {
-          guild_id: 1002,
-          event_id: 1902,
-          color_id: 102,
-        },
-      ],
-    });
+    await prisma.participation.createMany(participationSeedData());
     console.log("Seeded participation");
   }
 

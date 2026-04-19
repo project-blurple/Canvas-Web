@@ -1,4 +1,12 @@
-export const colorSeedData = [
+export const colorSeedData: {
+  id: number;
+  code: string;
+  emoji_name: string;
+  emoji_id: bigint;
+  global: boolean;
+  name: string;
+  rgba: [number, number, number, number];
+}[] = [
   {
     id: 0,
     code: "ptnr",
