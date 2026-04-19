@@ -86,7 +86,7 @@ export function participationSeedData(): ParticipationSeedData[] {
 
   for (let i = 0; i < colorIds.length; i++) {
     participations.push({
-      guild_id: BigInt(1001 + i),
+      guild_id: BigInt(1001 + (generatedGuildCount % i)),
       event_id: 2024,
       color_id: colorIds[i],
     });

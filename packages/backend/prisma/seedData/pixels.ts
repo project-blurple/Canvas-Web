@@ -17,7 +17,7 @@ function pixelSeedData2024(): PixelSeedData[] {
   const header = lines[0] ?? "";
   const rows = lines.slice(1);
 
-  if (header !== '"x","y","color_id"') {
+  if (header !== "x,y,color_id") {
     throw new Error(`Unexpected CSV header in ${pixelSeedDataPath.pathname}`);
   }
 

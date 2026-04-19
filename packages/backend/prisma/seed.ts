@@ -47,10 +47,8 @@ async function main() {
   logWithTiming("Starting database seed");
 
   const allSeedings = [
-    "blacklist",
     "canvas",
     "color",
-    "cooldown",
     "discord_guild_record",
     "discord_user_profile",
     "event",
@@ -60,20 +58,22 @@ async function main() {
     "info",
     "participation",
     "pixel",
-    "session",
     "user",
   ] as const;
   type Seeding = (typeof allSeedings)[number];
-  const seedings: Seeding[] = [...allSeedings];
+  let seedings: Seeding[] = [...allSeedings];
 
-  if (!OVERWRITE)
+  if (!OVERWRITE) {
+    const filteredSeedings: Seeding[] = [];
     for (const seeding of seedings) {
       const count = (await prisma[seeding].count()) as
         | number
         | undefined
         | null;
-      if (count && count >= 1) seedings.splice(seedings.indexOf(seeding), 1);
+      if (!(count && count >= 1)) filteredSeedings.push(seeding);
     }
+    seedings = filteredSeedings;
+  }
 
   if (seedings.length === 0) {
     logWithTiming("No seedings to run");
@@ -89,10 +89,7 @@ async function main() {
     "history",
     "guild",
     "frame",
-    "cooldown",
     "canvas",
-    "blacklist",
-    "session",
     "user",
     "event",
     "discord_guild_record",
