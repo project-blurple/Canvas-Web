@@ -10,10 +10,10 @@ import {
   eventSeedData,
   frameSeedData,
   guildSeedData,
-  historySeedData,
+  historySeedDataBatches,
   infoSeedData,
   participationSeedData,
-  pixelSeedData,
+  pixelSeedDataBatches,
   userSeedData,
 } from "./seedData/index.ts";
 
@@ -193,14 +193,18 @@ async function main() {
   // PIXEL
   if (seedings.includes("pixel")) {
     await runSeedingStep("pixel", async () => {
-      await prisma.pixel.createMany({ data: pixelSeedData() });
+      for await (const batch of pixelSeedDataBatches()) {
+        await prisma.pixel.createMany({ data: batch });
+      }
     });
   }
 
   // HISTORY
   if (seedings.includes("history")) {
     await runSeedingStep("history", async () => {
-      await prisma.history.createMany({ data: historySeedData() });
+      for await (const batch of historySeedDataBatches()) {
+        await prisma.history.createMany({ data: batch });
+      }
     });
   }
 

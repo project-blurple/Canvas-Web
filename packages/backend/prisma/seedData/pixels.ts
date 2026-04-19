@@ -1,8 +1,10 @@
-import { readFileSync } from "node:fs";
+import { createReadStream } from "node:fs";
+import { createInterface } from "node:readline";
 import { canvasSeedData } from "./events.ts";
 
 const pixelSeedDataPath = new URL("./pixelData2024.csv", import.meta.url);
 const historySeedDataPath = new URL("./historyData2024.csv", import.meta.url);
+const SEED_BATCH_SIZE = 2000;
 
 interface PixelSeedData {
   canvas_id: number;
@@ -11,49 +13,87 @@ interface PixelSeedData {
   color_id: number;
 }
 
-function pixelSeedData2024(): PixelSeedData[] {
-  const csv: string = readFileSync(pixelSeedDataPath, "utf8").trim();
-  const lines: string[] = csv.split(/\r?\n/);
-  const header = lines[0] ?? "";
-  const rows = lines.slice(1);
+function parsePixelSeedData(line: string): PixelSeedData {
+  const [x, y, colorId] = line.split(",");
 
-  if (header !== "x,y,color_id") {
-    throw new Error(`Unexpected CSV header in ${pixelSeedDataPath.pathname}`);
-  }
-
-  return rows
-    .filter((line: string) => line.length > 0)
-    .map((line: string) => {
-      const [x, y, colorId] = line.split(",");
-
-      return {
-        canvas_id: 2024,
-        x: Number(x),
-        y: Number(y),
-        color_id: Number(colorId),
-      };
-    });
+  return {
+    canvas_id: 2024,
+    x: Number(x),
+    y: Number(y),
+    color_id: Number(colorId),
+  };
 }
 
-export function pixelSeedData(): PixelSeedData[] {
-  const seedData = pixelSeedData2024();
+async function* pixelSeedData2024Batches(): AsyncGenerator<PixelSeedData[]> {
+  const fileStream = createReadStream(pixelSeedDataPath, { encoding: "utf8" });
+  const lineReader = createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
+  const batch: PixelSeedData[] = [];
+  let isHeader = true;
 
+  for await (const line of lineReader) {
+    if (isHeader) {
+      if (line !== "x,y,color_id") {
+        throw new Error(
+          `Unexpected CSV header in ${pixelSeedDataPath.pathname}`,
+        );
+      }
+
+      isHeader = false;
+      continue;
+    }
+
+    if (line.length === 0) continue;
+
+    batch.push(parsePixelSeedData(line));
+
+    if (batch.length >= SEED_BATCH_SIZE) {
+      yield batch;
+      batch.length = 0;
+    }
+  }
+
+  if (isHeader) {
+    throw new Error(`Unexpected empty CSV in ${pixelSeedDataPath.pathname}`);
+  }
+
+  if (batch.length > 0) {
+    yield batch;
+  }
+}
+
+function* generatedPixelSeedDataBatches(): Generator<PixelSeedData[]> {
   const canvases = canvasSeedData.filter((canvas) => canvas.id !== 2024);
+  const batch: PixelSeedData[] = [];
 
   for (const canvas of canvases) {
     for (let x = 0; x < canvas.width; x++) {
       for (let y = 0; y < canvas.height; y++) {
-        seedData.push({
+        batch.push({
           canvas_id: canvas.id,
           x,
           y,
-          color_id: 1, // Blank pixel
+          color_id: 1,
         });
+
+        if (batch.length >= SEED_BATCH_SIZE) {
+          yield batch;
+          batch.length = 0;
+        }
       }
     }
   }
 
-  return seedData;
+  if (batch.length > 0) {
+    yield batch;
+  }
+}
+
+export async function* pixelSeedDataBatches(): AsyncGenerator<PixelSeedData[]> {
+  yield* pixelSeedData2024Batches();
+  yield* generatedPixelSeedDataBatches();
 }
 
 interface HistorySeedData {
@@ -65,33 +105,65 @@ interface HistorySeedData {
   timestamp: Date;
 }
 
-function historySeedData2024(): HistorySeedData[] {
-  const csv: string = readFileSync(historySeedDataPath, "utf8").trim();
-  const lines: string[] = csv.split(/\r?\n/);
-  const header = lines[0] ?? "";
-  const rows = lines.slice(1);
+function parseHistorySeedData(line: string): HistorySeedData {
+  const [userId, x, y, colorId, timestamp] = line.split(",");
 
-  if (header !== "user_id,x,y,color_id,timestamp,id") {
-    throw new Error(`Unexpected CSV header in ${historySeedDataPath.pathname}`);
-  }
-
-  return rows
-    .filter((line: string) => line.length > 0)
-    .map((line: string) => {
-      const [userId, x, y, colorId, timestamp] = line.split(",");
-
-      return {
-        user_id: BigInt(userId),
-        canvas_id: 2024,
-        x: Number(x),
-        y: Number(y),
-        color_id: Number(colorId),
-        timestamp: new Date(timestamp),
-      };
-    });
+  return {
+    user_id: BigInt(userId),
+    canvas_id: 2024,
+    x: Number(x),
+    y: Number(y),
+    color_id: Number(colorId),
+    timestamp: new Date(timestamp),
+  };
 }
 
-export function historySeedData(): HistorySeedData[] {
-  // Only seeding 2024 history, as the rest remain blank
-  return historySeedData2024();
+async function* historySeedData2024Batches(): AsyncGenerator<
+  HistorySeedData[]
+> {
+  const fileStream = createReadStream(historySeedDataPath, {
+    encoding: "utf8",
+  });
+  const lineReader = createInterface({
+    input: fileStream,
+    crlfDelay: Infinity,
+  });
+  const batch: HistorySeedData[] = [];
+  let isHeader = true;
+
+  for await (const line of lineReader) {
+    if (isHeader) {
+      if (line !== "user_id,x,y,color_id,timestamp,id") {
+        throw new Error(
+          `Unexpected CSV header in ${historySeedDataPath.pathname}`,
+        );
+      }
+
+      isHeader = false;
+      continue;
+    }
+
+    if (line.length === 0) continue;
+
+    batch.push(parseHistorySeedData(line));
+
+    if (batch.length >= SEED_BATCH_SIZE) {
+      yield batch;
+      batch.length = 0;
+    }
+  }
+
+  if (isHeader) {
+    throw new Error(`Unexpected empty CSV in ${historySeedDataPath.pathname}`);
+  }
+
+  if (batch.length > 0) {
+    yield batch;
+  }
+}
+
+export async function* historySeedDataBatches(): AsyncGenerator<
+  HistorySeedData[]
+> {
+  yield* historySeedData2024Batches();
 }
