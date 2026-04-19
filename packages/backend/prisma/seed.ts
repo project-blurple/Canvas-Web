@@ -3,6 +3,7 @@ import console from "node:console";
 // @ts-expect-error
 import process from "node:process";
 import { PrismaClient } from "../build/client/generated/client.js";
+import { colorSeedData } from "./seedData/colors";
 
 const prisma = new PrismaClient();
 
@@ -71,61 +72,7 @@ async function main() {
 
   if (seedings.includes("color")) {
     await prisma.color.createMany({
-      data: [
-        {
-          id: 2,
-          code: "blurp",
-          emoji_name: "blurp",
-          emoji_id: 1234,
-          global: true,
-          name: "Blurple",
-          rgba: [88, 101, 242, 255],
-        },
-        {
-          id: 3,
-          code: "ltblp",
-          emoji_name: "ltblp",
-          emoji_id: 2345,
-          name: "Light Blurple",
-          rgba: [224, 227, 255, 255],
-        },
-        {
-          id: 4,
-          code: "black",
-          emoji_name: "black",
-          emoji_id: 3456,
-          global: true,
-          name: "Black",
-          rgba: [0, 0, 0, 255],
-        },
-        {
-          id: 1,
-          code: "blank",
-          emoji_name: "blank",
-          emoji_id: 4567,
-          global: true,
-          name: "Blank",
-          rgba: [88, 101, 242, 127],
-        },
-        {
-          id: 101,
-          code: "red",
-          emoji_name: "red",
-          emoji_id: 5678,
-          global: false,
-          name: "Red",
-          rgba: [255, 0, 0, 255],
-        },
-        {
-          id: 102,
-          code: "green",
-          emoji_name: "green",
-          emoji_id: 6789,
-          global: false,
-          name: "Green",
-          rgba: [0, 255, 0, 255],
-        },
-      ],
+      data: colorSeedData,
     });
     console.log("Seeded color");
   }
@@ -161,8 +108,8 @@ async function main() {
     await prisma.event.createMany({
       data: [
         {
-          id: 1901,
-          name: "First Event",
+          id: 2024,
+          name: "2024",
         },
         {
           id: 1902,
