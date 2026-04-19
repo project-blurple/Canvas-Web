@@ -1,6 +1,6 @@
-import BadRequestError from "@/errors/BadRequestError";
 import { CanvasInfo } from "@blurple-canvas-web/types";
 import z from "zod";
+import BadRequestError from "@/errors/BadRequestError";
 
 const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),
@@ -19,6 +19,17 @@ export const LeaderboardQueryModel = z.object({
 export const PixelHistoryParamModel = z.object({
   x: z.coerce.number().int().nonnegative(),
   y: z.coerce.number().int().nonnegative(),
+});
+
+export const FrameGuildIdsQueryModel = z.object({
+  guildIds: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .transform((value) =>
+      value === undefined ? []
+      : Array.isArray(value) ? value
+      : [value],
+    ),
 });
 
 export interface CanvasIdParam {

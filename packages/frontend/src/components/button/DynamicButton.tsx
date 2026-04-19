@@ -1,8 +1,7 @@
 "use client";
 
-import { buttonClasses, css, styled } from "@mui/material";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { buttonClasses, css, styled } from "@mui/material";
 
 import { Button as ButtonBase } from "@/components/button";
 
@@ -17,9 +16,8 @@ const StyledButton = styled(ButtonBase, {
     --dynamic-bg-color: var(--discord-blurple);
     background-color: var(--dynamic-bg-color);
 
-    :hover,
-    :focus,
-    :focus-visible {
+    &:hover,
+    &:focus-visible {
       ${({ backgroundColorStr }) =>
         backgroundColorStr &&
         css`
@@ -39,21 +37,28 @@ const StyledButton = styled(ButtonBase, {
 const DynamicButtonContent = styled("span")`
   display: block flex;
   gap: 0.25rem;
-  opacity: 95%;
-  transition:
-    color var(--transition-duration-fast) ease,
-    filter var(--transition-duration-fast) ease,
-    font-weight var(--transition-duration-fast) ease;
+  transition-duration: var(--transition-duration-fast);
+  transition-property: color, filter, font-weight;
+  transition-timing-function: ease;
 
-  /*
-   * Ensure contrast of button label against background. The color property
-   * should match that of the background it sits against.
-   *
-   * From https://robinrendle.com/the-cascade/015-context-aware-colors
-   */
-  color: var(--dynamic-bg-color);
-  filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-  mix-blend-mode: luminosity;
+  @supports (color: color-mix(in oklab, black, black)) {
+    color: color-mix(
+      in oklab,
+      contrast-color(var(--dynamic-bg-color)) 94%,
+      var(--dynamic-bg-color)
+    );
+  }
+
+  @supports not (color: color-mix(in oklab, black, black)) {
+    /*
+     * Ensure contrast of button label against background. The color property
+     * should match that of the background it sits against.
+     * From https://robinrendle.com/the-cascade/015-context-aware-colors
+     */
+    color: var(--dynamic-bg-color);
+    filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
+    mix-blend-mode: luminosity;
+  }
 `;
 
 interface DynamicButtonProps {
@@ -70,10 +75,8 @@ export default function DynamicButton({
   onAction,
   ...props
 }: DynamicButtonProps) {
-  const rgba = color?.rgba;
-  const rgb = rgba?.slice(0, 3).join(" ");
-
-  const backgroundColorStr = color ? `rgb(${rgb})` : undefined;
+  const rgb = color?.rgba?.slice(0, 3).join(" ");
+  const backgroundColorStr = rgb ? `rgb(${rgb})` : undefined;
 
   const clickHandler = onAction;
   const keyUpHandler = (event: React.KeyboardEvent) => {
@@ -95,13 +98,12 @@ export default function DynamicButton({
 }
 
 export function DynamicAnchorButton({
-  children,
   href,
   ...props
 }: DynamicButtonProps & { href: string }) {
   return (
     <StyledAnchor href={href} target="_blank" rel="noreferrer">
-      <DynamicButton {...props}>{children}</DynamicButton>
+      <DynamicButton {...props} />
     </StyledAnchor>
   );
 }

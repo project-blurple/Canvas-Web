@@ -1,11 +1,10 @@
 "use client";
 
+import { CanvasSummary } from "@blurple-canvas-web/types";
 import { NativeSelect, nativeSelectClasses, styled } from "@mui/material";
 import { ChevronsUpDown } from "lucide-react";
-
 import { useCanvasContext } from "@/contexts";
 import { useCanvasInfo, useCanvasList, useEventInfo } from "@/hooks";
-import { CanvasSummary } from "@blurple-canvas-web/types";
 
 const Select = styled(NativeSelect)`
   background-color: var(--discord-legacy-not-quite-black);
@@ -29,7 +28,6 @@ const Select = styled(NativeSelect)`
   .${nativeSelectClasses.select} {
     padding: 0.25rem 1rem;
 
-    :focus,
     :focus-visible {
       background-color: unset;
       outline: 0;
@@ -45,18 +43,18 @@ const Select = styled(NativeSelect)`
     cursor: wait;
   }
 
-  :hover:not(.${nativeSelectClasses.disabled}) {
-    background-color: var(--discord-legacy-greyple);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(.${nativeSelectClasses.disabled}) {
+      background-color: var(--discord-legacy-greyple);
+    }
   }
 
-  :hover,
-  ::before,
-  ::after {
+  &::before {
+    /* Remove MUI artifact */
     content: unset;
   }
 
-  :has(:focus),
-  :has(:focus-visible) {
+  &:has(:focus-visible) {
     outline: var(--focus-outline);
   }
 `;
@@ -76,7 +74,8 @@ export default function CanvasPicker() {
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
 
   const isLoading =
-    canvasListIsLoading || mainCanvasIsLoading || currentEventIsLoading;
+    false &&
+    (canvasListIsLoading || mainCanvasIsLoading || currentEventIsLoading);
 
   const currentCanvases = canvases.filter(
     ({ id, eventId }) => id !== mainCanvas?.id && eventId === currentEvent?.id,
@@ -85,7 +84,7 @@ export default function CanvasPicker() {
   const pastCanvases = canvases.filter(({ id }) => id !== currentEvent?.id);
 
   function handleChangeCanvas(event: React.ChangeEvent<HTMLSelectElement>) {
-    setCanvas(Number.parseInt(event.target.value));
+    setCanvas(Number.parseInt(event.target.value, 10));
   }
 
   return (

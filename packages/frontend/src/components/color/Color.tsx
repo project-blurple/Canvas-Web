@@ -6,10 +6,8 @@
 
 "use client";
 
-import { styled } from "@mui/material";
-import React from "react";
-
 import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 
 const ColorContainer = styled("div")`
   align-items: center;

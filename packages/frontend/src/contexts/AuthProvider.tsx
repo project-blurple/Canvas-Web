@@ -1,16 +1,17 @@
 "use client";
 
-import config from "@/config";
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import axios from "axios";
 import Cookies from "js-cookie";
 import {
-  ReactNode,
   createContext,
+  ReactNode,
   useCallback,
   useContext,
   useState,
 } from "react";
+import config from "@/config";
+import { useUserData } from "@/hooks";
 
 interface AuthContextType {
   user: DiscordUserProfile | null;
@@ -31,17 +32,30 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children, profile }: AuthProviderProps) {
   const [user, setUser] = useState(profile);
+  const { data: userData } = useUserData(user);
+
+  const resolvedUser =
+    user && !user.guilds && userData?.guilds ?
+      {
+        ...user,
+        guilds: userData.guilds,
+      }
+    : user;
 
   const signOut = useCallback<AuthContextType["signOut"]>(() => {
     // Delete the session cookie
-    axios.post(`${config.apiUrl}/api/v1/discord/logout`).catch(console.error);
+    axios
+      .post(`${config.apiUrl}/api/v1/discord/logout`, undefined, {
+        withCredentials: true,
+      })
+      .catch(console.error);
 
     Cookies.remove("profile");
     setUser(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, signOut }}>
+    <AuthContext.Provider value={{ user: resolvedUser, signOut }}>
       {children}
     </AuthContext.Provider>
   );

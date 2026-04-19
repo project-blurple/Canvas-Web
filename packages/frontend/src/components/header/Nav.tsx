@@ -1,10 +1,10 @@
 "use client";
 
-import { useAuthContext } from "@/contexts";
 import { IconButton, Menu, MenuItem, styled } from "@mui/material";
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useAuthContext } from "@/contexts";
 
 const Links = styled("ul")`
   display: none;
@@ -110,8 +110,8 @@ export default function Nav() {
         anchorEl={anchorElement}
         open={isOpen}
         onClose={handleClose}
-        MenuListProps={{
-          "aria-labelledby": "navigation-menu-button",
+        slotProps={{
+          list: { "aria-labelledby": "navigation-menu-button" },
         }}
       >
         {links.map(({ href, label }) => (

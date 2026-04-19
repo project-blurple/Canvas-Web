@@ -4,17 +4,22 @@ import axios from "axios";
 import type { Metadata, Viewport } from "next";
 
 import config from "@/config";
-import { QueryClientProvider, SelectedColorProvider } from "@/contexts";
-import "@/styles/core.css";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
-import { Theme } from "@/theme";
+import {
+  CanvasViewProvider,
+  QueryClientProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
+import "../styles/core.css";
 import {
   CanvasInfo,
   CanvasInfoRequest,
   DiscordUserProfile,
 } from "@blurple-canvas-web/types";
 import { cookies } from "next/headers";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { CanvasProvider } from "@/contexts/CanvasContext";
+import { Theme } from "@/theme";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),
@@ -31,16 +36,18 @@ export const viewport: Viewport = {
  * action (requiring it to be async and returning a promise) while still allowing it to access the
  * cookies during SSR... I love Next.js 😭
  */
-function getServerSideProfile(): DiscordUserProfile | null {
-  const profile = cookies().get("profile");
+async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
+  const cookieStore = await cookies();
+  const profile = cookieStore.get("profile");
 
   if (!profile) {
     return null;
   }
 
   try {
-    return JSON.parse(profile.value);
-  } catch {
+    return JSON.parse(profile.value) as DiscordUserProfile;
+  } catch (error) {
+    console.error("[layout] failed to parse profile cookie", error);
     return null;
   }
 }
@@ -77,20 +84,33 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AppRouterCacheProvider>
-          <AuthProvider profile={getServerSideProfile()}>
-            <QueryClientProvider>
-              <SelectedColorProvider>
-                <CanvasProvider
-                  mainCanvasInfo={await getServerSideCanvasInfo()}
-                >
-                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                </CanvasProvider>
-              </SelectedColorProvider>
-            </QueryClientProvider>
-          </AuthProvider>
-        </AppRouterCacheProvider>
+        <LayoutProviders>{children}</LayoutProviders>
       </body>
     </html>
+  );
+}
+
+async function LayoutProviders({ children }: { children: React.ReactNode }) {
+  const [profile, canvasInfo] = await Promise.all([
+    getServerSideProfile(),
+    getServerSideCanvasInfo(),
+  ]);
+
+  return (
+    <AppRouterCacheProvider>
+      <QueryClientProvider>
+        <AuthProvider profile={profile}>
+          <SelectedColorProvider>
+            <SelectedFrameProvider>
+              <CanvasProvider mainCanvasInfo={canvasInfo}>
+                <CanvasViewProvider>
+                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                </CanvasViewProvider>
+              </CanvasProvider>
+            </SelectedFrameProvider>
+          </SelectedColorProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppRouterCacheProvider>
   );
 }

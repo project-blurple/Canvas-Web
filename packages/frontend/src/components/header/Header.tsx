@@ -6,6 +6,16 @@ import { CanvasPicker } from "../canvas";
 import Nav, { NavLink } from "./Nav";
 
 const Wrapper = styled("header")`
+  body:has(&) {
+    --layout-padding-x: 2rem;
+    --layout-padding-y: 1rem;
+
+    ${({ theme }) => theme.breakpoints.up("lg")} {
+      --layout-padding-x: 4rem;
+      --layout-padding-y: 2rem;
+    }
+  }
+
   background-color: var(--discord-legacy-dark-but-not-black);
   border-block-end: var(--card-border);
   display: grid;
@@ -18,7 +28,7 @@ const Wrapper = styled("header")`
 
   ${({ theme }) => theme.breakpoints.up("md")} {
     gap: 1rem;
-    padding-inline: 4rem;
+    padding-inline: var(--layout-padding-x);
   }
 `;
 

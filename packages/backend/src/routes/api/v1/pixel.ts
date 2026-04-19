@@ -1,6 +1,12 @@
+import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import { Router } from "express";
 import config from "@/config";
-import { ApiError, ForbiddenError } from "@/errors";
-import { BadRequestError, UnauthorizedError } from "@/errors";
+import {
+  ApiError,
+  BadRequestError,
+  ForbiddenError,
+  UnauthorizedError,
+} from "@/errors";
 import { socketHandler } from "@/index";
 import { tenSecondLimiter } from "@/middleware/ratelimit";
 import {
@@ -12,10 +18,7 @@ import {
   PixelHistoryParamModel,
   parseCanvasId,
 } from "@/models/paramModels";
-import {
-  updateCachedCanvasPixel,
-  updateManyCachedPixels,
-} from "@/services/canvasService";
+import { updateManyCachedPixels } from "@/services/canvasService";
 import {
   getPixelHistory,
   placePixel,
@@ -23,8 +26,6 @@ import {
   validatePixel,
   validateUser,
 } from "@/services/pixelService";
-import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
-import { Router } from "express";
 
 export const pixelRouter = Router({ mergeParams: true });
 
@@ -60,6 +61,10 @@ pixelRouter.get<CanvasIdParam>("/history", async (req, res) => {
  */
 pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
   try {
+    if (!config.botPlacingEnabled) {
+      throw new ForbiddenError("Bot placing is disabled");
+    }
+
     const canvasId = await parseCanvasId(req.params);
 
     const apiKey = req.header("x-api-key");
@@ -102,7 +107,7 @@ pixelRouter.post<CanvasIdParam>("/", tenSecondLimiter, async (req, res) => {
     const canvasId = await parseCanvasId(req.params);
     const profile = req.user as DiscordUserProfile;
 
-    if (!profile || !profile.id) {
+    if (!profile?.id) {
       throw new UnauthorizedError("User is not authenticated");
     }
 

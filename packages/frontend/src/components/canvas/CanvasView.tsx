@@ -1,23 +1,36 @@
 "use client";
 
+import {
+  CanvasInfo,
+  Frame,
+  PlacePixelSocket,
+  Point,
+} from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-import { PlacePixelSocket, Point } from "@blurple-canvas-web/types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import config from "@/config";
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import {
+  useCanvasContext,
+  useCanvasViewContext,
+  useSelectedColorContext,
+  useSelectedFrameContext,
+} from "@/contexts";
+import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
+import { useFrameById } from "@/hooks/queries/useFrame";
+import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp } from "@/util";
+import { normalizeFrameBounds } from "../action-panel/tabs/FrameThumbCard";
 import { Button } from "../button";
 import {
-  ORIGIN,
   addPoints,
   diffPoints,
   distanceBetweenPoints,
   dividePoint,
   getMovementDelta,
   multiplyPoint,
+  ORIGIN,
 } from "./point";
 
 const CanvasContainer = styled("div")`
@@ -45,17 +58,12 @@ const CanvasContainer = styled("div")`
     border-radius: 0;
   }
 
-  :active {
+  &:active {
     cursor: grabbing;
   }
 
-  &,
-  * & {
+  & {
     user-select: none;
-  }
-
-  .loader {
-    position: absolute;
   }
 `;
 
@@ -77,28 +85,31 @@ const InviteButton = styled(Button)`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 10px rgba(0 0 0 / 25%);
   color: white;
   font-size: 1.2rem;
   font-variation-settings: "wdth" 125;
   font-weight: 900;
-  padding: 0.1rem 1rem;
+  inset-inline-end: 0.5rem;
+  padding-block: 0.1rem;
+  padding-inline: 1rem;
   position: absolute;
-  right: 0.5rem;
   text-decoration: none;
   z-index: 1;
 
-  :hover {
-    background-color: var(--discord-blurple);
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: var(--discord-blurple);
+    }
   }
 
   ${({ theme }) => theme.breakpoints.up("md")} {
-    bottom: 0.5rem;
     border-radius: 0.5rem 0.5rem 1rem 0.5rem;
+    inset-block-end: 0.5rem;
   }
 
   ${({ theme }) => theme.breakpoints.down("md")} {
-    top: 0.5rem;
+    inset-block-start: 0.5rem;
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
 `;
@@ -131,11 +142,8 @@ const CanvasImageWrapper = styled("div", {
   }
 
   img:not(:first-child) {
+    inset: 0;
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
   }
 `;
 
@@ -196,8 +204,8 @@ function calculateTouchOffsetDelta(
     x: movementDelta2.x,
     y: movementDelta2.y,
   });
-  const oldMagitude = distanceBetweenPoints(oldPosition1, oldPosition2);
-  const newMagitude = distanceBetweenPoints(newPosition1, newPosition2);
+  const oldMagnitude = distanceBetweenPoints(oldPosition1, oldPosition2);
+  const newMagnitude = distanceBetweenPoints(newPosition1, newPosition2);
   const relativePosition = dividePoint(
     addPoints(newPosition1, newPosition2),
     2,
@@ -206,8 +214,90 @@ function calculateTouchOffsetDelta(
     x: movementDelta1.x + movementDelta2.x / 2,
     y: movementDelta1.y + movementDelta2.y / 2,
   };
-  const scale = newMagitude / oldMagitude;
+  const scale = newMagnitude / oldMagnitude;
   return { offsetDelta, scale, centerOffset: relativePosition };
+}
+
+function clampZoom(zoom: number, initialZoom: number) {
+  return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
+}
+
+interface CanvasTargetView {
+  targetZoom: number;
+  offset: Point;
+  targetPoint: Point;
+}
+
+function getInitialViewFromSearchParams({
+  params,
+  frame,
+  canvas,
+  container,
+  initialZoom,
+}: {
+  params: CanvasSearchParams;
+  frame: Frame | null;
+  canvas: CanvasInfo;
+  container: HTMLDivElement;
+  initialZoom: number;
+}): CanvasTargetView | null {
+  if (params.frameId) {
+    if (
+      !frame ||
+      frame.canvasId !== canvas.id ||
+      frame.id.toUpperCase() !== params.frameId.toUpperCase()
+    )
+      return null;
+
+    return getViewForFrame({
+      frame,
+      canvas,
+      container,
+      initialZoom,
+    });
+  } else {
+    const canvasX = params.x;
+    const canvasY = params.y;
+
+    if (canvasX === null || canvasY === null) return null;
+
+    const zoomFromQuery = params.zoom;
+    const hasPixelDimensions =
+      params.pixelWidth !== null || params.pixelHeight !== null;
+
+    let targetZoom = initialZoom;
+
+    if (zoomFromQuery !== null) {
+      targetZoom = clampZoom(zoomFromQuery, initialZoom);
+    } else if (hasPixelDimensions) {
+      const widthBasedZoom =
+        params.pixelWidth !== null ?
+          container.clientWidth / params.pixelWidth
+        : Number.POSITIVE_INFINITY;
+
+      const heightBasedZoom =
+        params.pixelHeight !== null ?
+          container.clientHeight / params.pixelHeight
+        : Number.POSITIVE_INFINITY;
+
+      const fitZoom = Math.min(widthBasedZoom, heightBasedZoom);
+      targetZoom = clampZoom(fitZoom, initialZoom);
+    }
+
+    const [startX, startY] = canvas.startCoordinates;
+
+    const targetPoint = {
+      x: clamp(canvasX - startX, 0, canvas.width - 1),
+      y: clamp(canvasY - startY, 0, canvas.height - 1),
+    };
+
+    const offset = {
+      x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
+      y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
+    };
+
+    return { targetZoom, offset, targetPoint };
+  }
 }
 
 // Arbitrary value applied to the deltaY of the wheel zoom function to make it feel right
@@ -216,6 +306,7 @@ const SCALE_FACTOR = 0.002;
 const MAX_ZOOM = 100;
 // MIN ZOOM_FACTOR is relative to the initalZoom. i.e. MIN_ZOOM_FACTOR = 0.9 -> minimumCssScale = 0.9 * initialZoom
 const MIN_ZOOM_FACTOR = 0.9;
+const FRAME_FIT_FILL_RATIO = 0.75;
 
 const PAN_DECAY = 0.75;
 
@@ -239,18 +330,53 @@ function calculateReticleOffset(coords: Point | null): Point {
   };
 }
 
+function getViewForFrame({
+  frame,
+  canvas,
+  container,
+  initialZoom,
+}: {
+  frame: Frame;
+  canvas: CanvasInfo;
+  container: HTMLDivElement;
+  initialZoom: number;
+}): CanvasTargetView {
+  const frameBounds = normalizeFrameBounds(frame);
+  const targetZoom = clampZoom(
+    Math.min(
+      (container.clientWidth * FRAME_FIT_FILL_RATIO) / frameBounds.width,
+      (container.clientHeight * FRAME_FIT_FILL_RATIO) / frameBounds.height,
+    ),
+    initialZoom,
+  );
+
+  const targetPoint = {
+    x: clamp((frameBounds.left + frameBounds.right) / 2, 0, canvas.width - 1),
+    y: clamp((frameBounds.top + frameBounds.bottom) / 2, 0, canvas.height - 1),
+  };
+
+  const offset = {
+    x: (canvas.width / 2 - (targetPoint.x + 0.5)) * targetZoom,
+    y: (canvas.height / 2 - (targetPoint.y + 0.5)) * targetZoom,
+  };
+
+  return { targetZoom, offset, targetPoint };
+}
+
 export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const { canvas, coords, setCoords } = useCanvasContext();
+  const [frame, setFrame] = useSelectedFrameContext();
+  const { canvas, setCanvas } = useCanvasContext();
+  const { containerRef, coords, isReticleVisible, zoom, setCoords, setZoom } =
+    useCanvasViewContext();
+  const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
   const [isLaunching, setIsLaunching] = useState(true);
-  const [zoom, setZoom] = useState(1);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
@@ -268,9 +394,35 @@ export default function CanvasView() {
   const overlayCountRef = useRef(0);
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
-  const [isSafari, setIsSafari] = useState(false);
 
-  const imageUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}`;
+  /**
+   * Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
+   * If the user spoof their user agent, this is not my problem.
+   * @see https://bugs.webkit.org/show_bug.cgi?id=27684
+   */
+  const isWebKit = useMemo(() => {
+    const { userAgent: ua, vendor } = navigator;
+    const isProbablyWebKit =
+      vendor === "Apple Computer, Inc." ||
+      ua.includes("AppleWebKit/") ||
+      ua.includes("Safari/");
+    const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
+    return isProbablyWebKit && isNotChromium;
+  }, []);
+
+  const canvasSearchParams = useCanvasSearchParams();
+  const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
+  const {
+    data: initialFrameFromSearchParams,
+    isLoading: isInitialFrameFromSearchParamsLoading,
+  } = useFrameById({
+    frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
+  });
+  const hasAppliedInitialCanvasRef = useRef(false);
+  const hasAppliedInitialViewRef = useRef(false);
+  const hasAppliedInitialFrameRef = useRef(false);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
     (image: HTMLImageElement): void => {
       if (currentCanvasIDRef.current === canvas.id) return;
@@ -284,44 +436,118 @@ export default function CanvasView() {
       ctx.drawImage(image, 0, 0, image.width, image.height);
       offscreenCanvasRef.current = offscreenCanvas;
       setInitialZoom(zoom);
-      setZoom(zoom);
+
+      let appliedInitialView = false;
+      const params = initialCanvasSearchParamsRef.current;
+      const shouldApplyInitialViewForCurrentCanvas =
+        params.canvasId === null || params.canvasId === canvas.id;
+
+      if (
+        !hasAppliedInitialViewRef.current &&
+        shouldApplyInitialViewForCurrentCanvas
+      ) {
+        const container = containerRef.current;
+
+        if (container) {
+          const initialView = getInitialViewFromSearchParams({
+            params,
+            frame: initialFrameFromSearchParams ?? null,
+            canvas,
+            container,
+            initialZoom: zoom,
+          });
+
+          if (initialView) {
+            setZoom(initialView.targetZoom);
+            setOffset(initialView.offset);
+            setCoords({
+              x: initialView.targetPoint.x,
+              y: initialView.targetPoint.y,
+            });
+            appliedInitialView = true;
+          }
+        }
+
+        // Ensure this only runs once on page load, even if params are missing/invalid.
+        if (!params.frameId) {
+          hasAppliedInitialViewRef.current = true;
+        }
+      }
+
+      if (!appliedInitialView) {
+        setZoom(zoom);
+        setOffset(ORIGIN);
+      }
+
       setVelocity(ORIGIN);
-      setOffset(ORIGIN);
       setIsLoading(false);
       setIsLaunching(false);
       clearOverlay();
     },
-    [canvas.id],
+    [canvas.id, initialFrameFromSearchParams],
   );
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: We want to show the loader when switching canvases
+  useEffect(
+    function switchToCanvasFromSearchParams() {
+      if (hasAppliedInitialCanvasRef.current) return;
+
+      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
+      if (targetCanvasId === null || targetCanvasId === canvas.id) {
+        hasAppliedInitialCanvasRef.current = true;
+        return;
+      }
+
+      hasAppliedInitialCanvasRef.current = true;
+      void setCanvas(targetCanvasId).catch(() => {
+        // If URL canvas does not exist, keep default canvas.
+      });
+    },
+    [canvas.id, setCanvas],
+  );
+
   useEffect(() => {
     // Stops placing pixels from reloading the canvas
     if (currentCanvasIDRef.current === canvas.id) return;
     setIsLoading(true);
-    // The image onLoad doesn't always seem to fire, especially on reloads. Instead, the image
-    // seems pre-loaded. This may have something to do with SSR, or browser image caching. We'll
-    // need to check it's working correctly when we start placing pixels.
-    if (imageRef.current?.complete) {
-      handleLoadImage(imageRef.current);
+    if (sourceImage) {
+      handleLoadImage(sourceImage);
     }
-  }, [handleLoadImage, imageUrl]);
+  }, [canvas.id, sourceImage, handleLoadImage]);
 
-  useEffect(() => {
-    // Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
-    // If the user spoof their user agent, this is not my problem.
-    // Bug in question https://bugs.webkit.org/show_bug.cgi?id=27684
-    setIsSafari(
-      navigator.userAgent.includes("Safari/") &&
-        !navigator.userAgent.includes("Chrome/") &&
-        !navigator.userAgent.includes("Chromium/"),
-    );
-  });
+  useEffect(
+    function applyInitialFrameFromSearchParams() {
+      if (hasAppliedInitialFrameRef.current) return;
+
+      const params = initialCanvasSearchParamsRef.current;
+      if (!params.frameId) return;
+
+      const shouldApplyForCurrentCanvas =
+        params.canvasId === null || params.canvasId === canvas.id;
+      if (!shouldApplyForCurrentCanvas) return;
+
+      // Wait for frame lookup before deciding whether initial frame view can be applied.
+      if (isInitialFrameFromSearchParamsLoading) return;
+
+      if (initialFrameFromSearchParams?.canvasId === canvas.id) {
+        setFrame(initialFrameFromSearchParams);
+      }
+
+      // Frame lookup resolved for the initial frame URL, so do not try again.
+      hasAppliedInitialFrameRef.current = true;
+    },
+    [
+      canvas.id,
+      initialFrameFromSearchParams,
+      isInitialFrameFromSearchParamsLoading,
+      setFrame,
+    ],
+  );
 
   /********************************
    * SOCKET FUNCTIONALITY.       *
    ********************************/
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   useEffect(() => {
     const onDisconnect = () => {
       console.debug("[Live Updating]: Disconnected from server");
@@ -444,6 +670,7 @@ export default function CanvasView() {
    * @param newZoom The new zoom level as a value from `initialZoom * MIN_ZOOM` to `MAX_ZOOM`
    * @param pointerOffset The offset of the `Point` from the visual center of the wrapping container
    */
+  // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleZoom = useCallback(
     (scale: number, pointerPosition: Point, elem: HTMLElement) => {
       // The mouse position's origin is in the top left of the container.
@@ -478,6 +705,8 @@ export default function CanvasView() {
         );
       });
       setZoom(clampedZoom);
+
+      setFrame(null);
     },
     [initialZoom],
   );
@@ -516,7 +745,7 @@ export default function CanvasView() {
 
     return () =>
       containerRef.current?.removeEventListener("wheel", handleWheel);
-  }, [handleZoom]);
+  }, [handleZoom, containerRef]);
 
   /********************************
    * PANNING FUNCTIONALITY.       *
@@ -539,6 +768,35 @@ export default function CanvasView() {
     [canvas],
   );
 
+  useEffect(() => {
+    if (!frame || frame.canvasId !== canvas.id) return;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const frameView = getViewForFrame({
+      frame: frame,
+      canvas,
+      container,
+      initialZoom,
+    });
+
+    setIsZooming(false);
+    setZoom(frameView.targetZoom);
+    setOffset(clampOffset(frameView.offset, frameView.targetZoom));
+    setCoords({
+      x: Math.floor(frameView.targetPoint.x),
+      y: Math.floor(frameView.targetPoint.y),
+    });
+  }, [
+    canvas,
+    containerRef,
+    initialZoom,
+    frame,
+    setCoords,
+    clampOffset,
+    setZoom,
+  ]);
+
   const updateOffset = useCallback(
     (diff: Point): void => {
       // The more we're zoomed in, the less we've actually moved on the canvas
@@ -559,8 +817,10 @@ export default function CanvasView() {
       const scaledOffsetDelta = multiplyPoint(offsetDelta, zoomRef.current);
       setVelocity({ x: scaledOffsetDelta.x, y: scaledOffsetDelta.y });
       updateOffset(scaledOffsetDelta);
+
+      setFrame(null);
     },
-    [updateOffset],
+    [updateOffset, setFrame],
   );
 
   /**
@@ -709,76 +969,77 @@ export default function CanvasView() {
   const reticleOffset = calculateReticleOffset(coords);
 
   return (
-    <>
-      <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
-        {config.discordServerInvite && (
-          <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
-          </a>
-        )}
-        <div
-          id="canvas-pan-and-zoom"
-          ref={canvasPanAndZoomRef}
+    <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
+      {config.discordServerInvite && (
+        <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
+          <InviteButton>Project Blurple</InviteButton>
+        </a>
+      )}
+      <div
+        id="canvas-pan-and-zoom"
+        ref={canvasPanAndZoomRef}
+        style={{
+          transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
+          // Only apply transition when zooming is triggered by wheel event
+          transition:
+            !isWebKit && isZooming ?
+              "transform var(--transition-duration-fast) ease-out"
+            : undefined,
+        }}
+      >
+        <ReticleContainer
           style={{
-            transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
-            // Only apply transition when zooming is triggered by wheel event
-            transition:
-              !isSafari && isZooming ?
-                "transform var(--transition-duration-fast) ease-out"
-              : undefined,
+            scale: RETICLE_SCALE,
+            display: isReticleVisible ? undefined : "none",
+            ...(coords && {
+              transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
+            }),
           }}
         >
-          <ReticleContainer
-            style={{
-              scale: RETICLE_SCALE,
-              ...(coords && {
-                transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
-              }),
-            }}
-          >
-            {color && (
-              <PreviewPixel
-                style={{
-                  width: PREVIEW_PIXEL_SIZE,
-                  height: PREVIEW_PIXEL_SIZE,
-                  top: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                  left: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                  backgroundColor: `rgba(${color?.rgba.join()})`,
-                }}
-              />
-            )}
-            <Reticle
-              src="./images/reticle.png"
-              alt="Reticle"
-              className="reticle"
+          {color && (
+            <PreviewPixel
               style={{
-                width: RETICLE_SIZE,
-                height: RETICLE_SIZE,
-                // These min sizes prevent the reticle being squished which causes it to be misalignment.
-                minWidth: RETICLE_SIZE,
-                minHeight: RETICLE_SIZE,
+                width: PREVIEW_PIXEL_SIZE,
+                height: PREVIEW_PIXEL_SIZE,
+                top: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
+                left: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
+                backgroundColor: `rgba(${color?.rgba.join()})`,
               }}
             />
-          </ReticleContainer>
-          <CanvasImageWrapper
-            ref={canvasImageWrapperRef}
-            isLoading={isLoading}
-            isLaunching={isLaunching}
-            id="canvas-image-wrapper"
-          >
-            <img
-              alt="Active Blurple Canvas"
-              onLoad={(event) => handleLoadImage(event.currentTarget)}
-              ref={imageRef}
-              src={imageUrl}
-              crossOrigin="anonymous"
-              // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
-              style={{ minWidth: canvas.width, minHeight: canvas.height }}
-            />
-          </CanvasImageWrapper>
-        </div>
-        {isLoading && <CircularProgress className="loader" />}
-      </CanvasContainer>
-    </>
+          )}
+          <Reticle
+            src="/images/reticle.png"
+            alt="Reticle"
+            className="reticle"
+            style={{
+              width: RETICLE_SIZE,
+              height: RETICLE_SIZE,
+              // These min sizes prevent the reticle being squished which causes it to be misalignment.
+              minWidth: RETICLE_SIZE,
+              minHeight: RETICLE_SIZE,
+            }}
+          />
+        </ReticleContainer>
+        <CanvasImageWrapper
+          aria-busy={isLaunching || isLoading}
+          ref={canvasImageWrapperRef}
+          isLoading={isLoading}
+          isLaunching={isLaunching}
+          id="canvas-image-wrapper"
+        >
+          {/* biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art */}
+          <img
+            alt="Active Blurple Canvas"
+            onLoad={(event) => handleLoadImage(event.currentTarget)}
+            ref={imageRef}
+            src={sourceImage?.src}
+            crossOrigin="anonymous"
+            // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
+            style={{ minWidth: canvas.width, minHeight: canvas.height }}
+          />
+        </CanvasImageWrapper>
+      </div>
+      {isLoading && <CircularProgress style={{ position: "absolute" }} />}
+    </CanvasContainer>
   );
 }

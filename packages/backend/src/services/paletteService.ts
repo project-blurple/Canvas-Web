@@ -1,4 +1,4 @@
-import { PaletteColor } from "@blurple-canvas-web/types";
+import { PaletteColor, PixelColor } from "@blurple-canvas-web/types";
 
 import { prisma } from "@/client";
 import { getCurrentEvent } from "./eventService";
@@ -24,7 +24,6 @@ export async function getCurrentEventPalette(): Promise<PaletteColor[]> {
 export async function getEventPalette(
   eventId: number,
 ): Promise<PaletteColor[]> {
-  console.debug(`Getting palette for event ${eventId}`);
   const eventPalette = await prisma.color.findMany({
     select: {
       id: true,
@@ -60,7 +59,7 @@ export async function getEventPalette(
     id: color.id,
     code: color.code,
     name: color.name,
-    rgba: color.rgba,
+    rgba: color.rgba as PixelColor,
     global: color.global,
     // We don't need to worry about the size of participations because JS doesn't throw index out
     // of bounds errors, instead it just returns undefined.

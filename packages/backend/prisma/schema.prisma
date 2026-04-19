@@ -1,15 +1,14 @@
 generator client {
-  provider        = "prisma-client-js"
-  binaryTargets   = ["native", "linux-musl-openssl-3.0.x"]
-  // pnpm workspaces cause the types to be generated in the wrong place, so we need to manually make
-  // sure it's being installed in the right place.
-  output          = "../../../node_modules/.pnpm/@prisma+client@5.22.0_prisma@5.22.0/node_modules/.prisma/client"
-  previewFeatures = ["views"]
+  provider            = "prisma-client"
+  output              = "../src/client/generated"
+  previewFeatures     = ["views"]
+  moduleFormat        = "cjs"
+  engineType          = "client"
+  importFileExtension = ""
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model blacklist {
@@ -64,8 +63,6 @@ model cooldown {
   cooldown_time DateTime? @db.Timestamptz(6)
 
   @@id([user_id, canvas_id])
-  // Necessary to get update and upsert working with prismock
-  @@unique([user_id, canvas_id])
 }
 
 model discord_user_profile {
@@ -75,12 +72,14 @@ model discord_user_profile {
   history             history[]
   leaderboard_guild   leaderboard_guild[]
   leaderboard         leaderboard[]
+  frame               frame[]
 }
 
 model discord_guild_record {
   guild_id BigInt  @id
   name     String
   guild    guild[]
+  frame    frame[]
 }
 
 model event {
@@ -92,10 +91,12 @@ model event {
 }
 
 model frame {
-  id             String  @id
+  id             String                @id
   canvas_id      Int
-  canvas         canvas  @relation(fields: [canvas_id], references: [id])
+  canvas         canvas                @relation(fields: [canvas_id], references: [id])
   owner_id       BigInt
+  owner_user     discord_user_profile? @relation(fields: [owner_id], references: [user_id], map: "user")
+  owner_guild    discord_guild_record? @relation(fields: [owner_id], references: [guild_id], map: "guild")
   is_guild_owned Boolean
   name           String
   x_0            Int
@@ -103,6 +104,8 @@ model frame {
   y_0            Int
   y_1            Int
   style_id       Int?
+  user           user?                 @relation(fields: [userId], references: [id])
+  userId         BigInt?
 }
 
 model guild {
@@ -185,6 +188,7 @@ model user {
   user_stats        user_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
+  frame             frame[]
 }
 
 model session {
@@ -206,8 +210,6 @@ view user_stats {
   color_count            Int
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
-
-  @@id([user_id, canvas_id])
 }
 
 view guild_stats {
@@ -221,8 +223,6 @@ view guild_stats {
   color_count            Int
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
-
-  @@id([guild_id, canvas_id])
 }
 
 view leaderboard {
@@ -233,8 +233,6 @@ view leaderboard {
   discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
   total_pixels         Int
   rank                 Int
-
-  @@id([user_id, canvas_id])
 }
 
 view leaderboard_guild {
@@ -247,24 +245,18 @@ view leaderboard_guild {
   discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
   total_pixels         Int
   rank                 Int
-
-  @@id([user_id, guild_id, canvas_id])
 }
 
 view color_place_frequency {
   user_id          BigInt
   canvas_id        Int
   median_time_diff Unsupported("interval")
-
-  @@id([user_id, canvas_id])
 }
 
 view color_place_frequency_guild {
   guild_id         BigInt
   canvas_id        Int
   median_time_diff Unsupported("interval")
-
-  @@id([guild_id, canvas_id])
 }
 
 view most_frequent_color_guild {
@@ -272,8 +264,6 @@ view most_frequent_color_guild {
   canvas_id Int
   color_id  Int
   count     Int
-
-  @@id([guild_id, canvas_id])
 }
 
 view most_frequent_color {
@@ -281,6 +271,4 @@ view most_frequent_color {
   canvas_id Int
   color_id  Int
   count     Int
-
-  @@id([user_id, canvas_id])
 }

@@ -1,11 +1,15 @@
 "use client";
 
+import { PaletteColor } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useState } from "react";
-
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
-import { PaletteColor } from "@blurple-canvas-web/types";
+import {
+  useCanvasContext,
+  useCanvasViewContext,
+  useSelectedColorContext,
+} from "@/contexts";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
+import FramesTab from "./tabs/FramesTab";
 
 const Wrapper = styled("div")`
   --padding-width: 1rem;
@@ -33,11 +37,11 @@ const TabBar = styled("ul")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   list-style-type: none;
 `;
 
-const Tab = styled("li")<{ active?: boolean }>`
+const TabStyle = styled("li")<{ active?: boolean }>`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -68,14 +72,14 @@ const Tab = styled("li")<{ active?: boolean }>`
     content: "\\200B"; /* zero-width space */
   }
 
-  :hover,
-  :focus,
-  :focus-visible {
-    background-color: var(--discord-legacy-dark-but-not-black);
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: var(--discord-legacy-dark-but-not-black);
+    }
   }
 
-  :focus,
   :focus-visible {
+    background-color: var(--discord-legacy-dark-but-not-black);
     outline: var(--focus-outline);
   }
 
@@ -94,10 +98,38 @@ export const Heading = styled("h2")`
   text-transform: uppercase;
 `;
 
-const TABS = {
-  LOOK: "Look",
-  PLACE: "Place",
-};
+enum TABS {
+  LOOK = "Look",
+  PLACE = "Place",
+  FRAME = "Frame",
+}
+
+function Tab({
+  tabKey,
+  label,
+  currentTab,
+  onSwitchTab,
+}: {
+  tabKey: TABS;
+  label: string;
+  currentTab: TABS;
+  onSwitchTab: (tab: TABS) => void;
+}) {
+  const isActive = currentTab === tabKey;
+
+  return (
+    <TabStyle
+      active={isActive}
+      onClick={() => onSwitchTab(tabKey)}
+      onKeyUp={(event) => {
+        if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
+      }}
+      tabIndex={0}
+    >
+      {label}
+    </TabStyle>
+  );
+}
 
 export default function ActionPanel() {
   const [currentTab, setCurrentTab] = useState(TABS.PLACE);
@@ -105,49 +137,52 @@ export default function ActionPanel() {
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
+  const { setIsReticleVisible } = useCanvasViewContext();
 
-  const onSwitchTab = (isTabLook: boolean) => {
+  const onSwitchTab = (newTab: TABS) => {
     // switching tabs
+    setCurrentTab(newTab);
+
     // hiding colour from reticle if we are on look tab
-    if (isTabLook) {
-      setCurrentTab(TABS.LOOK);
+    if (newTab === TABS.LOOK) {
       setTempColor(color);
       setColor(null);
     } else {
-      setCurrentTab(TABS.PLACE);
       setColor(tempColor);
     }
+
+    // hiding reticle if we are on frames tab
+    setIsReticleVisible(newTab !== TABS.FRAME);
   };
 
   return (
     <Wrapper>
       <TabBar>
         <Tab
-          active={currentTab === TABS.PLACE}
-          onClick={() => onSwitchTab(false)}
-          onKeyUp={(event) => {
-            if (event.key === "Enter" || event.key === " ") onSwitchTab(false);
-          }}
-          tabIndex={0}
-        >
-          Place
-        </Tab>
+          tabKey={TABS.PLACE}
+          label="Place"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
         <Tab
-          active={currentTab === TABS.LOOK}
-          onClick={() => onSwitchTab(true)}
-          onKeyUp={(event) => {
-            if (event.key === "Enter" || event.key === " ") onSwitchTab(true);
-          }}
-          tabIndex={0}
-        >
-          Look
-        </Tab>
+          tabKey={TABS.LOOK}
+          label="Look"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
+        <Tab
+          tabKey={TABS.FRAME}
+          label="Frame"
+          currentTab={currentTab}
+          onSwitchTab={onSwitchTab}
+        />
       </TabBar>
       <PlacePixelTab
         active={currentTab === TABS.PLACE}
         eventId={canvas.eventId}
       />
       <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
+      <FramesTab active={currentTab === TABS.FRAME} canvasId={canvas.id} />
     </Wrapper>
   );
 }

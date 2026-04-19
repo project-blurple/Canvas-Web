@@ -9,15 +9,15 @@
     "Henry Wang <hwan513@aucklanduni.ac.nz> (http://henryh.wang)",
     "Jasper Lai <klai866@aucklanduni.ac.nz> (https://lai.nz)",
     "Josh Jeffers <joshjeffers600@gmail.com> (https://pumbas.net)",
-    "Samuel Ou <rockedohthree@gmail.com>"
+    "Samuel Ou <me@sjou.dev> (https://sjou.dev)"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes.git"
+    "url": "https://github.com/project-blurple/Canvas-Web.git"
   },
   "license": "SEE LICENSE IN LICENSE.md",
   "bugs": {
-    "url": "https://github.com/UOA-CS732-SE750-Students-2024/project-group-golden-giraffes/issues"
+    "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "scripts": {
     "build": "pnpm --recursive build",
@@ -34,20 +34,26 @@
     "clean": "pnpm --recursive clean && rm -rf node_modules/"
   },
   "lint-staged": {
-    "*.{css,html,md,markdown,yaml,yml}": "prettier --write",
+    "*.{css,html,md,markdown,yaml,yml}": "pnpm exec prettier --write",
     "*.{cjs,d.cts,d.mts,js,json,jsonc,jsx,mjs,ts,tsx}": [
-      "prettier --write",
-      "biome check --apply --formatter-enabled=false --files-ignore-unknown=true --no-errors-on-unmatched"
+      "pnpm exec prettier --write",
+      "pnpm exec biome check --write --formatter-enabled=false --files-ignore-unknown=true --no-errors-on-unmatched"
     ]
   },
   "engines": {
-    "node": ">=20",
-    "pnpm": ">=9.0.1"
+    "node": ">=24",
+    "pnpm": ">=10.33.0"
   },
-  "packageManager": "pnpm@9.15.6+sha256.5bf88eca1e818b973b9359a16e57405177c7a9b8177b9125d587577311786e64",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "esbuild"
+    ]
+  },
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.4.12",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.3"
+    "lint-staged": "^16.4.0",
+    "prettier": "^3.8.3"
   }
 }

@@ -15,6 +15,7 @@
     font-synthesis: none;
     hanging-punctuation: first allow-end last;
     hyphenate-character: "‐"; /* Unambiguous hyphen U+2010 */
+    interpolate-size: allow-keywords;
     letter-spacing: 0;
     margin: 0;
     orphans: 2;
@@ -45,6 +46,7 @@
   h5,
   h6 {
     line-height: 1.35;
+    text-wrap: balance;
   }
 
   b,
@@ -116,6 +118,14 @@
   button {
     touch-action: manipulation;
   }
+
+  :is(ol, ul)[role="list"] {
+    list-style-type: none;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
 }
 
 @layer fonts {
@@ -138,33 +148,57 @@
 }
 
 @layer core {
-  :root {
+  html {
     --discord-blurple: oklch(57.74% 0.209 273.85);
     --discord-green: oklch(85.48% 0.197 150.16);
     --discord-yellow: oklch(92.18% 0.157 99.87);
     --discord-fuchsia: oklch(65.34% 0.217 351.92);
     --discord-red: oklch(63.18% 0.207 24.57);
-    --discord-white: white;
-    --discord-black: black;
+    --discord-white: oklch(100% 0 0);
+    --discord-black: oklch(0% 0 0);
     --discord-legacy-blurple: oklch(64.74% 0.124 270.62);
     --discord-legacy-full-white: oklch(100% 0 0);
     --discord-legacy-greyple: oklch(72.83% 0.025 236.13);
     --discord-legacy-dark-but-not-black: oklch(30.38% 0.008 255.56);
     --discord-legacy-not-quite-black: oklch(26.99% 0.008 240.16);
-    --discord-legacy-actually-black: black;
+    --discord-legacy-actually-black: oklch(0% 0 0);
 
     --font-body:
       "Mona Sans", system-ui, -apple-system, BlinkMacSystemFont, "Inter",
       "Segoe UI", Roboto, Ubuntu, sans-serif;
-    --font-monospace: "Monaspace Neon", ui-monospace, Consolas, monospace;
+    --font-monospace:
+      "Monaspace Neon", ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
+      Liberation Mono, monospace;
     --border-color: oklch(from var(--discord-white) l c h / 15%);
     --card-border: var(--border-color) solid max(0.125rem, 1px);
     --card-border-radius: 1.5rem;
     --focus-outline: var(--discord-blurple) solid max(0.125rem, 1px);
+    --text-glow: 0 0 1rem var(--discord-blurple);
+
     --transition-duration-fast: 100ms;
     --transition-duration-medium: 150ms;
     --transition-duration-slow: 200ms;
-    --text-glow: 0 0 1rem var(--discord-blurple);
+
+    --ease-in-quad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
+    --ease-in-cubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
+    --ease-in-quart: cubic-bezier(0.895, 0.03, 0.685, 0.22);
+    --ease-in-quint: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    --ease-in-expo: cubic-bezier(0.95, 0.05, 0.795, 0.035);
+    --ease-in-circ: cubic-bezier(0.6, 0.04, 0.98, 0.335);
+
+    --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+    --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+    --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+    --ease-out-circ: cubic-bezier(0.075, 0.82, 0.165, 1);
+
+    --ease-in-out-quad: cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    --ease-in-out-cubic: cubic-bezier(0.645, 0.045, 0.355, 1);
+    --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-in-out-quint: cubic-bezier(0.86, 0, 0.07, 1);
+    --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+    --ease-in-out-circ: cubic-bezier(0.785, 0.135, 0.15, 0.86);
 
     background-color: var(--discord-legacy-dark-but-not-black);
     color: var(--discord-white);
@@ -189,9 +223,12 @@
     }
   }
 
-  /* biome-ignore lint/correctness/noUnknownFunction: https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech */
+  /*
+   * biome-ignore lint/correctness/noUnknownFunction: It is known 🙄
+   * https://developer.mozilla.org/en-US/docs/Web/CSS/@supports#font-tech
+   */
   @supports (font-tech(variations)) {
-    :root {
+    html {
       --text-slnt: 0;
       font-variation-settings: "slnt" var(--text-slnt);
     }
