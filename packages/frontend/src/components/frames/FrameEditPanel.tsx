@@ -18,7 +18,14 @@ import {
 import { styled } from "@mui/material/styles";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import config from "@/config";
 import {
   useAuthContext,
@@ -39,7 +46,7 @@ import {
   ScrollBlock,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
-import { FramePanelState } from "../action-panel/tabs/FramesTab";
+import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
 import { addPoints, tupleToPoint } from "../canvas/point";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
@@ -74,11 +81,11 @@ const ButtonRow = styled("div")`
 `;
 
 type GuildEntry = [string, GuildData];
-type GuildOption = {
+interface GuildOption {
   guildId: string;
   guild: GuildData;
   group: string;
-};
+}
 
 function areBoundsEqual(a: ViewBounds | null, b: ViewBounds | null) {
   if (!a && !b) return true;
@@ -118,7 +125,7 @@ export default function FrameEditPanel({
   setActivePanel,
   isCreateMode,
 }: {
-  setActivePanel: (panel: FramePanelState) => void;
+  setActivePanel: Dispatch<SetStateAction<FramePanelMode>>;
   isCreateMode: boolean;
 }) {
   const { user } = useAuthContext();
@@ -157,26 +164,29 @@ export default function FrameEditPanel({
 
   const didInitBoundsRef = useRef(false);
 
-  useEffect(() => {
-    if (didInitBoundsRef.current) return;
+  useEffect(
+    function initialiseBoundsFromCurrentView() {
+      if (didInitBoundsRef.current) return;
 
-    if (selectedFrame) {
-      setFrameBounds(normalizeFrameBounds(selectedFrame));
-    } else {
-      setBoundsToCurrentView(0.75);
-    }
+      if (selectedFrame) {
+        setFrameBounds(normalizeFrameBounds(selectedFrame));
+      } else {
+        setBoundsToCurrentView(0.75);
+      }
 
-    setCanEdit(true);
+      setCanEdit(true);
 
-    didInitBoundsRef.current = true;
-  }, [selectedFrame, setFrameBounds, setBoundsToCurrentView, setCanEdit]);
+      didInitBoundsRef.current = true;
+    },
+    [selectedFrame, setFrameBounds, setBoundsToCurrentView, setCanEdit],
+  );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
-    selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
+    selectedFrame?.owner.type ?? FrameOwnerType.User,
   );
 
   const [selectedGuildId, setSelectedGuildId] = useState<string>(
-    selectedFrame && selectedFrame.owner.type === "guild" ?
+    selectedFrame?.owner.type === "guild" ?
       selectedFrame.owner.guild.guild_id
     : "",
   );
@@ -243,7 +253,7 @@ export default function FrameEditPanel({
   const selectedGuildOption =
     guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
 
-  const hasUnsavedChanges = useMemo(() => {
+  const isDirty = useMemo(() => {
     if (!isDirtyTrackingReady) return false;
 
     const nameChanged = frameName !== initialFrameNameRef.current;
@@ -264,7 +274,7 @@ export default function FrameEditPanel({
   ]);
 
   const closeEditor = () => {
-    setActivePanel(FramePanelState.Info);
+    setActivePanel(FramePanelMode.Info);
     clearSelectedBounds();
   };
 
@@ -280,7 +290,7 @@ export default function FrameEditPanel({
   };
 
   const handleBackAction = () => {
-    if (hasUnsavedChanges) {
+    if (isDirty) {
       setIsBackConfirmOpen(true);
       return;
     }
@@ -422,7 +432,7 @@ export default function FrameEditPanel({
     if (!user) {
       // Shouldn't be able to get to this tab without being logged in,
       // but this prevents that at the least
-      setActivePanel(FramePanelState.Info);
+      setActivePanel(FramePanelMode.Info);
       clearSelectedBounds();
     }
   }, [user, setActivePanel, clearSelectedBounds]);
@@ -514,7 +524,7 @@ export default function FrameEditPanel({
               <DynamicButton
                 color={hexStringToPixelColor(frameId)}
                 onAction={handleSaveAction}
-                disabled={!frameName || !frameBounds || !hasUnsavedChanges}
+                disabled={!frameName || !frameBounds || !isDirty}
               >
                 Save
               </DynamicButton>

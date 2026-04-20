@@ -9,13 +9,13 @@ const FramesTabBlock = styled(TabBlock)`
   grid-template-rows: 1fr auto;
 `;
 
-export const FramePanelState = {
+export const FramePanelMode = {
   Info: "info",
   Create: "create",
   Edit: "edit",
 };
 
-export type FramePanelState = ValueOf<typeof FramePanelState>;
+export type FramePanelMode = ValueOf<typeof FramePanelMode>;
 
 interface FramesTabProps {
   active?: boolean;
@@ -23,25 +23,25 @@ interface FramesTabProps {
 }
 
 export default function FramesTab({ active, setTabsLocked }: FramesTabProps) {
-  const [activePanel, setActivePanel] = useState<FramePanelState>(
-    FramePanelState.Info,
+  const [activePanel, setActivePanel] = useState<FramePanelMode>(
+    FramePanelMode.Info,
   );
 
   useEffect(() => {
-    setTabsLocked(activePanel !== FramePanelState.Info);
+    setTabsLocked(activePanel !== FramePanelMode.Info);
   }, [activePanel, setTabsLocked]);
 
   return (
     <FramesTabBlock active={active}>
-      {activePanel === FramePanelState.Info ?
+      {activePanel === FramePanelMode.Info ?
         <FrameInfoPanel setActivePanel={setActivePanel} />
       : (
-        activePanel === FramePanelState.Edit ||
-        activePanel === FramePanelState.Create
+        activePanel === FramePanelMode.Edit ||
+        activePanel === FramePanelMode.Create
       ) ?
         <FrameEditPanel
           setActivePanel={setActivePanel}
-          isCreateMode={activePanel === FramePanelState.Create}
+          isCreateMode={activePanel === FramePanelMode.Create}
         />
       : null}
     </FramesTabBlock>

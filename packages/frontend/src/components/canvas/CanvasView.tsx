@@ -378,10 +378,10 @@ export default function CanvasView() {
     coords,
     isReticleVisible,
     offset,
-    zoom,
     setCoords,
     setOffset,
     setZoom,
+    zoom,
   } = useCanvasViewContext();
   const sourceImage = useCanvasImage(canvas.id);
 

@@ -12,7 +12,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import ActionPanelTooltip from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
-import { FramePanelState } from "../action-panel/tabs/FramesTab";
+import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
@@ -42,7 +42,7 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 export default function FrameInfoPanel({
   setActivePanel,
 }: {
-  setActivePanel: (panel: FramePanelState) => void;
+  setActivePanel: (panel: FramePanelMode) => void;
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -73,7 +73,7 @@ export default function FrameInfoPanel({
             <DynamicButton
               color={null}
               onAction={() => {
-                setActivePanel(FramePanelState.Edit);
+                setActivePanel(FramePanelMode.Edit);
               }}
             >
               Edit frame
@@ -105,7 +105,7 @@ export default function FrameInfoPanel({
           <DynamicButton
             color={null}
             onAction={() => {
-              setActivePanel(FramePanelState.Create);
+              setActivePanel(FramePanelMode.Create);
             }}
           >
             Create frame

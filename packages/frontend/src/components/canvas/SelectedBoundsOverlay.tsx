@@ -203,10 +203,10 @@ export default function SelectedBoundsOverlay({
   const overlayCutoutPath = useMemo(() => {
     if (!selectedBounds) return null;
 
-    const left = Math.max(0, Math.min(canvasWidth, selectedBounds.left));
-    const top = Math.max(0, Math.min(canvasHeight, selectedBounds.top));
-    const right = Math.max(left, Math.min(canvasWidth, selectedBounds.right));
-    const bottom = Math.max(top, Math.min(canvasHeight, selectedBounds.bottom));
+    const left = clamp(selectedBounds.left, 0, canvasWidth);
+    const top = clamp(selectedBounds.top, 0, canvasHeight);
+    const right = clamp(selectedBounds.right, left, canvasWidth);
+    const bottom = clamp(selectedBounds.bottom, top, canvasHeight);
 
     return `M0 0H${canvasWidth}V${canvasHeight}H0Z M${left} ${top}H${right}V${bottom}H${left}Z`;
   }, [canvasWidth, canvasHeight, selectedBounds]);

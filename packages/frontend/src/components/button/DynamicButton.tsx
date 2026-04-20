@@ -88,9 +88,9 @@ export default function DynamicButton({
   return (
     <StyledButton
       backgroundColorStr={backgroundColorStr}
+      disabled={disabled}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
-      disabled={disabled}
       {...props}
     >
       <DynamicButtonContent>{children}</DynamicButtonContent>
