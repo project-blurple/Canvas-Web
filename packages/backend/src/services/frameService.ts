@@ -50,7 +50,7 @@ type OwnerLookup = {
   guildsById: Map<bigint, GuildOwnerRecord>;
 };
 
-function collectOwnerIds(frames: FrameDbRecord[]) {
+function partitionOwnerIds(frames: FrameDbRecord[]) {
   const userIds = new Set<bigint>();
   const guildIds = new Set<bigint>();
 
@@ -69,7 +69,7 @@ function collectOwnerIds(frames: FrameDbRecord[]) {
 }
 
 async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
-  const { userIds, guildIds } = collectOwnerIds(frames);
+  const { userIds, guildIds } = partitionOwnerIds(frames);
 
   const [users, guilds] = await Promise.all([
     userIds.length ?
@@ -85,7 +85,7 @@ async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
           profile_picture_url: true,
         },
       })
-    : Promise.resolve([] as UserOwnerRecord[]),
+    : ([] as UserOwnerRecord[]),
     guildIds.length ?
       prisma.discord_guild_record.findMany({
         where: {
@@ -98,7 +98,7 @@ async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
           name: true,
         },
       })
-    : Promise.resolve([] as GuildOwnerRecord[]),
+    : ([] as GuildOwnerRecord[]),
   ]);
 
   return {
