@@ -64,26 +64,26 @@ async function main() {
     "user",
   ] as const;
   type Seeding = (typeof allSeedings)[number];
-  let seedings: Seeding[] = [...allSeedings];
+  const seedings = new Set<Seeding>(allSeedings);
 
   if (!OVERWRITE) {
-    const filteredSeedings: Seeding[] = [];
-    for (const seeding of seedings) {
+    for (const seeding of allSeedings) {
       const count = (await prisma[seeding].count()) as
         | number
         | undefined
         | null;
-      if (!(count && count >= 1)) filteredSeedings.push(seeding);
+      if (count && count >= 1) {
+        seedings.delete(seeding);
+      }
     }
-    seedings = filteredSeedings;
   }
 
-  if (seedings.length === 0) {
+  if (seedings.size === 0) {
     logWithTiming("No seedings to run");
     return;
   }
 
-  logWithTiming(`Seedings to run: ${seedings.join(", ")}`);
+  logWithTiming(`Seedings to run: ${Array.from(seedings).join(", ")}`);
 
   const order: Seeding[] = [
     "pixel",
@@ -100,17 +100,18 @@ async function main() {
     "color",
   ];
   await runSeedingStep("cleanup", async () => {
+    const sortedSeedings = Array.from(seedings).sort(
+      (a, b) => order.indexOf(a) - order.indexOf(b),
+    );
     await prisma.$transaction(
-      seedings
-        .toSorted((a, b) => order.indexOf(a) - order.indexOf(b))
-        .map((seeding) => prisma[seeding].deleteMany()),
+      sortedSeedings.map((seeding) => prisma[seeding].deleteMany()),
     );
   });
 
   const userData = discordUserProfileSeedData();
 
   // === DISCORD_USER_PROFILE ===
-  if (seedings.includes("discord_user_profile")) {
+  if (seedings.has("discord_user_profile")) {
     await runSeedingStep("discord_user_profile", async () => {
       await prisma.discord_user_profile.createMany({
         data: userData,
@@ -121,14 +122,14 @@ async function main() {
   // ====== User and Guild data ======
 
   // USER
-  if (seedings.includes("user")) {
+  if (seedings.has("user")) {
     await runSeedingStep("user", async () => {
       await prisma.user.createMany({ data: userSeedData(userData) });
     });
   }
 
   // DISCORD_GUILD_RECORD
-  if (seedings.includes("discord_guild_record")) {
+  if (seedings.has("discord_guild_record")) {
     await runSeedingStep("discord_guild_record", async () => {
       await prisma.discord_guild_record.createMany({
         data: discordGuildRecordSeedData(),
@@ -137,7 +138,7 @@ async function main() {
   }
 
   // GUILD
-  if (seedings.includes("guild")) {
+  if (seedings.has("guild")) {
     await runSeedingStep("guild", async () => {
       await prisma.guild.createMany({ data: guildSeedData() });
     });
@@ -146,7 +147,7 @@ async function main() {
   // ====== Color data ======
 
   // COLOR
-  if (seedings.includes("color")) {
+  if (seedings.has("color")) {
     await runSeedingStep("color", async () => {
       await prisma.color.createMany({ data: colorSeedData });
     });
@@ -155,28 +156,28 @@ async function main() {
   // ====== Event data ======
 
   // EVENT
-  if (seedings.includes("event")) {
+  if (seedings.has("event")) {
     await runSeedingStep("event", async () => {
       await prisma.event.createMany({ data: eventSeedData });
     });
   }
 
   // INFO
-  if (seedings.includes("info")) {
+  if (seedings.has("info")) {
     await runSeedingStep("info", async () => {
       await prisma.info.create({ data: infoSeedData });
     });
   }
 
   // CANVAS
-  if (seedings.includes("canvas")) {
+  if (seedings.has("canvas")) {
     await runSeedingStep("canvas", async () => {
       await prisma.canvas.createMany({ data: canvasSeedData });
     });
   }
 
   // PARTICIPATION
-  if (seedings.includes("participation")) {
+  if (seedings.has("participation")) {
     await runSeedingStep("participation", async () => {
       await prisma.participation.createMany({ data: participationSeedData() });
     });
@@ -185,7 +186,7 @@ async function main() {
   // ====== Frame data ======
 
   // FRAME
-  if (seedings.includes("frame")) {
+  if (seedings.has("frame")) {
     await runSeedingStep("frame", async () => {
       await prisma.frame.createMany({ data: frameSeedData });
     });
@@ -194,7 +195,7 @@ async function main() {
   // ====== Pixel data ======
 
   // PIXEL
-  if (seedings.includes("pixel")) {
+  if (seedings.has("pixel")) {
     await runSeedingStep("pixel", async () => {
       for await (const batch of pixelSeedDataBatches()) {
         await prisma.pixel.createMany({ data: batch });
@@ -203,7 +204,7 @@ async function main() {
   }
 
   // HISTORY
-  if (seedings.includes("history")) {
+  if (seedings.has("history")) {
     await runSeedingStep("history", async () => {
       for await (const batch of historySeedDataBatches()) {
         await prisma.history.createMany({ data: batch });
