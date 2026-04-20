@@ -172,6 +172,219 @@ function resizeBoundsFromHandle({
   };
 }
 
+function renderOverlayShades({
+  canvasWidth,
+  canvasHeight,
+  overlayCutoutPath,
+}: {
+  canvasWidth: number;
+  canvasHeight: number;
+  overlayCutoutPath: string | null;
+}) {
+  if (!overlayCutoutPath) return null;
+
+  return (
+    <>
+      <OverlayShade
+        aria-hidden
+        width={canvasWidth}
+        height={canvasHeight}
+        viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+      >
+        <path
+          d={overlayCutoutPath}
+          fill="#000000"
+          fillOpacity={0.25}
+          fillRule="evenodd"
+        />
+      </OverlayShade>
+      <OverlayDesaturateShade
+        aria-hidden
+        width={canvasWidth}
+        height={canvasHeight}
+        viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
+      >
+        <path
+          d={overlayCutoutPath}
+          fill="#808080"
+          fillRule="evenodd"
+          fillOpacity={0.25}
+        />
+      </OverlayDesaturateShade>
+    </>
+  );
+}
+
+function renderEdgeHitTargets({
+  canEdit,
+  edgeThickness,
+  edges,
+  handleHandlePointerDown,
+  handleHandlePointerMove,
+  handleHandlePointerUp,
+}: {
+  canEdit: boolean;
+  edgeThickness: number;
+  edges: Array<{
+    key: EdgeKey;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+  }>;
+  handleHandlePointerDown: (
+    handle: HandleKey,
+    event: PointerEvent<HTMLDivElement>,
+  ) => void;
+  handleHandlePointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  handleHandlePointerUp: (event: PointerEvent<HTMLDivElement>) => void;
+}) {
+  return edges.map((edge) => (
+    <CornerHitTarget
+      key={edge.key}
+      onPointerDown={(event) => handleHandlePointerDown(edge.key, event)}
+      onPointerMove={handleHandlePointerMove}
+      onPointerUp={handleHandlePointerUp}
+      onPointerCancel={handleHandlePointerUp}
+      style={{
+        cursor: canEdit ? getEdgeCursor(edge.key) : "default",
+        pointerEvents: canEdit ? "auto" : "none",
+        touchAction: "none",
+        left: edge.left - edgeThickness / 2,
+        top: edge.top - edgeThickness / 2,
+        width:
+          edge.key === "top" || edge.key === "bottom" ?
+            edge.width + edgeThickness
+          : edgeThickness,
+        height:
+          edge.key === "left" || edge.key === "right" ?
+            edge.height + edgeThickness
+          : edgeThickness,
+      }}
+    />
+  ));
+}
+
+function renderCornerHitTargets({
+  canEdit,
+  corners,
+  handleHandlePointerDown,
+  handleHandlePointerMove,
+  handleHandlePointerUp,
+  zoom,
+}: {
+  canEdit: boolean;
+  corners: Array<{
+    key: CornerKey;
+    point: Point;
+  }>;
+  handleHandlePointerDown: (
+    handle: HandleKey,
+    event: PointerEvent<HTMLDivElement>,
+  ) => void;
+  handleHandlePointerMove: (event: PointerEvent<HTMLDivElement>) => void;
+  handleHandlePointerUp: (event: PointerEvent<HTMLDivElement>) => void;
+  zoom: number;
+}) {
+  return corners.map((corner) => {
+    const hitSize = CORNER_HIT_TARGET_SIZE / zoom;
+    const hitAnchor = getCornerHandleAnchor(corner.point, corner.key);
+
+    return (
+      <CornerHitTarget
+        key={corner.key}
+        onPointerDown={(event) => handleHandlePointerDown(corner.key, event)}
+        onPointerMove={handleHandlePointerMove}
+        onPointerUp={handleHandlePointerUp}
+        onPointerCancel={handleHandlePointerUp}
+        style={{
+          cursor: canEdit ? getCornerCursor(corner.key) : "default",
+          pointerEvents: canEdit ? "auto" : "none",
+          touchAction: "none",
+          left: hitAnchor.x - hitSize / 2,
+          top: hitAnchor.y - hitSize / 2,
+          width: hitSize,
+          height: hitSize,
+        }}
+      />
+    );
+  });
+}
+
+function renderCornerReticles({
+  corners,
+  reticleScale,
+  reticleSize,
+}: {
+  corners: Array<{
+    key: CornerKey;
+    offset: Point;
+  }>;
+  reticleScale: number;
+  reticleSize: number;
+}) {
+  return corners.map((corner) => (
+    <OverlayReticleContainer
+      key={`selected-bounds-corner-${corner.key}`}
+      style={{
+        pointerEvents: "none",
+        scale: reticleScale,
+        transform: `translate(${corner.offset.x}px, ${corner.offset.y}px)`,
+      }}
+    >
+      <OverlayReticle
+        src="/images/boundsCorner.png"
+        alt=""
+        aria-hidden
+        style={{
+          transform: `rotate(${getCornerRotation(corner.key)}deg)`,
+          width: reticleSize,
+          height: reticleSize,
+          minWidth: reticleSize,
+          minHeight: reticleSize,
+        }}
+      />
+    </OverlayReticleContainer>
+  ));
+}
+
+function renderEdgeReticles({
+  edges,
+  reticleScale,
+  reticleSize,
+}: {
+  edges: Array<{
+    key: EdgeKey;
+    offset: Point;
+  }>;
+  reticleScale: number;
+  reticleSize: number;
+}) {
+  return edges.map((edge) => (
+    <OverlayReticleContainer
+      key={`selected-bounds-edge-${edge.key}`}
+      style={{
+        pointerEvents: "none",
+        scale: reticleScale,
+        transform: `translate(${edge.offset.x}px, ${edge.offset.y}px)`,
+      }}
+    >
+      <OverlayReticle
+        src="/images/boundsEdge.png"
+        alt=""
+        aria-hidden
+        style={{
+          transform: `rotate(${getEdgeRotation(edge.key)}deg)`,
+          width: reticleSize,
+          height: reticleSize,
+          minWidth: reticleSize,
+          minHeight: reticleSize,
+        }}
+      />
+    </OverlayReticleContainer>
+  ));
+}
+
 export default function SelectedBoundsOverlay({
   canvasWidth,
   canvasHeight,
@@ -219,7 +432,10 @@ export default function SelectedBoundsOverlay({
 
     const right = Math.max(selectedBounds.left, selectedBounds.right - 1);
     const bottom = Math.max(selectedBounds.top, selectedBounds.bottom - 1);
-    const corners = [
+    const corners: Array<{
+      key: CornerKey;
+      point: Point;
+    }> = [
       {
         key: "top-left",
         point: { x: selectedBounds.left, y: selectedBounds.top },
@@ -281,7 +497,13 @@ export default function SelectedBoundsOverlay({
         width: 0,
         height: selectedBounds.height,
       },
-    ];
+    ] satisfies Array<{
+      key: EdgeKey;
+      left: number;
+      top: number;
+      width: number;
+      height: number;
+    }>;
   }, [selectedBounds]);
 
   const selectedBoundsEdgeReticles = useMemo(() => {
@@ -292,7 +514,10 @@ export default function SelectedBoundsOverlay({
     const centerX = selectedBounds.left + (selectedBounds.width - 1) / 2;
     const centerY = selectedBounds.top + (selectedBounds.height - 1) / 2;
 
-    const edges = [
+    const edges: Array<{
+      key: EdgeKey;
+      point: Point;
+    }> = [
       {
         key: "top",
         point: { x: centerX, y: selectedBounds.top },
@@ -381,141 +606,37 @@ export default function SelectedBoundsOverlay({
 
   return (
     <>
-      {overlayCutoutPath && (
-        <OverlayShade
-          aria-hidden
-          width={canvasWidth}
-          height={canvasHeight}
-          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-        >
-          <path
-            d={overlayCutoutPath}
-            fill="#000000"
-            fillOpacity={0.25}
-            fillRule="evenodd"
-          />
-        </OverlayShade>
-      )}
-      {overlayCutoutPath && (
-        <OverlayDesaturateShade
-          aria-hidden
-          width={canvasWidth}
-          height={canvasHeight}
-          viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
-        >
-          <path
-            d={overlayCutoutPath}
-            fill="#808080"
-            fillRule="evenodd"
-            fillOpacity={0.25}
-          />
-        </OverlayDesaturateShade>
-      )}
-      {selectedBoundsEdges.map((edge) => {
-        const edgeThickness = EDGE_HIT_TARGET_THICKNESS / zoom;
-
-        return (
-          <CornerHitTarget
-            key={edge.key}
-            onPointerDown={(event) =>
-              handleHandlePointerDown(edge.key as EdgeKey, event)
-            }
-            onPointerMove={handleHandlePointerMove}
-            onPointerUp={handleHandlePointerUp}
-            onPointerCancel={handleHandlePointerUp}
-            style={{
-              cursor: canEdit ? getEdgeCursor(edge.key as EdgeKey) : "default",
-              pointerEvents: canEdit ? "auto" : "none",
-              touchAction: "none",
-              left: edge.left - edgeThickness / 2,
-              top: edge.top - edgeThickness / 2,
-              width:
-                edge.key === "top" || edge.key === "bottom" ?
-                  edge.width + edgeThickness
-                : edgeThickness,
-              height:
-                edge.key === "left" || edge.key === "right" ?
-                  edge.height + edgeThickness
-                : edgeThickness,
-            }}
-          />
-        );
+      {renderOverlayShades({
+        canvasWidth,
+        canvasHeight,
+        overlayCutoutPath,
       })}
-      {selectedBoundsCorners.map((corner) => {
-        const hitSize = CORNER_HIT_TARGET_SIZE / zoom;
-        const hitAnchor = getCornerHandleAnchor(
-          corner.point,
-          corner.key as CornerKey,
-        );
-
-        return (
-          <CornerHitTarget
-            key={corner.key}
-            onPointerDown={(event) =>
-              handleHandlePointerDown(corner.key as CornerKey, event)
-            }
-            onPointerMove={handleHandlePointerMove}
-            onPointerUp={handleHandlePointerUp}
-            onPointerCancel={handleHandlePointerUp}
-            style={{
-              cursor:
-                canEdit ? getCornerCursor(corner.key as CornerKey) : "default",
-              pointerEvents: canEdit ? "auto" : "none",
-              touchAction: "none",
-              left: hitAnchor.x - hitSize / 2,
-              top: hitAnchor.y - hitSize / 2,
-              width: hitSize,
-              height: hitSize,
-            }}
-          />
-        );
+      {renderEdgeHitTargets({
+        canEdit,
+        edgeThickness: EDGE_HIT_TARGET_THICKNESS / zoom,
+        edges: selectedBoundsEdges,
+        handleHandlePointerDown,
+        handleHandlePointerMove,
+        handleHandlePointerUp,
       })}
-      {selectedBoundsCorners.map((corner) => (
-        <OverlayReticleContainer
-          key={`selected-bounds-corner-${corner.key}`}
-          style={{
-            pointerEvents: "none",
-            scale: reticleScale,
-            transform: `translate(${corner.offset.x}px, ${corner.offset.y}px)`,
-          }}
-        >
-          <OverlayReticle
-            src="/images/boundsCorner.png"
-            alt=""
-            aria-hidden
-            style={{
-              transform: `rotate(${getCornerRotation(corner.key as CornerKey)}deg)`,
-              width: reticleSize,
-              height: reticleSize,
-              minWidth: reticleSize,
-              minHeight: reticleSize,
-            }}
-          />
-        </OverlayReticleContainer>
-      ))}
-      {selectedBoundsEdgeReticles.map((edge) => (
-        <OverlayReticleContainer
-          key={`selected-bounds-edge-${edge.key}`}
-          style={{
-            pointerEvents: "none",
-            scale: reticleScale,
-            transform: `translate(${edge.offset.x}px, ${edge.offset.y}px)`,
-          }}
-        >
-          <OverlayReticle
-            src="/images/boundsEdge.png"
-            alt=""
-            aria-hidden
-            style={{
-              transform: `rotate(${getEdgeRotation(edge.key as EdgeKey)}deg)`,
-              width: reticleSize,
-              height: reticleSize,
-              minWidth: reticleSize,
-              minHeight: reticleSize,
-            }}
-          />
-        </OverlayReticleContainer>
-      ))}
+      {renderCornerHitTargets({
+        canEdit,
+        corners: selectedBoundsCorners,
+        handleHandlePointerDown,
+        handleHandlePointerMove,
+        handleHandlePointerUp,
+        zoom,
+      })}
+      {renderCornerReticles({
+        corners: selectedBoundsCorners,
+        reticleScale,
+        reticleSize,
+      })}
+      {renderEdgeReticles({
+        edges: selectedBoundsEdgeReticles,
+        reticleScale,
+        reticleSize,
+      })}
     </>
   );
 }
