@@ -100,11 +100,11 @@ async function main() {
     "color",
   ];
   await runSeedingStep("cleanup", async () => {
-    await prisma.$transaction([
-      ...seedings
-        .sort((a, b) => order.indexOf(a) - order.indexOf(b))
+    await prisma.$transaction(
+      seedings
+        .toSorted((a, b) => order.indexOf(a) - order.indexOf(b))
         .map((seeding) => prisma[seeding].deleteMany()),
-    ]);
+    );
   });
 
   const userData = discordUserProfileSeedData();
