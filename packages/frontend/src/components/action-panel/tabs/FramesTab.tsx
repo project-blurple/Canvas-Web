@@ -1,6 +1,6 @@
 import { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabBlock } from "./ActionPanelTabBody";
@@ -27,23 +27,21 @@ export default function FramesTab({ active, setTabsLocked }: FramesTabProps) {
     FramePanelMode.Info,
   );
 
+  const panelByMode = {
+    [FramePanelMode.Info]: <FrameInfoPanel setActivePanel={setActivePanel} />,
+    [FramePanelMode.Edit]: (
+      <FrameEditPanel setActivePanel={setActivePanel} isCreateMode={false} />
+    ),
+    [FramePanelMode.Create]: (
+      <FrameEditPanel setActivePanel={setActivePanel} isCreateMode />
+    ),
+  } as const satisfies Record<FramePanelMode, ReactNode>;
+
   useEffect(() => {
     setTabsLocked(activePanel !== FramePanelMode.Info);
   }, [activePanel, setTabsLocked]);
 
   return (
-    <FramesTabBlock active={active}>
-      {activePanel === FramePanelMode.Info ?
-        <FrameInfoPanel setActivePanel={setActivePanel} />
-      : (
-        activePanel === FramePanelMode.Edit ||
-        activePanel === FramePanelMode.Create
-      ) ?
-        <FrameEditPanel
-          setActivePanel={setActivePanel}
-          isCreateMode={activePanel === FramePanelMode.Create}
-        />
-      : null}
-    </FramesTabBlock>
+    <FramesTabBlock active={active}>{panelByMode[activePanel]}</FramesTabBlock>
   );
 }
