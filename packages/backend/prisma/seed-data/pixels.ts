@@ -125,6 +125,7 @@ interface HistorySeedData {
   y: number;
   color_id: number;
   timestamp: Date;
+  guild_id: bigint;
 }
 
 function parseHistorySeedData(line: string): HistorySeedData {
@@ -137,6 +138,7 @@ function parseHistorySeedData(line: string): HistorySeedData {
     y: Number(y),
     color_id: Number(colorId),
     timestamp: new Date(timestamp),
+    guild_id: 412754940885467146n,
   };
 }
 

@@ -37,7 +37,7 @@
     "check": "pnpm format && pnpm lint",
     "check:fix": "pnpm format:fix && pnpm lint:fix",
     "clean": "rm -rf node_modules/ build/",
-    "prisma:push": "prisma db push",
+    "prisma:push": "prisma db push && node prisma/apply-views.mjs",
     "prisma:seed": "prisma db seed --"
   },
   "dependencies": {
