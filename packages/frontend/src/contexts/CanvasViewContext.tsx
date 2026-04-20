@@ -7,7 +7,6 @@ import {
   RefObject,
   SetStateAction,
   useContext,
-  useEffect,
   useMemo,
   useRef,
   useState,
@@ -54,6 +53,12 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
+  const [prevCanvasId, setPrevCanvasId] = useState(canvas.id);
+
+  if (prevCanvasId !== canvas.id) {
+    setSelectedCoords(null);
+    setPrevCanvasId(canvas.id);
+  }
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -62,14 +67,6 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
 
     return null;
   }, [canvas.startCoordinates, selectedCoords]);
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Trigger on canvas change
-  useEffect(
-    function resetCoordsOnCanvasChange() {
-      setSelectedCoords(null);
-    },
-    [canvas.id],
-  );
 
   return (
     <CanvasViewContext.Provider
