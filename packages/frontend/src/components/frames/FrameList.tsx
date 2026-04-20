@@ -17,6 +17,21 @@ const FramesWrapper = styled("div")`
   flex-direction: column;
 `;
 
+function sortByOwnerGuildName(
+  [, framesA]: readonly [string, GuildOwnedFrame[]],
+  [, framesB]: readonly [string, GuildOwnedFrame[]],
+): number {
+  const firstFrameA = framesA[0];
+  const firstFrameB = framesB[0];
+  if (!firstFrameA || !firstFrameB) {
+    return 0;
+  }
+
+  const ownerGuildA = firstFrameA.owner.guild.name;
+  const ownerGuildB = firstFrameB.owner.guild.name;
+  return ownerGuildA.localeCompare(ownerGuildB);
+}
+
 export default function FrameList() {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -35,28 +50,16 @@ export default function FrameList() {
     guildIds: guildIds,
   });
 
-  const groupedByOwnerId = guildFrames.reduce<
-    Record<string, GuildOwnedFrame[]>
-  >((acc, frame) => {
-    const ownerId = frame.owner.guild.guild_id;
-    acc[ownerId] ??= [];
-    acc[ownerId].push(frame);
-    return acc;
-  }, {});
-
-  const sortedGuildFrameMap = Object.entries(groupedByOwnerId).sort(
-    ([, framesA], [, framesB]) => {
-      const firstFrameA = framesA[0];
-      const firstFrameB = framesB[0];
-      if (!firstFrameA || !firstFrameB) {
-        return 0;
-      }
-
-      const ownerGuildA = firstFrameA.owner.guild.name;
-      const ownerGuildB = firstFrameB.owner.guild.name;
-      return ownerGuildA.localeCompare(ownerGuildB);
-    },
+  const groupedByOwnerId = Object.groupBy(
+    guildFrames,
+    (f) => f.owner.guild.guild_id,
   );
+
+  const sortedGuildFrameMap = Object.entries(groupedByOwnerId)
+    .filter(
+      (entry): entry is [string, GuildOwnedFrame[]] => entry[1] !== undefined,
+    )
+    .sort(sortByOwnerGuildName);
 
   const inbuiltFullCanvasFrame = {
     id: `system-${canvas.id.toString()}`,
