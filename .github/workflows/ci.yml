@@ -42,6 +42,47 @@ jobs:
       - name: Check linting
         run: pnpm lint
 
+  prisma_seed:
+    name: "Prisma push & seed"
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: blurple-canvas
+        options: >-
+          --health-cmd "pg_isready -U postgres -d blurple-canvas"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/blurple-canvas?schema=public&connection_limit=3
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Push Prisma schema
+        run: pnpm prisma:push
+
+      - name: Seed database
+        run: pnpm prisma:seed --overwrite=true
+
   build:
     name: "Build"
     timeout-minutes: 10
