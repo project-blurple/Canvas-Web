@@ -13,7 +13,6 @@ export type SourceRect = {
 
 export const PreviewCanvas = styled("canvas")`
   border-radius: 0.375rem;
-  display: block;
   image-rendering: pixelated;
   width: 100%;
 `;

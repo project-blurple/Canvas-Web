@@ -64,15 +64,14 @@ const PreviewContainer = styled("div")`
 `;
 
 const EditPreviewCanvas = styled(PreviewCanvas)`
-  height: auto;
+  height: unset;
 `;
 
 const ButtonRow = styled("div")`
-  background: transparent;
   display: flex;
   gap: 0.5rem;
+  inline-size: 100%;
   padding: 0;
-  width: 100%;
 
   > * {
     flex: 1 1 0;
