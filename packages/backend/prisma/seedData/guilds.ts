@@ -74,9 +74,9 @@ export function participationSeedData(): ParticipationSeedData[] {
   ];
 
   const colorIds = colorSeedData
-    .filter((color) => !color.global)
     .filter(
       (color) =>
+        !color.global &&
         !participations.some(
           // filtering out the ones already hardcoded above
           (participation) => participation.color_id === color.id,

@@ -34,7 +34,7 @@ async function runSeedingStep(
 ): Promise<void> {
   const startedAt = Date.now();
   logWithTiming(`Seeding ${step}...`);
-  if (action) await action();
+  await action?.();
   logWithTiming(`Seeded ${step} (${Date.now() - startedAt}ms)`);
 }
 
