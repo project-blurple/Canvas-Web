@@ -1,5 +1,4 @@
 import { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
-import { useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -10,7 +9,7 @@ import {
   ActionPanelTabBody,
   ScrollBlock,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import ActionPanelTooltip from "../action-panel/tabs/ActionPanelTooltip";
+import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
@@ -47,8 +46,6 @@ export default function FrameInfoPanel({
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
 
-  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
-
   const frameUrl =
     selectedFrame ?
       createPixelUrl({
@@ -79,23 +76,15 @@ export default function FrameInfoPanel({
             </DynamicButton>
           )}
           {selectedFrame.owner.type !== "system" && (
-            <ActionPanelTooltip
-              title="Copied"
-              onClose={() => {
-                setTooltipIsOpen(false);
+            <TooltipDynamicButton
+              color={hexStringToPixelColor(selectedFrame.id)}
+              tooltipTitle="Copied"
+              onAction={() => {
+                navigator.clipboard.writeText(frameUrl);
               }}
-              open={tooltipIsOpen}
             >
-              <DynamicButton
-                color={hexStringToPixelColor(selectedFrame.id)}
-                onAction={() => {
-                  setTooltipIsOpen(true);
-                  navigator.clipboard.writeText(frameUrl);
-                }}
-              >
-                Copy frame link
-              </DynamicButton>
-            </ActionPanelTooltip>
+              Copy frame link
+            </TooltipDynamicButton>
           )}
         </ActionPanelTabBody>
       : user ?

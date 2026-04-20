@@ -1,7 +1,5 @@
 import { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useState } from "react";
-import { DynamicButton } from "@/components/button";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { createPixelUrl } from "@/util";
@@ -11,7 +9,7 @@ import {
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
-import ActionPanelTooltip from "./ActionPanelTooltip";
+import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 import { CoordinateLabel } from "./PlacePixelTab";
@@ -82,10 +80,6 @@ export default function PixelInfoTab({
 
   const pixelHistory = data?.pixelHistory ?? [];
 
-  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
-  const closeTooltip = () => setTooltipIsOpen(false);
-  const openTooltip = () => setTooltipIsOpen(true);
-
   const pixelURL =
     (adjustedCoords &&
       containerRef.current &&
@@ -124,24 +118,18 @@ export default function PixelInfoTab({
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (
-          <ActionPanelTooltip
-            title="Copied"
-            onClose={closeTooltip}
-            open={tooltipIsOpen}
+          <TooltipDynamicButton
+            tooltipTitle="Copied"
+            onAction={() => {
+              navigator.clipboard.writeText(pixelURL);
+            }}
+            color={pixelHistory?.[0]?.color.rgba ?? null}
           >
-            <DynamicButton
-              color={pixelHistory?.[0]?.color.rgba ?? null}
-              onAction={() => {
-                openTooltip();
-                navigator.clipboard.writeText(pixelURL);
-              }}
-            >
-              Copy pixel link
-              <CoordinateLabel>
-                ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
-              </CoordinateLabel>
-            </DynamicButton>
-          </ActionPanelTooltip>
+            Copy pixel link
+            <CoordinateLabel>
+              ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
+            </CoordinateLabel>
+          </TooltipDynamicButton>
         )}
       </ActionPanelTabBody>
     </PixelInfoTabBlock>
