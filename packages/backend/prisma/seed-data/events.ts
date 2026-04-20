@@ -16,7 +16,8 @@ export const infoSeedData: InfoSeedData = {
   current_event_id: 2034,
   cached_canvas_ids: [2024, 2034],
   admin_server_id: 412754940885467146n,
-  current_emoji_server_id: 412754940885467146n, // This is for the bot, not used by the web app
+  /** @privateRemarks This is for the bot, not used by the web app */
+  current_emoji_server_id: 412754940885467146n,
   host_server_id: 412754940885467146n,
   default_canvas_id: 2034,
   all_colors_global: false,
@@ -45,7 +46,8 @@ interface CanvasSeedData {
   event_id: number;
   width: number;
   height: number;
-  cooldown_length: number; // in seconds
+  /** @privateRemarks Cooldown length in seconds between pixel placements on the canvas */
+  cooldown_length: number;
   start_coordinates: [number, number];
 }
 

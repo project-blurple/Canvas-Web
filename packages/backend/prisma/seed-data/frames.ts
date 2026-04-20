@@ -8,7 +8,8 @@ interface FrameSeedData {
   x_1: number;
   y_0: number;
   y_1: number;
-  style_id: number; // Used by the bot, not currently supported in the web app
+  /** @privateRemarks Used by the bot, not currently supported in the web app */
+  style_id: number;
 }
 
 // These frames are real guild frames from the 2024 event

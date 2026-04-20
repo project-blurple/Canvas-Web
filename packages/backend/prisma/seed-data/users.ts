@@ -34,7 +34,8 @@ export function discordUserProfileSeedData(): DiscordUserProfileSeedData[] {
 
 interface UserSeedData {
   id: bigint;
-  current_canvas_id?: number; // used by the bot, not supported in the web app
+  /** @privateRemarks Used by the bot to track which canvas a user is currently active on, not supported in the web app */
+  current_canvas_id?: number;
 }
 
 export function userSeedData(
