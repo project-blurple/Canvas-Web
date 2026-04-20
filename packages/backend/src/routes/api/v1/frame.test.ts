@@ -2,7 +2,19 @@ import express from "express";
 import request from "supertest";
 
 import { ForbiddenError } from "@/errors";
+import { createFrame, deleteFrame, editFrame } from "@/services/frameService";
 import { mockAuth } from "@/test/mockAuth";
+import { frameRouter } from "./frame";
+
+interface EndpointCase {
+  name: string;
+  method: "post" | "put" | "delete";
+  path: string;
+  body: Record<string, unknown>;
+  successStatus: number;
+  successMessage: string;
+  serviceName: "create" | "edit" | "delete";
+}
 
 vi.mock("@/services/frameService", () => ({
   createFrame: vi.fn(),
@@ -13,22 +25,11 @@ vi.mock("@/services/frameService", () => ({
   getFramesByUserId: vi.fn(),
 }));
 
-import { createFrame, deleteFrame, editFrame } from "@/services/frameService";
-import { frameRouter } from "./frame";
-
-type EndpointCase = {
-  name: string;
-  path: string;
-  body: Record<string, unknown>;
-  successStatus: number;
-  successMessage: string;
-  serviceName: "create" | "edit" | "delete";
-};
-
-const endpointCases: EndpointCase[] = [
+const endpointCases = [
   {
     name: "create",
-    path: "/api/v1/frame/create",
+    method: "post",
+    path: "/api/v1/frame",
     body: {
       canvasId: 1,
       name: "Frame name",
@@ -45,6 +46,7 @@ const endpointCases: EndpointCase[] = [
   },
   {
     name: "edit",
+    method: "put",
     path: "/api/v1/frame/abc123/edit",
     body: {
       name: "Updated frame",
@@ -59,13 +61,14 @@ const endpointCases: EndpointCase[] = [
   },
   {
     name: "delete",
+    method: "delete",
     path: "/api/v1/frame/abc123/delete",
     body: {},
     successStatus: 200,
     successMessage: "Frame deleted successfully",
     serviceName: "delete",
   },
-];
+] as const satisfies readonly EndpointCase[];
 
 const getServiceMock = (serviceName: EndpointCase["serviceName"]) => {
   switch (serviceName) {
@@ -93,6 +96,18 @@ const createApp = (includeAccessToken: boolean) => {
   return app;
 };
 
+const sendMutationRequest = ({
+  app,
+  method,
+  path,
+  body,
+}: {
+  app: express.Express;
+  method: EndpointCase["method"];
+  path: string;
+  body: Record<string, unknown>;
+}) => request(app)[method](path).send(body).type("json");
+
 describe("Frame mutation route tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -100,16 +115,24 @@ describe("Frame mutation route tests", () => {
 
   it.each(endpointCases)(
     "returns success for $name when authenticated and authorized",
-    async ({ path, body, successStatus, successMessage, serviceName }) => {
+    async ({
+      method,
+      path,
+      body,
+      successStatus,
+      successMessage,
+      serviceName,
+    }) => {
       const app = createApp(true);
       const serviceMock = getServiceMock(serviceName);
       serviceMock.mockResolvedValueOnce(undefined);
 
-      const response = await request(app)
-        .post(path)
-        .send(body)
-        .type("json")
-        .set("X-TestUserId", "1");
+      const response = await sendMutationRequest({
+        app,
+        method,
+        path,
+        body,
+      }).set("X-TestUserId", "1");
 
       expect(response.status).toBe(successStatus);
       expect(response.body).toStrictEqual({ message: successMessage });
@@ -119,11 +142,16 @@ describe("Frame mutation route tests", () => {
 
   it.each(endpointCases)(
     "returns 401 for $name when authentication is missing",
-    async ({ path, body, serviceName }) => {
+    async ({ method, path, body, serviceName }) => {
       const app = createApp(false);
       const serviceMock = getServiceMock(serviceName);
 
-      const response = await request(app).post(path).send(body).type("json");
+      const response = await sendMutationRequest({
+        app,
+        method,
+        path,
+        body,
+      });
 
       expect(response.status).toBe(401);
       expect(response.body).toStrictEqual({ message: "Unauthorized" });
@@ -133,16 +161,17 @@ describe("Frame mutation route tests", () => {
 
   it.each(endpointCases)(
     "returns 403 for $name when permissions are denied",
-    async ({ path, body, serviceName }) => {
+    async ({ method, path, body, serviceName }) => {
       const app = createApp(true);
       const serviceMock = getServiceMock(serviceName);
       serviceMock.mockRejectedValueOnce(new ForbiddenError("Forbidden"));
 
-      const response = await request(app)
-        .post(path)
-        .send(body)
-        .type("json")
-        .set("X-TestUserId", "1");
+      const response = await sendMutationRequest({
+        app,
+        method,
+        path,
+        body,
+      }).set("X-TestUserId", "1");
 
       expect(response.status).toBe(403);
       expect(response.body).toStrictEqual({ message: "Forbidden" });
