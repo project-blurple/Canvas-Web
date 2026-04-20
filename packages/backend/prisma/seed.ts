@@ -16,7 +16,7 @@ import {
   participationSeedData,
   pixelSeedDataBatches,
   userSeedData,
-} from "./seedData/index.ts";
+} from "./seed-data/index.ts";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL ?? ""),
