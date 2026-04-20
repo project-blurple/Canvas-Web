@@ -62,44 +62,54 @@ export default function FrameInfoPanel({
       <ScrollBlock>
         <FrameList />
       </ScrollBlock>
-      {selectedFrame ?
-        <ActionPanelTabBody>
-          <FrameInfoCard frame={selectedFrame} />
-          {userHasPermsToEditSelectedFrame && (
-            <DynamicButton
-              color={null}
-              onAction={() => {
-                setActivePanel(FramePanelMode.Edit);
-              }}
-            >
-              Edit frame
-            </DynamicButton>
-          )}
-          {selectedFrame.owner.type !== "system" && (
-            <TooltipDynamicButton
-              color={hexStringToPixelColor(selectedFrame.id)}
-              tooltipTitle="Copied"
-              onAction={() => {
-                navigator.clipboard.writeText(frameUrl);
-              }}
-            >
-              Copy frame link
-            </TooltipDynamicButton>
-          )}
-        </ActionPanelTabBody>
-      : user ?
-        <ActionPanelTabBody>
-          <BotCommandCard command="/frame create" />
-          <DynamicButton
-            color={null}
-            onAction={() => {
-              setActivePanel(FramePanelMode.Create);
-            }}
-          >
-            Create frame
-          </DynamicButton>
-        </ActionPanelTabBody>
-      : null}
+      {(() => {
+        if (selectedFrame) {
+          return (
+            <ActionPanelTabBody>
+              <FrameInfoCard frame={selectedFrame} />
+              {userHasPermsToEditSelectedFrame && (
+                <DynamicButton
+                  color={null}
+                  onAction={() => {
+                    setActivePanel(FramePanelMode.Edit);
+                  }}
+                >
+                  Edit frame
+                </DynamicButton>
+              )}
+              {selectedFrame.owner.type !== "system" && (
+                <TooltipDynamicButton
+                  color={hexStringToPixelColor(selectedFrame.id)}
+                  tooltipTitle="Copied"
+                  onAction={() => {
+                    navigator.clipboard.writeText(frameUrl);
+                  }}
+                >
+                  Copy frame link
+                </TooltipDynamicButton>
+              )}
+            </ActionPanelTabBody>
+          );
+        }
+
+        if (user) {
+          return (
+            <ActionPanelTabBody>
+              <BotCommandCard command="/frame create" />
+              <DynamicButton
+                color={null}
+                onAction={() => {
+                  setActivePanel(FramePanelMode.Create);
+                }}
+              >
+                Create frame
+              </DynamicButton>
+            </ActionPanelTabBody>
+          );
+        }
+
+        return null;
+      })()}
     </>
   );
 }
