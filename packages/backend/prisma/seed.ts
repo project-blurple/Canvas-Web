@@ -1,4 +1,5 @@
 import console from "node:console";
+import { performance } from "node:perf_hooks";
 import process from "node:process";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../build/client/generated/client.js";
@@ -21,10 +22,10 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL ?? ""),
 });
 
-const seedStartedAt = Date.now();
+const seedStartedAt = performance.now();
 
 function logWithTiming(message: string): void {
-  const elapsedMs = Date.now() - seedStartedAt;
+  const elapsedMs = Math.round(performance.now() - seedStartedAt);
   console.log(`[+${elapsedMs}ms] ${message}`);
 }
 
@@ -32,10 +33,12 @@ async function runSeedingStep(
   step: string,
   action?: () => Promise<void>,
 ): Promise<void> {
-  const startedAt = Date.now();
+  const startedAt = performance.now();
   logWithTiming(`Seeding ${step}...`);
   await action?.();
-  logWithTiming(`Seeded ${step} (${Date.now() - startedAt}ms)`);
+  logWithTiming(
+    `Seeded ${step} (${Math.round(performance.now() - startedAt)}ms)`,
+  );
 }
 
 const overwriteArg = process.argv.find((arg) => arg.startsWith("--overwrite="));
@@ -211,10 +214,11 @@ async function main() {
   logWithTiming("Database seed completed");
 }
 
-main()
-  .then(async () => await prisma.$disconnect())
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+try {
+  await main();
+  await prisma.$disconnect();
+} catch (e) {
+  console.error(e);
+  await prisma.$disconnect();
+  process.exit(1);
+}
