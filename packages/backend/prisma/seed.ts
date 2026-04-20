@@ -68,10 +68,7 @@ async function main() {
 
   if (!OVERWRITE) {
     for (const seeding of allSeedings) {
-      const count = (await prisma[seeding].count()) as
-        | number
-        | undefined
-        | null;
+      const count = await prisma[seeding].count();
       if (count && count >= 1) {
         seedings.delete(seeding);
       }
@@ -83,7 +80,8 @@ async function main() {
     return;
   }
 
-  logWithTiming(`Seedings to run: ${Array.from(seedings).join(", ")}`);
+  const formatter = new Intl.ListFormat();
+  logWithTiming(`Seedings to run: ${formatter.format(Array.from(seedings))}`);
 
   const order: Seeding[] = [
     "pixel",
