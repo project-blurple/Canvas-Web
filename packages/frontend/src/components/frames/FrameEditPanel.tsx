@@ -316,7 +316,7 @@ export default function FrameEditPanel({
         y1: frameBounds.bottom,
       };
 
-      await axios.post(requestUrl, body, {
+      await axios.put(requestUrl, body, {
         withCredentials: true,
       });
 
@@ -343,7 +343,7 @@ export default function FrameEditPanel({
 
       const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/delete`;
 
-      await axios.post(requestUrl, null, {
+      await axios.delete(requestUrl, {
         withCredentials: true,
       });
 
@@ -364,7 +364,7 @@ export default function FrameEditPanel({
 
   const handleCreateAction = async () => {
     try {
-      const requestUrl = `${config.apiUrl}/api/v1/frame/create`;
+      const requestUrl = `${config.apiUrl}/api/v1/frame`;
 
       const body = {
         canvasId: canvas.id,

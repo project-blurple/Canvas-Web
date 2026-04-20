@@ -60,7 +60,7 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
   }
 });
 
-frameRouter.post("/:frameId/edit", async (req, res) => {
+frameRouter.put("/:frameId/edit", async (req, res) => {
   try {
     if (!req.user || !req.session.discordAccessToken) {
       throw new ApiError("Unauthorized", 401);
@@ -77,7 +77,7 @@ frameRouter.post("/:frameId/edit", async (req, res) => {
     }
 
     await editFrame(
-      req.user as DiscordUserProfile,
+      req.user,
       req.session.discordAccessToken,
       frameId,
       bodyQueryResult.data.name,
@@ -92,7 +92,7 @@ frameRouter.post("/:frameId/edit", async (req, res) => {
   }
 });
 
-frameRouter.post("/:frameId/delete", async (req, res) => {
+frameRouter.delete("/:frameId/delete", async (req, res) => {
   try {
     if (!req.user || !req.session.discordAccessToken) {
       throw new ApiError("Unauthorized", 401);
@@ -100,18 +100,14 @@ frameRouter.post("/:frameId/delete", async (req, res) => {
 
     const frameId = await parseFrameId(req.params);
 
-    await deleteFrame(
-      req.user as DiscordUserProfile,
-      req.session.discordAccessToken,
-      frameId,
-    );
+    await deleteFrame(req.user, req.session.discordAccessToken, frameId);
     res.status(200).json({ message: "Frame deleted successfully" });
   } catch (error) {
     ApiError.sendError(res, error);
   }
 });
 
-frameRouter.post("/create", async (req, res) => {
+frameRouter.post("/", async (req, res) => {
   try {
     if (!req.user || !req.session.discordAccessToken) {
       throw new ApiError("Unauthorized", 401);
@@ -138,7 +134,7 @@ frameRouter.post("/create", async (req, res) => {
     }
 
     await createFrame(
-      req.user as DiscordUserProfile,
+      req.user,
       req.session.discordAccessToken,
       canvasId,
       bodyQueryResult.data.name,
