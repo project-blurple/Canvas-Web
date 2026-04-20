@@ -67,9 +67,10 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       throw new ApiError("Unauthorized", 401);
     }
 
-    const frameId = await parseFrameId(req.params);
-
-    const bodyQueryResult = await FrameDataParamModel.safeParseAsync(req.body);
+    const [frameId, bodyQueryResult] = await Promise.all([
+      parseFrameId(req.params),
+      FrameDataParamModel.safeParseAsync(req.body),
+    ]);
     if (!bodyQueryResult.success) {
       throw new BadRequestError(
         "Invalid body parameters",
@@ -121,9 +122,11 @@ frameRouter.post("/", async (req, res) => {
       throw new ApiError("Unauthorized", 401);
     }
 
-    const canvasId = await parseCanvasId(req.body);
-
-    const bodyQueryResult = await FrameDataParamModel.safeParseAsync(req.body);
+    const [canvasId, bodyQueryResult, ownerQueryResult] = await Promise.all([
+      parseCanvasId(req.body),
+      FrameDataParamModel.safeParseAsync(req.body),
+      FrameOwnerParamModel.safeParseAsync(req.body),
+    ]);
     if (!bodyQueryResult.success) {
       throw new BadRequestError(
         "Invalid body parameters",
@@ -138,9 +141,6 @@ frameRouter.post("/", async (req, res) => {
       bodyQueryResult.data.y1,
     );
 
-    const ownerQueryResult = await FrameOwnerParamModel.safeParseAsync(
-      req.body,
-    );
     if (!ownerQueryResult.success) {
       throw new BadRequestError(
         "Invalid body parameters",
