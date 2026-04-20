@@ -45,19 +45,19 @@ export const FrameDataParamModel = z
     y1: z.coerce.number().int().positive(),
   })
   .superRefine(({ x0, y0, x1, y1 }, ctx) => {
-    if (x1 <= x0) {
+    if (x0 === x1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["x1"],
-        message: "x1 must be greater than x0",
+        message: "x0 must not be equal to x1",
       });
     }
 
-    if (y1 <= y0) {
+    if (y0 === y1) {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["y1"],
-        message: "y1 must be greater than y0",
+        message: "y0 must not be equal to y1",
       });
     }
   });

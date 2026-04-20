@@ -16,6 +16,7 @@ import {
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
+import { normaliseBounds } from "@/utils";
 
 export const frameRouter = Router();
 
@@ -76,15 +77,22 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       );
     }
 
+    const { x0, y0, x1, y1 } = normaliseBounds(
+      bodyQueryResult.data.x0,
+      bodyQueryResult.data.y0,
+      bodyQueryResult.data.x1,
+      bodyQueryResult.data.y1,
+    );
+
     await editFrame(
       req.user,
       req.session.discordAccessToken,
       frameId,
       bodyQueryResult.data.name,
-      bodyQueryResult.data.x0,
-      bodyQueryResult.data.y0,
-      bodyQueryResult.data.x1,
-      bodyQueryResult.data.y1,
+      x0,
+      y0,
+      x1,
+      y1,
     );
     res.status(200).json({ message: "Frame edited successfully" });
   } catch (error) {
@@ -123,6 +131,13 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
+    const { x0, y0, x1, y1 } = normaliseBounds(
+      bodyQueryResult.data.x0,
+      bodyQueryResult.data.y0,
+      bodyQueryResult.data.x1,
+      bodyQueryResult.data.y1,
+    );
+
     const ownerQueryResult = await FrameOwnerParamModel.safeParseAsync(
       req.body,
     );
@@ -140,10 +155,10 @@ frameRouter.post("/", async (req, res) => {
       bodyQueryResult.data.name,
       ownerQueryResult.data.ownerId,
       ownerQueryResult.data.isGuildOwned,
-      bodyQueryResult.data.x0,
-      bodyQueryResult.data.y0,
-      bodyQueryResult.data.x1,
-      bodyQueryResult.data.y1,
+      x0,
+      y0,
+      x1,
+      y1,
     );
     res.status(201).json({ message: "Frame created successfully" });
   } catch (error) {
