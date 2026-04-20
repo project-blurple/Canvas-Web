@@ -70,7 +70,6 @@
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "prisma": "^7.7.0",
-    "prismock": "^1.35.4",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",
