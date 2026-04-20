@@ -16,7 +16,7 @@ import {
   ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
   Dispatch,
@@ -277,16 +277,81 @@ export default function FrameEditPanel({
     clearSelectedBounds();
   };
 
-  const refreshFrameQueries = async () => {
-    if (user) {
-      await queryClient.invalidateQueries({
-        queryKey: ["frame", "user", canvas.id, user.id],
-      });
-    }
-    await queryClient.invalidateQueries({
-      queryKey: ["frame", "guild", canvas.id],
-    });
+  const invalidateFrameQueries = async () => {
+    await Promise.all([
+      ...(user ?
+        [
+          queryClient.invalidateQueries({
+            queryKey: ["frame", "user", canvas.id, user.id],
+          }),
+        ]
+      : []),
+      queryClient.invalidateQueries({
+        queryKey: ["frame", "guild", canvas.id],
+      }),
+    ]);
   };
+
+  const saveFrameMutation = useMutation({
+    mutationFn: async ({
+      id,
+      name,
+      bounds,
+    }: {
+      id: string;
+      name: string;
+      bounds: ViewBounds;
+    }) => {
+      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(id)}/edit`;
+
+      const body = {
+        name: name,
+        x0: bounds.left,
+        y0: bounds.top,
+        x1: bounds.right,
+        y1: bounds.bottom,
+      };
+
+      await axios.put(requestUrl, body, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: invalidateFrameQueries,
+  });
+
+  const deleteFrameMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(id)}/delete`;
+
+      await axios.delete(requestUrl, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: invalidateFrameQueries,
+  });
+
+  const createFrameMutation = useMutation({
+    mutationFn: async () => {
+      const requestUrl = `${config.apiUrl}/api/v1/frame`;
+
+      const body = {
+        canvasId: canvas.id,
+        name: frameName,
+        ownerId:
+          selectedOwner === FrameOwnerType.User ? user?.id : selectedGuildId,
+        isGuildOwned: selectedOwner === FrameOwnerType.Guild,
+        x0: frameBounds?.left ?? 0,
+        y0: frameBounds?.top ?? 0,
+        x1: frameBounds ? frameBounds.right : canvas.width,
+        y1: frameBounds ? frameBounds.bottom : canvas.height,
+      };
+
+      await axios.post(requestUrl, body, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: invalidateFrameQueries,
+  });
 
   const handleBackAction = () => {
     if (isDirty) {
@@ -305,21 +370,11 @@ export default function FrameEditPanel({
     try {
       if (!frameId || !frameBounds) return;
 
-      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/edit`;
-
-      const body = {
+      await saveFrameMutation.mutateAsync({
+        id: frameId,
         name: frameName,
-        x0: frameBounds.left,
-        y0: frameBounds.top,
-        x1: frameBounds.right,
-        y1: frameBounds.bottom,
-      };
-
-      await axios.put(requestUrl, body, {
-        withCredentials: true,
+        bounds: frameBounds,
       });
-
-      await refreshFrameQueries();
     } catch (e) {
       console.error(e);
       if ((e as { response?: { status?: number } }).response?.status === 401) {
@@ -340,13 +395,7 @@ export default function FrameEditPanel({
     try {
       if (!frameId) return;
 
-      const requestUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/delete`;
-
-      await axios.delete(requestUrl, {
-        withCredentials: true,
-      });
-
-      await refreshFrameQueries();
+      await deleteFrameMutation.mutateAsync(frameId);
     } catch (e) {
       console.error(e);
       if ((e as { response?: { status?: number } }).response?.status === 401) {
@@ -363,25 +412,7 @@ export default function FrameEditPanel({
 
   const handleCreateAction = async () => {
     try {
-      const requestUrl = `${config.apiUrl}/api/v1/frame`;
-
-      const body = {
-        canvasId: canvas.id,
-        name: frameName,
-        ownerId:
-          selectedOwner === FrameOwnerType.User ? user?.id : selectedGuildId,
-        isGuildOwned: selectedOwner === FrameOwnerType.Guild,
-        x0: frameBounds?.left ?? 0,
-        y0: frameBounds?.top ?? 0,
-        x1: frameBounds ? frameBounds.right : canvas.width,
-        y1: frameBounds ? frameBounds.bottom : canvas.height,
-      };
-
-      await axios.post(requestUrl, body, {
-        withCredentials: true,
-      });
-
-      await refreshFrameQueries();
+      await createFrameMutation.mutateAsync();
     } catch (e) {
       console.error(e);
       if ((e as { response?: { status?: number } }).response?.status === 401) {
