@@ -41,7 +41,7 @@ const TabBar = styled("ul")`
   list-style-type: none;
 `;
 
-const TabStyle = styled("li")<{ active?: boolean; disabled?: boolean }>`
+const TabStyle = styled("li")<{ active?: boolean }>`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -64,14 +64,11 @@ const TabStyle = styled("li")<{ active?: boolean; disabled?: boolean }>`
       `
     : ""}
 
-  ${({ disabled }) =>
-    disabled ?
-      css`
-        cursor: not-allowed;
-        opacity: 0.5;
-        pointer-events: none;
-      `
-    : ""}
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+  }
 
   /*
   * Workaround for accessibility issue with VoiceOver.
@@ -136,7 +133,7 @@ function Tab({
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
       tabIndex={0}
-      disabled={locked}
+      aria-disabled={locked}
     >
       {label}
     </TabStyle>
