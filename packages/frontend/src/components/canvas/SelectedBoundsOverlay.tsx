@@ -405,7 +405,7 @@ export default function SelectedBoundsOverlay({
   selectedBounds: ViewBounds | null;
   reticleScale: number;
   reticleSize: number;
-  setSelectedBounds: Dispatch<SetStateAction<ViewBounds>>;
+  setSelectedBounds: Dispatch<SetStateAction<ViewBounds | null>>;
   zoom: number;
 }) {
   const dragStateRef = useRef<{
