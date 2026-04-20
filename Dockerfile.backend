@@ -1,23 +1,35 @@
-FROM node:20-alpine
+#
+# Build stage
+#
 
+FROM node:24-alpine AS builder
 RUN npm install -g pnpm
-
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/backend/package.json ./packages/backend/
 
-RUN pnpm install --frozen-lockfile
+COPY packages/backend ./packages/backend
+COPY packages/types ./packages/types
+RUN pnpm install --frozen-lockfile --no-optional
 
-RUN pnpm -F backend postinstall
+ENV NODE_ENV=production
 
-COPY . .
+RUN pnpm --filter backend build
+# Use --ignore-scripts so that the Prisma postinstall script doesn't run.
+# --no-optional is very important as otherwise the optional prisma peer dependency of @prisma/client
+# is installed, which includes React, and a number of other frontend packages we don't want.
+RUN pnpm --filter backend deploy --prod --no-optional --ignore-scripts deploy
 
-RUN pnpm run build
+#
+# Production stage
+#
 
-RUN pnpm store prune
+FROM node:24-alpine AS production
+WORKDIR /app
+ENV NODE_ENV=production
+
+COPY --from=builder /app/deploy .
 
 EXPOSE 8000
-
-WORKDIR /app/packages/backend
-
-CMD ["pnpm", "start"]
+CMD ["node", "build/index.js"]
