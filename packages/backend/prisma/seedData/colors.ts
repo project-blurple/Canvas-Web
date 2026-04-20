@@ -9,7 +9,7 @@ interface ColorSeedData {
 }
 
 // These are all the colors available in the 2024 event
-export const colorSeedData: ColorSeedData[] = [
+export const colorSeedData = [
   {
     id: 0,
     code: "ptnr",
@@ -334,4 +334,4 @@ export const colorSeedData: ColorSeedData[] = [
     name: "Extreme Green",
     rgba: [197, 255, 0, 255],
   },
-] as const;
+] as const satisfies readonly ColorSeedData[];

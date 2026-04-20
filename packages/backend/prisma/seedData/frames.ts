@@ -13,7 +13,7 @@ interface FrameSeedData {
 
 // These frames are real guild frames from the 2024 event
 // Does not include any user-owned frames
-export const frameSeedData: FrameSeedData[] = [
+export const frameSeedData = [
   {
     id: "08D565",
     canvas_id: 2024,
@@ -98,4 +98,4 @@ export const frameSeedData: FrameSeedData[] = [
     y_1: 25,
     style_id: 1,
   },
-];
+] as const satisfies readonly FrameSeedData[];

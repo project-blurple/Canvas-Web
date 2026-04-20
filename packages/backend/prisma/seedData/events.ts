@@ -27,7 +27,7 @@ interface EventSeedData {
   name: string;
 }
 
-export const eventSeedData: EventSeedData[] = [
+export const eventSeedData = [
   {
     id: 2024,
     name: "Canvas 2024",
@@ -36,7 +36,7 @@ export const eventSeedData: EventSeedData[] = [
     id: 2034,
     name: "Testing Event",
   },
-];
+] as const satisfies readonly EventSeedData[];
 
 interface CanvasSeedData {
   id: number;
@@ -49,7 +49,7 @@ interface CanvasSeedData {
   start_coordinates: [number, number];
 }
 
-export const canvasSeedData: CanvasSeedData[] = [
+export const canvasSeedData = [
   {
     id: 2024,
     name: "Canvas 2024",
@@ -70,4 +70,4 @@ export const canvasSeedData: CanvasSeedData[] = [
     cooldown_length: 15,
     start_coordinates: [1, 1],
   },
-];
+] as const satisfies readonly CanvasSeedData[];
