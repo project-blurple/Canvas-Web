@@ -6,7 +6,7 @@ import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollBlock,
+  ScrollableBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
 import { TooltipDynamicButton } from "./ActionPanelTooltip";
@@ -108,13 +108,13 @@ export default function PixelInfoTab({
         : <p>No selected pixel</p>}
       </ActionPanelTabBody>
       {adjustedCoords && pixelHistory.length > 1 && (
-        <ScrollBlock>
+        <ScrollableBlock>
           <ActionPanelTabBody>
             <div>
               <PixelHistoryPast history={pixelHistory} isLoading={isLoading} />
             </div>
           </ActionPanelTabBody>
-        </ScrollBlock>
+        </ScrollableBlock>
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (

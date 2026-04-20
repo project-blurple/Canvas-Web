@@ -39,7 +39,7 @@ export const TabBlock = styled(Block, {
   grid-template-rows: auto 1fr auto;
 `;
 
-export const ScrollBlock = styled(Block)`
+export const ScrollableBlock = styled(Block)`
   align-self: stretch;
   grid-column: 1 / -1;
 `;
