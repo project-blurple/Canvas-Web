@@ -87,15 +87,29 @@ The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/fro
 pnpm install
 ```
 
-**Set up the database.** Make sure you have a PostgreSQL database running, and that the `DATABASE_URL` environment variable in `packages/backend/.env` is set correctly. Then, run this command from the monorepo root to create the database schema:
+**Set up the database.** Make sure the `DATABASE_URL` environment variable in `packages/backend/.env` is set correctly.
+
+If you already have PostgreSQL running, point `DATABASE_URL` at that instance.
+
+If you want a local development database managed by Prisma, you can do:
+
+```sh
+pnpm install
+cd packages/backend
+pnpm prisma dev
+# Copy the DATABASE_URL shown in the output into packages/backend/.env
+```
+
+Before pushing schema changes or seeding, build the backend once so generated scripts can import the built client:
+
+```sh
+pnpm -F backend build
+```
+
+Then, from the monorepo root:
 
 ```sh
 pnpm prisma:push
-```
-
-You can also seed the database with test data:
-
-```sh
 pnpm prisma:seed
 ```
 

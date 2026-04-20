@@ -6,6 +6,30 @@
 
 1. Create a copy of [`.env.example`](./.env.example) and rename it `.env`.
 
+### Database setup
+
+Set `DATABASE_URL` in `.env` to a running PostgreSQL instance.
+
+If you want Prisma to spin up a local development database for you, run:
+
+```sh
+pnpm prisma dev
+# Copy the DATABASE_URL shown in the output into .env
+```
+
+Before pushing schema changes or seeding, build once so the seed script can import the built Prisma client:
+
+```sh
+pnpm build
+```
+
+Then apply schema changes and seed test data:
+
+```sh
+pnpm prisma:push
+pnpm prisma:seed
+```
+
 ### Running
 
 ```sh
