@@ -64,6 +64,9 @@
     "**/dist": true,
     "**/node_modules": true
   },
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
   "[prisma]": {
     "editor.defaultFormatter": "Prisma.prisma"
   }
