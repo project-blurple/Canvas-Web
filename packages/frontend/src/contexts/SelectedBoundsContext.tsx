@@ -6,7 +6,9 @@ import {
   Dispatch,
   RefObject,
   SetStateAction,
+  useCallback,
   useContext,
+  useMemo,
   useState,
 } from "react";
 import { ViewBounds } from "@/util";
@@ -128,33 +130,36 @@ export const SelectedBoundsProvider = ({
   const [minWidth, setMinWidth] =
     useState<SelectedBoundsContextType["minWidth"]>(5);
 
-  function setMinimumBounds(width: number, height: number) {
+  const setMinimumBounds = useCallback((width: number, height: number) => {
     setMinWidth(width);
     setMinHeight(height);
-  }
+  }, []);
 
   const { canvas } = useCanvasContext();
   const { containerRef, offset, zoom } = useCanvasViewContext();
 
-  function clearSelectedBounds() {
+  const clearSelectedBounds = useCallback(() => {
     setSelectedBounds(null);
     setCanEdit(false);
-  }
+  }, []);
 
-  function setBoundsToCurrentView(fillRatio: number) {
-    setSelectedBounds(
-      fitViewBoundsToFillRatio(
-        getCurrentViewBounds({
+  const setBoundsToCurrentView = useCallback(
+    (fillRatio: number) => {
+      setSelectedBounds(
+        fitViewBoundsToFillRatio(
+          getCurrentViewBounds({
+            canvas,
+            containerRef,
+            offset,
+            zoom,
+          }),
+          fillRatio,
           canvas,
-          containerRef,
-          offset,
-          zoom,
-        }),
-        fillRatio,
-        canvas,
-      ),
-    );
-  }
+        ),
+      );
+    },
+    [canvas, containerRef, offset, zoom],
+  );
 
   return (
     <SelectedBoundsContext.Provider
