@@ -88,11 +88,11 @@ export function getUserGuildFlags(
   return user.guilds ?? {};
 }
 
-export function normalizeFrameBounds(frame: Frame): ViewBounds {
-  const left = Math.min(frame.x0, frame.x1);
-  const right = Math.max(frame.x0, frame.x1);
-  const top = Math.min(frame.y0, frame.y1);
-  const bottom = Math.max(frame.y0, frame.y1);
+export function normalizeFrameBounds({ x0, x1, y0, y1 }: Frame): ViewBounds {
+  const left = Math.min(x0, x1);
+  const right = Math.max(x0, x1);
+  const top = Math.min(y0, y1);
+  const bottom = Math.max(y0, y1);
 
   return {
     left,
@@ -114,8 +114,8 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
     return null;
   }
 
-  const r = parseInt(normalized.slice(1, 3), 16);
-  const g = parseInt(normalized.slice(3, 5), 16);
-  const b = parseInt(normalized.slice(5, 7), 16);
+  const r = Number.parseInt(normalized.slice(1, 3), 16);
+  const g = Number.parseInt(normalized.slice(3, 5), 16);
+  const b = Number.parseInt(normalized.slice(5, 7), 16);
   return [r, g, b, 255];
 }

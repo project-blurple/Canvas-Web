@@ -63,7 +63,7 @@ const DynamicButtonContent = styled("span")`
 
 interface DynamicButtonProps {
   children: React.ReactNode;
-  color: PixelColor | null;
+  color?: PixelColor | null;
   disabled?: boolean;
   onAction?: () => void;
 }

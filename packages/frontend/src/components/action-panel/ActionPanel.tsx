@@ -117,13 +117,13 @@ function Tab({
   tabKey,
   label,
   currentTab,
-  isLocked,
+  locked,
   onSwitchTab,
 }: {
   tabKey: TABS;
   label: string;
   currentTab: TABS;
-  isLocked: boolean;
+  locked: boolean;
   onSwitchTab: (tab: TABS) => void;
 }) {
   const isActive = currentTab === tabKey;
@@ -136,7 +136,7 @@ function Tab({
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
       tabIndex={0}
-      disabled={isLocked}
+      disabled={locked}
     >
       {label}
     </TabStyle>
@@ -146,14 +146,14 @@ function Tab({
 export default function ActionPanel() {
   const [currentTab, setCurrentTab] = useState(TABS.PLACE);
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
-  const [tabsLocked, setTabsLocked] = useState(false);
+  const [areTabsLocked, setAreTabsLocked] = useState(false);
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
   const { setIsReticleVisible } = useCanvasViewContext();
 
   const onSwitchTab = (newTab: TABS) => {
-    if (tabsLocked) return;
+    if (areTabsLocked) return;
 
     // switching tabs
     setCurrentTab(newTab);
@@ -178,21 +178,21 @@ export default function ActionPanel() {
           label="Place"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}
-          isLocked={tabsLocked && currentTab !== TABS.PLACE}
+          locked={areTabsLocked && currentTab !== TABS.PLACE}
         />
         <Tab
           tabKey={TABS.LOOK}
           label="Look"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}
-          isLocked={tabsLocked && currentTab !== TABS.LOOK}
+          locked={areTabsLocked && currentTab !== TABS.LOOK}
         />
         <Tab
           tabKey={TABS.FRAME}
           label="Frame"
           currentTab={currentTab}
           onSwitchTab={onSwitchTab}
-          isLocked={tabsLocked && currentTab !== TABS.FRAME}
+          locked={areTabsLocked && currentTab !== TABS.FRAME}
         />
       </TabBar>
       <PlacePixelTab
@@ -202,7 +202,7 @@ export default function ActionPanel() {
       <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
       <FramesTab
         active={currentTab === TABS.FRAME}
-        setTabsLocked={setTabsLocked}
+        setTabsLocked={setAreTabsLocked}
       />
     </Wrapper>
   );

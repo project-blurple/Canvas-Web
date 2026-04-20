@@ -12,7 +12,7 @@ import { Heading } from "../action-panel/ActionPanel";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
 
-const FramesContainer = styled("div")`
+const FramesWrapper = styled("div")`
   display: flex;
   flex-direction: column;
 `;
@@ -58,7 +58,7 @@ export default function FrameList() {
     },
   );
 
-  const inbuiltFullCanvasFrame: SystemOwnedFrame = {
+  const inbuiltFullCanvasFrame = {
     id: `system-${canvas.id.toString()}`,
     canvasId: canvas.id,
     name: canvas.name,
@@ -70,12 +70,12 @@ export default function FrameList() {
       type: "system",
       name: "Blurple Canvas",
     },
-  };
+  } as const satisfies SystemOwnedFrame;
 
   return (
     <ActionPanelTabBody>
-      <FramesContainer>
-        <Heading>Your Frames</Heading>
+      <FramesWrapper>
+        <Heading>Your frames</Heading>
         {user ?
           userFrames.length !== 0 ?
             <FramePreviewList
@@ -88,15 +88,15 @@ export default function FrameList() {
             <Link href="/signin">Sign in</Link> to view frames
           </p>
         }
-      </FramesContainer>
-      <FramesContainer>
+      </FramesWrapper>
+      <FramesWrapper>
         <Heading>Blurple Canvas</Heading>
         <FramePreviewList
           items={[inbuiltFullCanvasFrame]}
           sourceImage={sourceImage}
           onSelectFrame={setSelectedFrame}
         />
-      </FramesContainer>
+      </FramesWrapper>
       {sortedGuildFrameMap.map(([ownerId, frames]) => {
         const firstFrame = frames[0];
         if (!firstFrame) {
@@ -104,14 +104,14 @@ export default function FrameList() {
         }
 
         return (
-          <FramesContainer key={ownerId}>
+          <FramesWrapper key={ownerId}>
             <Heading>{firstFrame.owner.guild.name}</Heading>
             <FramePreviewList
               items={frames.toSorted((a, b) => a.name.localeCompare(b.name))}
               sourceImage={sourceImage}
               onSelectFrame={setSelectedFrame}
             />
-          </FramesContainer>
+          </FramesWrapper>
         );
       })}
     </ActionPanelTabBody>

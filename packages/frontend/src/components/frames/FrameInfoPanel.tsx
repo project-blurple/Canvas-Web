@@ -29,11 +29,10 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   if (frame.owner.type === "guild") {
     const guildId = frame.owner.guild.guild_id;
     const userGuildData = user.guilds?.[guildId];
-    if (userGuildData !== undefined) {
-      if (userGuildData.administrator || userGuildData.manageGuild) {
-        return true;
-      }
-    }
+    return (
+      userGuildData !== undefined &&
+      (userGuildData.administrator || userGuildData.manageGuild)
+    );
   }
 
   return false;

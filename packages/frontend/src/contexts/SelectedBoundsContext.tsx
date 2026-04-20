@@ -37,7 +37,7 @@ export const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   setBoundsToCurrentView: () => {},
 });
 
-interface CurrentViewProps {
+interface CurrentViewParams {
   canvas: CanvasInfo;
   containerRef: RefObject<HTMLDivElement | null>;
   offset: Point;
@@ -49,7 +49,7 @@ function getCurrentViewBounds({
   containerRef,
   offset,
   zoom,
-}: CurrentViewProps): ViewBounds {
+}: CurrentViewParams): ViewBounds {
   if (!containerRef.current) {
     return {
       left: 0,
