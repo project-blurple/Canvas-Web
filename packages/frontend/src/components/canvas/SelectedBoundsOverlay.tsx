@@ -1,6 +1,6 @@
 import { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { PointerEvent, useMemo, useRef } from "react";
+import { Dispatch, PointerEvent, SetStateAction, useMemo, useRef } from "react";
 import { clamp, ViewBounds } from "@/util";
 
 const OverlayReticleContainer = styled("div")`
@@ -46,6 +46,9 @@ function calculateReticleOffsetForPoint(
 type CornerKey = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 type EdgeKey = "top" | "right" | "bottom" | "left";
 type HandleKey = CornerKey | EdgeKey;
+
+const EDGE_HIT_TARGET_THICKNESS = 14;
+const CORNER_HIT_TARGET_SIZE = 20;
 
 function getCornerCursor(corner: CornerKey): "nwse-resize" | "nesw-resize" {
   if (corner === "top-left" || corner === "bottom-right") {
@@ -189,7 +192,7 @@ export default function SelectedBoundsOverlay({
   selectedBounds: ViewBounds | null;
   reticleScale: number;
   reticleSize: number;
-  setSelectedBounds: (value: ViewBounds) => void;
+  setSelectedBounds: Dispatch<SetStateAction<ViewBounds>>;
   zoom: number;
 }) {
   const dragStateRef = useRef<{
@@ -409,11 +412,11 @@ export default function SelectedBoundsOverlay({
         </OverlayDesaturateShade>
       )}
       {selectedBoundsEdges.map((edge) => {
-        const edgeThickness = 14 / zoom;
+        const edgeThickness = EDGE_HIT_TARGET_THICKNESS / zoom;
 
         return (
           <CornerHitTarget
-            key={`selected-bounds-edge-hit-${edge.key}`}
+            key={edge.key}
             onPointerDown={(event) =>
               handleHandlePointerDown(edge.key as EdgeKey, event)
             }
@@ -439,7 +442,7 @@ export default function SelectedBoundsOverlay({
         );
       })}
       {selectedBoundsCorners.map((corner) => {
-        const hitSize = 20 / zoom;
+        const hitSize = CORNER_HIT_TARGET_SIZE / zoom;
         const hitAnchor = getCornerHandleAnchor(
           corner.point,
           corner.key as CornerKey,
@@ -447,7 +450,7 @@ export default function SelectedBoundsOverlay({
 
         return (
           <CornerHitTarget
-            key={`selected-bounds-corner-hit-${corner.key}`}
+            key={corner.key}
             onPointerDown={(event) =>
               handleHandlePointerDown(corner.key as CornerKey, event)
             }
