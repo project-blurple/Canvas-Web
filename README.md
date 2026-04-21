@@ -93,14 +93,7 @@ pnpm install
 
 If you already have PostgreSQL running, point `DATABASE_URL` at that instance.
 
-If you want a local development database managed by Prisma, you can do:
-
-```sh
-pnpm install
-cd packages/backend
-pnpm prisma dev
-# Copy the DATABASE_URL shown in the output into packages/backend/.env
-```
+For local development, install PostgreSQL locally, create a database (for example, `canvas`), and set `DATABASE_URL` in `packages/backend/.env` to that database.
 
 Before pushing schema changes or seeding, build the backend once so generated scripts can import the built client:
 

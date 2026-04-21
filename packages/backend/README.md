@@ -12,12 +12,7 @@ Set `DATABASE_URL` in `.env` to a running PostgreSQL instance.
 
 Our schema and views require PostgreSQL 9.4 or newer.
 
-If you want Prisma to spin up a local development database for you, run:
-
-```sh
-pnpm prisma dev
-# Copy the DATABASE_URL shown in the output into .env
-```
+For local development, install PostgreSQL locally, create a database (for example, `canvas`), and set `DATABASE_URL` in `.env` to that database.
 
 Before pushing schema changes or seeding, build once so the seed script can import the built Prisma client:
 
