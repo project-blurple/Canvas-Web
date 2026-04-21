@@ -8,6 +8,7 @@ import {
   useAudioContext,
   useAuthContext,
   useCanvasContext,
+  useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
 import { Button } from "./Button";
@@ -22,7 +23,8 @@ interface PlacePixelButtonProps {
 }
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
-  const { canvas, coords, adjustedCoords, setCoords } = useCanvasContext();
+  const { canvas } = useCanvasContext();
+  const { coords, adjustedCoords, setCoords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
   const { playSounds, cooldownExpiryJingle } = useAudioContext();
   const isSelected = adjustedCoords && color;

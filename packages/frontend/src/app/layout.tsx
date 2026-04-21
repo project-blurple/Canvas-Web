@@ -1,24 +1,25 @@
-import { ThemeProvider } from "@mui/material";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
-import axios from "axios";
-import type { Metadata, Viewport } from "next";
-
-import config from "@/config";
-import {
-  AudioProvider,
-  QueryClientProvider,
-  SelectedColorProvider,
-} from "@/contexts";
-import "../styles/core.css";
 import {
   CanvasInfo,
   CanvasInfoRequest,
   DiscordUserProfile,
 } from "@blurple-canvas-web/types";
+import { ThemeProvider } from "@mui/material";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import axios from "axios";
+import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
+import config from "@/config";
+import {
+  AudioProvider,
+  CanvasViewProvider,
+  QueryClientProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import { CanvasProvider } from "@/contexts/CanvasContext";
 import { Theme } from "@/theme";
+import "../styles/core.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),
@@ -44,8 +45,9 @@ async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
   }
 
   try {
-    return JSON.parse(profile.value);
-  } catch {
+    return JSON.parse(profile.value) as DiscordUserProfile;
+  } catch (error) {
+    console.error("[layout] failed to parse profile cookie", error);
     return null;
   }
 }
@@ -79,28 +81,38 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  return (
+    <html lang="en">
+      <body>
+        <LayoutProviders>{children}</LayoutProviders>
+      </body>
+    </html>
+  );
+}
+
+async function LayoutProviders({ children }: { children: React.ReactNode }) {
   const [profile, canvasInfo] = await Promise.all([
     getServerSideProfile(),
     getServerSideCanvasInfo(),
   ]);
 
   return (
-    <html lang="en">
-      <body>
-        <AppRouterCacheProvider>
-          <AuthProvider profile={profile}>
-            <QueryClientProvider>
-              <AudioProvider>
-                <SelectedColorProvider>
-                  <CanvasProvider mainCanvasInfo={canvasInfo}>
+    <AppRouterCacheProvider>
+      <QueryClientProvider>
+        <AuthProvider profile={profile}>
+          <AudioProvider>
+            <SelectedColorProvider>
+              <SelectedFrameProvider>
+                <CanvasProvider mainCanvasInfo={canvasInfo}>
+                  <CanvasViewProvider>
                     <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </CanvasProvider>
-                </SelectedColorProvider>
-              </AudioProvider>
-            </QueryClientProvider>
-          </AuthProvider>
-        </AppRouterCacheProvider>
-      </body>
-    </html>
+                  </CanvasViewProvider>
+                </CanvasProvider>
+              </SelectedFrameProvider>
+            </SelectedColorProvider>
+          </AudioProvider>
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppRouterCacheProvider>
   );
 }

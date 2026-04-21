@@ -1,16 +1,20 @@
 import { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-
-import { useCanvasContext } from "@/contexts";
+import { useState } from "react";
+import { DynamicButton } from "@/components/button";
+import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
+import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
   TabBlock,
 } from "./ActionPanelTabBody";
+import ActionPanelTooltip from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
+import { CoordinateLabel } from "./PlacePixelTab";
 
 const PixelInfoTabBlock = styled(TabBlock)`
   grid-template-rows: auto 1fr;
@@ -72,10 +76,32 @@ export default function PixelInfoTab({
   active = false,
   canvasId,
 }: PixelInfoTabProps) {
-  const { coords, adjustedCoords } = useCanvasContext();
+  const { canvas } = useCanvasContext();
+  const { adjustedCoords, containerRef, coords, zoom } = useCanvasViewContext();
   const { data, isLoading } = usePixelHistory(canvasId, coords);
 
   const pixelHistory = data?.pixelHistory ?? [];
+
+  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
+  const closeTooltip = () => setTooltipIsOpen(false);
+  const openTooltip = () => setTooltipIsOpen(true);
+
+  const pixelURL =
+    (adjustedCoords &&
+      containerRef.current &&
+      createPixelUrl({
+        canvasId: canvasId,
+        coords: adjustedCoords,
+        pixelWidth: Math.min(
+          containerRef.current?.clientWidth / zoom,
+          canvas.width,
+        ),
+        pixelHeight: Math.min(
+          containerRef.current?.clientHeight / zoom,
+          canvas.height,
+        ),
+      })) ??
+    "";
 
   return (
     <PixelInfoTabBlock active={active}>
@@ -96,6 +122,28 @@ export default function PixelInfoTab({
           </ActionPanelTabBody>
         </ScrollBlock>
       )}
+      <ActionPanelTabBody>
+        {adjustedCoords && (
+          <ActionPanelTooltip
+            title="Copied"
+            onClose={closeTooltip}
+            open={tooltipIsOpen}
+          >
+            <DynamicButton
+              color={pixelHistory?.[0]?.color ?? null}
+              onAction={() => {
+                openTooltip();
+                navigator.clipboard.writeText(pixelURL);
+              }}
+            >
+              Copy pixel link
+              <CoordinateLabel>
+                ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
+              </CoordinateLabel>
+            </DynamicButton>
+          </ActionPanelTooltip>
+        )}
+      </ActionPanelTabBody>
     </PixelInfoTabBlock>
   );
 }

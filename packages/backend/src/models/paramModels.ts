@@ -13,12 +13,24 @@ export const EventIdParamModel = z.object({
 export type LeaderboardParamModel = typeof CanvasIdParamModel;
 
 export const LeaderboardQueryModel = z.object({
+  page: z.coerce.number().int().positive().optional(),
   size: z.coerce.number().int().positive().optional(),
 });
 
 export const PixelHistoryParamModel = z.object({
   x: z.coerce.number().int().nonnegative(),
   y: z.coerce.number().int().nonnegative(),
+});
+
+export const FrameGuildIdsQueryModel = z.object({
+  guildIds: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .transform((value) =>
+      value === undefined ? []
+      : Array.isArray(value) ? value
+      : [value],
+    ),
 });
 
 export interface CanvasIdParam {

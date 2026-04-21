@@ -6,6 +6,7 @@ const config = {
   discordServerInvite:
     process.env.NEXT_PUBLIC_DISCORD_SERVER_INVITE ||
     "https://projectblurple.com",
+  showBotCommands: process.env.SHOW_BOT_COMMANDS === "true",
 } as const;
 
 export default config;

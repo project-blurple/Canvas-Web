@@ -1,6 +1,8 @@
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
-import { useCanvasContext, useSelectedColorContext } from "@/contexts";
+import VisuallyHidden from "@/components/VisuallyHidden";
+import config from "@/config";
+import { useCanvasViewContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   align-items: center;
@@ -25,11 +27,13 @@ const CopyButton = styled("button")<CopyButtonProps>`
   place-items: center;
   transition: background-color var(--transition-duration-fast) ease;
 
-  :hover {
-    background-color: oklch(from var(--discord-white) l c h / 24%);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: oklch(from var(--discord-white) l c h / 24%);
+    }
   }
 
-  :active {
+  &:active {
     background-color: oklch(from var(--discord-white) l c h / 6%);
   }
 `;
@@ -39,21 +43,27 @@ const StyledCopyIcon = styled(CopyIcon)`
   inline-size: 1.5rem;
 `;
 
-export default function BotCommandCard() {
-  const { adjustedCoords: coordinates } = useCanvasContext();
-  const { color } = useSelectedColorContext();
-
-  if (!coordinates || !color) return null;
-
-  const { x, y } = coordinates;
-  const command = `/place x:${x} y:${y} color:${color.code}`;
+export default function BotCommandCard({ command }: { command: string }) {
+  if (config.showBotCommands === false) return null;
 
   return (
     <Wrapper>
       <code>{command}</code>
       <CopyButton onClick={() => navigator.clipboard.writeText(command)}>
-        <StyledCopyIcon />
+        <StyledCopyIcon aria-hidden />
+        <VisuallyHidden>Copy bot command</VisuallyHidden>
       </CopyButton>
     </Wrapper>
   );
+}
+
+export function BotPlaceCommandCard() {
+  const { adjustedCoords: coordinates } = useCanvasViewContext();
+  const { color } = useSelectedColorContext();
+
+  if (!(coordinates && color)) return null;
+  const { x, y } = coordinates;
+  const command = `/place x:${x} y:${y} color:${color.code}`;
+
+  return <BotCommandCard command={command} />;
 }

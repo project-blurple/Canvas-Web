@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
 
-import seedPrismock from "@/test";
+import seedAll from "@/test";
 import { mockAuth } from "@/test/mockAuth";
 
 vi.mock("@/index", () => ({
@@ -15,8 +15,8 @@ import { pixelRouter } from "./pixel";
 let app: express.Express;
 
 describe("Place Pixel Tests", () => {
-  beforeEach(() => {
-    seedPrismock();
+  beforeEach(async () => {
+    await seedAll();
     vi.useFakeTimers();
 
     app = express();

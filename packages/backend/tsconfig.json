@@ -1,7 +1,6 @@
 {
   // See: https://www.npmjs.com/package/@tsconfig/node22
   "extends": "@tsconfig/node24/tsconfig.json",
-
   // Reference: https://www.typescriptlang.org/tsconfig
   "compilerOptions": {
     "rootDir": "src",
@@ -15,6 +14,7 @@
   "exclude": ["node_modules"],
   "include": ["src/**/*"],
   "ts-node": {
+    "files": true,
     // This is required to use path aliases with nodemon
     "require": ["tsconfig-paths/register"]
   }

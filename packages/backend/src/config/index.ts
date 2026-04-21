@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
-import dotenv from "dotenv";
+import dotenvx from "@dotenvx/dotenvx";
 
-dotenv.config();
+dotenvx.config();
 
 function requiredEnv(key: keyof NodeJS.ProcessEnv): string {
   const value = process.env[key];
@@ -33,6 +33,9 @@ const config = {
   discord: {
     clientId: requiredEnv("DISCORD_CLIENT_ID"),
     clientSecret: requiredEnv("DISCORD_CLIENT_SECRET"),
+    discordAdminRole: process.env.DISCORD_ADMIN_ROLE_ID,
+    discordManagementGuild: process.env.DISCORD_MANAGEMENT_GUILD_ID,
+    discordModeratorRole: process.env.DISCORD_MODERATOR_ROLE_ID,
   },
   /**
    * Placed pixels are typically attributed to guilds they were place in.
@@ -40,9 +43,12 @@ const config = {
    */
   webGuildId: 0,
   webPlacingEnabled: process.env.WEB_PLACING_ENABLED === "true",
+  // Keep bot placing enabled by default unless explicitly disabled.
+  botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
+  databaseUrl: requiredEnv("DATABASE_URL"),
 } as const;
 
 if (!fs.existsSync(config.paths.canvases)) {

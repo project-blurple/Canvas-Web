@@ -31,6 +31,13 @@ export const Theme = createTheme({
       paper: "var(--discord-legacy-not-quite-black)",
     },
   },
+  transitions: {
+    easing: {
+      easeIn: "var(--ease-in-quad)",
+      easeInOut: "var(--ease-in-out-quad)",
+      easeOut: "var(--ease-out-quad)",
+    },
+  },
   typography: {
     fontFamily: "var(--font-body)",
   },

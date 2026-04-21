@@ -1,31 +1,18 @@
 "use client";
 
-import {
-  CanvasInfo,
-  CanvasInfoRequest,
-  Point,
-} from "@blurple-canvas-web/types";
+import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
-import {
-  createContext,
-  Dispatch,
-  SetStateAction,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-} from "react";
-import { addPoints, tupleToPoint } from "@/components/canvas/point";
+import { useRouter } from "next/navigation";
+import { createContext, useCallback, useContext, useState } from "react";
 import config from "@/config";
 import { socket } from "@/socket";
+import { useCanvasViewContext } from "./CanvasViewContext";
 import { useSelectedColorContext } from "./SelectedColorContext";
+import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 interface CanvasContextType {
   canvas: CanvasInfo;
-  coords: Point | null;
-  adjustedCoords: Point | null;
-  setCanvas: (canvasId: CanvasInfo["id"]) => void;
-  setCoords: Dispatch<SetStateAction<Point | null>>;
+  setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
@@ -40,10 +27,7 @@ export const CanvasContext = createContext<CanvasContextType>({
     webPlacingEnabled: false,
     allColorsGlobal: false,
   },
-  coords: null,
-  adjustedCoords: null,
-  setCoords: () => {},
-  setCanvas: () => {},
+  setCanvas: async () => {},
 });
 
 interface CanvasProviderProps {
@@ -55,22 +39,12 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
+  const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
-  const [selectedCoords, setSelectedCoords] =
-    useState<CanvasContextType["coords"]>(null);
+  const { setCoords } = useCanvasViewContext();
 
-  const adjustedCoords = useMemo(() => {
-    if (selectedCoords) {
-      return addPoints(
-        selectedCoords,
-        tupleToPoint(activeCanvas.startCoordinates),
-      );
-    }
-
-    return null;
-  }, [activeCanvas.startCoordinates, selectedCoords]);
-
-  const { setColor: setSelectedColor } = useSelectedColorContext();
+  const { setColor } = useSelectedColorContext();
+  const [, setFrame] = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {
@@ -78,8 +52,15 @@ export const CanvasProvider = ({
         `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
       );
       setActiveCanvas(response.data);
-      setSelectedColor(null);
-      setSelectedCoords(null);
+      setColor(null);
+      setCoords(null);
+      setFrame(null);
+
+      const url = new URL(window.location.href);
+      url.pathname =
+        canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
+      url.search = "";
+      router.replace(`${url.pathname}${url.search}${url.hash}`);
 
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
@@ -89,16 +70,13 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [setSelectedColor],
+    [router, setColor, setFrame, setCoords, mainCanvasInfo.id],
   );
 
   return (
     <CanvasContext.Provider
       value={{
-        coords: selectedCoords,
-        adjustedCoords,
         canvas: activeCanvas,
-        setCoords: setSelectedCoords,
         setCanvas: setCanvasById,
       }}
     >

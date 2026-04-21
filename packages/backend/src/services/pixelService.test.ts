@@ -2,11 +2,11 @@ import { fail } from "node:assert";
 import { prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
-import {
+import seedAll, {
   seedBlacklist,
   seedCanvases,
   seedColors,
-  seedPixels,
+  seedEvents,
   seedUsers,
 } from "@/test";
 
@@ -26,8 +26,9 @@ import {
 } from "./pixelService";
 
 describe("Pixel Validation Tests", () => {
-  beforeEach(() => {
-    seedCanvases();
+  beforeEach(async () => {
+    await seedEvents();
+    await seedCanvases();
   });
 
   it("Resolves valid canvas on top left pixel (0, 0)", async () => {
@@ -86,8 +87,8 @@ describe("Pixel Validation Tests", () => {
 });
 
 describe("Color Validation Tests", () => {
-  beforeEach(() => {
-    seedColors();
+  beforeEach(async () => {
+    await seedColors();
   });
 
   it("Resolves valid color", async () => {
@@ -108,8 +109,9 @@ describe("Color Validation Tests", () => {
 });
 
 describe("User Validation Tests", () => {
-  beforeEach(() => {
-    seedBlacklist();
+  beforeEach(async () => {
+    await seedUsers();
+    await seedBlacklist();
   });
 
   it("Rejects blacklisted user", async () => {
@@ -122,9 +124,10 @@ describe("User Validation Tests", () => {
 });
 
 describe("Get Cooldown Tests", () => {
-  beforeEach(() => {
-    seedUsers();
-    seedCanvases();
+  beforeEach(async () => {
+    await seedEvents();
+    await seedUsers();
+    await seedCanvases();
     vi.useFakeTimers();
   });
 
@@ -134,7 +137,7 @@ describe("Get Cooldown Tests", () => {
 
   it("Resolves canvas with no cooldown_time", async () => {
     // A user theoretically shouldn't have cooldown time if the canvas doesn't
-    prisma.cooldown.create({
+    await prisma.cooldown.create({
       data: { canvas_id: 9, user_id: BigInt(1), cooldown_time: new Date() },
     });
     return expect(getCooldown(9, BigInt(1), new Date())).resolves.toMatchObject(
@@ -156,7 +159,7 @@ describe("Get Cooldown Tests", () => {
 
   it("Resolves user with null cooldown", async () => {
     // Users with null cooldowns theoretically shouldn't exist
-    prisma.cooldown.create({
+    await prisma.cooldown.create({
       data: { canvas_id: 1, user_id: BigInt(1), cooldown_time: null },
     });
     return expect(getCooldown(1, BigInt(1), new Date())).resolves.toMatchObject(
@@ -168,7 +171,7 @@ describe("Get Cooldown Tests", () => {
   });
 
   it("Resolves user with cooldown greater than 30 seconds", async () => {
-    prisma.cooldown.create({
+    await prisma.cooldown.create({
       data: {
         canvas_id: 1,
         user_id: BigInt(1),
@@ -185,7 +188,7 @@ describe("Get Cooldown Tests", () => {
   });
 
   it("Rejects user with cooldown less than 30 seconds", async () => {
-    prisma.cooldown.create({
+    await prisma.cooldown.create({
       data: { canvas_id: 1, user_id: BigInt(1), cooldown_time: new Date() },
     });
     return expect(getCooldown(1, BigInt(1), new Date())).rejects.toThrow(
@@ -195,12 +198,9 @@ describe("Get Cooldown Tests", () => {
 });
 
 describe("Place Pixel Tests", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.useFakeTimers();
-    seedUsers();
-    seedCanvases();
-    seedColors();
-    seedPixels();
+    await seedAll();
   });
 
   afterEach(() => {

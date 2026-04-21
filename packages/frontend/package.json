@@ -46,11 +46,11 @@
     "axios": "^1.15.0",
     "colorjs.io": "^0.6.1",
     "js-cookie": "^3.0.5",
-    "lucide-react": "^1.7.0",
+    "lucide-react": "^1.8.0",
     "luxon": "^3.7.2",
     "next": "^16.2.3",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react-dom": "^19.2.5",
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
@@ -61,7 +61,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
-    "prettier": "^3.8.1",
+    "prettier": "^3.8.3",
     "typescript": "^6.0.2"
   }
 }

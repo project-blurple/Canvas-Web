@@ -40,7 +40,7 @@ async function resyncClient(
         {
           x: pixel.x,
           y: pixel.y,
-          color: pixel.color.rgba,
+          rgba: pixel.color.rgba,
         },
         new Date().toISOString(),
       );
