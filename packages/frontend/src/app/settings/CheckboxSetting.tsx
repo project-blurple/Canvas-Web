@@ -43,7 +43,7 @@ interface CheckboxSettingProps
       >,
       "checked" | "name" | "onChange"
     > {
-  description: React.ReactNode;
+  description?: React.ReactNode;
   label: React.ReactNode;
 }
 
