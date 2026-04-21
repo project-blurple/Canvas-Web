@@ -85,7 +85,7 @@ async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
           profile_picture_url: true,
         },
       })
-    : ([] as UserOwnerRecord[]),
+    : [],
     guildIds.length ?
       prisma.discord_guild_record.findMany({
         where: {
@@ -98,16 +98,12 @@ async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
           name: true,
         },
       })
-    : ([] as GuildOwnerRecord[]),
+    : [],
   ]);
 
   return {
-    usersById: new Map(
-      users.map((user: UserOwnerRecord) => [user.user_id, user]),
-    ),
-    guildsById: new Map(
-      guilds.map((guild: GuildOwnerRecord) => [guild.guild_id, guild]),
-    ),
+    usersById: new Map(users.map((user) => [user.user_id, user])),
+    guildsById: new Map(guilds.map((guild) => [guild.guild_id, guild])),
   };
 }
 
