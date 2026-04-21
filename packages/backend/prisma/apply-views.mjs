@@ -1,6 +1,5 @@
 import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 
 const viewDefinitions = [
   ["public", "most_frequent_color"],
@@ -18,10 +17,6 @@ function quoteIdentifier(identifier) {
 }
 
 async function main() {
-  const prismaCliPath = fileURLToPath(
-    new URL("../node_modules/prisma/build/index.js", import.meta.url),
-  );
-
   for (const [schema, viewName] of viewDefinitions) {
     const sqlFilePath = new URL(
       `./views/${schema}/${viewName}.sql`,
@@ -35,15 +30,12 @@ async function main() {
       ";",
     ].join("\n");
 
-    const result = spawnSync(
-      process.execPath,
-      [prismaCliPath, "db", "execute", "--stdin"],
-      {
-        input: statement,
-        encoding: "utf8",
-        stdio: ["pipe", "pipe", "pipe"],
-      },
-    );
+    const result = spawnSync("prisma", ["db", "execute", "--stdin"], {
+      input: statement,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: process.platform === "win32",
+    });
 
     if (result.error) {
       throw new Error(
@@ -56,6 +48,8 @@ async function main() {
       process.stderr.write(result.stderr ?? "");
       throw new Error(`Failed to apply view ${schema}.${viewName}`);
     }
+
+    console.log(`Successfully applied view ${schema}.${viewName}`);
   }
 }
 

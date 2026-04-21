@@ -12,14 +12,7 @@ SELECT
 FROM
   history
 WHERE
-  NOT EXISTS (
-    SELECT
-      1
-    FROM
-      blacklist
-    WHERE
-      blacklist.user_id = history.user_id
-  )
+  history.user_id NOT IN (SELECT user_id FROM blacklist)
 GROUP BY
   history.user_id,
   history.canvas_id,
