@@ -3,23 +3,33 @@
 import { useAudioContext } from "@/contexts";
 import { styled } from "@mui/material";
 import CheckboxSetting from "./CheckboxSetting";
+import { BellRing, CaseSensitive } from "lucide-react";
 
 const Wrapper = styled("div")`
-  display: flex;
-  flex-direction: column;
-  gap: calc(2 * var(--layout-padding-y));
   inline-size: 40rem;
   margin-inline: auto;
   padding-block: 4rem;
   padding-inline: var(--layout-padding-x);
+`;
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    text-align: center;
+const H1 = styled("h1")`
+  margin-block-end: 4rem;
+  text-align: center;
+`;
+
+const H2 = styled("h2")`
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-block-end: 1em;
+  margin-block-start: 5em;
+  .lucide {
+    block-size: 1em;
+    color: var(--discord-white);
+    display: inline-block;
+    inline-size: auto;
+    margin-inline-end: 0.5em;
+    opacity: 55%;
+    vertical-align: middle;
   }
 `;
 
@@ -38,8 +48,12 @@ export default function Settings() {
 
   return (
     <Wrapper>
-      <h1>Settings</h1>
-      <h2>Notification sounds</h2>
+      <H1>Settings</H1>
+
+      <H2>
+        <BellRing />
+        Notification sounds
+      </H2>
       <Form>
         <CheckboxSetting
           checked={playSounds}
@@ -57,7 +71,10 @@ export default function Settings() {
         />
       </Form>
 
-      <h2>Webfonts</h2>
+      <H2>
+        <CaseSensitive />
+        Webfonts
+      </H2>
       <Form>
         <CheckboxSetting
           label="Use webfonts"
