@@ -1,0 +1,9 @@
+FROM postgres:16-alpine
+
+RUN apk add --no-cache bash tzdata gzip
+
+WORKDIR /app
+COPY scripts/db-backup.sh /app/db-backup.sh
+RUN chmod +x /app/db-backup.sh
+
+ENTRYPOINT ["/app/db-backup.sh"]
