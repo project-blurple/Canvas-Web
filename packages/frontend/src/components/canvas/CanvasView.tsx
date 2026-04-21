@@ -717,6 +717,7 @@ export default function CanvasView() {
      * in on a specific pixel, we need to offset the image so that the pixel we're zooming in on
      * stays in the same place on the screen after the zoom.
      */
+    const container = containerRef.current;
     const handleWheel = (event: WheelEvent): void => {
       event.preventDefault();
       // Ensures that the handler can be added to a parent element but only operates on the canvas image wrapper.
@@ -739,12 +740,11 @@ export default function CanvasView() {
       handleZoom(scale, pointerPosition, elem);
     };
 
-    containerRef.current?.addEventListener("wheel", handleWheel, {
+    container?.addEventListener("wheel", handleWheel, {
       passive: false,
     });
 
-    return () =>
-      containerRef.current?.removeEventListener("wheel", handleWheel);
+    return () => container?.removeEventListener("wheel", handleWheel);
   }, [handleZoom, containerRef]);
 
   /********************************
