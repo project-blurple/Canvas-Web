@@ -1,12 +1,4 @@
-interface ColorSeedData {
-  id: number;
-  code: string;
-  emoji_name: string;
-  emoji_id: bigint;
-  global: boolean;
-  name: string;
-  rgba: [number, number, number, number];
-}
+import type { Prisma } from "../../client/generated/client";
 
 // These are all the colors available in the 2024 event
 export const colorSeedData = [
@@ -334,4 +326,4 @@ export const colorSeedData = [
     name: "Extreme Green",
     rgba: [197, 255, 0, 255],
   },
-] as const satisfies readonly ColorSeedData[];
+] as const satisfies readonly Prisma.colorCreateManyInput[];

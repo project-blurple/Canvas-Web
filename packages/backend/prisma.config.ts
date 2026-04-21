@@ -9,7 +9,7 @@ export default defineConfig({
     path: "prisma/views",
   },
   migrations: {
-    seed: "node --experimental-strip-types prisma/seed.ts",
+    seed: "node --experimental-strip-types --experimental-specifier-resolution=node src/seed/index.ts",
   },
   datasource: {
     url: process.env.DATABASE_URL,

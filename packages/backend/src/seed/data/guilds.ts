@@ -1,15 +1,11 @@
+import type { Prisma } from "../../client/generated/client";
+// @ts-expect-error Node strip-types runtime needs explicit .ts extension.
 import { colorSeedData } from "./colors.ts";
 
 const generatedGuildCount = 12;
 
-interface GuildSeedData {
-  id: bigint;
-  manager_role?: bigint;
-  invite?: string;
-}
-
-export function guildSeedData(): GuildSeedData[] {
-  const guilds: GuildSeedData[] = [
+export function guildSeedData(): Prisma.guildCreateManyInput[] {
+  const guilds: Prisma.guildCreateManyInput[] = [
     {
       id: 412754940885467146n,
       manager_role: 708540954302218311n,
@@ -31,13 +27,8 @@ export function guildSeedData(): GuildSeedData[] {
   return guilds;
 }
 
-interface DiscordGuildRecordSeedData {
-  guild_id: bigint;
-  name: string;
-}
-
-export function discordGuildRecordSeedData(): DiscordGuildRecordSeedData[] {
-  const guilds: DiscordGuildRecordSeedData[] = [
+export function discordGuildRecordSeedData(): Prisma.discord_guild_recordCreateManyInput[] {
+  const guilds: Prisma.discord_guild_recordCreateManyInput[] = [
     {
       guild_id: 412754940885467146n,
       name: "Project Blurple",
@@ -58,14 +49,8 @@ export function discordGuildRecordSeedData(): DiscordGuildRecordSeedData[] {
   return guilds;
 }
 
-interface ParticipationSeedData {
-  guild_id: bigint;
-  event_id: number;
-  color_id: number;
-}
-
-export function participationSeedData(): ParticipationSeedData[] {
-  const participations: ParticipationSeedData[] = [
+export function participationSeedData(): Prisma.participationCreateManyInput[] {
+  const participations: Prisma.participationCreateManyInput[] = [
     {
       guild_id: 281648235557421056n,
       event_id: 2024,

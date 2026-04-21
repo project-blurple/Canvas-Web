@@ -1,16 +1,6 @@
-interface InfoSeedData {
-  title: string;
-  canvas_admin: bigint[];
-  current_event_id: number;
-  cached_canvas_ids: number[];
-  admin_server_id: bigint;
-  current_emoji_server_id: bigint;
-  host_server_id: bigint;
-  default_canvas_id: number;
-  all_colors_global: boolean;
-}
+import type { Prisma } from "../../client/generated/client";
 
-export const infoSeedData: InfoSeedData = {
+export const infoSeedData: Prisma.infoUncheckedCreateInput = {
   title: "Canvas Dev",
   canvas_admin: [708540954302218311n],
   current_event_id: 2034,
@@ -23,11 +13,6 @@ export const infoSeedData: InfoSeedData = {
   all_colors_global: false,
 };
 
-interface EventSeedData {
-  id: number;
-  name: string;
-}
-
 export const eventSeedData = [
   {
     id: 2024,
@@ -37,19 +22,7 @@ export const eventSeedData = [
     id: 2034,
     name: "Testing Event",
   },
-] as const satisfies readonly EventSeedData[];
-
-interface CanvasSeedData {
-  id: number;
-  name: string;
-  locked: boolean;
-  event_id: number;
-  width: number;
-  height: number;
-  /** @privateRemarks Cooldown length in seconds between pixel placements on the canvas */
-  cooldown_length: number;
-  start_coordinates: [number, number];
-}
+] as const satisfies readonly Prisma.eventCreateManyInput[];
 
 export const canvasSeedData = [
   {
@@ -72,4 +45,4 @@ export const canvasSeedData = [
     cooldown_length: 15,
     start_coordinates: [1, 1],
   },
-] as const satisfies readonly CanvasSeedData[];
+] as const satisfies readonly Prisma.canvasCreateManyInput[];

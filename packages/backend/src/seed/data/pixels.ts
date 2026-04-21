@@ -1,8 +1,23 @@
 import { createReadStream } from "node:fs";
+import path from "node:path";
+import type { Prisma } from "../../client/generated/client";
+// @ts-expect-error Node strip-types runtime needs explicit .ts extension.
 import { canvasSeedData } from "./events.ts";
 
-const pixelSeedDataPath = new URL("./pixelData2024.csv", import.meta.url);
-const historySeedDataPath = new URL("./historyData2024.csv", import.meta.url);
+const pixelSeedDataPath = path.join(
+  process.cwd(),
+  "src",
+  "seed",
+  "data",
+  "pixelData2024.csv",
+);
+const historySeedDataPath = path.join(
+  process.cwd(),
+  "src",
+  "seed",
+  "data",
+  "historyData2024.csv",
+);
 const SEED_BATCH_SIZE = 2000;
 
 function normalizeCsvHeader(line: string): string {
@@ -12,8 +27,8 @@ function normalizeCsvHeader(line: string): string {
     .trim();
 }
 
-async function* readLines(path: URL): AsyncGenerator<string> {
-  const fileStream = createReadStream(path, { encoding: "utf8" });
+async function* readLines(filePath: string): AsyncGenerator<string> {
+  const fileStream = createReadStream(filePath, { encoding: "utf8" });
   let buffer = "";
 
   for await (const chunk of fileStream) {
@@ -33,14 +48,7 @@ async function* readLines(path: URL): AsyncGenerator<string> {
   }
 }
 
-interface PixelSeedData {
-  canvas_id: number;
-  x: number;
-  y: number;
-  color_id: number;
-}
-
-function parsePixelSeedData(line: string): PixelSeedData {
+function parsePixelSeedData(line: string): Prisma.pixelCreateManyInput {
   const [x, y, colorId] = line.split(",");
 
   return {
@@ -51,16 +59,16 @@ function parsePixelSeedData(line: string): PixelSeedData {
   };
 }
 
-async function* pixelSeedData2024Batches(): AsyncGenerator<PixelSeedData[]> {
-  const batch: PixelSeedData[] = [];
+async function* pixelSeedData2024Batches(): AsyncGenerator<
+  Prisma.pixelCreateManyInput[]
+> {
+  const batch: Prisma.pixelCreateManyInput[] = [];
   let isHeader = true;
 
   for await (const line of readLines(pixelSeedDataPath)) {
     if (isHeader) {
       if (normalizeCsvHeader(line) !== "x,y,color_id") {
-        throw new Error(
-          `Unexpected CSV header in ${pixelSeedDataPath.pathname}`,
-        );
+        throw new Error(`Unexpected CSV header in ${pixelSeedDataPath}`);
       }
 
       isHeader = false;
@@ -78,7 +86,7 @@ async function* pixelSeedData2024Batches(): AsyncGenerator<PixelSeedData[]> {
   }
 
   if (isHeader) {
-    throw new Error(`Unexpected empty CSV in ${pixelSeedDataPath.pathname}`);
+    throw new Error(`Unexpected empty CSV in ${pixelSeedDataPath}`);
   }
 
   if (batch.length > 0) {
@@ -86,9 +94,11 @@ async function* pixelSeedData2024Batches(): AsyncGenerator<PixelSeedData[]> {
   }
 }
 
-function* generatedPixelSeedDataBatches(): Generator<PixelSeedData[]> {
+function* generatedPixelSeedDataBatches(): Generator<
+  Prisma.pixelCreateManyInput[]
+> {
   const canvases = canvasSeedData.filter((canvas) => canvas.id !== 2024);
-  const batch: PixelSeedData[] = [];
+  const batch: Prisma.pixelCreateManyInput[] = [];
 
   for (const canvas of canvases) {
     for (let x = 0; x < canvas.width; x++) {
@@ -113,22 +123,14 @@ function* generatedPixelSeedDataBatches(): Generator<PixelSeedData[]> {
   }
 }
 
-export async function* pixelSeedDataBatches(): AsyncGenerator<PixelSeedData[]> {
+export async function* pixelSeedDataBatches(): AsyncGenerator<
+  Prisma.pixelCreateManyInput[]
+> {
   yield* pixelSeedData2024Batches();
   yield* generatedPixelSeedDataBatches();
 }
 
-interface HistorySeedData {
-  user_id: bigint;
-  canvas_id: number;
-  x: number;
-  y: number;
-  color_id: number;
-  timestamp: Date;
-  guild_id: bigint;
-}
-
-function parseHistorySeedData(line: string): HistorySeedData {
+function parseHistorySeedData(line: string): Prisma.historyCreateManyInput {
   const [userId, x, y, colorId, timestamp] = line.split(",");
 
   return {
@@ -143,17 +145,15 @@ function parseHistorySeedData(line: string): HistorySeedData {
 }
 
 async function* historySeedData2024Batches(): AsyncGenerator<
-  HistorySeedData[]
+  Prisma.historyCreateManyInput[]
 > {
-  const batch: HistorySeedData[] = [];
+  const batch: Prisma.historyCreateManyInput[] = [];
   let isHeader = true;
 
   for await (const line of readLines(historySeedDataPath)) {
     if (isHeader) {
       if (normalizeCsvHeader(line) !== "user_id,x,y,color_id,timestamp") {
-        throw new Error(
-          `Unexpected CSV header in ${historySeedDataPath.pathname}`,
-        );
+        throw new Error(`Unexpected CSV header in ${historySeedDataPath}`);
       }
 
       isHeader = false;
@@ -171,7 +171,7 @@ async function* historySeedData2024Batches(): AsyncGenerator<
   }
 
   if (isHeader) {
-    throw new Error(`Unexpected empty CSV in ${historySeedDataPath.pathname}`);
+    throw new Error(`Unexpected empty CSV in ${historySeedDataPath}`);
   }
 
   if (batch.length > 0) {
@@ -180,7 +180,7 @@ async function* historySeedData2024Batches(): AsyncGenerator<
 }
 
 export async function* historySeedDataBatches(): AsyncGenerator<
-  HistorySeedData[]
+  Prisma.historyCreateManyInput[]
 > {
   yield* historySeedData2024Batches();
 }

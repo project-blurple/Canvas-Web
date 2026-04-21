@@ -1,13 +1,9 @@
 const generatedUserCount = 20;
 
-interface DiscordUserProfileSeedData {
-  user_id: bigint;
-  username: string;
-  profile_picture_url: string;
-}
+import type { Prisma } from "../../client/generated/client";
 
-export function discordUserProfileSeedData(): DiscordUserProfileSeedData[] {
-  const users: DiscordUserProfileSeedData[] = [
+export function discordUserProfileSeedData(): Prisma.discord_user_profileCreateManyInput[] {
+  const users: Prisma.discord_user_profileCreateManyInput[] = [
     {
       user_id: 204778476102877187n,
       username: "rocked03",
@@ -32,18 +28,14 @@ export function discordUserProfileSeedData(): DiscordUserProfileSeedData[] {
   return users;
 }
 
-interface UserSeedData {
-  id: bigint;
-  /** @privateRemarks Used by the bot to track which canvas a user is currently active on, not supported in the web app */
-  current_canvas_id?: number;
-}
-
 export function userSeedData(
-  discordUsers: DiscordUserProfileSeedData[],
-): UserSeedData[] {
-  const users: UserSeedData[] = discordUsers.map((discordUser) => ({
-    id: discordUser.user_id,
-  }));
+  discordUsers: Prisma.discord_user_profileCreateManyInput[],
+): Prisma.userCreateManyInput[] {
+  const users: Prisma.userCreateManyInput[] = discordUsers.map(
+    (discordUser) => ({
+      id: discordUser.user_id,
+    }),
+  );
 
   return users;
 }

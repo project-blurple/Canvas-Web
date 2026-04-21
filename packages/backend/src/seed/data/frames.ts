@@ -1,16 +1,4 @@
-interface FrameSeedData {
-  id: string;
-  canvas_id: number;
-  owner_id: bigint;
-  is_guild_owned: boolean;
-  name: string;
-  x_0: number;
-  x_1: number;
-  y_0: number;
-  y_1: number;
-  /** @privateRemarks Used by the bot, not currently supported in the web app */
-  style_id: number;
-}
+import type { Prisma } from "../../client/generated/client";
 
 // These frames are real guild frames from the 2024 event
 // Does not include any user-owned frames
@@ -99,4 +87,4 @@ export const frameSeedData = [
     y_1: 25,
     style_id: 1,
   },
-] as const satisfies readonly FrameSeedData[];
+] as const satisfies readonly Prisma.frameCreateManyInput[];

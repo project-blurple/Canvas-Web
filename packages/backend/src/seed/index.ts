@@ -2,7 +2,8 @@ import console from "node:console";
 import { performance } from "node:perf_hooks";
 import process from "node:process";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../build/client/generated/client.js";
+// @ts-expect-error Runtime uses built JS Prisma client; no declaration file is emitted.
+import { PrismaClient } from "../../build/client/generated/client.js";
 import {
   canvasSeedData,
   colorSeedData,
@@ -16,7 +17,8 @@ import {
   participationSeedData,
   pixelSeedDataBatches,
   userSeedData,
-} from "./seed-data/index.ts";
+  // @ts-expect-error Node strip-types runtime needs explicit .ts extension.
+} from "./data/index.ts";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL ?? ""),
@@ -66,9 +68,67 @@ async function main() {
   type Seeding = (typeof allSeedings)[number];
   const seedings = new Set<Seeding>(allSeedings);
 
+  async function countRecords(seeding: Seeding): Promise<number> {
+    switch (seeding) {
+      case "canvas":
+        return prisma.canvas.count();
+      case "color":
+        return prisma.color.count();
+      case "discord_guild_record":
+        return prisma.discord_guild_record.count();
+      case "discord_user_profile":
+        return prisma.discord_user_profile.count();
+      case "event":
+        return prisma.event.count();
+      case "frame":
+        return prisma.frame.count();
+      case "guild":
+        return prisma.guild.count();
+      case "history":
+        return prisma.history.count();
+      case "info":
+        return prisma.info.count();
+      case "participation":
+        return prisma.participation.count();
+      case "pixel":
+        return prisma.pixel.count();
+      case "user":
+        return prisma.user.count();
+    }
+  }
+
+  function cleanupOperation(seeding: Seeding) {
+    switch (seeding) {
+      case "canvas":
+        return prisma.canvas.deleteMany();
+      case "color":
+        return prisma.color.deleteMany();
+      case "discord_guild_record":
+        return prisma.discord_guild_record.deleteMany();
+      case "discord_user_profile":
+        return prisma.discord_user_profile.deleteMany();
+      case "event":
+        return prisma.event.deleteMany();
+      case "frame":
+        return prisma.frame.deleteMany();
+      case "guild":
+        return prisma.guild.deleteMany();
+      case "history":
+        return prisma.history.deleteMany();
+      case "info":
+        return prisma.info.deleteMany();
+      case "participation":
+        return prisma.participation.deleteMany();
+      case "pixel":
+        return prisma.pixel.deleteMany();
+      case "user":
+        return prisma.user.deleteMany();
+    }
+  }
+
   if (!OVERWRITE) {
     for (const seeding of allSeedings) {
-      const count = await prisma[seeding].count();
+      const count = await countRecords(seeding);
       if (count && count >= 1) {
         seedings.delete(seeding);
       }
@@ -102,7 +162,7 @@ async function main() {
       (a, b) => order.indexOf(a) - order.indexOf(b),
     );
     await prisma.$transaction(
-      sortedSeedings.map((seeding) => prisma[seeding].deleteMany()),
+      sortedSeedings.map((seeding) => cleanupOperation(seeding)),
     );
   });
 
@@ -147,7 +207,7 @@ async function main() {
   // COLOR
   if (seedings.has("color")) {
     await runSeedingStep("color", async () => {
-      await prisma.color.createMany({ data: colorSeedData });
+      await prisma.color.createMany({ data: [...colorSeedData] });
     });
   }
 
@@ -156,7 +216,7 @@ async function main() {
   // EVENT
   if (seedings.has("event")) {
     await runSeedingStep("event", async () => {
-      await prisma.event.createMany({ data: eventSeedData });
+      await prisma.event.createMany({ data: [...eventSeedData] });
     });
   }
 
@@ -170,7 +230,7 @@ async function main() {
   // CANVAS
   if (seedings.has("canvas")) {
     await runSeedingStep("canvas", async () => {
-      await prisma.canvas.createMany({ data: canvasSeedData });
+      await prisma.canvas.createMany({ data: [...canvasSeedData] });
     });
   }
 
@@ -186,7 +246,7 @@ async function main() {
   // FRAME
   if (seedings.has("frame")) {
     await runSeedingStep("frame", async () => {
-      await prisma.frame.createMany({ data: frameSeedData });
+      await prisma.frame.createMany({ data: [...frameSeedData] });
     });
   }
 
@@ -213,11 +273,12 @@ async function main() {
   logWithTiming("Database seed completed");
 }
 
-try {
-  await main();
-  await prisma.$disconnect();
-} catch (e) {
-  console.error(e);
-  await prisma.$disconnect();
-  process.exit(1);
-}
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
