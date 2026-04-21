@@ -43,7 +43,7 @@ export default function PixelHistoryListItem({
 
   return (
     <Wrapper>
-      {record ?
+      {color ?
         <StyledSwatch key={color.code} rgba={color.rgba} />
       : <SwatchSkeleton variant="rectangular" />}
       <div>
@@ -53,7 +53,7 @@ export default function PixelHistoryListItem({
           : <Skeleton width={80} />}
         </Username>
         <ColorName>
-          {record ?
+          {color ?
             <>
               {color.name} <ColorCodeChip color={color} />
             </>
