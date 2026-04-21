@@ -8,6 +8,7 @@
     "declaration": true,
     "rootDir": "src",
     "outDir": "build",
+    "preserveWatchOutput": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
       "@/*": ["./src/*"]
