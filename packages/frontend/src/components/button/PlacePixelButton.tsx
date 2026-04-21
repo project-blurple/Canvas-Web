@@ -15,6 +15,7 @@ import { Button } from "./Button";
 import DynamicButton from "./DynamicButton";
 
 export const CoordinateLabel = styled("span")`
+  margin-inline-start: 0.25em;
   opacity: 0.6;
 `;
 
