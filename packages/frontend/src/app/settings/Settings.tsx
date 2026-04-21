@@ -5,8 +5,6 @@ import { useAudioContext } from "@/contexts";
 import CheckboxSetting from "./CheckboxSetting";
 
 const Wrapper = styled("div")`
-  border: 1px solid magenta;
-
   display: flex;
   flex-direction: column;
   gap: calc(2 * var(--layout-padding-y));
