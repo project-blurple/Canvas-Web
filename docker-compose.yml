@@ -17,6 +17,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    depends_on:
+      - backend
+    environment:
+      # 'backend' here is referencing the backend service. Docker compose automatically interprets
+      # this and forwards traffic to the appropriate container.
+      - NEXT_PUBLIC_API_URL=http://backend:8000
     ports:
       - "3000:3000"
 
