@@ -10,6 +10,8 @@
 
 Set `DATABASE_URL` in `.env` to a running PostgreSQL instance.
 
+Our schema and views require PostgreSQL 9.4 or newer.
+
 If you want Prisma to spin up a local development database for you, run:
 
 ```sh

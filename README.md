@@ -75,6 +75,8 @@ corepack enable pnpm
 pnpm --version
 ```
 
+Our schema and views require **PostgreSQL 9.4 or newer.**+.
+
 ### 🤫 Secrets & environment variables
 
 The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/project-blurple/Canvas-Web/graphs/contributors) if you need any secrets.
