@@ -8,6 +8,7 @@ import { BellRing, CaseSensitive } from "lucide-react";
 const Wrapper = styled("div")`
   inline-size: 40rem;
   margin-inline: auto;
+  max-inline-size: 100%;
   padding-block: 4rem;
   padding-inline: var(--layout-padding-x);
 `;
