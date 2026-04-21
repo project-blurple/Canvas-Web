@@ -32,5 +32,6 @@ ENV NODE_ENV=production
 
 COPY --from=builder /app/deploy .
 
-EXPOSE 8000
+ARG PORT
+EXPOSE $PORT
 CMD ["node", "build/index.js"]
