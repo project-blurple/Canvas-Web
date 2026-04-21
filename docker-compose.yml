@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.backend
     ports:
       - "8000:8000"
+    env_file:
+      - ./packages/backend/.env
 
   frontend:
     build:
