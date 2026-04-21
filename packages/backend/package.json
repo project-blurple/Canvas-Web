@@ -24,6 +24,7 @@
     "node": ">=24",
     "pnpm": ">=10.33.0"
   },
+  "main": "build/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.json",
     "dev": "nodemon src/index.ts --devmode",
