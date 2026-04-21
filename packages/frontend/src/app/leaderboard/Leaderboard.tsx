@@ -1,6 +1,7 @@
 "use client";
 
-import { styled } from "@mui/material";
+import { Pagination, PaginationItem, styled } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
@@ -41,8 +42,20 @@ const NoContentsMessage = styled("p")`
 
 export default function Leaderboard() {
   const { canvas } = useCanvasContext();
-  const { data: leaderboard = [], isLoading: isLeaderboardLoading } =
-    useLeaderboard(canvas.id);
+  const [page, setPage] = useState(1);
+  const {
+    data: { total, page: currentPage, size, entries: leaderboard } = {
+      total: undefined,
+      page: page,
+      size: 10,
+      entries: [],
+    },
+    isLoading: isLeaderboardLoading,
+  } = useLeaderboard(canvas.id, page);
+
+  useEffect(() => {
+    if (canvas.id) setPage(1);
+  }, [canvas.id]);
 
   const isLeaderboardEmpty = leaderboard.length === 0;
 
@@ -62,7 +75,7 @@ export default function Leaderboard() {
         </thead>
         <tbody>
           {isLeaderboardLoading ?
-            Array.from({ length: 10 }, (_, index) => (
+            Array.from({ length: size }, (_, index) => (
               <LeaderboardRowSkeleton key={index.toString()} />
             ))
           : isLeaderboardEmpty ?
@@ -73,6 +86,31 @@ export default function Leaderboard() {
           }
         </tbody>
       </Table>
+      <Pagination
+        page={page}
+        siblingCount={0}
+        boundaryCount={0}
+        showFirstButton
+        showLastButton
+        onChange={(_, value) => setPage(value)}
+        count={total ? Math.ceil(total / size) : currentPage}
+        color="primary"
+        size="large"
+        renderItem={(item) => {
+          switch (item.type) {
+            case "start-ellipsis":
+            case "end-ellipsis":
+              return null;
+            case "page":
+              if (item.page !== currentPage) return null;
+          }
+
+          return <PaginationItem {...item} />;
+        }}
+        sx={{
+          display: total === 0 ? "none" : "inherit",
+        }}
+      />
     </Wrapper>
   );
 }
