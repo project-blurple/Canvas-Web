@@ -12,7 +12,7 @@ const viewDefinitions = [
   ["public", "guild_stats"],
 ];
 
-function quoteIdentifier(identifier) {
+function quoteIdentifier(identifier: string): string {
   return `"${identifier.replaceAll('"', '""')}"`;
 }
 
