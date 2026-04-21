@@ -1,10 +1,12 @@
 "use client";
 
-import { Checkbox, styled } from "@mui/material";
-import { BellOff, BellRing, Volume2, VolumeOff } from "lucide-react";
+import { styled } from "@mui/material";
 import { useAudioContext } from "@/contexts";
+import CheckboxSetting from "./CheckboxSetting";
 
 const Wrapper = styled("div")`
+  border: 1px solid magenta;
+
   display: flex;
   flex-direction: column;
   gap: calc(2 * var(--layout-padding-y));
@@ -13,35 +15,9 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
-const TitleBlock = styled("div")`
-  text-align: center;
-`;
-
-const CategoryBlock = styled("div")`
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-`;
-
-const Table = styled("table")`
-  font-size: min(4svw, 1.75rem);
-  font-weight: 500;
-  inline-size: min(40rem, 100%);
-
-  th,
-  td {
-    --cell-padding: min(1.5svw, 1rem);
-    padding: var(--cell-padding);
-  }
-`;
-
-const StyledCheckbox = styled(Checkbox)`
-  color: var(--discord-white);
-
-  &.Mui-checked {
-    color: var(--discord-white);
-  }
+const Form = styled("form")`
+  border-radius: var(--card-border-radius);
+  border: var(--card-border);
 `;
 
 export default function Settings() {
@@ -54,44 +30,25 @@ export default function Settings() {
 
   return (
     <Wrapper>
-      <TitleBlock>
-        <h1>Settings</h1>
-      </TitleBlock>
-      <CategoryBlock>
-        <h2>Audio</h2>
-        <Table>
-          <thead hidden>
-            <tr>
-              <th>Value</th>
-              <th>Setting</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <StyledCheckbox
-                  icon={<VolumeOff />}
-                  checkedIcon={<Volume2 />}
-                  checked={playSounds}
-                  onChange={(_, checked) => setPlaySounds(checked)}
-                />
-              </td>
-              <td>Play sounds</td>
-            </tr>
-            <tr>
-              <td>
-                <StyledCheckbox
-                  icon={<BellOff />}
-                  checkedIcon={<BellRing />}
-                  checked={cooldownExpiryJingle}
-                  onChange={(_, checked) => setCooldownExpiryJingle(checked)}
-                />
-              </td>
-              <td>Cooldown expiry jingle</td>
-            </tr>
-          </tbody>
-        </Table>
-      </CategoryBlock>
+      <h1>Settings</h1>
+      <h2>Notification sounds</h2>
+      <Form>
+        <CheckboxSetting
+          label="Sound effects"
+          description=""
+          onChange={(e) => {
+            console.log(e);
+            setPlaySounds(e.target.checked);
+          }}
+          checked={playSounds}
+        />
+        <CheckboxSetting
+          label="Cooldown expiry jingle"
+          description="Play a sound when you can place another pixel"
+          checked={cooldownExpiryJingle}
+          onChange={(e) => setCooldownExpiryJingle(e.target.checked)}
+        />
+      </Form>
     </Wrapper>
   );
 }
