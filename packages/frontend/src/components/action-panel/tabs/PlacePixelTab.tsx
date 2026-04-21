@@ -44,6 +44,7 @@ const PlacePixelTabBlock = styled(TabBlock)`
 `;
 
 export const CoordinateLabel = styled("span")`
+  margin-inline-start: 0.25em;
   opacity: 0.6;
 `;
 
