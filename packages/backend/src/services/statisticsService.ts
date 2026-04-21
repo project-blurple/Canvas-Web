@@ -1,6 +1,7 @@
 import {
   CanvasInfo,
   LeaderboardEntry,
+  Paginated,
   UserStats,
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
@@ -48,15 +49,18 @@ export async function getUserStats(
 }
 
 /**
- * Retrieves the top n users on the leaderboard for a canvas, up to a maximum
- * of 40.
+ * Retrieves the top `size` (max 40), from the rank `(page - 1) * size`
+ * users on the leaderboard for a canvas.
  */
 export async function getLeaderboard(
   canvasId: CanvasInfo["id"],
+  page = 1,
   size = 10,
-): Promise<LeaderboardEntry[]> {
+): Promise<Paginated<LeaderboardEntry>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
-    take: Math.min(size, 40), // Arbitrary maximum
+    skip: Math.max((page - 1) * take, 0),
+    take,
     orderBy: {
       rank: "asc",
     },
@@ -76,13 +80,24 @@ export async function getLeaderboard(
     },
   });
 
-  return leaderboard.map((row) => ({
-    rank: row.rank,
-    userId: row.user_id.toString(),
-    totalPixels: row.total_pixels,
-    username: row.discord_user_profile?.username,
-    profilePictureUrl:
-      row.discord_user_profile?.profile_picture_url ??
-      createDefaultAvatarUrl(row.user_id),
-  }));
+  const total = await prisma.leaderboard.count({
+    where: {
+      canvas_id: canvasId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
 }

@@ -13,6 +13,7 @@ export const EventIdParamModel = z.object({
 export type LeaderboardParamModel = typeof CanvasIdParamModel;
 
 export const LeaderboardQueryModel = z.object({
+  page: z.coerce.number().int().positive().optional(),
   size: z.coerce.number().int().positive().optional(),
 });
 

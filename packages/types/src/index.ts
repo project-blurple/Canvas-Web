@@ -5,6 +5,7 @@ export type * from "./discordGuildRecord";
 export type * from "./discordUserProfile";
 export type * from "./event";
 export * from "./frame";
+export type * from "./pagination";
 export type * from "./palette";
 export type * from "./pixelHistory";
 export type * from "./pixelInfo";
