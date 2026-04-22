@@ -3,49 +3,81 @@
 import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 
-type AvatarProps = Pick<
-  DiscordUserProfile,
-  "username" | "profilePictureUrl"
-> & {
+interface AvatarProps
+  extends
+    Pick<DiscordUserProfile, "username" | "profilePictureUrl">,
+    React.ComponentPropsWithRef<"object"> {
   /** In pixels */
   size?: number;
-};
+}
 
 const StyledObject = styled("object")`
-  --stroke-width: max(0.125rem, 1px);
-
+  aspect-ratio: 1;
   border-radius: calc(infinity * 1px);
-  outline: oklch(from var(--discord-white) l c h / 12%) var(--stroke-width)
-    solid;
-  outline-offset: calc(-1 * var(--stroke-width));
+  border: oklch(from var(--discord-white) l c h / 12%) 1px solid;
+  object-fit: cover;
+  overflow: hidden;
 `;
 
 const AvatarImage = styled("img")`
   border-radius: inherit;
+  outline: inherit;
+  outline-offset: inherit;
+  aspect-ratio: 1;
+  object-fit: cover;
 `;
 
 export default function Avatar({
   username,
   profilePictureUrl,
   size,
+  ...props
 }: AvatarProps) {
+  const hash = (username.length % 6) as 0 | 1 | 2 | 3 | 4 | 5;
   return (
-    <StyledObject data={profilePictureUrl} width={size} height={size}>
+    <StyledObject
+      data={profilePictureUrl}
+      role="img"
+      width={size}
+      height={size}
+      style={{
+        minHeight: size,
+        minWidth: size,
+        height: size,
+        width: size,
+      }}
+      {...props}
+    >
       <AvatarImage
         alt={`${username}’s avatar`}
-        src="https://cdn.discordapp.com/embed/avatars/1.png"
+        src={`https://cdn.discordapp.com/embed/avatars/${hash}.png`}
+        width={size}
+        height={size}
+        style={{
+          minHeight: size,
+          minWidth: size,
+          height: size,
+          width: size,
+        }}
       />
     </StyledObject>
   );
 }
 
-export function AvatarSkeleton() {
+interface AvatarSkeletonProps extends React.ComponentPropsWithoutRef<
+  typeof Skeleton
+> {
+  size?: string | number | undefined;
+}
+
+export function AvatarSkeleton({ size, sx, ...props }: AvatarSkeletonProps) {
   return (
     <Skeleton
       variant="circular"
-      width="100%"
-      height="auto"
-      sx={{ aspectRatio: 1 }}
+      width={size ?? "100%"}
+      height={size ?? "auto"}
+      sx={{ aspectRatio: 1, ...sx }}
+      {...props}
     />
   );
 }
