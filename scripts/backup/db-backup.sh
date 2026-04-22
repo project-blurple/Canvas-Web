@@ -56,7 +56,7 @@ run_full_backup() {
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +"$RETENTION_DAYS" -delete || true
 }
 
 run_schema_backup() {
@@ -80,7 +80,7 @@ run_schema_backup() {
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +"$RETENTION_DAYS" -delete || true
 }
 
 run_unlocked_backup() {
@@ -107,11 +107,11 @@ run_unlocked_backup() {
     echo
   } > "$backup_file"
 
-  if [ -z "$unlocked_canvas_ids" ]; then
+  if [ "$unlocked_canvas_ids" = "" ]; then
     echo '-- No unlocked canvases found at backup time.' >> "$backup_file"
     gzip -f "$backup_file"
     echo "$(date -Is) Backup created (empty unlocked snapshot): $backup_file.gz"
-    find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
+    find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +"$RETENTION_DAYS" -delete || true
     return 0
   fi
 
@@ -126,7 +126,7 @@ run_unlocked_backup() {
     local cols
 
     cols="$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -At -v ON_ERROR_STOP=1 -c "SELECT string_agg(format('%I', column_name), ', ' ORDER BY ordinal_position) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '$table'")"
-    if [ -z "$cols" ]; then
+    if [ "$cols" = "" ]; then
       echo "Could not resolve columns for table $table" >&2
       return 1
     fi
@@ -148,7 +148,7 @@ run_unlocked_backup() {
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +"$RETENTION_DAYS" -delete || true
 }
 
 echo "Starting backup loop with UNLOCKED_INTERVAL_MINUTES=$UNLOCKED_INTERVAL_MINUTES, FULL_INTERVAL_MINUTES=$FULL_INTERVAL_MINUTES, RUN_SCHEMA_WITH_FULL=$RUN_SCHEMA_WITH_FULL, TZ=$TZ"
