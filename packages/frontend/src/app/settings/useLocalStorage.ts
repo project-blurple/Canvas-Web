@@ -35,17 +35,17 @@ const defaults = {
   webfonts: true,
 } as const satisfies LocalStorageValueTypes;
 
-export default function useLocalStorage<KeyT extends LocalStorageKey>(
-  key: KeyT,
+export default function useLocalStorage<Key extends LocalStorageKey>(
+  key: Key,
 ): [
-  LocalStorageValueTypes[KeyT] | undefined,
-  UseMutateFunction<void, Error, LocalStorageValueTypes[KeyT], unknown>,
+  LocalStorageValueTypes[Key] | undefined,
+  UseMutateFunction<void, Error, LocalStorageValueTypes[Key], unknown>,
 ] {
   const get = useCallback(() => {
     const raw = window.localStorage.getItem(key);
     try {
       return raw !== null ?
-          (JSON.parse(raw) as LocalStorageValueTypes[KeyT])
+          (JSON.parse(raw) as LocalStorageValueTypes[Key])
         : defaults[key];
     } catch (e) {
       if (!(e instanceof SyntaxError)) throw e;
@@ -57,14 +57,14 @@ export default function useLocalStorage<KeyT extends LocalStorageKey>(
     }
   }, [key]);
 
-  const { data } = useQuery<LocalStorageValueTypes[KeyT]>({
+  const { data } = useQuery<LocalStorageValueTypes[Key]>({
     queryKey: ["localStorage", key],
     queryFn: get,
   });
 
   const queryClient = useQueryClient();
   const set = useCallback(
-    async (newValue: LocalStorageValueTypes[KeyT]) => {
+    async (newValue: LocalStorageValueTypes[Key]) => {
       try {
         window.localStorage.setItem(key, JSON.stringify(newValue));
         await queryClient.invalidateQueries({
