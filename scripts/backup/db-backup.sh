@@ -22,17 +22,17 @@ mkdir -p "$BACKUP_DIR" "$STATE_DIR"
 export TZ=${TZ:-UTC}
 
 if ! [[ "$UNLOCKED_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || [ "$UNLOCKED_INTERVAL_MINUTES" -le 0 ]; then
-  echo "UNLOCKED_INTERVAL_MINUTES must be a positive integer." >&2
+  echo 'UNLOCKED_INTERVAL_MINUTES must be a positive integer.' >&2
   exit 1
 fi
 
 if ! [[ "$FULL_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || [ "$FULL_INTERVAL_MINUTES" -le 0 ]; then
-  echo "FULL_INTERVAL_MINUTES must be a positive integer." >&2
+  echo 'FULL_INTERVAL_MINUTES must be a positive integer.' >&2
   exit 1
 fi
 
 if ! [[ "$LOOP_SLEEP_SECONDS" =~ ^[0-9]+$ ]] || [ "$LOOP_SLEEP_SECONDS" -le 0 ]; then
-  echo "LOOP_SLEEP_SECONDS must be a positive integer." >&2
+  echo 'LOOP_SLEEP_SECONDS must be a positive integer.' >&2
   exit 1
 fi
 
@@ -56,7 +56,7 @@ run_full_backup() {
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
 }
 
 run_schema_backup() {
@@ -80,7 +80,7 @@ run_schema_backup() {
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
 }
 
 run_unlocked_backup() {
@@ -92,26 +92,26 @@ run_unlocked_backup() {
   unlocked_canvas_ids="$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -At -v ON_ERROR_STOP=1 -c "SELECT COALESCE(string_agg(id::text, ',' ORDER BY id), '') FROM public.canvas WHERE locked = false")"
 
   {
-    echo "-- Unlocked-canvas data backup"
+    echo '-- Unlocked-canvas data backup'
     echo "-- Generated at $(date -Is)"
-    echo "SET statement_timeout = 0;"
-    echo "SET lock_timeout = 0;"
-    echo "SET idle_in_transaction_session_timeout = 0;"
+    echo 'SET statement_timeout = 0;'
+    echo 'SET lock_timeout = 0;'
+    echo 'SET idle_in_transaction_session_timeout = 0;'
     echo "SET client_encoding = 'UTF8';"
-    echo "SET standard_conforming_strings = on;"
+    echo 'SET standard_conforming_strings = on;'
     echo "SELECT pg_catalog.set_config('search_path', '', false);"
-    echo "SET check_function_bodies = false;"
-    echo "SET xmloption = content;"
-    echo "SET client_min_messages = warning;"
-    echo "SET row_security = off;"
+    echo 'SET check_function_bodies = false;'
+    echo 'SET xmloption = content;'
+    echo 'SET client_min_messages = warning;'
+    echo 'SET row_security = off;'
     echo
   } > "$backup_file"
 
   if [ -z "$unlocked_canvas_ids" ]; then
-    echo "-- No unlocked canvases found at backup time." >> "$backup_file"
+    echo '-- No unlocked canvases found at backup time.' >> "$backup_file"
     gzip -f "$backup_file"
     echo "$(date -Is) Backup created (empty unlocked snapshot): $backup_file.gz"
-    find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
+    find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
     return 0
   fi
 
@@ -135,31 +135,31 @@ run_unlocked_backup() {
       echo
       echo "COPY public.$table ($cols) FROM stdin;"
       psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -c "COPY (SELECT $cols FROM public.$table WHERE $where_clause) TO STDOUT"
-      echo "\\."
+      echo '\.'
     } >> "$backup_file"
   }
 
-  append_copy_block "canvas" "id IN ($unlocked_canvas_ids)"
-  append_copy_block "pixel" "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block "history" "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block "cooldown" "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block "frame" "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block 'canvas' "id IN ($unlocked_canvas_ids)"
+  append_copy_block 'pixel' "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block 'history' "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block 'cooldown' "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block 'frame' "canvas_id IN ($unlocked_canvas_ids)"
 
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
 
-  find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
+  find "$BACKUP_DIR" -type f -name 'db-*.sql.gz' -mtime +$RETENTION_DAYS -delete || true
 }
 
 echo "Starting backup loop with UNLOCKED_INTERVAL_MINUTES=$UNLOCKED_INTERVAL_MINUTES, FULL_INTERVAL_MINUTES=$FULL_INTERVAL_MINUTES, RUN_SCHEMA_WITH_FULL=$RUN_SCHEMA_WITH_FULL, TZ=$TZ"
 
-if [ "$RUN_UNLOCKED_ON_START" = "true" ]; then
+if [ "$RUN_UNLOCKED_ON_START" = 'true' ]; then
   run_unlocked_backup
   date +%s > "$STATE_DIR/last_unlocked_epoch"
 fi
 
-if [ "$RUN_FULL_ON_START" = "true" ]; then
-  if [ "$RUN_SCHEMA_WITH_FULL" = "true" ]; then
+if [ "$RUN_FULL_ON_START" = 'true' ]; then
+  if [ "$RUN_SCHEMA_WITH_FULL" = 'true' ]; then
     run_full_backup &
     full_pid=$!
     run_schema_backup &
@@ -179,7 +179,7 @@ while true; do
   last_full_epoch=$(cat "$STATE_DIR/last_full_epoch" 2>/dev/null || echo 0)
   full_interval_seconds=$((FULL_INTERVAL_MINUTES * 60))
   if [ $((now_epoch - last_full_epoch)) -ge "$full_interval_seconds" ]; then
-    if [ "$RUN_SCHEMA_WITH_FULL" = "true" ]; then
+    if [ "$RUN_SCHEMA_WITH_FULL" = 'true' ]; then
       run_full_backup &
       full_pid=$!
       run_schema_backup &
@@ -189,15 +189,15 @@ while true; do
     else
       run_full_backup
     fi
-    printf '%s\n' "$now_epoch" > "$STATE_DIR/last_full_epoch"
-    printf '%s\n' "$now_epoch" > "$STATE_DIR/last_unlocked_epoch"
+    echo "$now_epoch" > "$STATE_DIR/last_full_epoch"
+    echo "$now_epoch" > "$STATE_DIR/last_unlocked_epoch"
   fi
 
   last_unlocked_epoch=$(cat "$STATE_DIR/last_unlocked_epoch" 2>/dev/null || echo 0)
   unlocked_interval_seconds=$((UNLOCKED_INTERVAL_MINUTES * 60))
   if [ $((now_epoch - last_unlocked_epoch)) -ge "$unlocked_interval_seconds" ]; then
     run_unlocked_backup
-    printf '%s\n' "$now_epoch" > "$STATE_DIR/last_unlocked_epoch"
+    echo "$now_epoch" > "$STATE_DIR/last_unlocked_epoch"
   fi
 
   sleep "$LOOP_SLEEP_SECONDS"
