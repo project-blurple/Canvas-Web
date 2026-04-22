@@ -20,6 +20,7 @@ export const CoordinateLabel = styled("span")`
 const Time = styled("time")`
   font-variant-numeric: tabular-nums;
 `;
+
 interface PlacePixelButtonProps {
   isVerbose: boolean;
 }
