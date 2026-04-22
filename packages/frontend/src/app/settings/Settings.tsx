@@ -19,6 +19,7 @@ const H1 = styled("h1")`
 `;
 
 const H2 = styled("h2")`
+  color: unset;
   font-size: 1.125rem;
   font-weight: 500;
   margin-block-end: 1em;
