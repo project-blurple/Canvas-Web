@@ -1,9 +1,11 @@
 "use client";
 
-import { Pagination, PaginationItem, styled } from "@mui/material";
-import { useEffect, useState } from "react";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
+import { styled } from "@mui/material";
+import Pagination from "@mui/material/Pagination";
+import PaginationItem from "@mui/material/PaginationItem";
+import { useEffect, useState } from "react";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
 
 const Wrapper = styled("div")`
