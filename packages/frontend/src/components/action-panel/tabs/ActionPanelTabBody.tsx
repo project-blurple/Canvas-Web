@@ -1,4 +1,5 @@
 import { styled } from "@mui/material";
+import React from "react";
 
 export const ActionPanelTabBody = styled("div")`
   display: block flex;
@@ -31,13 +32,19 @@ export const Block = styled("div")`
   }
 `;
 
-export const TabBlock = styled(Block, {
+const StyledBlock = styled(Block, {
   shouldForwardProp: (prop) => prop !== "active",
 })<{ active?: boolean }>`
   display: ${({ active }) => (active ? "grid" : "none")};
   gap: 0.5rem;
   grid-template-rows: auto 1fr auto;
 `;
+
+export function TabPanel(
+  props: React.ComponentPropsWithRef<typeof StyledBlock>,
+) {
+  return <StyledBlock role="tabpanel" {...props} />;
+}
 
 export const ScrollBlock = styled(Block)`
   align-self: stretch;

@@ -19,7 +19,7 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
-  TabBlock,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
@@ -39,7 +39,7 @@ const ColorPicker = styled("div")`
   }
 `;
 
-const PlacePixelTabBlock = styled(TabBlock)`
+const PlacePixelTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -70,7 +70,9 @@ function isUserInServer(user: DiscordUserProfile, serverId: string) {
   return guildIds.includes(serverId);
 }
 
-interface PlacePixelTabProps {
+interface PlacePixelTabProps extends React.ComponentPropsWithRef<
+  typeof PlacePixelTabBlock
+> {
   active?: boolean;
   eventId: number | null;
 }
@@ -78,6 +80,7 @@ interface PlacePixelTabProps {
 export default function PlacePixelTab({
   active = false,
   eventId,
+  ...props
 }: PlacePixelTabProps) {
   const { data: palette = [] } = usePalette(eventId ?? undefined);
   const [mainColors, partnerColors] = partitionPalette(palette);
@@ -149,7 +152,7 @@ export default function PlacePixelTab({
   }
 
   return (
-    <PlacePixelTabBlock active={active} ref={PlacePixelTabBlockRef}>
+    <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       <ScrollBlock>
         <ActionPanelTabBody>
           <ColorPicker>

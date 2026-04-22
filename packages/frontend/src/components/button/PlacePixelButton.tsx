@@ -19,9 +19,18 @@ export const CoordinateLabel = styled("span")`
   opacity: 0.6;
 `;
 
+const Time = styled("time")`
+  font-variant-numeric: tabular-nums;
+`;
+
 interface PlacePixelButtonProps {
   isVerbose: boolean;
 }
+
+const durationFormat =
+  "DurationFormat" in Intl ?
+    new Intl.DurationFormat("en-US", { style: "narrow" })
+  : undefined;
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
@@ -130,7 +139,13 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   if (timeLeft > 0) {
     return (
       <Button variant="contained" disabled>
-        On cooldown: {timeLeft} seconds left
+        On cooldown (
+        <Time>
+          {durationFormat?.format({ seconds: timeLeft }) ?? (
+            <>{timeLeft}&nbsp;s</>
+          )}
+        </Time>
+        )
       </Button>
     );
   }
