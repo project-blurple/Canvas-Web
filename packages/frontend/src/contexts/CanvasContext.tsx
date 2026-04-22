@@ -56,11 +56,22 @@ export const CanvasProvider = ({
       setCoords(null);
       setFrame(null);
 
+      // Only rewrite the URL when the user is on a canvas-bound route
+      // (/, /canvas, /canvas/:id). Other pages like /leaderboard or /me
+      // read the active canvas from context and should stay put when the
+      // user switches canvases — redirecting home in those cases was the
+      // bug reported in #442.
       const url = new URL(window.location.href);
-      url.pathname =
-        canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
-      url.search = "";
-      router.replace(`${url.pathname}${url.search}${url.hash}`);
+      const isCanvasRoute =
+        url.pathname === "/" ||
+        url.pathname === "/canvas" ||
+        url.pathname.startsWith("/canvas/");
+      if (isCanvasRoute) {
+        url.pathname =
+          canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
+        url.search = "";
+        router.replace(`${url.pathname}${url.search}${url.hash}`);
+      }
 
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
