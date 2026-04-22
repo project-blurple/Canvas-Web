@@ -30,7 +30,6 @@ const TitleBlock = styled("div")`
 const List = styled("ol")`
   display: grid;
   font-size: 1.2rem;
-  font-variant-numeric: tabular-nums;
   font-weight: 500;
   grid-template-columns: auto 1fr auto;
   inline-size: min(36rem, 100%);

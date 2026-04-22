@@ -53,8 +53,9 @@ const Username = styled("div")`
 `;
 
 const PixelCount = styled("div")`
-  font-weight: 500;
   color: oklch(from var(--discord-white) l c h / 55%);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
 `;
 
 const StyledAvatar = styled(Avatar)`
