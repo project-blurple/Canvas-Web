@@ -6,15 +6,18 @@ import CheckboxSetting from "./CheckboxSetting";
 import { BellRing, CaseSensitive } from "lucide-react";
 
 const Wrapper = styled("div")`
-  inline-size: 40rem;
+  display: flex;
+  flex-direction: column;
   margin-inline: auto;
-  max-inline-size: 100%;
   padding-block: 4rem;
   padding-inline: var(--layout-padding-x);
+  place-items: center;
+  > * {
+    inline-size: min(36rem, 100%);
+  }
 `;
 
 const H1 = styled("h1")`
-  margin-block-end: 4rem;
   text-align: center;
 `;
 
