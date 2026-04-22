@@ -14,7 +14,7 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
-  Tabpanel,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
@@ -34,7 +34,7 @@ const ColorPicker = styled("div")`
   }
 `;
 
-const PlacePixelTabBlock = styled(Tabpanel)`
+const PlacePixelTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 

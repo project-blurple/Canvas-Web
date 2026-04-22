@@ -18,14 +18,14 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
-  Tabpanel,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import ActionPanelTooltip from "./ActionPanelTooltip";
 import BotCommandCard from "./BotCommandCard";
 import { FramePreviewList } from "./FramePreviewList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
-const FramesTabBlock = styled(Tabpanel)`
+const FramesTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 

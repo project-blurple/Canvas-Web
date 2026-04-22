@@ -40,10 +40,10 @@ const StyledBlock = styled(Block, {
   grid-template-rows: auto 1fr auto;
 `;
 
-export function Tabpanel(
+export function TabPanel(
   props: React.ComponentPropsWithRef<typeof StyledBlock>,
 ) {
-  return <StyledBlock role="tabpanel" {...props} />;
+  return <StyledBlock role="TabPanel" {...props} />;
 }
 
 export const ScrollBlock = styled(Block)`
