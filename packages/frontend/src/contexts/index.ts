@@ -1,4 +1,3 @@
-export { AudioProvider, useAudioContext } from "./AudioContext";
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { CanvasViewProvider, useCanvasViewContext } from "./CanvasViewContext";

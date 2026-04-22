@@ -1,9 +1,9 @@
 "use client";
 
-import { useAudioContext } from "@/contexts";
 import { styled } from "@mui/material";
-import CheckboxSetting from "./CheckboxSetting";
 import { BellRing, CaseSensitive } from "lucide-react";
+import CheckboxSetting from "./CheckboxSetting";
+import useLocalStorage from "./useLocalStorage";
 
 const Wrapper = styled("div")`
   inline-size: 40rem;
@@ -39,14 +39,46 @@ const Form = styled("form")`
   border: var(--card-border);
 `;
 
-export default function Settings() {
-  const {
-    playSounds,
-    cooldownExpiryJingle,
-    setPlaySounds,
-    setCooldownExpiryJingle,
-  } = useAudioContext();
+function SoundEffectsSetting() {
+  const [value, setValue] = useLocalStorage("sound-fx");
+  return (
+    <CheckboxSetting
+      checked={value}
+      description="Play sound effects as you interact with a canvas"
+      label="Sound effects"
+      name="sound-fx"
+      onChange={(e) => setValue(e.target.checked)}
+    />
+  );
+}
 
+function CooldownExpiryJingleSetting() {
+  const [value, setValue] = useLocalStorage("cooldown-jingle");
+  return (
+    <CheckboxSetting
+      checked={value}
+      description="Play a sound when you can place another pixel"
+      label="Cooldown expiry jingle"
+      name="cooldown-jingle"
+      onChange={(e) => setValue(e.target.checked)}
+    />
+  );
+}
+
+function WebfontsSetting() {
+  const [value, setValue] = useLocalStorage("webfonts");
+  return (
+    <CheckboxSetting
+      checked={value}
+      description="Uncheck to use system fonts"
+      label="Use webfonts"
+      name="webfonts"
+      onChange={(e) => setValue(e.target.checked)}
+    />
+  );
+}
+
+export default function Settings() {
   return (
     <Wrapper>
       <H1>Settings</H1>
@@ -56,20 +88,8 @@ export default function Settings() {
         Notification sounds
       </H2>
       <Form>
-        <CheckboxSetting
-          checked={playSounds}
-          description="Play sound effects as you interact with a canvas"
-          label="Sound effects"
-          name="sound-fx"
-          onChange={(e) => setPlaySounds(e.target.checked)}
-        />
-        <CheckboxSetting
-          checked={cooldownExpiryJingle}
-          description="Play a sound when you can place another pixel"
-          label="Cooldown expiry jingle"
-          name="cooldown-jingle"
-          onChange={(e) => setCooldownExpiryJingle(e.target.checked)}
-        />
+        <SoundEffectsSetting />
+        <CooldownExpiryJingleSetting />
       </Form>
 
       <H2>
@@ -77,10 +97,7 @@ export default function Settings() {
         Webfonts
       </H2>
       <Form>
-        <CheckboxSetting
-          label="Use webfonts"
-          description="Uncheck to use system fonts"
-        />
+        <WebfontsSetting />
       </Form>
     </Wrapper>
   );
