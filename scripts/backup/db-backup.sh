@@ -21,17 +21,17 @@ RUN_SCHEMA_WITH_FULL=${RUN_SCHEMA_WITH_FULL:-true}
 mkdir -p "$BACKUP_DIR" "$STATE_DIR"
 export TZ=${TZ:-UTC}
 
-if ! [[ "$UNLOCKED_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || [ "$UNLOCKED_INTERVAL_MINUTES" -le 0 ]; then
+if ! [[ "$UNLOCKED_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || (( UNLOCKED_INTERVAL_MINUTES < 0 )); then
   echo 'UNLOCKED_INTERVAL_MINUTES must be a positive integer.' >&2
   exit 1
 fi
 
-if ! [[ "$FULL_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || [ "$FULL_INTERVAL_MINUTES" -le 0 ]; then
+if ! [[ "$FULL_INTERVAL_MINUTES" =~ ^[0-9]+$ ]] || (( FULL_INTERVAL_MINUTES < 0 )); then
   echo 'FULL_INTERVAL_MINUTES must be a positive integer.' >&2
   exit 1
 fi
 
-if ! [[ "$LOOP_SLEEP_SECONDS" =~ ^[0-9]+$ ]] || [ "$LOOP_SLEEP_SECONDS" -le 0 ]; then
+if ! [[ "$LOOP_SLEEP_SECONDS" =~ ^[0-9]+$ ]] || (( LOOP_SLEEP_SECONDS < 0 )); then
   echo 'LOOP_SLEEP_SECONDS must be a positive integer.' >&2
   exit 1
 fi
