@@ -43,7 +43,7 @@ const StyledBlock = styled(Block, {
 export function TabPanel(
   props: React.ComponentPropsWithRef<typeof StyledBlock>,
 ) {
-  return <StyledBlock role="TabPanel" {...props} />;
+  return <StyledBlock role="tabpanel" {...props} />;
 }
 
 export const ScrollBlock = styled(Block)`
