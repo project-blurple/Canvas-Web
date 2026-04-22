@@ -1,13 +1,13 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
-import { css, styled } from "@mui/material";
-import { useState } from "react";
 import {
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
+import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
+import React, { useState } from "react";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
@@ -29,7 +29,7 @@ const Wrapper = styled("div")`
 
   ${({ theme }) => theme.breakpoints.down("md")} {
     border-radius: 0;
-    border: initial;
+    border: unset;
   }
 `;
 
@@ -41,7 +41,7 @@ const TabBar = styled("ul")`
   list-style-type: none;
 `;
 
-const TabStyle = styled("li")<{ active?: boolean }>`
+const StyledTab = styled("li")`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -51,18 +51,10 @@ const TabStyle = styled("li")<{ active?: boolean }>`
   place-items: center;
   text-align: center;
   touch-action: manipulation;
-  transition:
-    background-color var(--transition-duration-fast) ease,
-    color var(--transition-duration-fast) ease,
-    outline var(--transition-duration-fast) ease;
+  transition-duration: var(--transition-duration-fast);
+  transition-property: background, color, outline;
+  transition-timing-function: ease;
   user-select: none;
-
-  ${({ active }) =>
-    active ?
-      css`
-        background-color: var(--discord-legacy-dark-but-not-black);
-      `
-    : ""}
 
   /*
   * Workaround for accessibility issue with VoiceOver.
@@ -72,18 +64,22 @@ const TabStyle = styled("li")<{ active?: boolean }>`
     content: "\\200B"; /* zero-width space */
   }
 
+  &[aria-selected="true"] {
+    background-color: var(--discord-legacy-dark-but-not-black);
+  }
+
   @media (hover: hover) and (pointer: fine) {
-    :hover {
+    &:hover {
       background-color: var(--discord-legacy-dark-but-not-black);
     }
   }
 
-  :focus-visible {
+  &:focus-visible {
     background-color: var(--discord-legacy-dark-but-not-black);
     outline: var(--focus-outline);
   }
 
-  :active {
+  &:active {
     background-color: var(--discord-legacy-greyple);
   }
 `;
@@ -98,53 +94,40 @@ export const Heading = styled("h2")`
   text-transform: uppercase;
 `;
 
-enum TABS {
-  LOOK = "Look",
-  PLACE = "Place",
-  FRAME = "Frame",
-}
+type TabKey = "look" | "place" | "frame";
 
 function Tab({
   tabKey,
-  label,
-  currentTab,
   onSwitchTab,
+  ...props
 }: {
-  tabKey: TABS;
-  label: string;
-  currentTab: TABS;
-  onSwitchTab: (tab: TABS) => void;
-}) {
-  const isActive = currentTab === tabKey;
-
+  tabKey: TabKey;
+  onSwitchTab: (tabKey: TabKey) => void;
+} & React.ComponentPropsWithRef<typeof StyledTab>) {
   return (
-    <TabStyle
-      active={isActive}
+    <StyledTab
       onClick={() => onSwitchTab(tabKey)}
       onKeyUp={(event) => {
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
-      tabIndex={0}
-    >
-      {label}
-    </TabStyle>
+      {...props}
+    />
   );
 }
 
 export default function ActionPanel() {
-  const [currentTab, setCurrentTab] = useState(TABS.PLACE);
+  const [currentTab, setCurrentTab] = useState("place");
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
   const { setIsReticleVisible } = useCanvasViewContext();
 
-  const onSwitchTab = (newTab: TABS) => {
-    // switching tabs
+  const onSwitchTab = (newTab: TabKey) => {
     setCurrentTab(newTab);
 
     // hiding colour from reticle if we are on look tab
-    if (newTab === TABS.LOOK) {
+    if (newTab === "look") {
       setTempColor(color);
       setColor(null);
     } else {
@@ -152,37 +135,37 @@ export default function ActionPanel() {
     }
 
     // hiding reticle if we are on frames tab
-    setIsReticleVisible(newTab !== TABS.FRAME);
+    setIsReticleVisible(newTab !== "frame");
   };
 
   return (
     <Wrapper>
       <TabBar>
         <Tab
-          tabKey={TABS.PLACE}
-          label="Place"
-          currentTab={currentTab}
+          aria-selected={currentTab === "place"}
+          tabKey="place"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Place
+        </Tab>
         <Tab
-          tabKey={TABS.LOOK}
-          label="Look"
-          currentTab={currentTab}
+          aria-selected={currentTab === "look"}
+          tabKey="look"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Look
+        </Tab>
         <Tab
-          tabKey={TABS.FRAME}
-          label="Frame"
-          currentTab={currentTab}
+          aria-selected={currentTab === "frame"}
+          tabKey="frame"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Frame
+        </Tab>
       </TabBar>
-      <PlacePixelTab
-        active={currentTab === TABS.PLACE}
-        eventId={canvas.eventId}
-      />
-      <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
-      <FramesTab active={currentTab === TABS.FRAME} canvasId={canvas.id} />
+      <PlacePixelTab active={currentTab === "place"} eventId={canvas.eventId} />
+      <PixelInfoTab active={currentTab === "look"} canvasId={canvas.id} />
+      <FramesTab active={currentTab === "frame"} canvasId={canvas.id} />
     </Wrapper>
   );
 }
