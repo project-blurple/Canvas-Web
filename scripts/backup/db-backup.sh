@@ -37,10 +37,10 @@ if ! [[ "$LOOP_SLEEP_SECONDS" =~ ^[0-9]+$ ]] || [ "$LOOP_SLEEP_SECONDS" -le 0 ];
 fi
 
 run_full_backup() {
-  local ts out
+  local backup_timestamp backup_file
 
-  ts="$(date +%F_%H-%M-%S)"
-  out="$BACKUP_DIR/db-full-$ts.sql"
+  backup_timestamp="$(date +%F_%H-%M-%S)"
+  backup_file="$BACKUP_DIR/db-full-$backup_timestamp.sql"
 
   pg_dump \
     --host="$PGHOST" \
@@ -51,19 +51,19 @@ run_full_backup() {
     --encoding=UTF8 \
     --no-owner \
     --no-privileges \
-    --file="$out"
+    --file="$backup_file"
 
-  gzip -f "$out"
-  echo "$(date -Is) Backup created: $out.gz"
+  gzip -f "$backup_file"
+  echo "$(date -Is) Backup created: $backup_file.gz"
 
   find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
 }
 
 run_schema_backup() {
-  local ts out
+  local backup_timestamp backup_file
 
-  ts="$(date +%F_%H-%M-%S)"
-  out="$BACKUP_DIR/db-schema-$ts.sql"
+  backup_timestamp="$(date +%F_%H-%M-%S)"
+  backup_file="$BACKUP_DIR/db-schema-$backup_timestamp.sql"
 
   pg_dump \
     --host="$PGHOST" \
@@ -75,19 +75,19 @@ run_schema_backup() {
     --encoding=UTF8 \
     --no-owner \
     --no-privileges \
-    --file="$out"
+    --file="$backup_file"
 
-  gzip -f "$out"
-  echo "$(date -Is) Backup created: $out.gz"
+  gzip -f "$backup_file"
+  echo "$(date -Is) Backup created: $backup_file.gz"
 
   find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
 }
 
 run_unlocked_backup() {
-  local ts out unlocked_canvas_ids
+  local backup_timestamp backup_file unlocked_canvas_ids
 
-  ts="$(date +%F_%H-%M-%S)"
-  out="$BACKUP_DIR/db-unlocked-$ts.sql"
+  backup_timestamp="$(date +%F_%H-%M-%S)"
+  backup_file="$BACKUP_DIR/db-unlocked-$backup_timestamp.sql"
 
   unlocked_canvas_ids="$(psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -At -v ON_ERROR_STOP=1 -c "SELECT COALESCE(string_agg(id::text, ',' ORDER BY id), '') FROM public.canvas WHERE locked = false")"
 
@@ -105,12 +105,12 @@ run_unlocked_backup() {
     echo "SET client_min_messages = warning;"
     echo "SET row_security = off;"
     echo
-  } > "$out"
+  } > "$backup_file"
 
   if [ -z "$unlocked_canvas_ids" ]; then
-    echo "-- No unlocked canvases found at backup time." >> "$out"
-    gzip -f "$out"
-    echo "$(date -Is) Backup created (empty unlocked snapshot): $out.gz"
+    echo "-- No unlocked canvases found at backup time." >> "$backup_file"
+    gzip -f "$backup_file"
+    echo "$(date -Is) Backup created (empty unlocked snapshot): $backup_file.gz"
     find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
     return 0
   fi
@@ -136,7 +136,7 @@ run_unlocked_backup() {
       echo "COPY public.$table ($cols) FROM stdin;"
       psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 -c "COPY (SELECT $cols FROM public.$table WHERE $where_clause) TO STDOUT"
       echo "\\."
-    } >> "$out"
+    } >> "$backup_file"
   }
 
   append_copy_block "canvas" "id IN ($unlocked_canvas_ids)"
@@ -145,8 +145,8 @@ run_unlocked_backup() {
   append_copy_block "cooldown" "canvas_id IN ($unlocked_canvas_ids)"
   append_copy_block "frame" "canvas_id IN ($unlocked_canvas_ids)"
 
-  gzip -f "$out"
-  echo "$(date -Is) Backup created: $out.gz"
+  gzip -f "$backup_file"
+  echo "$(date -Is) Backup created: $backup_file.gz"
 
   find "$BACKUP_DIR" -type f -name "db-*.sql.gz" -mtime +$RETENTION_DAYS -delete || true
 }
