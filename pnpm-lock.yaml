@@ -151,8 +151,8 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0(@emotion/cache@11.14.0)(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(next@16.2.3(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.5(react@19.2.4))(react@19.2.4))(react@19.2.4)
       '@tanstack/react-query':
-        specifier: ^5.96.2
-        version: 5.96.2(react@19.2.4)
+        specifier: ^5.99.2
+        version: 5.99.2(react@19.2.4)
       axios:
         specifier: ^1.15.0
         version: 1.15.0
@@ -1132,11 +1132,11 @@ packages:
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
 
-  '@tanstack/query-core@5.96.2':
-    resolution: {integrity: sha512-hzI6cTVh4KNRk8UtoIBS7Lv9g6BnJPXvBKsvYH1aGWvv0347jT3BnSvztOE+kD76XGvZnRC/t6qdW1CaIfwCeA==}
+  '@tanstack/query-core@5.99.2':
+    resolution: {integrity: sha512-1HunU0bXVsR1ZJMZbcOPE6VtaBJxsW809RE9xPe4Gz7MlB0GWwQvuTPhMoEmQ/hIzFKJ/DWAuttIe7BOaWx0tA==}
 
-  '@tanstack/react-query@5.96.2':
-    resolution: {integrity: sha512-sYyzzJT4G0g02azzJ8o55VFFV31XvFpdUpG+unxS0vSaYsJnSPKGoI6WdPwUucJL1wpgGfwfmntNX/Ub1uOViA==}
+  '@tanstack/react-query@5.99.2':
+    resolution: {integrity: sha512-vM91UEe45QUS9ED6OklsVL15i8qKcRqNwpWzPTVWvRPRSEgDudDgHpvyTjcdlwHcrKNa80T+xXYcchT2noPnZA==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -4279,11 +4279,11 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
-  '@tanstack/query-core@5.96.2': {}
+  '@tanstack/query-core@5.99.2': {}
 
-  '@tanstack/react-query@5.96.2(react@19.2.4)':
+  '@tanstack/react-query@5.99.2(react@19.2.4)':
     dependencies:
-      '@tanstack/query-core': 5.96.2
+      '@tanstack/query-core': 5.99.2
       react: 19.2.4
 
   '@testcontainers/postgresql@11.14.0':
