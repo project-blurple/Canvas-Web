@@ -44,6 +44,10 @@ const NoContentsMessage = styled("p")`
   text-align: center;
 `;
 
+const StyledPaginationItem = styled(PaginationItem)`
+  font-variant-numeric: tabular-nums;
+`;
+
 const customIconSlots = {
   first: ChevronFirst,
   previous: ChevronLeft,
@@ -101,7 +105,7 @@ export default function Leaderboard() {
         onChange={(_, value) => setPage(value)}
         page={page}
         renderItem={(item) => (
-          <PaginationItem slots={customIconSlots} {...item} />
+          <StyledPaginationItem slots={customIconSlots} {...item} />
         )}
         shape="rounded"
         showFirstButton
