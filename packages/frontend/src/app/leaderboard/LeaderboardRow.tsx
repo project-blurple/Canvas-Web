@@ -101,7 +101,8 @@ export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
       <UsernameWrapper>
         <Username>{entry.username ?? entry.userId}</Username>
         <PixelCount>
-          {entry.totalPixels.toLocaleString()}&nbsp;pixels
+          {entry.totalPixels.toLocaleString()}&nbsp;
+          {entry.totalPixels === 1 ? "pixel" : "pixels"}
         </PixelCount>
       </UsernameWrapper>
       <StyledAvatar
