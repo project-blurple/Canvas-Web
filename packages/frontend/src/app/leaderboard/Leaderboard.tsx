@@ -19,17 +19,13 @@ const TitleBlock = styled("div")`
   text-align: center;
 `;
 
-const Table = styled("table")`
-  font-size: min(4svw, 1.75rem);
+const List = styled("ol")`
+  display: grid;
+  font-size: 1.2rem;
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  inline-size: min(40rem, 100%);
-
-  th,
-  td {
-    --cell-padding: min(1.5svw, 1rem);
-    padding: var(--cell-padding);
-  }
+  grid-template-columns: auto 1fr auto;
+  inline-size: min(36rem, 100%);
 `;
 
 const NoContentsMessage = styled("p")`
@@ -65,27 +61,20 @@ export default function Leaderboard() {
         <h1>Leaderboard</h1>
         <h2>{canvas.name}</h2>
       </TitleBlock>
-      <Table>
-        <thead hidden>
-          <tr>
-            <th>Rank</th>
-            <th>User</th>
-            <th>Pixels placed</th>
-          </tr>
-        </thead>
-        <tbody>
-          {isLeaderboardLoading ?
-            Array.from({ length: size }, (_, index) => (
-              <LeaderboardRowSkeleton key={index.toString()} />
-            ))
-          : isLeaderboardEmpty ?
-            <NoContentsMessage>No leaderboard found</NoContentsMessage>
-          : leaderboard.map((entry) => (
-              <LeaderboardRow key={entry.userId} entry={entry} />
-            ))
-          }
-        </tbody>
-      </Table>
+
+      {/** biome-ignore lint/a11y/noRedundantRoles: <explanation> */}
+      <List start={leaderboard?.[0]?.rank} role="list">
+        {isLeaderboardLoading ?
+          Array.from({ length: 10 }, (_, index) => (
+            <LeaderboardRowSkeleton key={index.toString()} />
+          ))
+        : isLeaderboardEmpty ?
+          <NoContentsMessage>No leaderboard found</NoContentsMessage>
+        : leaderboard.map((entry) => (
+            <LeaderboardRow key={entry.userId} entry={entry} />
+          ))
+        }
+      </List>
       <Pagination
         page={page}
         siblingCount={0}
