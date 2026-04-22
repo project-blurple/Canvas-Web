@@ -67,11 +67,9 @@ export default function useLocalStorage<KeyT extends LocalStorageKey>(
     async (newValue: LocalStorageValueTypes[KeyT]) => {
       try {
         window.localStorage.setItem(key, JSON.stringify(newValue));
-        console.time("invalidate");
         await queryClient.invalidateQueries({
           queryKey: ["localStorage", key],
         });
-        console.timeEnd("invalidate");
       } catch (e) {
         console.error(e); // TODO: Reveal this error to user
       }
