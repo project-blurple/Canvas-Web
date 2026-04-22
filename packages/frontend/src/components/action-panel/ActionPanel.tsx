@@ -1,13 +1,13 @@
 "use client";
 
+import { PaletteColor } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
+import React, { useId, useState } from "react";
 import {
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { PaletteColor } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
-import React, { useState } from "react";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
@@ -33,15 +33,25 @@ const Wrapper = styled("div")`
   }
 `;
 
-const TabBar = styled("ul")`
+const TabBar = styled("div")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
-  list-style-type: none;
 `;
 
-const StyledTab = styled("li")`
+const StyledTab = styled("button")`
+  appearance: none;
+  background-color: unset;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  line-height: inherit;
+  text-align: inherit;
+  text-decoration-thickness: from-font;
+
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -111,6 +121,7 @@ function Tab({
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
       {...props}
+      role="tab"
     />
   );
 }
@@ -138,10 +149,15 @@ export default function ActionPanel() {
     setIsReticleVisible(newTab !== "frame");
   };
 
+  const placeTabId = useId();
+  const lookTabId = useId();
+  const frameTabId = useId();
+
   return (
     <Wrapper>
-      <TabBar>
+      <TabBar role="tablist">
         <Tab
+          aria-controls={placeTabId}
           aria-selected={currentTab === "place"}
           tabKey="place"
           onSwitchTab={onSwitchTab}
@@ -149,6 +165,7 @@ export default function ActionPanel() {
           Place
         </Tab>
         <Tab
+          aria-controls={lookTabId}
           aria-selected={currentTab === "look"}
           tabKey="look"
           onSwitchTab={onSwitchTab}
@@ -156,6 +173,7 @@ export default function ActionPanel() {
           Look
         </Tab>
         <Tab
+          aria-controls={frameTabId}
           aria-selected={currentTab === "frame"}
           tabKey="frame"
           onSwitchTab={onSwitchTab}
@@ -163,9 +181,21 @@ export default function ActionPanel() {
           Frame
         </Tab>
       </TabBar>
-      <PlacePixelTab active={currentTab === "place"} eventId={canvas.eventId} />
-      <PixelInfoTab active={currentTab === "look"} canvasId={canvas.id} />
-      <FramesTab active={currentTab === "frame"} canvasId={canvas.id} />
+      <PlacePixelTab
+        active={currentTab === "place"}
+        eventId={canvas.eventId}
+        id={placeTabId}
+      />
+      <PixelInfoTab
+        active={currentTab === "look"}
+        canvasId={canvas.id}
+        id={lookTabId}
+      />
+      <FramesTab
+        active={currentTab === "frame"}
+        canvasId={canvas.id}
+        id={frameTabId}
+      />
     </Wrapper>
   );
 }

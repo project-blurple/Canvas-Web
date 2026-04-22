@@ -9,14 +9,14 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
-  TabBlock,
+  Tabpanel,
 } from "./ActionPanelTabBody";
 import ActionPanelTooltip from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 import { CoordinateLabel } from "./PlacePixelTab";
 
-const PixelInfoTabBlock = styled(TabBlock)`
+const PixelInfoTabBlock = styled(Tabpanel)`
   grid-template-rows: auto 1fr;
 `;
 
