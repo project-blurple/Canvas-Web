@@ -50,6 +50,7 @@ function SoundEffectsSetting() {
   const [value, setValue] = useLocalStorage("sound-fx");
   return (
     <CheckboxSetting
+      aria-busy={value === undefined}
       checked={value}
       description="Play sound effects as you interact with a canvas"
       label="Sound effects"
@@ -63,6 +64,7 @@ function CooldownExpiryJingleSetting() {
   const [value, setValue] = useLocalStorage("cooldown-jingle");
   return (
     <CheckboxSetting
+      aria-busy={value === undefined}
       checked={value}
       description="Play a sound when you can place another pixel"
       label="Cooldown expiry jingle"
@@ -76,6 +78,7 @@ function WebfontsSetting() {
   const [value, setValue] = useLocalStorage("webfonts");
   return (
     <CheckboxSetting
+      aria-busy={value === undefined}
       checked={value}
       description="Uncheck to use system fonts"
       label="Use webfonts"

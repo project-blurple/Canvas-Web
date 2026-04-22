@@ -48,6 +48,7 @@ interface CheckboxSettingProps
 }
 
 export default function CheckboxSetting({
+  "aria-busy": ariaBusy,
   checked,
   description,
   label,
@@ -59,7 +60,9 @@ export default function CheckboxSetting({
   return (
     <Wrapper {...props}>
       <input
-        checked={checked}
+        aria-busy={ariaBusy}
+        checked={checked ?? false}
+        disabled={ariaBusy}
         id={id}
         name={name}
         onChange={onChange}
