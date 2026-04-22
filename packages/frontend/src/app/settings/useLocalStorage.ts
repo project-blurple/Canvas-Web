@@ -16,9 +16,9 @@ type JsonDataType =
   | JsonDataType[]
   | { [key: string]: JsonDataType };
 
-type AssertSatisfies<T extends BaseT, BaseT> = T;
+type Satisfies<T extends BaseT, BaseT> = T;
 
-interface LocalStorageValueTypes extends AssertSatisfies<
+interface LocalStorageValueTypes extends Satisfies<
   {
     "cooldown-jingle": boolean;
     "sound-fx": boolean;
