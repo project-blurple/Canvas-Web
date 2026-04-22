@@ -88,8 +88,9 @@ const InviteButton = styled(Button)`
   box-shadow: 0 0 10px rgba(0 0 0 / 25%);
   color: white;
   font-size: 1.2rem;
-  font-variation-settings: "wdth" 125;
   font-weight: 900;
+  font-stretch: 125%;
+  font-width: 125%;
   inset-inline-end: 0.5rem;
   padding-block: 0.1rem;
   padding-inline: 1rem;

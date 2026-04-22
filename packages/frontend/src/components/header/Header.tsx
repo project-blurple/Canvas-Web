@@ -41,8 +41,9 @@ const CompositeLogo = styled(NavLink)`
 
 const Wordmark = styled("div")`
   display: none;
-  font-variation-settings: "wdth" 125;
   font-weight: 900;
+  font-stretch: 125%;
+  font-width: 125%;
   text-decoration: none;
 
   ${({ theme }) => theme.breakpoints.up("md")} {
