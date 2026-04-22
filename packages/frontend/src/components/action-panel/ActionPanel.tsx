@@ -42,15 +42,12 @@ const TabBar = styled("div")`
 
 const StyledTab = styled("button")`
   appearance: none;
-  background-color: unset;
   border: none;
   color: inherit;
   font-family: inherit;
   font-size: inherit;
   font-style: inherit;
   line-height: inherit;
-  text-align: inherit;
-  text-decoration-thickness: from-font;
 
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
