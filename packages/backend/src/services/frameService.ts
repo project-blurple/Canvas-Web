@@ -1,6 +1,5 @@
 import {
   Frame,
-  FrameOwnerType,
   GuildOwnedFrame,
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
@@ -66,7 +65,7 @@ function frameFromDb(frame: FrameDbRecord): Frame {
     return {
       ...baseFrame,
       owner: {
-        type: FrameOwnerType.Guild,
+        type: "guild",
         guild: {
           guild_id: frame.owner_guild.guild_id.toString(),
           name: frame.owner_guild.name,
@@ -81,7 +80,7 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   return {
     ...baseFrame,
     owner: {
-      type: FrameOwnerType.User,
+      type: "user",
       user: {
         id: frame.owner_user.user_id.toString(),
         username: frame.owner_user.username,
@@ -91,14 +90,14 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 }
 
-function asUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
-  if (frame.owner.type !== FrameOwnerType.User) {
+function assertIsUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
+  if (frame.owner.type !== "user") {
     throw new Error(`Expected user-owned frame, got ${frame.owner.type}`);
   }
 }
 
-function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
-  if (frame.owner.type !== FrameOwnerType.Guild) {
+function assertIsGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
+  if (frame.owner.type !== "guild") {
     throw new Error(`Expected guild-owned frame, got ${frame.owner.type}`);
   }
 }
@@ -133,7 +132,7 @@ export async function getFramesByUserId(
 
   return frames.map((frame) => {
     const mapped = frameFromDb(frame);
-    asUserFrame(mapped);
+    assertIsUserFrame(mapped);
     return mapped;
   });
 }
@@ -155,7 +154,7 @@ export async function getFramesByGuildIds(
 
   return frames.map((frame) => {
     const mapped = frameFromDb(frame);
-    asGuildFrame(mapped);
+    assertIsGuildFrame(mapped);
     return mapped;
   });
 }
