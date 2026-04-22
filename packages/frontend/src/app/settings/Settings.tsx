@@ -39,6 +39,13 @@ const Form = styled("form")`
   border: var(--card-border);
 `;
 
+const Aside = styled("aside")`
+  margin-block-start: 5rem;
+  opacity: 55%;
+  text-align: center;
+  text-wrap: balance;
+`;
+
 function SoundEffectsSetting() {
   const [value, setValue] = useLocalStorage("sound-fx");
   return (
@@ -99,6 +106,11 @@ export default function Settings() {
       <Form>
         <WebfontsSetting />
       </Form>
+
+      <Aside>
+        Settings are stored locally in your browser, and don&rsquo;t follow your
+        account
+      </Aside>
     </Wrapper>
   );
 }
