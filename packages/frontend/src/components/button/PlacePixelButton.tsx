@@ -24,7 +24,10 @@ interface PlacePixelButtonProps {
   isVerbose: boolean;
 }
 
-const durationFormat = new Intl.DurationFormat("en-US", { style: "narrow" });
+const durationFormat =
+  "DurationFormat" in Intl ?
+    new Intl.DurationFormat("en-US", { style: "narrow" })
+  : undefined;
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
