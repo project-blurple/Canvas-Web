@@ -18,14 +18,14 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollBlock,
-  TabBlock,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import ActionPanelTooltip from "./ActionPanelTooltip";
 import BotCommandCard from "./BotCommandCard";
 import { FramePreviewList } from "./FramePreviewList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
-const FramesTabBlock = styled(TabBlock)`
+const FramesTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -34,12 +34,18 @@ const FramesContainer = styled("div")`
   flex-direction: column;
 `;
 
-interface FramesTabProps {
+interface FramesTabProps extends React.ComponentPropsWithRef<
+  typeof FramesTabBlock
+> {
   active?: boolean;
   canvasId: number;
 }
 
-export default function FramesTab({ active, canvasId }: FramesTabProps) {
+export default function FramesTab({
+  active,
+  canvasId,
+  ...props
+}: FramesTabProps) {
   const { user } = useAuthContext();
   const [selectedFrame, setSelectedFrame] = useSelectedFrameContext();
   const { canvas } = useCanvasContext();
@@ -61,7 +67,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
 
   if (!user) {
     return (
-      <FramesTabBlock active={active}>
+      <FramesTabBlock active={active} {...props}>
         <ActionPanelTabBody>
           <FramesContainer>
             <Heading>Your frames</Heading>
@@ -120,7 +126,7 @@ export default function FramesTab({ active, canvasId }: FramesTabProps) {
     : "";
 
   return (
-    <FramesTabBlock active={active}>
+    <FramesTabBlock active={active} {...props}>
       <ScrollBlock>
         <ActionPanelTabBody>
           <FramesContainer>

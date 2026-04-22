@@ -6,19 +6,23 @@ import CheckboxSetting from "./CheckboxSetting";
 import useLocalStorage from "./useLocalStorage";
 
 const Wrapper = styled("div")`
-  inline-size: 40rem;
+  display: flex;
+  flex-direction: column;
   margin-inline: auto;
-  max-inline-size: 100%;
   padding-block: 4rem;
   padding-inline: var(--layout-padding-x);
+  place-items: center;
+  > * {
+    inline-size: min(36rem, 100%);
+  }
 `;
 
 const H1 = styled("h1")`
-  margin-block-end: 4rem;
   text-align: center;
 `;
 
 const H2 = styled("h2")`
+  color: unset;
   font-size: 1.125rem;
   font-weight: 500;
   margin-block-end: 1em;
