@@ -180,7 +180,7 @@ async function main() {
   // COLOR
   if (seedings.has("color")) {
     await runSeedingStep("color", async () => {
-      await prisma.color.createMany({ data: [...colorSeedData] });
+      await prisma.color.createMany({ data: colorSeedData });
     });
   }
 
@@ -189,7 +189,7 @@ async function main() {
   // EVENT
   if (seedings.has("event")) {
     await runSeedingStep("event", async () => {
-      await prisma.event.createMany({ data: [...eventSeedData] });
+      await prisma.event.createMany({ data: eventSeedData });
     });
   }
 
@@ -203,7 +203,7 @@ async function main() {
   // CANVAS
   if (seedings.has("canvas")) {
     await runSeedingStep("canvas", async () => {
-      await prisma.canvas.createMany({ data: [...canvasSeedData] });
+      await prisma.canvas.createMany({ data: canvasSeedData });
     });
   }
 
@@ -219,7 +219,7 @@ async function main() {
   // FRAME
   if (seedings.has("frame")) {
     await runSeedingStep("frame", async () => {
-      await prisma.frame.createMany({ data: [...frameSeedData] });
+      await prisma.frame.createMany({ data: frameSeedData });
     });
   }
 
@@ -246,12 +246,13 @@ async function main() {
   logWithTiming("Database seed completed");
 }
 
-main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
-  .catch(async (e) => {
+(async () => {
+  try {
+    await main();
+  } catch (e) {
     console.error(e);
-    await prisma.$disconnect();
     process.exit(1);
-  });
+  } finally {
+    await prisma.$disconnect();
+  }
+})();
