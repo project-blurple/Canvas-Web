@@ -10,14 +10,7 @@ SELECT
 FROM
   leaderboard_guild
 WHERE
-  NOT EXISTS (
-    SELECT
-      1
-    FROM
-      blacklist
-    WHERE
-      blacklist.user_id = leaderboard_guild.user_id
-  )
+  history.user_id NOT IN (SELECT user_id FROM blacklist)
 GROUP BY
   leaderboard_guild.user_id,
   leaderboard_guild.canvas_id;
