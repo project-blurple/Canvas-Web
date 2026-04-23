@@ -6,15 +6,15 @@ import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollableBlock,
-  TabBlock,
+  ScrollableView,
+  TabView,
 } from "./ActionPanelTabBody";
 import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 import { CoordinateLabel } from "./PlacePixelTab";
 
-const PixelInfoTabBlock = styled(TabBlock)`
+const PixelInfoTabBlock = styled(TabView)`
   grid-template-rows: auto 1fr;
 `;
 
@@ -108,13 +108,13 @@ export default function PixelInfoTab({
         : <p>No selected pixel</p>}
       </ActionPanelTabBody>
       {adjustedCoords && pixelHistory.length > 1 && (
-        <ScrollableBlock>
+        <ScrollableView>
           <ActionPanelTabBody>
             <div>
               <PixelHistoryPast history={pixelHistory} isLoading={isLoading} />
             </div>
           </ActionPanelTabBody>
-        </ScrollableBlock>
+        </ScrollableView>
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (

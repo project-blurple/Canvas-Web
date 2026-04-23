@@ -13,8 +13,8 @@ import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollableBlock,
-  TabBlock,
+  ScrollableView,
+  TabView,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
@@ -34,7 +34,7 @@ const ColorPicker = styled("div")`
   }
 `;
 
-const PlacePixelTabBlock = styled(TabBlock)`
+const PlacePixelTabBlock = styled(TabView)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -134,7 +134,7 @@ export default function PlacePixelTab({
 
   return (
     <PlacePixelTabBlock active={active} ref={PlacePixelTabBlockRef}>
-      <ScrollableBlock>
+      <ScrollableView>
         <ActionPanelTabBody>
           <ColorPicker>
             <Heading>Main colors</Heading>
@@ -169,7 +169,7 @@ export default function PlacePixelTab({
             }
           </ColorPicker>
         </ActionPanelTabBody>
-      </ScrollableBlock>
+      </ScrollableView>
       <ActionPanelTabBody>
         {isLarge && (
           <ColorInfoCard

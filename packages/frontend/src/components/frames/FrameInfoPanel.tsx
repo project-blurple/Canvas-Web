@@ -7,7 +7,7 @@ import {
 import { createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
-  ScrollableBlock,
+  ScrollableView,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
@@ -17,24 +17,22 @@ import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
-  if (frame.owner.type === "system") {
-    return false;
+  switch (frame.owner.type) {
+    case "system":
+      return false;
+    case "user":
+      return frame.owner.user.id === user.id;
+    case "guild": {
+      const guildId = frame.owner.guild.guild_id;
+      const userGuildData = user.guilds?.[guildId];
+      return (
+        userGuildData !== undefined &&
+        (userGuildData.administrator || userGuildData.manageGuild)
+      );
+    }
+    default:
+      return false;
   }
-
-  if (frame.owner.type === "user") {
-    return frame.owner.user.id === user.id;
-  }
-
-  if (frame.owner.type === "guild") {
-    const guildId = frame.owner.guild.guild_id;
-    const userGuildData = user.guilds?.[guildId];
-    return (
-      userGuildData !== undefined &&
-      (userGuildData.administrator || userGuildData.manageGuild)
-    );
-  }
-
-  return false;
 }
 
 export default function FrameInfoPanel({
@@ -59,9 +57,9 @@ export default function FrameInfoPanel({
 
   return (
     <>
-      <ScrollableBlock>
+      <ScrollableView>
         <FrameList />
-      </ScrollableBlock>
+      </ScrollableView>
       {(() => {
         if (selectedFrame) {
           return (

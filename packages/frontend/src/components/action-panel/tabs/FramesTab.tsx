@@ -3,9 +3,9 @@ import { styled } from "@mui/material";
 import { ReactNode, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
-import { TabBlock } from "./ActionPanelTabBody";
+import { TabView } from "./ActionPanelTabBody";
 
-const FramesTabBlock = styled(TabBlock)`
+const FramesTabBlock = styled(TabView)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -13,7 +13,7 @@ export const FramePanelMode = {
   Info: "info",
   Create: "create",
   Edit: "edit",
-};
+} as const;
 
 export type FramePanelMode = ValueOf<typeof FramePanelMode>;
 

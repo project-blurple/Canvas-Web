@@ -43,7 +43,7 @@ import {
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollableBlock,
+  ScrollableView,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
@@ -469,7 +469,7 @@ export default function FrameEditPanel({
 
   return (
     <>
-      <ScrollableBlock>
+      <ScrollableView>
         <ActionPanelTabBody>
           <EditContainer>
             <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
@@ -546,7 +546,7 @@ export default function FrameEditPanel({
             : <p>Select a frame to preview it.</p>}
           </PreviewContainer>
         </ActionPanelTabBody>
-      </ScrollableBlock>
+      </ScrollableView>
       <ActionPanelTabBody>
         <ButtonRow>
           {!isCreateMode ?

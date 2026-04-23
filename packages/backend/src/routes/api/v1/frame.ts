@@ -1,4 +1,3 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
 import {
@@ -16,7 +15,7 @@ import {
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
-import { normaliseBounds } from "@/utils";
+import { normalizeBounds } from "@/utils";
 
 export const frameRouter = Router();
 
@@ -78,12 +77,12 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       );
     }
 
-    const { x0, y0, x1, y1 } = normaliseBounds(
-      bodyQueryResult.data.x0,
-      bodyQueryResult.data.y0,
-      bodyQueryResult.data.x1,
-      bodyQueryResult.data.y1,
-    );
+    const { x0, y0, x1, y1 } = normalizeBounds({
+      x0: bodyQueryResult.data.x0,
+      y0: bodyQueryResult.data.y0,
+      x1: bodyQueryResult.data.x1,
+      y1: bodyQueryResult.data.y1,
+    });
 
     await editFrame(
       req.user,
@@ -134,12 +133,12 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
-    const { x0, y0, x1, y1 } = normaliseBounds(
-      bodyQueryResult.data.x0,
-      bodyQueryResult.data.y0,
-      bodyQueryResult.data.x1,
-      bodyQueryResult.data.y1,
-    );
+    const { x0, y0, x1, y1 } = normalizeBounds({
+      x0: bodyQueryResult.data.x0,
+      y0: bodyQueryResult.data.y0,
+      x1: bodyQueryResult.data.x1,
+      y1: bodyQueryResult.data.y1,
+    });
 
     if (!ownerQueryResult.success) {
       throw new BadRequestError(

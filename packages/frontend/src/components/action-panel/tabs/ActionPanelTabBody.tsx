@@ -23,7 +23,7 @@ export const ActionPanelTabBody = styled("div")`
   }
 `;
 
-export const Block = styled("div")`
+export const View = styled("div")`
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {
@@ -31,7 +31,7 @@ export const Block = styled("div")`
   }
 `;
 
-export const TabBlock = styled(Block, {
+export const TabView = styled(View, {
   shouldForwardProp: (prop) => prop !== "active",
 })<{ active?: boolean }>`
   display: ${({ active }) => (active ? "grid" : "none")};
@@ -39,7 +39,7 @@ export const TabBlock = styled(Block, {
   grid-template-rows: auto 1fr auto;
 `;
 
-export const ScrollableBlock = styled(Block)`
+export const ScrollableView = styled(View)`
   align-self: stretch;
   grid-column: 1 / -1;
 `;
