@@ -7,14 +7,14 @@ import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
   ScrollableView,
-  TabView,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 import { CoordinateLabel } from "./PlacePixelTab";
 
-const PixelInfoTabBlock = styled(TabView)`
+const PixelInfoTabBlock = styled(TabPanel)`
   grid-template-rows: auto 1fr;
 `;
 
@@ -65,7 +65,9 @@ const PixelHistoryCurrent = ({ isLoading, history }: PixelHistoryProps) => {
   return <PixelHistoryListItem record={currentPixelInfo} />;
 };
 
-interface PixelInfoTabProps {
+interface PixelInfoTabProps extends React.ComponentPropsWithRef<
+  typeof PixelInfoTabBlock
+> {
   active?: boolean;
   canvasId: number;
 }
@@ -73,6 +75,7 @@ interface PixelInfoTabProps {
 export default function PixelInfoTab({
   active = false,
   canvasId,
+  ...props
 }: PixelInfoTabProps) {
   const { canvas } = useCanvasContext();
   const { adjustedCoords, containerRef, coords, zoom } = useCanvasViewContext();
@@ -80,7 +83,7 @@ export default function PixelInfoTab({
 
   const pixelHistory = data?.pixelHistory ?? [];
 
-  const pixelURL =
+  const pixelUrl =
     (adjustedCoords &&
       containerRef.current &&
       createPixelUrl({
@@ -98,7 +101,7 @@ export default function PixelInfoTab({
     "";
 
   return (
-    <PixelInfoTabBlock active={active}>
+    <PixelInfoTabBlock active={active} {...props}>
       <ActionPanelTabBody>
         {adjustedCoords ?
           <div>
@@ -121,7 +124,7 @@ export default function PixelInfoTab({
           <TooltipDynamicButton
             tooltipTitle="Copied"
             onAction={() => {
-              navigator.clipboard.writeText(pixelURL);
+              navigator.clipboard.writeText(pixelUrl);
             }}
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >

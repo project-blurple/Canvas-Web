@@ -152,7 +152,7 @@ export default function FrameEditPanel({
 
   const initialFrameNameRef = useRef(selectedFrame?.name ?? "");
   const initialOwnerRef = useRef<FrameOwnerType>(
-    selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
+    selectedFrame ? selectedFrame.owner.type : "user",
   );
   const initialGuildIdRef = useRef(
     selectedFrame && selectedFrame.owner.type === "guild" ?
@@ -181,7 +181,7 @@ export default function FrameEditPanel({
   );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
-    selectedFrame?.owner.type ?? FrameOwnerType.User,
+    selectedFrame?.owner.type ?? "user",
   );
 
   const [selectedGuildId, setSelectedGuildId] = useState<string>(
@@ -337,9 +337,8 @@ export default function FrameEditPanel({
       const body = {
         canvasId: canvas.id,
         name: frameName,
-        ownerId:
-          selectedOwner === FrameOwnerType.User ? user?.id : selectedGuildId,
-        isGuildOwned: selectedOwner === FrameOwnerType.Guild,
+        ownerId: selectedOwner === "user" ? user?.id : selectedGuildId,
+        isGuildOwned: selectedOwner === "guild",
         x0: frameBounds?.left ?? 0,
         y0: frameBounds?.top ?? 0,
         x1: frameBounds ? frameBounds.right : canvas.width,
@@ -492,10 +491,10 @@ export default function FrameEditPanel({
               }}
               disabled={!isCreateMode} // Can't change owner after frame is created
             >
-              <ToggleButton value={FrameOwnerType.User}>You</ToggleButton>
-              <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
+              <ToggleButton value={"user"}>You</ToggleButton>
+              <ToggleButton value={"guild"}>Server</ToggleButton>
             </ToggleButtonGroup>
-            {selectedOwner === FrameOwnerType.Guild && (
+            {selectedOwner === "guild" && (
               <Autocomplete
                 options={guildOptions}
                 value={selectedGuildOption}
@@ -571,7 +570,7 @@ export default function FrameEditPanel({
               disabled={
                 !frameName ||
                 !frameBounds ||
-                (!selectedGuildId && selectedOwner === FrameOwnerType.Guild)
+                (!selectedGuildId && selectedOwner === "guild")
               }
             >
               Create

@@ -1,7 +1,7 @@
 "use client";
 
 import { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
 
@@ -21,6 +21,7 @@ export function useLeaderboard(
   return useQuery({
     queryKey: ["leaderboard", canvasId, { page, size }],
     queryFn: getLeaderboard,
+    placeholderData: keepPreviousData,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds

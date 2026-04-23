@@ -74,5 +74,12 @@ export const Theme = createTheme({
         },
       },
     },
+    MuiPaginationItem: {
+      styleOverrides: {
+        root: {
+          transitionProperty: "none",
+        },
+      },
+    },
   },
 });

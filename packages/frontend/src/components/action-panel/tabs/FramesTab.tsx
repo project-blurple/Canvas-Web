@@ -3,9 +3,9 @@ import { styled } from "@mui/material";
 import { ReactNode, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
-import { TabView } from "./ActionPanelTabBody";
+import { TabPanel } from "./ActionPanelTabBody";
 
-const FramesTabBlock = styled(TabView)`
+const FramesTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -17,12 +17,18 @@ export const FramePanelMode = {
 
 export type FramePanelMode = ValueOf<typeof FramePanelMode>;
 
-interface FramesTabProps {
+interface FramesTabProps extends React.ComponentPropsWithRef<
+  typeof FramesTabBlock
+> {
   active?: boolean;
   setTabsLocked: (locked: boolean) => void;
 }
 
-export default function FramesTab({ active, setTabsLocked }: FramesTabProps) {
+export default function FramesTab({
+  active,
+  setTabsLocked,
+  ...props
+}: FramesTabProps) {
   const [activePanel, setActivePanel] = useState<FramePanelMode>(
     FramePanelMode.Info,
   );
@@ -42,6 +48,8 @@ export default function FramesTab({ active, setTabsLocked }: FramesTabProps) {
   }, [activePanel, setTabsLocked]);
 
   return (
-    <FramesTabBlock active={active}>{panelByMode[activePanel]}</FramesTabBlock>
+    <FramesTabBlock active={active} {...props}>
+      {panelByMode[activePanel]}
+    </FramesTabBlock>
   );
 }
