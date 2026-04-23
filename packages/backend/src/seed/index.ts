@@ -97,42 +97,15 @@ async function main() {
     }
   }
 
-  function cleanupOperation(seeding: Seeding) {
-    switch (seeding) {
-      case "canvas":
-        return prisma.canvas.deleteMany();
-      case "color":
-        return prisma.color.deleteMany();
-      case "discord_guild_record":
-        return prisma.discord_guild_record.deleteMany();
-      case "discord_user_profile":
-        return prisma.discord_user_profile.deleteMany();
-      case "event":
-        return prisma.event.deleteMany();
-      case "frame":
-        return prisma.frame.deleteMany();
-      case "guild":
-        return prisma.guild.deleteMany();
-      case "history":
-        return prisma.history.deleteMany();
-      case "info":
-        return prisma.info.deleteMany();
-      case "participation":
-        return prisma.participation.deleteMany();
-      case "pixel":
-        return prisma.pixel.deleteMany();
-      case "user":
-        return prisma.user.deleteMany();
-    }
-  }
-
   if (!OVERWRITE) {
-    for (const seeding of allSeedings) {
-      const count = await countRecords(seeding);
-      if (count && count >= 1) {
-        seedings.delete(seeding);
-      }
-    }
+    Promise.all(
+      allSeedings.map(async (seeding) => {
+        const count = await countRecords(seeding);
+        if (count && count >= 1) {
+          seedings.delete(seeding);
+        }
+      }),
+    );
   }
 
   if (seedings.size === 0) {
@@ -162,7 +135,7 @@ async function main() {
       (a, b) => order.indexOf(a) - order.indexOf(b),
     );
     await prisma.$transaction(
-      sortedSeedings.map((seeding) => cleanupOperation(seeding)),
+      sortedSeedings.map((seeding) => prisma[seeding].deleteMany()),
     );
   });
 

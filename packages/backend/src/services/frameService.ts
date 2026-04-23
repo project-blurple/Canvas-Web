@@ -55,11 +55,7 @@ function partitionOwnerIds(frames: FrameDbRecord[]) {
   const guildIds = new Set<bigint>();
 
   for (const frame of frames) {
-    if (frame.is_guild_owned) {
-      guildIds.add(frame.owner_id);
-    } else {
-      userIds.add(frame.owner_id);
-    }
+    (frame.is_guild_owned ? guildIds : userIds).add(frame.owner_id);
   }
 
   return {

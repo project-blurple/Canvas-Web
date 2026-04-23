@@ -4,20 +4,12 @@ import type { Prisma } from "../../client/generated/client";
 // @ts-expect-error Node strip-types runtime needs explicit .ts extension.
 import { canvasSeedData } from "./events.ts";
 
-const pixelSeedDataPath = path.join(
-  process.cwd(),
-  "src",
-  "seed",
-  "data",
-  "pixelData2024.csv",
-);
-const historySeedDataPath = path.join(
-  process.cwd(),
-  "src",
-  "seed",
-  "data",
-  "historyData2024.csv",
-);
+const rootDataPath = path.join(process.cwd(), "src", "seed", "data");
+
+const pixelSeedDataPath = path.join(rootDataPath, "pixelData2024.csv");
+
+const historySeedDataPath = path.join(rootDataPath, "historyData2024.csv");
+
 const SEED_BATCH_SIZE = 2000;
 
 function normalizeCsvHeader(line: string): string {
@@ -136,9 +128,9 @@ function parseHistorySeedData(line: string): Prisma.historyCreateManyInput {
   return {
     user_id: BigInt(userId),
     canvas_id: 2024,
-    x: Number(x),
-    y: Number(y),
-    color_id: Number(colorId),
+    x: Number.parseInt(x, 10),
+    y: Number.parseInt(y, 10),
+    color_id: Number.parseInt(colorId, 10),
     timestamp: new Date(timestamp),
     guild_id: 412754940885467146n,
   };
