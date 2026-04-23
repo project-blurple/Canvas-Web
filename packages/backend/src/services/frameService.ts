@@ -90,13 +90,13 @@ function frameFromDb(frame: FrameDbRecord): Frame {
   };
 }
 
-function assertIsUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
+function asUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
   if (frame.owner.type !== "user") {
     throw new Error(`Expected user-owned frame, got ${frame.owner.type}`);
   }
 }
 
-function assertIsGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
+function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
   if (frame.owner.type !== "guild") {
     throw new Error(`Expected guild-owned frame, got ${frame.owner.type}`);
   }
@@ -132,7 +132,7 @@ export async function getFramesByUserId(
 
   return frames.map((frame) => {
     const mapped = frameFromDb(frame);
-    assertIsUserFrame(mapped);
+    asUserFrame(mapped);
     return mapped;
   });
 }
@@ -154,7 +154,7 @@ export async function getFramesByGuildIds(
 
   return frames.map((frame) => {
     const mapped = frameFromDb(frame);
-    assertIsGuildFrame(mapped);
+    asGuildFrame(mapped);
     return mapped;
   });
 }
