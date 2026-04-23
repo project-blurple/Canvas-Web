@@ -11,6 +11,8 @@ SELECT
   ) AS rank
 FROM
   history
+WHERE
+  history.user_id NOT IN (SELECT user_id FROM blacklist)
 GROUP BY
   history.user_id,
   history.canvas_id,

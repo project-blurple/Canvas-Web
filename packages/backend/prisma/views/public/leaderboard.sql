@@ -9,8 +9,6 @@ SELECT
   ) AS rank
 FROM
   leaderboard_guild
-WHERE
-  history.user_id NOT IN (SELECT user_id FROM blacklist)
 GROUP BY
   leaderboard_guild.user_id,
   leaderboard_guild.canvas_id;
