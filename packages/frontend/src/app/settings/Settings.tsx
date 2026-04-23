@@ -1,9 +1,9 @@
 "use client";
 
-import { useAudioContext } from "@/contexts";
 import { styled } from "@mui/material";
-import CheckboxSetting from "./CheckboxSetting";
 import { BellRing, CaseSensitive } from "lucide-react";
+import { useAudioContext } from "@/contexts";
+import CheckboxSetting from "./CheckboxSetting";
 
 const Wrapper = styled("div")`
   display: flex;
