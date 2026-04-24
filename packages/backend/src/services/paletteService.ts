@@ -1,4 +1,8 @@
-import { PaletteColor, PixelColor } from "@blurple-canvas-web/types";
+import {
+  BlurpleEvent,
+  PaletteColor,
+  PixelColor,
+} from "@blurple-canvas-web/types";
 
 import { prisma } from "@/client";
 import { getCurrentEvent } from "./eventService";
@@ -75,4 +79,120 @@ export async function getEventPalette(
       color.participations[0]?.guild?.discord_guild_record?.name ?? null,
     guildId: color.participations[0]?.guild?.id.toString() ?? null,
   }));
+}
+
+interface CreateColorParams {
+  code: string;
+  name: string;
+  rgba: PixelColor;
+  global: boolean;
+}
+
+export async function createColor({
+  code,
+  name,
+  rgba,
+  global,
+}: CreateColorParams) {
+  const color = await prisma.color.create({
+    data: {
+      code: code,
+      name: name,
+      rgba: rgba,
+      global: global,
+    },
+  });
+
+  return color;
+}
+
+interface EditColorParams {
+  colorId: PaletteColor["id"];
+  code: string;
+  name: string;
+  rgba: PixelColor;
+  global: boolean;
+}
+
+export async function editColor({
+  colorId,
+  code,
+  name,
+  rgba,
+  global,
+}: EditColorParams) {
+  const color = await prisma.color.update({
+    where: {
+      id: colorId,
+    },
+    data: {
+      code: code,
+      name: name,
+      rgba: rgba,
+      global: global,
+    },
+  });
+
+  return color;
+}
+
+export async function deleteColor(colorId: PaletteColor["id"]) {
+  await prisma.color.delete({
+    where: {
+      id: colorId,
+    },
+  });
+}
+
+interface AssignColorToEventParams {
+  colorId: PaletteColor["id"];
+  eventId: BlurpleEvent["id"];
+  guildId: bigint;
+}
+
+export async function assignColorToEvent({
+  colorId,
+  eventId,
+  guildId,
+}: AssignColorToEventParams) {
+  // Check if the color is already assigned to the event
+  const existingParticipation = await prisma.participation.findFirst({
+    where: {
+      color_id: colorId,
+      event_id: eventId,
+    },
+  });
+
+  if (existingParticipation) {
+    throw new Error(
+      `Color with ID ${colorId} is already assigned to event with ID ${eventId}`,
+    );
+  }
+
+  await prisma.participation.create({
+    data: {
+      color_id: colorId,
+      event_id: eventId,
+      guild_id: guildId,
+    },
+  });
+}
+
+interface UnassignColorFromEventParams {
+  eventId: BlurpleEvent["id"];
+  guildId: bigint;
+}
+
+export async function unassignColorFromEvent({
+  eventId,
+  guildId,
+}: UnassignColorFromEventParams) {
+  await prisma.participation.delete({
+    where: {
+      guild_id_event_id: {
+        guild_id: guildId,
+        event_id: eventId,
+      },
+    },
+  });
 }
