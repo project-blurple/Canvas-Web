@@ -59,7 +59,8 @@ export const partitionPalette = (palette: Palette) => {
   return [mainColors, partnerColors];
 };
 
-function isUserInServer(user: DiscordUserProfile, serverId: string) {
+function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
+  if (!serverId) return false;
   const guildIds = getUserGuildIds(user);
   return guildIds.includes(serverId);
 }

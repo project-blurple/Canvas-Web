@@ -33,6 +33,13 @@ export const FrameGuildIdsQueryModel = z.object({
     ),
 });
 
+export const PaletteQueryModel = z.object({
+  allColors: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "true"),
+});
+
 export interface CanvasIdParam {
   canvasId: string;
   [key: string]: string;

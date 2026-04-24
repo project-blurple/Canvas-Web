@@ -8,9 +8,11 @@ import { getCurrentEvent } from "./eventService";
  *
  * @returns The palette for the current event
  */
-export async function getCurrentEventPalette(): Promise<PaletteColor[]> {
+export async function getCurrentEventPalette(
+  allColors = false,
+): Promise<PaletteColor[]> {
   const currentEvent = await getCurrentEvent();
-  return await getEventPalette(currentEvent.id);
+  return await getEventPalette(currentEvent.id, allColors);
 }
 
 /**
@@ -23,7 +25,19 @@ export async function getCurrentEventPalette(): Promise<PaletteColor[]> {
  */
 export async function getEventPalette(
   eventId: number,
+  allColors = false,
 ): Promise<PaletteColor[]> {
+  const where =
+    // If allColors is true, we don't need to filter the colors at all
+    allColors ? undefined : (
+      {
+        OR: [
+          { global: true },
+          { participations: { some: { event_id: eventId } } },
+        ],
+      }
+    );
+
   const eventPalette = await prisma.color.findMany({
     select: {
       id: true,
@@ -45,14 +59,7 @@ export async function getEventPalette(
       },
     },
     // Filter the colours to only include global colours or colours that are part of the event
-    where: {
-      OR: [
-        { global: true },
-        {
-          participations: { some: { event_id: eventId } },
-        },
-      ],
-    },
+    where,
   });
 
   return eventPalette.map((color) => ({

@@ -9,7 +9,7 @@ export interface PaletteColor {
   global: boolean;
   invite: string | null;
   guildName: string | null;
-  guildId: string;
+  guildId: string | null;
 }
 
 export type Palette = PaletteColor[];

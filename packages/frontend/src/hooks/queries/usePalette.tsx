@@ -16,22 +16,23 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
   const hueA = new Color("srgb", rgbA).to("oklch").coords[2];
   const hueB = new Color("srgb", rgbB).to("oklch").coords[2];
   if (hueA && hueB) return hueA - hueB;
-  // Everything below should be unreachable in pratice
+  // Everything below should be unreachable in practice
   if (hueA === null) return 1;
   if (hueB == null) return -1;
   return 0;
 }
 
-export function usePalette(eventId?: BlurpleEvent["id"]) {
+export function usePalette(eventId?: BlurpleEvent["id"], allColors = false) {
   const getPalette = async () => {
-    const response = await axios.get<PaletteRequest.ResBody>(
-      `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
-    );
+    const url = `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`;
+    const params: PaletteRequest.ReqQuery | undefined =
+      allColors ? { allColors: true } : undefined;
+    const response = await axios.get<PaletteRequest.ResBody>(url, { params });
     return response.data.sort(sortByOklchHue);
   };
 
   return useQuery({
-    queryKey: ["palette", eventId],
+    queryKey: ["palette", eventId, allColors],
     queryFn: getPalette,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
