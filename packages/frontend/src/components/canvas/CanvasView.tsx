@@ -364,7 +364,15 @@ function getViewForFrame({
   return { targetZoom, offset, targetPoint };
 }
 
-export default function CanvasView() {
+interface CanvasViewProps {
+  showInvite?: boolean;
+  showReticle?: boolean;
+}
+
+export default function CanvasView({
+  showInvite = true,
+  showReticle = true,
+}: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
@@ -971,7 +979,7 @@ export default function CanvasView() {
 
   return (
     <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
-      {config.discordServerInvite && (
+      {showInvite && config.discordServerInvite && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
           <InviteButton>Project Blurple</InviteButton>
         </a>
@@ -991,7 +999,7 @@ export default function CanvasView() {
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: isReticleVisible ? undefined : "none",
+            display: showReticle && isReticleVisible ? undefined : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),

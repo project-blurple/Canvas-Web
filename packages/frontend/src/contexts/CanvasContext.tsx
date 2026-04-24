@@ -12,7 +12,7 @@ import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 interface CanvasContextType {
   canvas: CanvasInfo;
-  setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
+  setCanvas: (canvasId: CanvasInfo["id"], redirect?: boolean) => Promise<void>;
 }
 
 export const CanvasContext = createContext<CanvasContextType>({
@@ -47,7 +47,7 @@ export const CanvasProvider = ({
   const [, setFrame] = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
-    async (canvasId: CanvasInfo["id"]) => {
+    async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
       const response = await axios.get<CanvasInfoRequest.ResBody>(
         `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
       );
@@ -56,11 +56,13 @@ export const CanvasProvider = ({
       setCoords(null);
       setFrame(null);
 
-      const url = new URL(window.location.href);
-      url.pathname =
-        canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
-      url.search = "";
-      router.replace(`${url.pathname}${url.search}${url.hash}`);
+      if (redirect) {
+        const url = new URL(window.location.href);
+        url.pathname =
+          canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
+        url.search = "";
+        router.replace(`${url.pathname}${url.search}${url.hash}`);
+      }
 
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
