@@ -1,8 +1,14 @@
 import { Response, Router } from "express";
 import { ApiError } from "@/errors";
+import {
+  CreateCanvasBodyModel,
+  EditCanvasBodyModel,
+} from "@/models/bodyModels";
 import { parseCanvasId } from "@/models/paramModels";
 import {
   CachedCanvas,
+  createCanvas,
+  editCanvas,
   getCanvases,
   getCanvasFilename,
   getCanvasInfo,
@@ -11,6 +17,8 @@ import {
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
+import { assertCanvasAdmin } from "@/services/discordGuildService";
+import { assertLoggedIn } from "@/utils";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = Router();
@@ -66,12 +74,60 @@ canvasRouter.get("/:canvasId", async (req, res) => {
   }
 });
 
-canvasRouter.post("/", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+canvasRouter.post("/", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
+
+    if (!canvasData.success) {
+      res.status(400).json({ message: "Invalid canvas data" });
+      return;
+    }
+
+    await createCanvas({
+      name: canvasData.data.name,
+      width: canvasData.data.width,
+      height: canvasData.data.height,
+      startCoordinates: canvasData.data.startCoordinates,
+      allColorsGlobal: canvasData.data.allColorsGlobal,
+      cooldownLength: canvasData.data.cooldownLength,
+    });
+
+    res.status(201).json({ message: "Canvas created successfully" });
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });
 
-canvasRouter.put("/:canvasId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+canvasRouter.put("/:canvasId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [canvasId, canvasData] = await Promise.all([
+      parseCanvasId(req.params),
+      EditCanvasBodyModel.safeParseAsync(req.body),
+    ]);
+
+    if (!canvasData.success) {
+      res.status(400).json({ message: "Invalid canvas data" });
+      return;
+    }
+
+    await editCanvas({
+      canvasId,
+      name: canvasData.data.name,
+      allColorsGlobal: canvasData.data.allColorsGlobal,
+      cooldownLength: canvasData.data.cooldownLength,
+      isLocked: canvasData.data.isLocked,
+    });
+
+    res.status(200).json({ message: "Canvas edited successfully" });
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });
 
 /**

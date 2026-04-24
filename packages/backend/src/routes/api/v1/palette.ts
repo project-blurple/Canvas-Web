@@ -1,11 +1,25 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
+import { ColorBodyModel } from "@/models/bodyModels";
+import {
+  PaletteQueryModel,
+  parseColorId,
+  parseEventId,
+  parseGuildId,
+} from "@/models/paramModels";
+import { assertCanvasAdmin } from "@/services/discordGuildService";
 import { EventIdParamModel } from "@/models/paramModels";
 import {
+  assignColorToEvent,
+  createColor,
+  deleteColor,
+  editColor,
   getCurrentEventPalette,
   getEventPalette,
+  unassignColorFromEvent,
 } from "@/services/paletteService";
+import { assertLoggedIn } from "@/utils";
 
 export const paletteRouter = Router();
 
@@ -20,15 +34,7 @@ paletteRouter.get("/current", async (_req, res) => {
 
 paletteRouter.get("/:eventId", async (req, res) => {
   try {
-    const result = await EventIdParamModel.safeParseAsync(req.params);
-    if (!result.success) {
-      throw new BadRequestError(
-        `${req.params.eventId} is not a valid event ID`,
-        result.error.issues,
-      );
-    }
-
-    const { eventId } = result.data;
+    const eventId = await parseEventId(req.params);
     const palette = await getEventPalette(eventId);
 
     res.status(200).json(palette);
@@ -37,22 +43,108 @@ paletteRouter.get("/:eventId", async (req, res) => {
   }
 });
 
-paletteRouter.post("/", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+paletteRouter.post("/", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const colorData = await ColorBodyModel.safeParseAsync(req.body);
+    if (!colorData.success) {
+      throw new BadRequestError("Invalid color data", colorData.error.issues);
+    }
+
+    await createColor(colorData.data);
+
+    res.status(201).json({ message: "Color created successfully" });
+  } catch (error) {
+    return ApiError.sendError(res, error);
+  }
 });
 
-paletteRouter.put("/:colorId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+paletteRouter.put("/:colorId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [colorId, colorData] = await Promise.all([
+      parseColorId(req.params),
+      ColorBodyModel.safeParseAsync(req.body),
+    ]);
+
+    if (!colorData.success) {
+      throw new BadRequestError("Invalid color data", colorData.error.issues);
+    }
+
+    await editColor({
+      colorId,
+      ...colorData.data,
+    });
+
+    res.status(200).json({ message: "Color edited successfully" });
+  } catch (error) {
+    return ApiError.sendError(res, error);
+  }
 });
 
-paletteRouter.delete("/:colorId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+paletteRouter.delete("/:colorId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const colorId = await parseColorId(req.params);
+
+    await deleteColor(colorId);
+
+    res.status(200).json({ message: "Color deleted successfully" });
+  } catch (error) {
+    return ApiError.sendError(res, error);
+  }
 });
 
-paletteRouter.post("/:colorId/assign/:eventId/:guildId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+paletteRouter.post("/:colorId/assign/:eventId/:guildId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [colorId, eventId, guildId] = await Promise.all([
+      parseColorId(req.params),
+      parseEventId(req.params),
+      parseGuildId(req.params),
+    ]);
+
+    await assignColorToEvent({
+      colorId,
+      eventId,
+      guildId,
+    });
+
+    res.status(200).json({ message: "Color assigned to event successfully" });
+  } catch (error) {
+    return ApiError.sendError(res, error);
+  }
 });
 
-paletteRouter.post("/:colorId/unassign/:eventId/:guildId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
+paletteRouter.delete("/:colorId/assign/:eventId/:guildId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [_colorId, eventId, guildId] = await Promise.all([
+      parseColorId(req.params),
+      parseEventId(req.params),
+      parseGuildId(req.params),
+    ]);
+
+    // Color ID isn't actually used here, but I'm not sure how else to structure the route
+    await unassignColorFromEvent({
+      eventId,
+      guildId,
+    });
+
+    res
+      .status(200)
+      .json({ message: "Color unassigned from event successfully" });
+  } catch (error) {
+    return ApiError.sendError(res, error);
+  }
 });
