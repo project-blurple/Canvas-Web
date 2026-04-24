@@ -79,7 +79,7 @@ export default function Nav() {
   const isOpen = anchorElement !== null;
 
   const links: LinkInfo[] = [
-    { href: "/admin", label: "Admin" },
+    ...(user?.isCanvasAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     { href: "/leaderboard", label: "Leaderboard" },
     user ?
       { href: "/me", label: user.username }

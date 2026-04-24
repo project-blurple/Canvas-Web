@@ -1,9 +1,11 @@
 "use client";
 
+import { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { usePathname, useRouter } from "next/navigation";
+import { redirect, usePathname, useRouter } from "next/navigation";
 import { ReactNode } from "react";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import { useAuthContext } from "@/contexts";
 
 const TabBar = styled("div")`
   border-radius: 0.5rem;
@@ -74,9 +76,18 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
+function verifyAdmin(user: DiscordUserProfile | null) {
+  if (!user?.isCanvasAdmin) {
+    redirect("/");
+  }
+}
+
 export default function Admin({ children }: { children?: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
+
+  const { user } = useAuthContext();
+  verifyAdmin(user);
 
   return (
     <LayoutWithHeader>
