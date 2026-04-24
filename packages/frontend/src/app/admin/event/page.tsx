@@ -18,6 +18,10 @@ export default function AdminEventPage() {
 
   const isLoading = currentEventIsLoading || canvasListIsLoading;
 
+  const eventCanvases = canvases.filter(
+    (canvas) => canvas.eventId === currentEvent?.id,
+  );
+
   return (
     <Admin>
       <EventInfoWrapper>
@@ -29,10 +33,9 @@ export default function AdminEventPage() {
             <h2>{currentEvent.name}</h2>
             <ul>
               {/* This would be cool as previews/thumbnails */}
-              {canvases.map((canvas) => (
+              {eventCanvases.map((canvas) => (
                 <li key={canvas.id}>
-                  {canvas.name} (#{canvas.id}){" "}
-                  {canvas.eventId === currentEvent.id && "Current Event"}
+                  {canvas.name} (#{canvas.id})
                 </li>
               ))}
             </ul>
