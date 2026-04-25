@@ -24,7 +24,7 @@ export const ActionPanelTabBody = styled("div")`
   }
 `;
 
-export const Block = styled("div")`
+export const ScrollView = styled("div")`
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {
@@ -32,7 +32,7 @@ export const Block = styled("div")`
   }
 `;
 
-const StyledBlock = styled(Block, {
+const StyledView = styled(ScrollView, {
   shouldForwardProp: (prop) => prop !== "active",
 })<{ active?: boolean }>`
   display: ${({ active }) => (active ? "grid" : "none")};
@@ -41,12 +41,12 @@ const StyledBlock = styled(Block, {
 `;
 
 export function TabPanel(
-  props: React.ComponentPropsWithRef<typeof StyledBlock>,
+  props: React.ComponentPropsWithRef<typeof StyledView>,
 ) {
-  return <StyledBlock role="tabpanel" {...props} />;
+  return <StyledView role="tabpanel" {...props} />;
 }
 
-export const ScrollBlock = styled(Block)`
+export const FullWidthScrollView = styled(ScrollView)`
   align-self: stretch;
   grid-column: 1 / -1;
 `;

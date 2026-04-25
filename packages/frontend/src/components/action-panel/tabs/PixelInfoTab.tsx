@@ -1,17 +1,15 @@
 import { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useState } from "react";
-import { DynamicButton } from "@/components/button";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollBlock,
+  FullWidthScrollView,
   TabPanel,
 } from "./ActionPanelTabBody";
-import ActionPanelTooltip from "./ActionPanelTooltip";
+import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 import { CoordinateLabel } from "./PlacePixelTab";
@@ -85,10 +83,6 @@ export default function PixelInfoTab({
 
   const pixelHistory = data?.pixelHistory ?? [];
 
-  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
-  const closeTooltip = () => setTooltipIsOpen(false);
-  const openTooltip = () => setTooltipIsOpen(true);
-
   const pixelUrl =
     (adjustedCoords &&
       containerRef.current &&
@@ -117,34 +111,28 @@ export default function PixelInfoTab({
         : <p>No selected pixel</p>}
       </ActionPanelTabBody>
       {adjustedCoords && pixelHistory.length > 1 && (
-        <ScrollBlock>
+        <FullWidthScrollView>
           <ActionPanelTabBody>
             <div>
               <PixelHistoryPast history={pixelHistory} isLoading={isLoading} />
             </div>
           </ActionPanelTabBody>
-        </ScrollBlock>
+        </FullWidthScrollView>
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (
-          <ActionPanelTooltip
-            title="Copied"
-            onClose={closeTooltip}
-            open={tooltipIsOpen}
+          <TooltipDynamicButton
+            tooltipTitle="Copied"
+            onAction={() => {
+              navigator.clipboard.writeText(pixelUrl);
+            }}
+            color={pixelHistory?.[0]?.color.rgba ?? null}
           >
-            <DynamicButton
-              color={pixelHistory?.[0]?.color ?? null}
-              onAction={() => {
-                openTooltip();
-                navigator.clipboard.writeText(pixelUrl);
-              }}
-            >
-              Copy pixel link
-              <CoordinateLabel>
-                ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
-              </CoordinateLabel>
-            </DynamicButton>
-          </ActionPanelTooltip>
+            Copy pixel link
+            <CoordinateLabel>
+              ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
+            </CoordinateLabel>
+          </TooltipDynamicButton>
         )}
       </ActionPanelTabBody>
     </PixelInfoTabBlock>

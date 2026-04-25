@@ -1,7 +1,21 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import {
+  DiscordUserProfile,
+  Frame,
+  GuildData,
+  PixelColor,
+} from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
+
+export interface ViewBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
 
 /**
  * Return the value clamped so that it is within the range [min, max].
@@ -72,4 +86,35 @@ export function getUserGuildFlags(
   user: DiscordUserProfile,
 ): Record<string, GuildData> {
   return user.guilds ?? {};
+}
+
+export function normalizeFrameBounds({ x0, x1, y0, y1 }: Frame): ViewBounds {
+  const left = Math.min(x0, x1);
+  const right = Math.max(x0, x1);
+  const top = Math.min(y0, y1);
+  const bottom = Math.max(y0, y1);
+
+  return {
+    left,
+    right,
+    top,
+    bottom,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+export function hexStringToPixelColor(hex: string | null): PixelColor | null {
+  if (hex === null) {
+    return null;
+  }
+
+  if (!/^#?([0-9A-Fa-f]{6})$/.test(hex)) {
+    return null;
+  }
+
+  const r = Number.parseInt(hex.slice(-6, -4), 16);
+  const g = Number.parseInt(hex.slice(-4, -2), 16);
+  const b = Number.parseInt(hex.slice(-2, 0), 16);
+  return [r, g, b, 255];
 }

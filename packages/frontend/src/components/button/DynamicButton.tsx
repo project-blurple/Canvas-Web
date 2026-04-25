@@ -1,6 +1,6 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
+import { PixelColor } from "@blurple-canvas-web/types";
 import { buttonClasses, css, styled } from "@mui/material";
 
 import { Button as ButtonBase } from "@/components/button";
@@ -61,10 +61,11 @@ const DynamicButtonContent = styled("span")`
   }
 `;
 
-interface DynamicButtonProps {
-  children: React.ReactNode;
-  color: PaletteColor | null;
-  disabled?: boolean;
+interface DynamicButtonProps extends Omit<
+  React.ComponentPropsWithRef<typeof StyledButton>,
+  "color"
+> {
+  color?: PixelColor | null;
   onAction?: () => void;
 }
 
@@ -75,7 +76,7 @@ export default function DynamicButton({
   onAction,
   ...props
 }: DynamicButtonProps) {
-  const rgb = color?.rgba?.slice(0, 3).join(" ");
+  const rgb = color?.slice(0, 3).join(" ");
   const backgroundColorStr = rgb ? `rgb(${rgb})` : undefined;
 
   const clickHandler = onAction;
@@ -88,6 +89,7 @@ export default function DynamicButton({
   return (
     <StyledButton
       backgroundColorStr={backgroundColorStr}
+      disabled={disabled}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
       {...props}

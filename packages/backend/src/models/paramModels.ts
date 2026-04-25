@@ -40,6 +40,40 @@ export const PaletteQueryModel = z.object({
     .transform((v) => v === true || v === "true"),
 });
 
+const FrameIdParamModel = z.object({
+  frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
+});
+
+export const FrameDataParamModel = z
+  .object({
+    name: z.string().min(1).max(100),
+    x0: z.coerce.number().int().nonnegative(),
+    y0: z.coerce.number().int().nonnegative(),
+    x1: z.coerce.number().int().positive(),
+    y1: z.coerce.number().int().positive(),
+  })
+  .superRefine(({ x0, y0, x1, y1 }, ctx) => {
+    if (x0 === x1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["x1"],
+        message: "x0 must not be equal to x1",
+      });
+    }
+
+    if (y0 === y1) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["y1"],
+        message: "y0 must not be equal to y1",
+      });
+    }
+  });
+export const FrameOwnerParamModel = z.object({
+  ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
+  isGuildOwned: z.boolean(),
+});
+
 export interface CanvasIdParam {
   canvasId: string;
   [key: string]: string;
@@ -57,4 +91,21 @@ export async function parseCanvasId(
   }
 
   return result.data.canvasId;
+}
+
+export interface FrameIdParam {
+  frameId: string;
+  [key: string]: string;
+}
+
+export async function parseFrameId(params: FrameIdParam): Promise<string> {
+  const result = await FrameIdParamModel.safeParseAsync(params);
+  if (!result.success) {
+    throw new BadRequestError(
+      `${params.frameId} is not a valid frame ID`,
+      result.error.issues,
+    );
+  }
+
+  return result.data.frameId;
 }
