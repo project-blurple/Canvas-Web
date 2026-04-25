@@ -62,7 +62,7 @@ export default function CheckboxSetting({
       <input
         aria-busy={ariaBusy}
         checked={checked ?? false}
-        disabled={ariaBusy}
+        disabled={ariaBusy === true || ariaBusy === "true"}
         id={id}
         name={name}
         onChange={onChange}
