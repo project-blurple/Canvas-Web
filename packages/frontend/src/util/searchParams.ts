@@ -6,7 +6,7 @@ export interface SearchParamConfig {
   readonly aliases: readonly string[];
 }
 
-export const SEARCH_PARAM_KEYS = {
+const SEARCH_PARAM_KEYS = {
   canvasId: { canonical: "c", aliases: ["canvas"] },
   x: { canonical: "x", aliases: [] },
   y: { canonical: "y", aliases: [] },

@@ -24,7 +24,7 @@ export const ActionPanelTabBody = styled("div")`
   }
 `;
 
-export const Block = styled("div")`
+const Block = styled("div")`
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {

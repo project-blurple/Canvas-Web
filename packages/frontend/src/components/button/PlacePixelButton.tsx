@@ -13,7 +13,7 @@ import {
 import { Button } from "./Button";
 import DynamicButton from "./DynamicButton";
 
-export const CoordinateLabel = styled("span")`
+const CoordinateLabel = styled("span")`
   opacity: 0.6;
 `;
 

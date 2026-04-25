@@ -102,7 +102,7 @@ interface userHasRoleInGuildProps {
   accessToken: string;
 }
 
-export async function userHasRoleInGuild({
+async function userHasRoleInGuild({
   guildId,
   roleId,
   accessToken,

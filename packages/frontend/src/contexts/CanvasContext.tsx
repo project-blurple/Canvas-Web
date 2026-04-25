@@ -15,7 +15,7 @@ interface CanvasContextType {
   setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
 
-export const CanvasContext = createContext<CanvasContextType>({
+const CanvasContext = createContext<CanvasContextType>({
   canvas: {
     id: -1,
     name: "",

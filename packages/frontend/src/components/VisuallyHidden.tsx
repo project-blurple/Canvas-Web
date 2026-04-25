@@ -2,7 +2,7 @@ import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
 
 /** @see https://www.a11yproject.com/posts/how-to-hide-content */
-export const Root = styled("span")`
+const Root = styled("span")`
   &:not(:active, :focus-visible, :focus-within) {
     border: 0;
     clip: rect(0 0 0 0);
