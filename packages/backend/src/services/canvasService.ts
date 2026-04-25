@@ -10,7 +10,6 @@ import { canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { PlacePixelArray } from "@/models/bodyModels";
-import { getCurrentEvent } from "./eventService";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -350,69 +349,4 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
   // image hasn’t finished being written to the file system when Express tries to send it in the
   // response.
   return unlockedCanvas;
-}
-
-interface CreateCanvasParams {
-  name: string;
-  width: number;
-  height: number;
-  startCoordinates?: [number, number];
-  allColorsGlobal?: boolean;
-  cooldownLength?: number;
-}
-
-export async function createCanvas({
-  name,
-  width,
-  height,
-  startCoordinates = [1, 1],
-  allColorsGlobal = false,
-  cooldownLength = 15,
-}: CreateCanvasParams) {
-  const currentEventId = await getCurrentEvent();
-
-  await prisma.canvas.create({
-    data: {
-      name,
-      width,
-      height,
-      event_id: currentEventId.id,
-      start_coordinates: startCoordinates,
-      locked: true,
-      all_colors_global: allColorsGlobal,
-      cooldown_length: cooldownLength,
-    },
-  });
-}
-
-interface EditCanvasParams {
-  canvasId: number;
-  name?: string;
-  isLocked?: boolean;
-  allColorsGlobal?: boolean;
-  cooldownLength?: number;
-}
-
-export async function editCanvas({
-  canvasId,
-  name,
-  isLocked,
-  allColorsGlobal,
-  cooldownLength,
-}: EditCanvasParams) {
-  const canvas = await prisma.canvas.update({
-    where: {
-      id: canvasId,
-    },
-    data: {
-      name,
-      locked: isLocked,
-      all_colors_global: allColorsGlobal,
-      cooldown_length: cooldownLength,
-    },
-  });
-
-  if (!canvas) {
-    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
-  }
 }

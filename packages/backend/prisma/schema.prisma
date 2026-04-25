@@ -42,8 +42,8 @@ model canvas {
 model color {
   id             Int             @id @default(autoincrement())
   code           String
-  emoji_name     String?
-  emoji_id       BigInt?
+  emoji_name     String
+  emoji_id       BigInt
   global         Boolean         @default(true)
   name           String
   rgba           Int[]
