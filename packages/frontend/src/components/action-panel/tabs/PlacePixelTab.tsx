@@ -5,13 +5,12 @@ import {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
-import useLocalStorage from "@/app/settings/useLocalStorage";
 import {
   useAuthContext,
   useCanvasContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette } from "@/hooks";
+import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
@@ -87,7 +86,7 @@ export default function PlacePixelTab({
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
-  const [playSounds] = useLocalStorage("sound-fx");
+  const playSound = usePlaySound("pick_color");
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -142,12 +141,7 @@ export default function PlacePixelTab({
     false;
 
   function setSelectedColor(color: PaletteColor | null) {
-    if (playSounds) {
-      void new Audio("/audio/pick_color.ogg").play().catch(() => {
-        // Ignore playback failures from browser autoplay rules.
-      });
-    }
-
+    playSound();
     setColor(color);
   }
 

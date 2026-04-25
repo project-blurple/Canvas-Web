@@ -1,8 +1,8 @@
 import { Cooldown } from "@blurple-canvas-web/types";
-import { CircularProgress, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
-import { useCallback, useEffect, useState } from "react";
-import useLocalStorage from "@/app/settings/useLocalStorage";
+import { useEffect, useState } from "react";
 import config from "@/config";
 import {
   useAuthContext,
@@ -10,6 +10,7 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
+import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { Button } from "./Button";
 import DynamicButton from "./DynamicButton";
 
@@ -35,23 +36,13 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
   const { coords, adjustedCoords, setCoords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
-  const [playSounds] = useLocalStorage("sound-fx");
-  const [cooldownExpiryJingle] = useLocalStorage("cooldown-jingle");
+  const playCooldownExpirySound = usePlayCooldownExpirySound();
+  const playPixelPlacementSound = usePlaySound("place_pixel");
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
   const [previousTimeLeft, setPreviousTimeLeft] = useState(0);
   const { user, signOut } = useAuthContext();
-
-  const handleCooldownExpired = useCallback(() => {
-    if (!cooldownExpiryJingle) {
-      return;
-    }
-
-    void new Audio("/audio/cooldown_notification.ogg").play().catch(() => {
-      // Ignore playback failures from browser autoplay rules.
-    });
-  }, [cooldownExpiryJingle]);
 
   // cooldown timer
   useEffect(() => {
@@ -66,21 +57,15 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
 
   useEffect(() => {
     if (previousTimeLeft > 0 && timeLeft === 0) {
-      handleCooldownExpired();
+      playCooldownExpirySound();
     }
     setPreviousTimeLeft(timeLeft);
-  }, [previousTimeLeft, timeLeft, handleCooldownExpired]);
+  }, [playCooldownExpirySound, previousTimeLeft, timeLeft]);
 
   const handlePixelRequest = () => {
     if (!coords || !color) return;
 
-    if (playSounds) {
-      void new Audio("/audio/place_pixel.ogg").play().catch(() => {
-        // Ignore playback failures from browser autoplay rules.
-      });
-    }
-
-    const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel`;
+    playPixelPlacementSound();
 
     const body = {
       x: coords.x,
@@ -90,9 +75,11 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
 
     setIsPlacing(true);
     axios
-      .post<Cooldown>(requestUrl, body, {
-        withCredentials: true,
-      })
+      .post<Cooldown>(
+        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel`,
+        body,
+        { withCredentials: true },
+      )
       .then((res) => res.data)
       .then((data) => {
         const cooldown = data.cooldownEndTime;
