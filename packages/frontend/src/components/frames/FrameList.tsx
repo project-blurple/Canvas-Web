@@ -22,7 +22,7 @@ const FramesWrapper = styled("div")`
 `;
 
 type GuildFrames = FrameRequest.GuildFramesResBody;
-type SortedGuildFrameMap = [string, GuildOwnedFrame[]][];
+type SortedGuildFrameEntries = [string, GuildOwnedFrame[]][];
 
 function sortByOwnerGuildName(
   [, framesA]: readonly [string, GuildOwnedFrame[]],
@@ -39,7 +39,9 @@ function sortByOwnerGuildName(
   return ownerGuildA.localeCompare(ownerGuildB);
 }
 
-function selectSortedGuildFrameMap(data: GuildFrames): SortedGuildFrameMap {
+function selectSortedGuildFrameEntries(
+  data: GuildFrames,
+): SortedGuildFrameEntries {
   const groupedByOwnerId = Object.groupBy(data, (f) => f.owner.guild.guild_id);
 
   return Object.entries(groupedByOwnerId)
@@ -68,7 +70,7 @@ export default function FrameList() {
       guildIds: guildIds,
     },
     {
-      select: selectSortedGuildFrameMap,
+      select: selectSortedGuildFrameEntries,
     },
   );
 
