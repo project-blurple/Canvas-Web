@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Continuous PostgreSQL backup runner for containerized deployment.
-set -euo pipefail
+set -ex
 
 : "${PGHOST:?PGHOST is required}"
 : "${PGPORT:=5432}"
@@ -107,7 +107,7 @@ run_unlocked_backup() {
     echo
   } > "$backup_file"
 
-  if [ "$unlocked_canvas_ids" = "" ]; then
+  if [[ "$unlocked_canvas_ids" = "" ]]; then
     echo '-- No unlocked canvases found at backup time.' >> "$backup_file"
     gzip -f "$backup_file"
     echo "$(date -Is) Backup created (empty unlocked snapshot): $backup_file.gz"
@@ -139,11 +139,11 @@ run_unlocked_backup() {
     } >> "$backup_file"
   }
 
-  append_copy_block 'canvas' "id IN ($unlocked_canvas_ids)"
-  append_copy_block 'pixel' "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block 'history' "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block 'cooldown' "canvas_id IN ($unlocked_canvas_ids)"
-  append_copy_block 'frame' "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block canvas "id IN ($unlocked_canvas_ids)"
+  append_copy_block pixel "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block history "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block cooldown "canvas_id IN ($unlocked_canvas_ids)"
+  append_copy_block frame "canvas_id IN ($unlocked_canvas_ids)"
 
   gzip -f "$backup_file"
   echo "$(date -Is) Backup created: $backup_file.gz"
@@ -153,13 +153,13 @@ run_unlocked_backup() {
 
 echo "Starting backup loop with UNLOCKED_INTERVAL_MINUTES=$UNLOCKED_INTERVAL_MINUTES, FULL_INTERVAL_MINUTES=$FULL_INTERVAL_MINUTES, RUN_SCHEMA_WITH_FULL=$RUN_SCHEMA_WITH_FULL, TZ=$TZ"
 
-if [ "$RUN_UNLOCKED_ON_START" = 'true' ]; then
+if [[ "$RUN_UNLOCKED_ON_START" = 'true' ]]; then
   run_unlocked_backup
   date +%s > "$STATE_DIR/last_unlocked_epoch"
 fi
 
-if [ "$RUN_FULL_ON_START" = 'true' ]; then
-  if [ "$RUN_SCHEMA_WITH_FULL" = 'true' ]; then
+if [[ "$RUN_FULL_ON_START" = 'true' ]]; then
+  if [[ "$RUN_SCHEMA_WITH_FULL" = 'true' ]]; then
     run_full_backup &
     full_pid=$!
     run_schema_backup &
@@ -178,8 +178,8 @@ while true; do
 
   last_full_epoch=$(cat "$STATE_DIR/last_full_epoch" 2>/dev/null || echo 0)
   full_interval_seconds=$((FULL_INTERVAL_MINUTES * 60))
-  if [ $((now_epoch - last_full_epoch)) -ge "$full_interval_seconds" ]; then
-    if [ "$RUN_SCHEMA_WITH_FULL" = 'true' ]; then
+  if [[ $((now_epoch - last_full_epoch)) -ge "$full_interval_seconds" ]]; then
+    if [[ "$RUN_SCHEMA_WITH_FULL" = 'true' ]]; then
       run_full_backup &
       full_pid=$!
       run_schema_backup &
@@ -195,7 +195,7 @@ while true; do
 
   last_unlocked_epoch=$(cat "$STATE_DIR/last_unlocked_epoch" 2>/dev/null || echo 0)
   unlocked_interval_seconds=$((UNLOCKED_INTERVAL_MINUTES * 60))
-  if [ $((now_epoch - last_unlocked_epoch)) -ge "$unlocked_interval_seconds" ]; then
+  if [[ $((now_epoch - last_unlocked_epoch)) -ge "$unlocked_interval_seconds" ]]; then
     run_unlocked_backup
     echo "$now_epoch" > "$STATE_DIR/last_unlocked_epoch"
   fi
