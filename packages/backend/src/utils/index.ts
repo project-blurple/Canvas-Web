@@ -28,12 +28,12 @@ export function normalizeBounds({ x0, y0, x1, y1 }: Bounds): Bounds {
   };
 }
 
-type AuthenticatedRequest = Request & {
+interface AuthenticatedRequest extends Request {
   user: Express.User;
   session: Request["session"] & {
     discordAccessToken: string;
   };
-};
+}
 
 export function assertLoggedIn(
   req: Request,
