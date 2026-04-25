@@ -96,7 +96,7 @@ paletteRouter.put("/:colorId", async (req, res) => {
 
     await editColor({
       colorId,
-      data: colorData.data,
+      ...colorData.data,
     });
 
     res.status(200).json({ message: "Color edited successfully" });
@@ -148,7 +148,7 @@ paletteRouter.delete("/:colorId/assign/:eventId/:guildId", async (req, res) => {
     assertLoggedIn(req);
     assertCanvasAdmin(req.user);
 
-    const [, eventId, guildId] = await Promise.all([
+    const [_colorId, eventId, guildId] = await Promise.all([
       parseColorId(req.params),
       parseEventId(req.params),
       parseGuildId(req.params),

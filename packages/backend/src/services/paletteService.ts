@@ -108,15 +108,29 @@ export async function createColor({
 
 interface EditColorParams {
   colorId: PaletteColor["id"];
-  data: CreateColorParams;
+  code: string;
+  name: string;
+  rgba: PixelColor;
+  global: boolean;
 }
 
-export async function editColor({ colorId, data }: EditColorParams) {
+export async function editColor({
+  colorId,
+  code,
+  name,
+  rgba,
+  global,
+}: EditColorParams) {
   const color = await prisma.color.update({
     where: {
       id: colorId,
     },
-    data,
+    data: {
+      code: code,
+      name: name,
+      rgba: rgba,
+      global: global,
+    },
   });
 
   return color;
