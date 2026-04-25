@@ -100,3 +100,41 @@ export async function getPixelHistory({
     totalEntries,
   };
 }
+
+export async function deletePixelHistoryEntries(
+  canvasId: number,
+  historyIds: bigint[],
+): Promise<void> {
+  // First, check that all history entries exist and belong to the specified canvas
+  const existingEntries = await prisma.history.findMany({
+    where: {
+      canvas_id: canvasId,
+      id: {
+        in: historyIds,
+      },
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  const existingEntryIds = new Set(existingEntries.map((entry) => entry.id));
+
+  const invalidIds = historyIds.filter((id) => !existingEntryIds.has(id));
+  if (invalidIds.length > 0) {
+    throw new Error(
+      `The following history IDs do not exist for canvas ${canvasId}: ${invalidIds
+        .map((id) => id.toString())
+        .join(", ")}`,
+    );
+  }
+
+  await prisma.history.deleteMany({
+    where: {
+      canvas_id: canvasId,
+      id: {
+        in: historyIds,
+      },
+    },
+  });
+}

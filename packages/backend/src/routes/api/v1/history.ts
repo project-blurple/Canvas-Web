@@ -4,10 +4,14 @@ import { ApiError, BadRequestError } from "@/errors";
 import {
   PixelHistoryComplexBodyModel,
   PixelHistoryComplexParamModel,
+  PixelHistoryDeleteBodyModel,
   PixelHistoryParamModel,
 } from "@/models/historyModels";
 import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
-import { getPixelHistory } from "@/services/historyService";
+import {
+  deletePixelHistoryEntries,
+  getPixelHistory,
+} from "@/services/historyService";
 
 export const historyRouter = Router({ mergeParams: true });
 
@@ -36,6 +40,7 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
 
 historyRouter.post<CanvasIdParam>("/", async (req, res) => {
   // Could become a QUERY endpoint in the future once it becomes supported
+  // TODO: restrict by Canvas Manager auth?
   try {
     // grabbing the canvasId from the path
     const canvasId = await parseCanvasId(req.params);
@@ -93,6 +98,27 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
   }
 });
 
-historyRouter.delete<CanvasIdParam>("/", async (_req, res) => {
-  return res.status(504).json({ message: "Not implemented" });
+historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
+  try {
+    // TODO: restrict by Canvas Manager auth
+    const canvasId = await parseCanvasId(req.params);
+
+    const bodyResult = await PixelHistoryDeleteBodyModel.safeParseAsync(
+      req.body,
+    );
+    if (!bodyResult.success) {
+      throw new BadRequestError(
+        "Invalid request body. Expected an object with a historyIds property that is an array of non-negative integers",
+        bodyResult.error.issues,
+      );
+    }
+
+    const historyIds = bodyResult.data.historyIds.map(BigInt);
+
+    await deletePixelHistoryEntries(canvasId, historyIds);
+
+    res.status(204).send();
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });
