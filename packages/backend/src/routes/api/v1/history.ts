@@ -1,11 +1,13 @@
+import { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
 import {
-  CanvasIdParam,
+  PixelHistoryComplexBodyModel,
+  PixelHistoryComplexParamModel,
   PixelHistoryParamModel,
-  parseCanvasId,
-} from "@/models/paramModels";
-import { getPixelHistory } from "@/services/pixelService";
+} from "@/models/historyModels";
+import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
+import { getPixelHistory } from "@/services/historyService";
 
 export const historyRouter = Router({ mergeParams: true });
 
@@ -24,7 +26,66 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     }
 
     const coordinates = queryResult.data;
-    const pixelHistory = await getPixelHistory(canvasId, coordinates);
+    const pixelHistory = await getPixelHistory({ canvasId, coordinates });
+
+    res.status(200).json(pixelHistory);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+historyRouter.post<CanvasIdParam>("/", async (req, res) => {
+  // Could become a QUERY endpoint in the future once it becomes supported
+  try {
+    // grabbing the canvasId from the path
+    const canvasId = await parseCanvasId(req.params);
+
+    const [queryResult, bodyResult] = await Promise.all([
+      PixelHistoryComplexParamModel.safeParseAsync(req.query),
+      PixelHistoryComplexBodyModel.safeParseAsync(req.body),
+    ]);
+
+    if (!queryResult.success) {
+      throw new BadRequestError(
+        "Invalid query parameters. Expected x0, y0, x1, and y1 as positive integers, with x1 and y1 being optional",
+        queryResult.error.issues,
+      );
+    }
+    if (!bodyResult.success) {
+      throw new BadRequestError(
+        "Invalid request body. Expected a valid history query object",
+        bodyResult.error.issues,
+      );
+    }
+
+    const coordinate0 = {
+      x: queryResult.data.x0,
+      y: queryResult.data.y0,
+    };
+    const coordinate1 = {
+      x: queryResult.data.x1 ?? queryResult.data.x0,
+      y: queryResult.data.y1 ?? queryResult.data.y0,
+    };
+    const coordinates: [Point, Point] = [coordinate0, coordinate1];
+
+    const dateRange = {
+      from: bodyResult.data.fromDateTime,
+      to: bodyResult.data.toDateTime,
+    };
+
+    const userIdFilter =
+      bodyResult.data.includeUserIds ?
+        { ids: bodyResult.data.includeUserIds.map(BigInt), include: true }
+      : bodyResult.data.excludeUserIds ?
+        { ids: bodyResult.data.excludeUserIds.map(BigInt), include: false }
+      : undefined;
+
+    const pixelHistory = await getPixelHistory({
+      canvasId,
+      coordinates,
+      dateRange,
+      userIdFilter,
+    });
 
     res.status(200).json(pixelHistory);
   } catch (error) {
