@@ -15,19 +15,10 @@ jobs:
         strict:
           - ""
           - --strict
-        issue_type:
-          - catalog
-          - dependencies
-          - duplicates
-          - enumMembers
-          - exports
-          - files
-          - namespaceMembers
-          - nsExports
-          - nsTypes
-          - types
-          - unlisted
-          - unresolved
+        scope:
+          - --dependencies
+          - --exports
+          - --files
     steps:
       - uses: actions/checkout@v6
 
@@ -44,4 +35,4 @@ jobs:
         run: pnpm install
 
       - name: Run knip
-        run: pnpm run knip --cache --include=${{ matrix.issue_type }} ${{ matrix.strict }}
+        run: pnpm run knip --cache ${{ matrix.scope }} ${{ matrix.strict }}
