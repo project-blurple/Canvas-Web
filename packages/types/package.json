@@ -38,10 +38,8 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
+    "@types/passport-discord": "^0.1.15",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3"
-  },
-  "dependencies": {
-    "@types/passport-discord": "^0.1.15"
   }
 }

@@ -1,10 +1,13 @@
 import {
+  DiscordUserProfile,
   Frame,
   GuildOwnedFrame,
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
-import { prisma } from "@/client";
-import { NotFoundError } from "@/errors";
+import { Prisma, prisma } from "@/client";
+import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
+import { PrismaErrorCode } from "@/utils";
+import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
 type FrameSelect = NonNullable<FrameFindManyArgs>["select"];
@@ -157,4 +160,174 @@ export async function getFramesByGuildIds(
     asGuildFrame(mapped);
     return mapped;
   });
+}
+
+async function assertUserHasPermissionsForFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  isGuildOwned: boolean,
+  ownerId: string,
+) {
+  if (isGuildOwned) {
+    const permissions = await getGuildPermissionsForUser(ownerId, accessToken);
+
+    if (!permissions.administrator && !permissions.manage_guild) {
+      throw new ForbiddenError(
+        "You do not have permission to modify frames for this guild",
+      );
+    }
+  }
+
+  if (ownerId !== user.id) {
+    throw new ForbiddenError("You are not the owner of this frame");
+  }
+}
+
+async function assertUserHasPermissionsForFrameObject(
+  user: DiscordUserProfile,
+  accessToken: string,
+  frame: Frame,
+) {
+  if (frame.owner.type === "system") {
+    throw new ForbiddenError("System-owned frames cannot be edited");
+  }
+  return assertUserHasPermissionsForFrame(
+    user,
+    accessToken,
+    frame.owner.type === "guild",
+    frame.owner.type === "guild" ?
+      frame.owner.guild.guild_id
+    : frame.owner.user.id,
+  );
+}
+
+async function assertCoordsAreWithinCanvas(
+  canvasId: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  const canvas = await prisma.canvas.findUnique({
+    where: {
+      id: canvasId,
+    },
+    select: {
+      width: true,
+      height: true,
+    },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError("Canvas not found");
+  }
+
+  if (x0 < 0 || y0 < 0 || x1 > canvas.width || y1 > canvas.height) {
+    throw new BadRequestError(
+      "Frame coordinates must be within the bounds of the canvas",
+    );
+  }
+
+  return canvas;
+}
+
+export async function editFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  frameId: string,
+  name: string,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  const frame = await getFrameById(frameId);
+
+  await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+
+  await assertCoordsAreWithinCanvas(frame.canvasId, x0, y0, x1, y1);
+
+  return await prisma.frame.update({
+    where: {
+      id: frameId,
+    },
+    data: {
+      name,
+      x_0: x0,
+      y_0: y0,
+      x_1: x1,
+      y_1: y1,
+    },
+  });
+}
+
+export async function deleteFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  frameId: string,
+) {
+  const frame = await getFrameById(frameId);
+
+  await assertUserHasPermissionsForFrameObject(user, accessToken, frame);
+
+  await prisma.frame.delete({
+    where: {
+      id: frameId,
+    },
+  });
+}
+
+export async function createFrame(
+  user: DiscordUserProfile,
+  accessToken: string,
+  canvasId: number,
+  name: string,
+  ownerId: string,
+  isGuildOwned: boolean,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+) {
+  await assertUserHasPermissionsForFrame(
+    user,
+    accessToken,
+    isGuildOwned,
+    ownerId,
+  );
+
+  await assertCoordsAreWithinCanvas(canvasId, x0, y0, x1, y1);
+
+  while (true) {
+    // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
+    // These are like hex colour codes!
+    const id = Math.floor(Math.random() * 0x1000000)
+      .toString(16)
+      .padStart(6, "0");
+
+    try {
+      await prisma.frame.create({
+        data: {
+          id,
+          canvas_id: canvasId,
+          name,
+          owner_id: BigInt(ownerId),
+          is_guild_owned: isGuildOwned,
+          x_0: x0,
+          y_0: y0,
+          x_1: x1,
+          y_1: y1,
+        },
+      });
+      return;
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === PrismaErrorCode.UniqueConstraintViolation
+      ) {
+        continue;
+      }
+      throw error;
+    }
+  }
 }

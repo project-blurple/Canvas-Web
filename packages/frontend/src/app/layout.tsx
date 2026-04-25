@@ -14,6 +14,7 @@ import {
   CanvasProvider,
   CanvasViewProvider,
   QueryClientProvider,
+  SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
@@ -103,7 +104,9 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
                 <CanvasViewProvider>
-                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  <SelectedBoundsProvider>
+                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  </SelectedBoundsProvider>
                 </CanvasViewProvider>
               </CanvasProvider>
             </SelectedFrameProvider>

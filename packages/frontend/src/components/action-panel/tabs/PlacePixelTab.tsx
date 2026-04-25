@@ -13,7 +13,7 @@ import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollBlock,
+  FullWidthScrollView,
   TabPanel,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
@@ -137,7 +137,7 @@ export default function PlacePixelTab({
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
-      <ScrollBlock>
+      <FullWidthScrollView>
         <ActionPanelTabBody>
           <ColorPicker>
             <Heading>Main colors</Heading>
@@ -172,7 +172,7 @@ export default function PlacePixelTab({
             }
           </ColorPicker>
         </ActionPanelTabBody>
-      </ScrollBlock>
+      </FullWidthScrollView>
       <ActionPanelTabBody>
         {isLarge && (
           <ColorInfoCard
@@ -183,7 +183,7 @@ export default function PlacePixelTab({
         )}
         {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
-          <DynamicAnchorButton color={selectedColor} href={serverInvite}>
+          <DynamicAnchorButton color={selectedColor?.rgba} href={serverInvite}>
             {!userInServer ? "Join" : "Open"}{" "}
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>
