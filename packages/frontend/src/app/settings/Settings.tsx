@@ -1,7 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
-import { BellRing, CaseSensitive } from "lucide-react";
+import { BellRing } from "lucide-react";
 import CheckboxSetting from "./CheckboxSetting";
 import useLocalStorage from "./useLocalStorage";
 
@@ -73,20 +73,6 @@ function CooldownExpiryJingleSetting() {
       description="Play a sound when you can place another pixel"
       label="Cooldown expiry jingle"
       name="cooldown-jingle"
-      onChange={(e) => setValue(e.target.checked)}
-    />
-  );
-}
-
-function WebfontsSetting() {
-  const [value, setValue] = useLocalStorage("webfonts");
-  return (
-    <CheckboxSetting
-      aria-busy={value === undefined}
-      checked={value}
-      description="Uncheck to use system fonts"
-      label="Use webfonts"
-      name="webfonts"
       onChange={(e) => setValue(e.target.checked)}
     />
   );
