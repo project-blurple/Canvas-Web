@@ -55,23 +55,3 @@ paletteRouter.get("/:eventId", async (req, res) => {
     ApiError.sendError(res, error);
   }
 });
-
-paletteRouter.post("/", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-paletteRouter.put("/:colorId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-paletteRouter.delete("/:colorId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-paletteRouter.post("/:colorId/assign/:eventId/:guildId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-paletteRouter.post("/:colorId/unassign/:eventId/:guildId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});

@@ -66,14 +66,6 @@ canvasRouter.get("/:canvasId", async (req, res) => {
   }
 });
 
-canvasRouter.post("/", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-canvasRouter.put("/:canvasId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
 /**
  * Handles sending a cached canvas as a response.
  */

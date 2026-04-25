@@ -34,11 +34,3 @@ eventRouter.get("/:eventId", async (req, res) => {
     ApiError.sendError(res, error);
   }
 });
-
-eventRouter.post("/", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
-
-eventRouter.put("/:eventId", (_req, res) => {
-  res.status(501).json({ message: "Not implemented" });
-});
