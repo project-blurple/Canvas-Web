@@ -1,7 +1,13 @@
-import { PaletteColor, PixelColor } from "@blurple-canvas-web/types";
+import {
+  PaletteColor,
+  PaletteColorSummary,
+  PixelColor,
+} from "@blurple-canvas-web/types";
 
-import { prisma } from "@/client";
+import { color, prisma } from "@/client";
 import { getCurrentEvent } from "./eventService";
+
+type ColorSummary = Pick<color, "id" | "code" | "name" | "rgba" | "global">;
 
 /**
  * Retrieves the palette for the current event defined in the database.
@@ -68,4 +74,16 @@ export async function getEventPalette(
       color.participations[0]?.guild?.discord_guild_record?.name ?? null,
     guildId: color.participations[0]?.guild?.id.toString() ?? null,
   }));
+}
+
+export function toPaletteColorSummary(
+  color: ColorSummary,
+): PaletteColorSummary {
+  return {
+    id: color.id,
+    code: color.code,
+    name: color.name,
+    rgba: color.rgba as PixelColor,
+    global: color.global,
+  };
 }

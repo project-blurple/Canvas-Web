@@ -75,6 +75,12 @@ const StyledTab = styled("button")`
     background-color: var(--discord-legacy-dark-but-not-black);
   }
 
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       background-color: var(--discord-legacy-dark-but-not-black);
@@ -126,12 +132,15 @@ function Tab({
 export default function ActionPanel() {
   const [currentTab, setCurrentTab] = useState("place");
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
+  const [areTabsLocked, setAreTabsLocked] = useState(false);
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
   const { setIsReticleVisible } = useCanvasViewContext();
 
   const onSwitchTab = (newTab: TabKey) => {
+    if (areTabsLocked) return;
+
     setCurrentTab(newTab);
 
     // hiding colour from reticle if we are on look tab
@@ -155,6 +164,7 @@ export default function ActionPanel() {
       <TabBar role="tablist">
         <Tab
           aria-controls={placeTabId}
+          aria-disabled={areTabsLocked && currentTab !== "place"}
           aria-selected={currentTab === "place"}
           tabKey="place"
           onSwitchTab={onSwitchTab}
@@ -163,6 +173,7 @@ export default function ActionPanel() {
         </Tab>
         <Tab
           aria-controls={lookTabId}
+          aria-disabled={areTabsLocked && currentTab !== "look"}
           aria-selected={currentTab === "look"}
           tabKey="look"
           onSwitchTab={onSwitchTab}
@@ -171,6 +182,7 @@ export default function ActionPanel() {
         </Tab>
         <Tab
           aria-controls={frameTabId}
+          aria-disabled={areTabsLocked && currentTab !== "frame"}
           aria-selected={currentTab === "frame"}
           tabKey="frame"
           onSwitchTab={onSwitchTab}
@@ -190,8 +202,8 @@ export default function ActionPanel() {
       />
       <FramesTab
         active={currentTab === "frame"}
-        canvasId={canvas.id}
         id={frameTabId}
+        setTabsLocked={setAreTabsLocked}
       />
     </Wrapper>
   );

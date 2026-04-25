@@ -1,6 +1,6 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
+import { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 
 const Container = styled("code", {
@@ -39,7 +39,7 @@ export default function ColorCodeChip({
   color,
   ...props
 }: {
-  color: PaletteColor;
+  color: PaletteColorSummary;
 }) {
   const { code: colorCode } = color;
 
