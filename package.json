@@ -26,6 +26,7 @@
     "test": "pnpm --recursive test",
     "lint": "pnpm --recursive lint",
     "lint:fix": "pnpm --recursive lint:fix",
+    "knip": "knip",
     "format": "pnpm --recursive format",
     "format:fix": "pnpm --recursive format:fix",
     "check": "pnpm --recursive check",
@@ -52,6 +53,7 @@
     "@biomejs/biome": "^2.4.12",
     "@types/node": "^24.12.2",
     "husky": "^9.1.7",
+    "knip": "^6.4.1",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3"
