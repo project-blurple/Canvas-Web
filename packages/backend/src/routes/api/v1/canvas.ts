@@ -4,7 +4,7 @@ import {
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
 } from "@/models/bodyModels";
-import { parseCanvasId } from "@/models/paramModels";
+import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
 import {
   CachedCanvas,
   createCanvas,
@@ -101,7 +101,7 @@ canvasRouter.post("/", async (req, res) => {
   }
 });
 
-canvasRouter.put("/:canvasId", async (req, res) => {
+canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
   try {
     assertLoggedIn(req);
     assertCanvasAdmin(req.user);
