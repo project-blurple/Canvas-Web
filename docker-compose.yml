@@ -24,15 +24,15 @@ services:
       # this and forwards traffic to the appropriate container.
       - NEXT_PUBLIC_API_URL=http://backend:8000
     ports:
-      - "3000:3000"
+      - 3000:3000
 
   caddy:
     image: caddy:2.7-alpine
 
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
     depends_on:
       - backend
       - frontend
