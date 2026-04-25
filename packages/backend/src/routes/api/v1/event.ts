@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { ApiError } from "@/errors";
+import { ApiError, NotFoundError } from "@/errors";
 import { CreateEventBodyModel, EditEventBodyModel } from "@/models/bodyModels";
 import { parseEventId } from "@/models/paramModels";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
@@ -45,6 +45,10 @@ eventRouter.post("/", async (req, res) => {
 
     res.status(201).json({ message: "Event created successfully" });
   } catch (error) {
+    if (error instanceof NotFoundError) {
+      return res.status(409).json({ message: error.message });
+    }
+
     ApiError.sendError(res, error);
   }
 });

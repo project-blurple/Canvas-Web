@@ -8,12 +8,12 @@ BigInt.prototype.toJSON = function (): string {
   return this.toString();
 };
 
-type AuthenticatedRequest = Request & {
+interface AuthenticatedRequest extends Request {
   user: Express.User;
   session: Request["session"] & {
     discordAccessToken: string;
   };
-};
+}
 
 export function assertLoggedIn(
   req: Request,
