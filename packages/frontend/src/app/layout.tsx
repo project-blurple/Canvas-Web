@@ -10,7 +10,6 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config";
 import {
-  AudioProvider,
   CanvasViewProvider,
   QueryClientProvider,
   SelectedColorProvider,
@@ -100,17 +99,15 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider>
       <QueryClientProvider>
         <AuthProvider profile={profile}>
-          <AudioProvider>
-            <SelectedColorProvider>
-              <SelectedFrameProvider>
-                <CanvasProvider mainCanvasInfo={canvasInfo}>
-                  <CanvasViewProvider>
-                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </CanvasViewProvider>
-                </CanvasProvider>
-              </SelectedFrameProvider>
-            </SelectedColorProvider>
-          </AudioProvider>
+          <SelectedColorProvider>
+            <SelectedFrameProvider>
+              <CanvasProvider mainCanvasInfo={canvasInfo}>
+                <CanvasViewProvider>
+                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                </CanvasViewProvider>
+              </CanvasProvider>
+            </SelectedFrameProvider>
+          </SelectedColorProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>

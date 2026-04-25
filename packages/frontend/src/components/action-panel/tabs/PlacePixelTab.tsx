@@ -5,8 +5,8 @@ import {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
+import useLocalStorage from "@/app/settings/useLocalStorage";
 import {
-  useAudioContext,
   useAuthContext,
   useCanvasContext,
   useSelectedColorContext,
@@ -87,7 +87,7 @@ export default function PlacePixelTab({
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
-  const { playSounds } = useAudioContext();
+  const [playSounds] = useLocalStorage("sound-fx");
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);

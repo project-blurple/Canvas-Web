@@ -2,10 +2,9 @@ import { Cooldown } from "@blurple-canvas-web/types";
 import { CircularProgress, styled } from "@mui/material";
 import axios from "axios";
 import { useCallback, useEffect, useState } from "react";
-
+import useLocalStorage from "@/app/settings/useLocalStorage";
 import config from "@/config";
 import {
-  useAudioContext,
   useAuthContext,
   useCanvasContext,
   useCanvasViewContext,
@@ -36,7 +35,8 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
   const { coords, adjustedCoords, setCoords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
-  const { playSounds, cooldownExpiryJingle } = useAudioContext();
+  const [playSounds] = useLocalStorage("sound-fx");
+  const [cooldownExpiryJingle] = useLocalStorage("cooldown-jingle");
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
