@@ -1,8 +1,11 @@
 import { Router } from "express";
 
 import { ApiError, NotFoundError } from "@/errors";
-import { CreateEventBodyModel, EditEventBodyModel } from "@/models/bodyModels";
-import { parseEventId } from "@/models/paramModels";
+import {
+  CreateEventBodyModel,
+  EditEventBodyModel,
+  parseEventId,
+} from "@/models/eventModels";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
 import {
   createEvent,

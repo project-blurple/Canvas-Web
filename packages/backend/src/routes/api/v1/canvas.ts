@@ -1,10 +1,11 @@
 import { Response, Router } from "express";
 import { ApiError } from "@/errors";
 import {
+  CanvasIdParam,
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
-} from "@/models/bodyModels";
-import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
+  parseCanvasId,
+} from "@/models/canvasModels";
 import {
   CachedCanvas,
   createCanvas,

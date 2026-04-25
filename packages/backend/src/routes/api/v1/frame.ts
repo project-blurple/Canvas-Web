@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
+import { parseCanvasId } from "@/models/canvasModels";
 import {
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
   FrameOwnerParamModel,
-  parseCanvasId,
   parseFrameId,
-} from "@/models/paramModels";
+} from "@/models/frameModels";
 import {
   createFrame,
   deleteFrame,
