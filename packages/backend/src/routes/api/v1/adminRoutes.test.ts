@@ -193,10 +193,12 @@ describe("Admin route tests", () => {
       });
       expect(mocks.editColor).toHaveBeenCalledWith({
         colorId: 3,
-        code: "gren",
-        name: "Green",
-        global: false,
-        rgba: [0, 255, 0, 255],
+        data: {
+          code: "gren",
+          name: "Green",
+          global: false,
+          rgba: [0, 255, 0, 255],
+        },
       });
     });
 
