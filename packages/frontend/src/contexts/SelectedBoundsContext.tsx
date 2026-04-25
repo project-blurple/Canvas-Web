@@ -144,18 +144,18 @@ export const SelectedBoundsProvider = ({
 
   const setBoundsToCurrentView = useCallback(
     (fillRatio: number) => {
-      setSelectedBounds(
-        fitViewBoundsToFillRatio(
-          getCurrentViewBounds({
-            canvas,
-            containerRef,
-            offset,
-            zoom,
-          }),
-          fillRatio,
-          canvas,
-        ),
+      const currentViewBounds = getCurrentViewBounds({
+        canvas,
+        containerRef,
+        offset,
+        zoom,
+      });
+      const fittedBounds = fitViewBoundsToFillRatio(
+        currentViewBounds,
+        fillRatio,
+        canvas,
       );
+      setSelectedBounds(fittedBounds);
     },
     [canvas, containerRef, offset, zoom],
   );

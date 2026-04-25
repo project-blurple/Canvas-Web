@@ -77,12 +77,7 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       );
     }
 
-    const { x0, y0, x1, y1 } = normalizeBounds({
-      x0: bodyQueryResult.data.x0,
-      y0: bodyQueryResult.data.y0,
-      x1: bodyQueryResult.data.x1,
-      y1: bodyQueryResult.data.y1,
-    });
+    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
     await editFrame(
       req.user,
@@ -94,7 +89,7 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       x1,
       y1,
     );
-    res.status(200).json({ message: "Frame edited successfully" });
+    res.status(200).json({ message: "Frame edited" });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -109,7 +104,7 @@ frameRouter.delete("/:frameId/delete", async (req, res) => {
     const frameId = await parseFrameId(req.params);
 
     await deleteFrame(req.user, req.session.discordAccessToken, frameId);
-    res.status(200).json({ message: "Frame deleted successfully" });
+    res.status(204).json({ message: "Frame deleted" });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -133,12 +128,7 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
-    const { x0, y0, x1, y1 } = normalizeBounds({
-      x0: bodyQueryResult.data.x0,
-      y0: bodyQueryResult.data.y0,
-      x1: bodyQueryResult.data.x1,
-      y1: bodyQueryResult.data.y1,
-    });
+    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
     if (!ownerQueryResult.success) {
       throw new BadRequestError(
@@ -147,7 +137,7 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
-    await createFrame(
+    const frame = await createFrame(
       req.user,
       req.session.discordAccessToken,
       canvasId,
@@ -159,7 +149,7 @@ frameRouter.post("/", async (req, res) => {
       x1,
       y1,
     );
-    res.status(201).json({ message: "Frame created successfully" });
+    res.status(201).json(frame);
   } catch (error) {
     ApiError.sendError(res, error);
   }

@@ -4,12 +4,12 @@ import { clamp, normalizeFrameBounds } from "@/util";
 
 export const FRAME_FILL_RATIO = 0.9;
 
-export type SourceRect = {
+export interface SourceRect {
   x: number;
   y: number;
   width: number;
   height: number;
-};
+}
 
 export const PreviewCanvas = styled("canvas")`
   border-radius: 0.375rem;

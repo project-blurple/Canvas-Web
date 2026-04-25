@@ -175,10 +175,10 @@ async function assertUserHasPermissionsForFrame(
         "You do not have permission to modify frames for this guild",
       );
     }
-  } else {
-    if (ownerId !== user.id) {
-      throw new ForbiddenError("You are not the owner of this frame");
-    }
+  }
+
+  if (ownerId !== user.id) {
+    throw new ForbiddenError("You are not the owner of this frame");
   }
 }
 

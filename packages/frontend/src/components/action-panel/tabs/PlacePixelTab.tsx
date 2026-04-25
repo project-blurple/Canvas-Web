@@ -13,7 +13,7 @@ import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollableView,
+  FullWidthScrollView,
   TabPanel,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
@@ -137,7 +137,7 @@ export default function PlacePixelTab({
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
-      <ScrollableView>
+      <FullWidthScrollView>
         <ActionPanelTabBody>
           <ColorPicker>
             <Heading>Main colors</Heading>
@@ -172,7 +172,7 @@ export default function PlacePixelTab({
             }
           </ColorPicker>
         </ActionPanelTabBody>
-      </ScrollableView>
+      </FullWidthScrollView>
       <ActionPanelTabBody>
         {isLarge && (
           <ColorInfoCard

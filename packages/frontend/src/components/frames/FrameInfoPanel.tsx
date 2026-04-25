@@ -7,7 +7,7 @@ import {
 import { createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
-  ScrollableView,
+  FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
@@ -57,9 +57,9 @@ export default function FrameInfoPanel({
 
   return (
     <>
-      <ScrollableView>
+      <FullWidthScrollView>
         <FrameList />
-      </ScrollableView>
+      </FullWidthScrollView>
       {(() => {
         if (selectedFrame) {
           return (

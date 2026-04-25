@@ -4,17 +4,14 @@ BigInt.prototype.toJSON = function (): string {
   return this.toString();
 };
 
-export function normalizeBounds({
-  x0,
-  y0,
-  x1,
-  y1,
-}: {
+interface Bounds {
   x0: number;
   y0: number;
   x1: number;
   y1: number;
-}): { x0: number; y0: number; x1: number; y1: number } {
+}
+
+export function normalizeBounds({ x0, y0, x1, y1 }: Bounds): Bounds {
   return {
     x0: Math.min(x0, x1),
     y0: Math.min(y0, y1),

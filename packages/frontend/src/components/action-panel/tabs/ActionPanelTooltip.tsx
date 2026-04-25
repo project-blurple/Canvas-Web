@@ -1,5 +1,5 @@
 import { PixelColor } from "@blurple-canvas-web/types";
-import { Tooltip, TooltipProps } from "@mui/material";
+import Tooltip, { TooltipProps } from "@mui/material/Tooltip";
 import { useState } from "react";
 import DynamicButton from "@/components/button/DynamicButton";
 

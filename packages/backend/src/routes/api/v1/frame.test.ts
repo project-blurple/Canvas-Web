@@ -41,7 +41,7 @@ const endpointCases = [
       y1: 10,
     },
     successStatus: 201,
-    successMessage: "Frame created successfully",
+    successMessage: "Frame created",
     serviceName: "create",
   },
   {
@@ -56,7 +56,7 @@ const endpointCases = [
       y1: 12,
     },
     successStatus: 200,
-    successMessage: "Frame edited successfully",
+    successMessage: "Frame edited",
     serviceName: "edit",
   },
   {
@@ -64,8 +64,8 @@ const endpointCases = [
     method: "delete",
     path: "/api/v1/frame/abc123/delete",
     body: {},
-    successStatus: 200,
-    successMessage: "Frame deleted successfully",
+    successStatus: 204,
+    successMessage: "Frame deleted",
     serviceName: "delete",
   },
 ] as const satisfies readonly EndpointCase[];

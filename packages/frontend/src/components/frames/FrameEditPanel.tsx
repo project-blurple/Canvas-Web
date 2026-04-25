@@ -43,7 +43,7 @@ import {
 import { Heading } from "../action-panel/ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollableView,
+  FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
@@ -468,7 +468,7 @@ export default function FrameEditPanel({
 
   return (
     <>
-      <ScrollableView>
+      <FullWidthScrollView>
         <ActionPanelTabBody>
           <EditContainer>
             <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
@@ -491,8 +491,8 @@ export default function FrameEditPanel({
               }}
               disabled={!isCreateMode} // Can't change owner after frame is created
             >
-              <ToggleButton value={"user"}>You</ToggleButton>
-              <ToggleButton value={"guild"}>Server</ToggleButton>
+              <ToggleButton value="user">You</ToggleButton>
+              <ToggleButton value="guild">Server</ToggleButton>
             </ToggleButtonGroup>
             {selectedOwner === "guild" && (
               <Autocomplete
@@ -545,7 +545,7 @@ export default function FrameEditPanel({
             : <p>Select a frame to preview it.</p>}
           </PreviewContainer>
         </ActionPanelTabBody>
-      </ScrollableView>
+      </FullWidthScrollView>
       <ActionPanelTabBody>
         <ButtonRow>
           {!isCreateMode ?

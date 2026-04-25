@@ -8,14 +8,14 @@ import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
 
-export type ViewBounds = {
+export interface ViewBounds {
   left: number;
   top: number;
   right: number;
   bottom: number;
   width: number;
   height: number;
-};
+}
 
 /**
  * Return the value clamped so that it is within the range [min, max].
@@ -109,13 +109,12 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
     return null;
   }
 
-  const normalized = hex.startsWith("#") ? hex : `#${hex}`;
-  if (!/^#([0-9A-Fa-f]{6})$/.test(normalized)) {
+  if (hex === null || !/^#?([0-9A-Fa-f]{6})$/.test(hex)) {
     return null;
   }
 
-  const r = Number.parseInt(normalized.slice(1, 3), 16);
-  const g = Number.parseInt(normalized.slice(3, 5), 16);
-  const b = Number.parseInt(normalized.slice(5, 7), 16);
+  const r = Number.parseInt(hex.slice(-6, -4), 16);
+  const g = Number.parseInt(hex.slice(-4, -2), 16);
+  const b = Number.parseInt(hex.slice(-2, 0), 16);
   return [r, g, b, 255];
 }
