@@ -19,9 +19,6 @@ const Wrapper = styled("div")`
     border-end-start-radius: inherit;
     border-end-end-radius: inherit;
   }
-  &[aria-disabled="true"] :not(input[type="checkbox"]) {
-    opacity: 55%;
-  }
   > :not(input[type="checkbox"]) {
     grid-column: 2;
   }
@@ -44,7 +41,7 @@ interface CheckboxSettingProps
         React.InputHTMLAttributes<HTMLInputElement>,
         HTMLInputElement
       >,
-      "checked" | "disabled" | "name" | "onChange"
+      "checked" | "name" | "onChange"
     > {
   description?: React.ReactNode;
   label: React.ReactNode;
@@ -54,7 +51,6 @@ export default function CheckboxSetting({
   "aria-busy": ariaBusy,
   checked,
   description,
-  disabled,
   label,
   name,
   onChange,
@@ -62,11 +58,11 @@ export default function CheckboxSetting({
 }: CheckboxSettingProps) {
   const id = useId();
   return (
-    <Wrapper {...props} aria-disabled={disabled}>
+    <Wrapper {...props}>
       <input
         aria-busy={ariaBusy}
         checked={checked ?? false}
-        disabled={disabled || ariaBusy === true || ariaBusy === "true"}
+        disabled={ariaBusy === true || ariaBusy === "true"}
         id={id}
         name={name}
         onChange={onChange}

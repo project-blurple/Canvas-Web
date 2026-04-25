@@ -65,13 +65,11 @@ function SoundEffectsSetting() {
 }
 
 function CooldownExpiryJingleSetting() {
-  const [isApplicable] = useLocalStorage("sound-fx");
   const [value, setValue] = useLocalStorage("cooldown-jingle");
   return (
     <CheckboxSetting
       aria-busy={value === undefined}
       checked={value}
-      disabled={!isApplicable}
       description="Play a sound when you can place another pixel"
       label="Cooldown expiry jingle"
       name="cooldown-jingle"
