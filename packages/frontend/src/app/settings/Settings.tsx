@@ -106,14 +106,6 @@ export default function Settings() {
         <CooldownExpiryJingleSetting />
       </Form>
 
-      <H2>
-        <CaseSensitive />
-        Webfonts
-      </H2>
-      <Form>
-        <WebfontsSetting />
-      </Form>
-
       <Aside>
         Settings are stored locally in your browser, and don&rsquo;t follow your
         account
