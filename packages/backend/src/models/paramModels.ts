@@ -54,7 +54,6 @@ export const PaletteQueryModel = z.object({
 
 export interface CanvasIdParam {
   canvasId: string;
-  [key: string]: string;
 }
 
 export async function parseCanvasId(
