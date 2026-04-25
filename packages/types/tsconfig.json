@@ -4,6 +4,7 @@
 
   // Reference: https://www.typescriptlang.org/tsconfig
   "compilerOptions": {
+    "skipLibCheck": false,
     "declaration": true,
     "rootDir": "src",
     "outDir": "build",
