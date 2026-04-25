@@ -12,7 +12,7 @@ interface EndpointCase {
   path: string;
   body: Record<string, unknown>;
   successStatus: number;
-  successMessage: string;
+  successBody: unknown;
   serviceName: "create" | "edit" | "delete";
 }
 
@@ -41,7 +41,7 @@ const endpointCases = [
       y1: 10,
     },
     successStatus: 201,
-    successMessage: "Frame created",
+    successBody: "",
     serviceName: "create",
   },
   {
@@ -56,7 +56,7 @@ const endpointCases = [
       y1: 12,
     },
     successStatus: 200,
-    successMessage: "Frame edited",
+    successBody: { id: "abc123" },
     serviceName: "edit",
   },
   {
@@ -65,7 +65,7 @@ const endpointCases = [
     path: "/api/v1/frame/abc123/delete",
     body: {},
     successStatus: 204,
-    successMessage: "Frame deleted",
+    successBody: {},
     serviceName: "delete",
   },
 ] as const satisfies readonly EndpointCase[];
@@ -96,17 +96,18 @@ const createApp = (includeAccessToken: boolean) => {
   return app;
 };
 
-const sendMutationRequest = ({
-  app,
-  method,
-  path,
-  body,
-}: {
-  app: express.Express;
-  method: EndpointCase["method"];
-  path: string;
-  body: Record<string, unknown>;
-}) => request(app)[method](path).send(body).type("json");
+const sendMutationRequest = (
+  path: string,
+  {
+    app,
+    method,
+    body,
+  }: {
+    app: express.Express;
+    method: EndpointCase["method"];
+    body: Record<string, unknown>;
+  },
+) => request(app)[method](path).send(body).type("json");
 
 describe("Frame mutation route tests", () => {
   beforeEach(() => {
@@ -115,27 +116,31 @@ describe("Frame mutation route tests", () => {
 
   it.each(endpointCases)(
     "returns success for $name when authenticated and authorized",
-    async ({
-      method,
-      path,
-      body,
-      successStatus,
-      successMessage,
-      serviceName,
-    }) => {
+    async ({ method, path, body, successStatus, successBody, serviceName }) => {
       const app = createApp(true);
       const serviceMock = getServiceMock(serviceName);
-      serviceMock.mockResolvedValueOnce(undefined);
+      switch (serviceName) {
+        case "create":
+          vi.mocked(createFrame).mockResolvedValueOnce(undefined);
+          break;
+        case "edit":
+          vi.mocked(editFrame).mockResolvedValueOnce({
+            id: "abc123",
+          } as Awaited<ReturnType<typeof editFrame>>);
+          break;
+        case "delete":
+          vi.mocked(deleteFrame).mockResolvedValueOnce(undefined);
+          break;
+      }
 
-      const response = await sendMutationRequest({
+      const response = await sendMutationRequest(path, {
         app,
         method,
-        path,
         body,
       }).set("X-TestUserId", "1");
 
       expect(response.status).toBe(successStatus);
-      expect(response.body).toStrictEqual({ message: successMessage });
+      expect(response.body).toStrictEqual(successBody);
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
@@ -146,10 +151,9 @@ describe("Frame mutation route tests", () => {
       const app = createApp(false);
       const serviceMock = getServiceMock(serviceName);
 
-      const response = await sendMutationRequest({
+      const response = await sendMutationRequest(path, {
         app,
         method,
-        path,
         body,
       });
 
@@ -166,10 +170,9 @@ describe("Frame mutation route tests", () => {
       const serviceMock = getServiceMock(serviceName);
       serviceMock.mockRejectedValueOnce(new ForbiddenError("Forbidden"));
 
-      const response = await sendMutationRequest({
+      const response = await sendMutationRequest(path, {
         app,
         method,
-        path,
         body,
       }).set("X-TestUserId", "1");
 

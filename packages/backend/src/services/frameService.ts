@@ -226,6 +226,8 @@ async function assertCoordsAreWithinCanvas(
       "Frame coordinates must be within the bounds of the canvas",
     );
   }
+
+  return canvas;
 }
 
 export async function editFrame(
@@ -244,7 +246,7 @@ export async function editFrame(
 
   await assertCoordsAreWithinCanvas(frame.canvasId, x0, y0, x1, y1);
 
-  await prisma.frame.update({
+  return await prisma.frame.update({
     where: {
       id: frameId,
     },

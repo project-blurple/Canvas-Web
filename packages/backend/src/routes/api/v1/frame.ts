@@ -79,7 +79,7 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
 
     const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
-    await editFrame(
+    const frame = await editFrame(
       req.user,
       req.session.discordAccessToken,
       frameId,
@@ -89,7 +89,7 @@ frameRouter.put("/:frameId/edit", async (req, res) => {
       x1,
       y1,
     );
-    res.status(200).json({ message: "Frame edited" });
+    res.status(200).json(frame);
   } catch (error) {
     ApiError.sendError(res, error);
   }

@@ -109,7 +109,7 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
     return null;
   }
 
-  if (hex === null || !/^#?([0-9A-Fa-f]{6})$/.test(hex)) {
+  if (!/^#?([0-9A-Fa-f]{6})$/.test(hex)) {
     return null;
   }
 

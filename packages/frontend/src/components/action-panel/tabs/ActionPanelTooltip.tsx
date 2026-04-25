@@ -1,9 +1,13 @@
-import { PixelColor } from "@blurple-canvas-web/types";
 import Tooltip, { TooltipProps } from "@mui/material/Tooltip";
 import { useState } from "react";
 import DynamicButton from "@/components/button/DynamicButton";
 
 type ActionPanelTooltipProps = Omit<TooltipProps, "placement" | "slotProps">;
+type TooltipDynamicButtonProps = React.ComponentPropsWithoutRef<
+  typeof DynamicButton
+> & {
+  tooltipTitle: string;
+};
 
 export function ActionPanelTooltip({
   children,
@@ -38,16 +42,10 @@ export function ActionPanelTooltip({
 }
 
 export function TooltipDynamicButton({
-  children,
-  color,
-  onAction,
   tooltipTitle,
-}: {
-  children: React.ReactNode;
-  color?: PixelColor | null;
-  onAction?: () => void;
-  tooltipTitle: string;
-}) {
+  onAction,
+  ...dynamicButtonProps
+}: TooltipDynamicButtonProps) {
   const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
 
   return (
@@ -59,14 +57,12 @@ export function TooltipDynamicButton({
       open={tooltipIsOpen}
     >
       <DynamicButton
-        color={color}
+        {...dynamicButtonProps}
         onAction={() => {
           setTooltipIsOpen(true);
           onAction?.();
         }}
-      >
-        {children}
-      </DynamicButton>
+      />
     </ActionPanelTooltip>
   );
 }

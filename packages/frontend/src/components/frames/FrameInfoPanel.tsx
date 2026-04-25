@@ -40,6 +40,21 @@ export default function FrameInfoPanel({
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
+  return (
+    <>
+      <FullWidthScrollView>
+        <FrameList />
+      </FullWidthScrollView>
+      <FrameInfoPanelBody setActivePanel={setActivePanel} />
+    </>
+  );
+}
+
+function FrameInfoPanelBody({
+  setActivePanel,
+}: {
+  setActivePanel: (panel: FramePanelMode) => void;
+}) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
@@ -55,59 +70,50 @@ export default function FrameInfoPanel({
   const userHasPermsToEditSelectedFrame =
     selectedFrame && user && userCanEditFrame(user, selectedFrame);
 
-  return (
-    <>
-      <FullWidthScrollView>
-        <FrameList />
-      </FullWidthScrollView>
-      {(() => {
-        if (selectedFrame) {
-          return (
-            <ActionPanelTabBody>
-              <FrameInfoCard frame={selectedFrame} />
-              {userHasPermsToEditSelectedFrame && (
-                <DynamicButton
-                  color={null}
-                  onAction={() => {
-                    setActivePanel(FramePanelMode.Edit);
-                  }}
-                >
-                  Edit frame
-                </DynamicButton>
-              )}
-              {selectedFrame.owner.type !== "system" && (
-                <TooltipDynamicButton
-                  color={hexStringToPixelColor(selectedFrame.id)}
-                  tooltipTitle="Copied"
-                  onAction={() => {
-                    navigator.clipboard.writeText(frameUrl);
-                  }}
-                >
-                  Copy frame link
-                </TooltipDynamicButton>
-              )}
-            </ActionPanelTabBody>
-          );
-        }
+  if (selectedFrame) {
+    return (
+      <ActionPanelTabBody>
+        <FrameInfoCard frame={selectedFrame} />
+        {userHasPermsToEditSelectedFrame && (
+          <DynamicButton
+            color={null}
+            onAction={() => {
+              setActivePanel(FramePanelMode.Edit);
+            }}
+          >
+            Edit frame
+          </DynamicButton>
+        )}
+        {selectedFrame.owner.type !== "system" && (
+          <TooltipDynamicButton
+            color={hexStringToPixelColor(selectedFrame.id)}
+            tooltipTitle="Copied"
+            onAction={() => {
+              navigator.clipboard.writeText(frameUrl);
+            }}
+          >
+            Copy frame link
+          </TooltipDynamicButton>
+        )}
+      </ActionPanelTabBody>
+    );
+  }
 
-        if (user) {
-          return (
-            <ActionPanelTabBody>
-              <BotCommandCard command="/frame create" />
-              <DynamicButton
-                color={null}
-                onAction={() => {
-                  setActivePanel(FramePanelMode.Create);
-                }}
-              >
-                Create frame
-              </DynamicButton>
-            </ActionPanelTabBody>
-          );
-        }
+  if (user) {
+    return (
+      <ActionPanelTabBody>
+        <BotCommandCard command="/frame create" />
+        <DynamicButton
+          color={null}
+          onAction={() => {
+            setActivePanel(FramePanelMode.Create);
+          }}
+        >
+          Create frame
+        </DynamicButton>
+      </ActionPanelTabBody>
+    );
+  }
 
-        return null;
-      })()}
-    </>
-  );
+  return null;
 }

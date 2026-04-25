@@ -1,6 +1,6 @@
 import { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabPanel } from "./ActionPanelTabBody";
