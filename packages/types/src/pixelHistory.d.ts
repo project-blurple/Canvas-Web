@@ -1,8 +1,9 @@
 import { DiscordUserProfile } from "./discordUserProfile";
+import { PaletteColorSummary } from "./palette";
 
 export interface PixelHistoryRecord {
   id: string;
-  color: PaletteColor;
+  color: PaletteColorSummary;
   timestamp: Date;
   guildId?: string;
   userId: string;

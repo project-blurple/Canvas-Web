@@ -1,8 +1,8 @@
 "use client";
 
 import { PaletteColor } from "@blurple-canvas-web/types";
-import { css, styled } from "@mui/material";
-import { useState } from "react";
+import { styled } from "@mui/material";
+import React, { useId, useState } from "react";
 import {
   useCanvasContext,
   useCanvasViewContext,
@@ -29,19 +29,26 @@ const Wrapper = styled("div")`
 
   ${({ theme }) => theme.breakpoints.down("md")} {
     border-radius: 0;
-    border: initial;
+    border: unset;
   }
 `;
 
-const TabBar = styled("ul")`
+const TabBar = styled("div")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
-  list-style-type: none;
 `;
 
-const TabStyle = styled("li")<{ active?: boolean }>`
+const StyledTab = styled("button")`
+  appearance: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  line-height: inherit;
+
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -51,18 +58,10 @@ const TabStyle = styled("li")<{ active?: boolean }>`
   place-items: center;
   text-align: center;
   touch-action: manipulation;
-  transition:
-    background-color var(--transition-duration-fast) ease,
-    color var(--transition-duration-fast) ease,
-    outline var(--transition-duration-fast) ease;
+  transition-duration: var(--transition-duration-fast);
+  transition-property: background, color, outline;
+  transition-timing-function: ease;
   user-select: none;
-
-  ${({ active }) =>
-    active ?
-      css`
-        background-color: var(--discord-legacy-dark-but-not-black);
-      `
-    : ""}
 
   /*
   * Workaround for accessibility issue with VoiceOver.
@@ -72,18 +71,28 @@ const TabStyle = styled("li")<{ active?: boolean }>`
     content: "\\200B"; /* zero-width space */
   }
 
+  &[aria-selected="true"] {
+    background-color: var(--discord-legacy-dark-but-not-black);
+  }
+
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
   @media (hover: hover) and (pointer: fine) {
-    :hover {
+    &:hover {
       background-color: var(--discord-legacy-dark-but-not-black);
     }
   }
 
-  :focus-visible {
+  &:focus-visible {
     background-color: var(--discord-legacy-dark-but-not-black);
     outline: var(--focus-outline);
   }
 
-  :active {
+  &:active {
     background-color: var(--discord-legacy-greyple);
   }
 `;
@@ -98,53 +107,44 @@ export const Heading = styled("h2")`
   text-transform: uppercase;
 `;
 
-enum TABS {
-  LOOK = "Look",
-  PLACE = "Place",
-  FRAME = "Frame",
-}
+type TabKey = "look" | "place" | "frame";
 
 function Tab({
   tabKey,
-  label,
-  currentTab,
   onSwitchTab,
+  ...props
 }: {
-  tabKey: TABS;
-  label: string;
-  currentTab: TABS;
-  onSwitchTab: (tab: TABS) => void;
-}) {
-  const isActive = currentTab === tabKey;
-
+  tabKey: TabKey;
+  onSwitchTab: (tabKey: TabKey) => void;
+} & React.ComponentPropsWithRef<typeof StyledTab>) {
   return (
-    <TabStyle
-      active={isActive}
+    <StyledTab
       onClick={() => onSwitchTab(tabKey)}
       onKeyUp={(event) => {
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
       }}
-      tabIndex={0}
-    >
-      {label}
-    </TabStyle>
+      {...props}
+      role="tab"
+    />
   );
 }
 
 export default function ActionPanel() {
-  const [currentTab, setCurrentTab] = useState(TABS.PLACE);
+  const [currentTab, setCurrentTab] = useState("place");
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
+  const [areTabsLocked, setAreTabsLocked] = useState(false);
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
   const { setIsReticleVisible } = useCanvasViewContext();
 
-  const onSwitchTab = (newTab: TABS) => {
-    // switching tabs
+  const onSwitchTab = (newTab: TabKey) => {
+    if (areTabsLocked) return;
+
     setCurrentTab(newTab);
 
     // hiding colour from reticle if we are on look tab
-    if (newTab === TABS.LOOK) {
+    if (newTab === "look") {
       setTempColor(color);
       setColor(null);
     } else {
@@ -152,37 +152,59 @@ export default function ActionPanel() {
     }
 
     // hiding reticle if we are on frames tab
-    setIsReticleVisible(newTab !== TABS.FRAME);
+    setIsReticleVisible(newTab !== "frame");
   };
+
+  const placeTabId = useId();
+  const lookTabId = useId();
+  const frameTabId = useId();
 
   return (
     <Wrapper>
-      <TabBar>
+      <TabBar role="tablist">
         <Tab
-          tabKey={TABS.PLACE}
-          label="Place"
-          currentTab={currentTab}
+          aria-controls={placeTabId}
+          aria-disabled={areTabsLocked && currentTab !== "place"}
+          aria-selected={currentTab === "place"}
+          tabKey="place"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Place
+        </Tab>
         <Tab
-          tabKey={TABS.LOOK}
-          label="Look"
-          currentTab={currentTab}
+          aria-controls={lookTabId}
+          aria-disabled={areTabsLocked && currentTab !== "look"}
+          aria-selected={currentTab === "look"}
+          tabKey="look"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Look
+        </Tab>
         <Tab
-          tabKey={TABS.FRAME}
-          label="Frame"
-          currentTab={currentTab}
+          aria-controls={frameTabId}
+          aria-disabled={areTabsLocked && currentTab !== "frame"}
+          aria-selected={currentTab === "frame"}
+          tabKey="frame"
           onSwitchTab={onSwitchTab}
-        />
+        >
+          Frame
+        </Tab>
       </TabBar>
       <PlacePixelTab
-        active={currentTab === TABS.PLACE}
+        active={currentTab === "place"}
         eventId={canvas.eventId}
+        id={placeTabId}
       />
-      <PixelInfoTab active={currentTab === TABS.LOOK} canvasId={canvas.id} />
-      <FramesTab active={currentTab === TABS.FRAME} canvasId={canvas.id} />
+      <PixelInfoTab
+        active={currentTab === "look"}
+        canvasId={canvas.id}
+        id={lookTabId}
+      />
+      <FramesTab
+        active={currentTab === "frame"}
+        id={frameTabId}
+        setTabsLocked={setAreTabsLocked}
+      />
     </Wrapper>
   );
 }

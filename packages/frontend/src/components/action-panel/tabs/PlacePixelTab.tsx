@@ -13,8 +13,8 @@ import { InteractiveSwatch } from "../../swatch";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
-  ScrollBlock,
-  TabBlock,
+  FullWidthScrollView,
+  TabPanel,
 } from "./ActionPanelTabBody";
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
@@ -34,7 +34,7 @@ const ColorPicker = styled("div")`
   }
 `;
 
-const PlacePixelTabBlock = styled(TabBlock)`
+const PlacePixelTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
@@ -64,7 +64,9 @@ function isUserInServer(user: DiscordUserProfile, serverId: string) {
   return guildIds.includes(serverId);
 }
 
-interface PlacePixelTabProps {
+interface PlacePixelTabProps extends React.ComponentPropsWithRef<
+  typeof PlacePixelTabBlock
+> {
   active?: boolean;
   eventId: number | null;
 }
@@ -72,6 +74,7 @@ interface PlacePixelTabProps {
 export default function PlacePixelTab({
   active = false,
   eventId,
+  ...props
 }: PlacePixelTabProps) {
   const { data: palette = [] } = usePalette(eventId ?? undefined);
   const [mainColors, partnerColors] = partitionPalette(palette);
@@ -133,8 +136,8 @@ export default function PlacePixelTab({
     false;
 
   return (
-    <PlacePixelTabBlock active={active} ref={PlacePixelTabBlockRef}>
-      <ScrollBlock>
+    <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
+      <FullWidthScrollView>
         <ActionPanelTabBody>
           <ColorPicker>
             <Heading>Main colors</Heading>
@@ -169,7 +172,7 @@ export default function PlacePixelTab({
             }
           </ColorPicker>
         </ActionPanelTabBody>
-      </ScrollBlock>
+      </FullWidthScrollView>
       <ActionPanelTabBody>
         {isLarge && (
           <ColorInfoCard
@@ -180,7 +183,7 @@ export default function PlacePixelTab({
         )}
         {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
-          <DynamicAnchorButton color={selectedColor} href={serverInvite}>
+          <DynamicAnchorButton color={selectedColor?.rgba} href={serverInvite}>
             {!userInServer ? "Join" : "Open"}{" "}
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>

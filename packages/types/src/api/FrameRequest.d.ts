@@ -2,8 +2,8 @@ import {
   DiscordGuildRecord,
   DiscordUserProfile,
   Frame,
-  GuildFrame,
-  UserFrame,
+  GuildOwnedFrame,
+  UserOwnedFrame,
 } from "..";
 
 export interface Params {
@@ -15,7 +15,7 @@ export interface Params {
 
 export type ResBody = Frame[];
 export type FrameByIdResBody = Frame;
-export type UserFramesResBody = UserFrame[];
-export type GuildFramesResBody = GuildFrame[];
+export type UserFramesResBody = UserOwnedFrame[];
+export type GuildFramesResBody = GuildOwnedFrame[];
 export type ReqBody = Record<string, never>;
 export type ReqQuery = Record<string, never>;

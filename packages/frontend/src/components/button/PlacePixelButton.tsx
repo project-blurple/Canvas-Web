@@ -17,9 +17,18 @@ export const CoordinateLabel = styled("span")`
   opacity: 0.6;
 `;
 
+const Time = styled("time")`
+  font-variant-numeric: tabular-nums;
+`;
+
 interface PlacePixelButtonProps {
   isVerbose: boolean;
 }
+
+const durationFormat =
+  "DurationFormat" in Intl ?
+    new Intl.DurationFormat("en-US", { style: "narrow" })
+  : undefined;
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
@@ -103,7 +112,13 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   if (timeLeft > 0) {
     return (
       <Button variant="contained" disabled>
-        On cooldown: {timeLeft} seconds left
+        On cooldown (
+        <Time>
+          {durationFormat?.format({ seconds: timeLeft }) ?? (
+            <>{timeLeft}&nbsp;s</>
+          )}
+        </Time>
+        )
       </Button>
     );
   }
@@ -123,12 +138,12 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { x, y } = adjustedCoords;
   const nbsp = "\u00A0";
 
-  const placePixelMessege =
+  const placePixelMessage =
     isVerbose ? `Place ${color.code} at` : "Place pixel";
 
   return (
-    <DynamicButton color={color} onAction={handlePixelRequest}>
-      {isSelected ? placePixelMessege : "Select a pixel"}
+    <DynamicButton color={color.rgba} onAction={handlePixelRequest}>
+      {isSelected ? placePixelMessage : "Select a pixel"}
       {isSelected && (
         <CoordinateLabel>
           {/* String interpolation is required to prevent https://github.com/project-blurple/Canvas-Web/issues/255 */}

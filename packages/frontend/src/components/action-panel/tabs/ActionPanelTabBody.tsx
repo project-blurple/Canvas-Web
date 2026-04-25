@@ -1,4 +1,5 @@
 import { styled } from "@mui/material";
+import React from "react";
 
 export const ActionPanelTabBody = styled("div")`
   display: block flex;
@@ -23,7 +24,7 @@ export const ActionPanelTabBody = styled("div")`
   }
 `;
 
-export const Block = styled("div")`
+export const ScrollView = styled("div")`
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {
@@ -31,7 +32,7 @@ export const Block = styled("div")`
   }
 `;
 
-export const TabBlock = styled(Block, {
+const StyledView = styled(ScrollView, {
   shouldForwardProp: (prop) => prop !== "active",
 })<{ active?: boolean }>`
   display: ${({ active }) => (active ? "grid" : "none")};
@@ -39,7 +40,13 @@ export const TabBlock = styled(Block, {
   grid-template-rows: auto 1fr auto;
 `;
 
-export const ScrollBlock = styled(Block)`
+export function TabPanel(
+  props: React.ComponentPropsWithRef<typeof StyledView>,
+) {
+  return <StyledView role="tabpanel" {...props} />;
+}
+
+export const FullWidthScrollView = styled(ScrollView)`
   align-self: stretch;
   grid-column: 1 / -1;
 `;
