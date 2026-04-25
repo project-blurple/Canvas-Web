@@ -1,4 +1,8 @@
-import { GuildOwnedFrame, SystemOwnedFrame } from "@blurple-canvas-web/types";
+import {
+  FrameRequest,
+  GuildOwnedFrame,
+  SystemOwnedFrame,
+} from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
 import {
@@ -17,6 +21,9 @@ const FramesWrapper = styled("div")`
   flex-direction: column;
 `;
 
+type GuildFrames = FrameRequest.GuildFramesResBody;
+type SortedGuildFrameMap = [string, GuildOwnedFrame[]][];
+
 function sortByOwnerGuildName(
   [, framesA]: readonly [string, GuildOwnedFrame[]],
   [, framesB]: readonly [string, GuildOwnedFrame[]],
@@ -32,6 +39,16 @@ function sortByOwnerGuildName(
   return ownerGuildA.localeCompare(ownerGuildB);
 }
 
+function selectSortedGuildFrameMap(data: GuildFrames): SortedGuildFrameMap {
+  const groupedByOwnerId = Object.groupBy(data, (f) => f.owner.guild.guild_id);
+
+  return Object.entries(groupedByOwnerId)
+    .filter(
+      (entry): entry is [string, GuildOwnedFrame[]] => entry[1] !== undefined,
+    )
+    .sort(sortByOwnerGuildName);
+}
+
 export default function FrameList() {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -45,21 +62,15 @@ export default function FrameList() {
   });
 
   const guildIds = Object.keys(user?.guilds ?? {});
-  const { data: guildFrames = [] } = useGuildFrames({
-    canvasId: canvas.id,
-    guildIds: guildIds,
-  });
-
-  const groupedByOwnerId = Object.groupBy(
-    guildFrames,
-    (f) => f.owner.guild.guild_id,
+  const { data: sortedGuildFrameMap = [] } = useGuildFrames(
+    {
+      canvasId: canvas.id,
+      guildIds: guildIds,
+    },
+    {
+      select: selectSortedGuildFrameMap,
+    },
   );
-
-  const sortedGuildFrameMap = Object.entries(groupedByOwnerId)
-    .filter(
-      (entry): entry is [string, GuildOwnedFrame[]] => entry[1] !== undefined,
-    )
-    .sort(sortByOwnerGuildName);
 
   const inbuiltFullCanvasFrame = {
     id: `system-${canvas.id.toString()}`,

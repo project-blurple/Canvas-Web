@@ -6,7 +6,7 @@ import {
   Frame,
   FrameRequest,
 } from "@blurple-canvas-web/types";
-import { useQuery } from "@tanstack/react-query";
+import { UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
 
@@ -65,7 +65,13 @@ export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
   });
 }
 
-export function useGuildFrames({ canvasId, guildIds }: UseGuildFramesParams) {
+export function useGuildFrames<TData = FrameRequest.GuildFramesResBody>(
+  { canvasId, guildIds }: UseGuildFramesParams,
+  options?: Omit<
+    UseQueryOptions<FrameRequest.GuildFramesResBody, Error, TData>,
+    "queryKey" | "queryFn"
+  >,
+) {
   const getFrames = async (): Promise<FrameRequest.GuildFramesResBody> => {
     if (!guildIds || guildIds.length === 0) return [];
 
@@ -85,10 +91,11 @@ export function useGuildFrames({ canvasId, guildIds }: UseGuildFramesParams) {
     return response.data;
   };
 
-  return useQuery<FrameRequest.GuildFramesResBody>({
+  return useQuery<FrameRequest.GuildFramesResBody, Error, TData>({
+    ...options,
     queryKey: ["frame", "guild", canvasId, guildIds],
     queryFn: getFrames,
-    enabled: Boolean(guildIds?.length),
+    enabled: Boolean(guildIds?.length) && (options?.enabled ?? true),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: [],
