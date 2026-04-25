@@ -6,6 +6,7 @@ import {
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
+import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -322,7 +323,7 @@ export async function createFrame(
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === "P2002"
+        error.code === PrismaErrorCode.UniqueConstraintViolation
       ) {
         continue;
       }

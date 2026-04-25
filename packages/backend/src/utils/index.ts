@@ -4,6 +4,10 @@ BigInt.prototype.toJSON = function (): string {
   return this.toString();
 };
 
+export const PrismaErrorCode = {
+  UniqueConstraintViolation: "P2002",
+} as const;
+
 interface Bounds {
   x0: number;
   y0: number;
