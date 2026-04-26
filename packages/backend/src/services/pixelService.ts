@@ -168,7 +168,7 @@ export async function validateUser(userId: bigint) {
  *
  * @returns The current and future cooldown time
  */
-async function getCooldown(
+export async function getCooldown(
   canvasId: number,
   userId: bigint,
   placementTime: Date,
