@@ -1,4 +1,4 @@
-import {
+import type {
   FrameOwnerType,
   GuildData,
   GuildOwnedFrame,
@@ -19,8 +19,8 @@ import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import {
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useEffect,
   useMemo,
   useRef,
@@ -38,7 +38,7 @@ import { useCanvasImage } from "@/hooks/useCanvasImage";
 import {
   hexStringToPixelColor,
   normalizeFrameBounds,
-  ViewBounds,
+  type ViewBounds,
 } from "@/util";
 import { Heading } from "../action-panel/ActionPanel";
 import {

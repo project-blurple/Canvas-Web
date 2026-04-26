@@ -1,4 +1,4 @@
-import Tooltip, { TooltipProps } from "@mui/material/Tooltip";
+import Tooltip, { type TooltipProps } from "@mui/material/Tooltip";
 import { useState } from "react";
 import DynamicButton from "@/components/button/DynamicButton";
 

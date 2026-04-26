@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
 import {
   useAuthContext,
   useCanvasContext,

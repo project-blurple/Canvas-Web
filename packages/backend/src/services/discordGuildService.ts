@@ -1,4 +1,4 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
 import config from "@/config";
 import BadRequestError from "@/errors/BadRequestError";
 import ForbiddenError from "@/errors/ForbiddenError";

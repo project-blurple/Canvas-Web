@@ -1,6 +1,6 @@
 "use client";
 
-import { LeaderboardEntry } from "@blurple-canvas-web/types";
+import type { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 

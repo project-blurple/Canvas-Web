@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import React from "react";
+import type React from "react";
 
 export const ActionPanelTabBody = styled("div")`
   display: block flex;

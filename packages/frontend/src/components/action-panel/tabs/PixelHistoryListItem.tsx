@@ -1,4 +1,4 @@
-import { PixelHistoryRecord } from "@blurple-canvas-web/types";
+import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 
 import ColorCodeChip from "@/components/ColorCodeChip";
