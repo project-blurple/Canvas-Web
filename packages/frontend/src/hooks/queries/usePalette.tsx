@@ -22,7 +22,7 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
 }
 
 export function usePalette(
-  eventId?: BlurpleEvent["id"],
+  eventId: BlurpleEvent["id"] | "current" = "current",
   useQueryOptions?: Omit<
     UseQueryOptions<PaletteRequest.ResBody>,
     "queryKey" | "queryFn"
@@ -31,9 +31,7 @@ export function usePalette(
   const api = useApiContext();
   const getPalette = async () => {
     const response = await api
-      .get<PaletteRequest.ResBody>(
-        `palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
-      )
+      .get<PaletteRequest.ResBody>(`palette/${encodeURIComponent(eventId)}`)
       .json();
     return response.sort(sortByOklchHue);
   };
