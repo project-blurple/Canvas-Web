@@ -115,7 +115,7 @@ historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
 
     const historyIds = bodyResult.data.historyIds.map(BigInt);
 
-    await deletePixelHistoryEntries(canvasId, historyIds);
+    await deletePixelHistoryEntries(canvasId, historyIds, bodyResult.data.blacklistAuthors);
 
     res.status(204).send();
   } catch (error) {

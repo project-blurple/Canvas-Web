@@ -1,5 +1,6 @@
 import { PixelHistoryWrapper, Point } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
+import { addUsersToBlacklist } from "./blacklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import { validatePixel } from "./pixelService";
 
@@ -104,6 +105,7 @@ export async function getPixelHistory({
 export async function deletePixelHistoryEntries(
   canvasId: number,
   historyIds: bigint[],
+  blacklistAuthors: boolean = false,
 ): Promise<void> {
   // First, check that all history entries exist and belong to the specified canvas
   const existingEntries = await prisma.history.findMany({
@@ -115,6 +117,7 @@ export async function deletePixelHistoryEntries(
     },
     select: {
       id: true,
+      user_id: true,
     },
   });
 
@@ -137,4 +140,11 @@ export async function deletePixelHistoryEntries(
       },
     },
   });
+
+  if (blacklistAuthors) {
+    const authorIds = [
+      ...new Set(existingEntries.map((entry) => entry.user_id)),
+    ];
+    await addUsersToBlacklist(authorIds, true);
+  }
 }

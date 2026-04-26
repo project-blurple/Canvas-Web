@@ -1,7 +1,6 @@
 import { BlacklistEntry } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import BadRequestError from "@/errors/BadRequestError";
-import NotFoundError from "@/errors/NotFoundError";
 import { PrismaErrorCode } from "@/utils";
 
 export async function getBlacklist() {
@@ -24,12 +23,16 @@ export async function checkIfUserIsBlacklisted(
   return !!blacklistEntry;
 }
 
-export async function addUsersToBlacklist(userIds: BlacklistEntry["userId"][]) {
+export async function addUsersToBlacklist(
+  userIds: BlacklistEntry["userId"][],
+  ignoreDuplicates = false,
+) {
   try {
     await prisma.blacklist.createMany({
       data: userIds.map((userId) => ({
         user_id: userId,
       })),
+      skipDuplicates: ignoreDuplicates,
     });
   } catch (error) {
     if (
@@ -45,21 +48,11 @@ export async function addUsersToBlacklist(userIds: BlacklistEntry["userId"][]) {
 export async function removeUsersFromBlacklist(
   userIds: BlacklistEntry["userId"][],
 ) {
-  try {
-    await prisma.blacklist.deleteMany({
-      where: {
-        user_id: {
-          in: userIds,
-        },
+  await prisma.blacklist.deleteMany({
+    where: {
+      user_id: {
+        in: userIds,
       },
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === PrismaErrorCode.RecordNotFound
-    ) {
-      throw new NotFoundError("User is not in the blacklist");
-    }
-    throw error;
-  }
+    },
+  });
 }
