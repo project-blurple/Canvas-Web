@@ -2,15 +2,14 @@
 
 import type { BlurpleEvent, EventRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import config from "@/config/clientConfig";
+import { useApiContext } from "@/contexts";
 
 export function useEventInfo(eventId?: BlurpleEvent["id"]) {
+  const api = useApiContext();
   const getEvent = async () => {
-    const response = await axios.get<EventRequest.ResBody>(
-      `${config.apiUrl}/api/v1/event/${eventId ? encodeURIComponent(eventId) : "current"}`,
+    return await api.get<EventRequest.ResBody>(
+      `/api/v1/event/${eventId ? encodeURIComponent(eventId) : "current"}`,
     );
-    return response.data;
   };
 
   return useQuery({

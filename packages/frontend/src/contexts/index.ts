@@ -1,3 +1,4 @@
+export { ApiProvider, useApiContext } from "./ApiProvider";
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { CanvasViewProvider, useCanvasViewContext } from "./CanvasViewContext";
