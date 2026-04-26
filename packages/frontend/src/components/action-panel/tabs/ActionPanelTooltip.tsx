@@ -9,10 +9,7 @@ type TooltipDynamicButtonProps = React.ComponentPropsWithoutRef<
   tooltipTitle: string;
 };
 
-export function ActionPanelTooltip({
-  children,
-  ...props
-}: ActionPanelTooltipProps) {
+function ActionPanelTooltip({ children, ...props }: ActionPanelTooltipProps) {
   return (
     <Tooltip
       placement="top"

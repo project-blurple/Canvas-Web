@@ -1,7 +1,7 @@
 import { Point } from "@blurple-canvas-web/types";
 import config from "@/config";
 
-export interface SearchParamConfig {
+interface SearchParamConfig {
   readonly canonical: string;
   readonly aliases: readonly string[];
 }
@@ -16,13 +16,13 @@ const SEARCH_PARAM_KEYS = {
   frameId: { canonical: "f", aliases: ["frame"] },
 } as const satisfies Record<string, SearchParamConfig>;
 
-export type ParamKey = keyof typeof SEARCH_PARAM_KEYS;
+type ParamKey = keyof typeof SEARCH_PARAM_KEYS;
 
 type ParamVariant<K extends ParamKey> =
   | (typeof SEARCH_PARAM_KEYS)[K]["canonical"]
   | (typeof SEARCH_PARAM_KEYS)[K]["aliases"][number];
 
-export interface CreatePixelUrlOptions {
+interface CreatePixelUrlOptions {
   canvasId?: number;
   coords?: Point;
   zoom?: number;

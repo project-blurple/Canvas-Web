@@ -2,9 +2,9 @@ import { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { clamp, normalizeFrameBounds } from "@/util";
 
-export const FRAME_FILL_RATIO = 0.9;
+const FRAME_FILL_RATIO = 0.9;
 
-export interface SourceRect {
+interface SourceRect {
   x: number;
   y: number;
   width: number;

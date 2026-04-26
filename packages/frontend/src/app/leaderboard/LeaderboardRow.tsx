@@ -63,16 +63,6 @@ const StyledAvatar = styled(Avatar)`
   grid-row: 1 / -1;
 `;
 
-interface LoadingEntry extends Pick<LeaderboardEntry, "userId" | "rank"> {
-  isLoading: true;
-}
-
-interface LoadedEntry extends LeaderboardEntry {
-  isLoading: false;
-}
-
-export type LeaderboardRowEntry = LoadingEntry | LoadedEntry;
-
 export interface LeaderboardRowProps {
   entry: LeaderboardEntry;
 }
