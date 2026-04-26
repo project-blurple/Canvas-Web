@@ -27,7 +27,7 @@ interface CanvasViewContextType {
   setZoom: Dispatch<SetStateAction<number>>;
 }
 
-export const CanvasViewContext = createContext<CanvasViewContextType>({
+const CanvasViewContext = createContext<CanvasViewContextType>({
   adjustedCoords: null,
   containerRef: { current: null },
   coords: null,

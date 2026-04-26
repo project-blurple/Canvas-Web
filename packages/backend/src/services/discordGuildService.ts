@@ -24,7 +24,7 @@ interface DiscordGuildMember {
   roles: string[];
 }
 
-export interface GuildPermissionsSummary {
+interface GuildPermissionsSummary {
   administrator: boolean;
   manage_guild: boolean;
 }

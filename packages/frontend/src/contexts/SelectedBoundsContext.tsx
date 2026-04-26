@@ -26,7 +26,7 @@ interface SelectedBoundsContextType {
   setBoundsToCurrentView: (fillRatio: number) => void;
 }
 
-export const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
+const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   canEdit: false,
   minHeight: 5,
   minWidth: 5,
