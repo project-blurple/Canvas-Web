@@ -16,7 +16,9 @@ blacklistRouter.get("/", async (req, res) => {
     assertLoggedIn(req);
     assertCanvasModerator(req.user);
 
-    return await getBlacklist();
+    const blacklist = await getBlacklist();
+
+    res.status(200).json(blacklist);
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -44,7 +46,7 @@ blacklistRouter.delete("/", async (req, res) => {
 
     await removeUsersFromBlacklist(userIds);
 
-    res.status(204);
+    res.status(204).send();
   } catch (error) {
     ApiError.sendError(res, error);
   }
