@@ -1,3 +1,13 @@
+import {
+  CanvasInfo,
+  CanvasInfoRequest,
+  DiscordUserProfile,
+} from "@blurple-canvas-web/types";
+import { ThemeProvider } from "@mui/material";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
+import axios from "axios";
+import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
 import config from "@/config";
 import {
   ApiProvider,
@@ -10,16 +20,6 @@ import {
   SelectedFrameProvider,
 } from "@/contexts";
 import { Theme } from "@/theme";
-import {
-  CanvasInfo,
-  CanvasInfoRequest,
-  DiscordUserProfile,
-} from "@blurple-canvas-web/types";
-import { ThemeProvider } from "@mui/material";
-import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
-import axios from "axios";
-import type { Metadata, Viewport } from "next";
-import { cookies } from "next/headers";
 import "../styles/core.css";
 
 export const metadata: Metadata = {
