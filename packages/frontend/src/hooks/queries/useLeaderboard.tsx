@@ -13,7 +13,7 @@ export function useLeaderboard(
   const getLeaderboard = async () => {
     return await api
       .get<LeaderboardRequest.ResBody>(
-        `/api/v1/statistics/leaderboard/${encodeURIComponent(canvasId)}`,
+        `statistics/leaderboard/${encodeURIComponent(canvasId)}`,
         { searchParams: { page, size } },
       )
       .json();

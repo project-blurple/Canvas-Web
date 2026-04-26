@@ -7,7 +7,7 @@ import { useApiContext } from "@/contexts/ApiProvider";
 export function useCanvasList() {
   const api = useApiContext();
   const getCanvasList = async () => {
-    return await api.get<CanvasListRequest.ResBody>("/api/v1/canvas/").json();
+    return await api.get<CanvasListRequest.ResBody>("canvas").json();
   };
 
   return useQuery({

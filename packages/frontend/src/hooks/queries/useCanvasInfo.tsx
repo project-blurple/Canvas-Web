@@ -9,7 +9,7 @@ export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
   const getMainCanvasInfo = async () => {
     return await api
       .get<CanvasInfoRequest.ResBody>(
-        `/api/v1/canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
+        `canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
       )
       .json();
   };

@@ -32,7 +32,7 @@ export function usePalette(
   const getPalette = async () => {
     const response = await api
       .get<PaletteRequest.ResBody>(
-        `/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
+        `palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
       )
       .json();
     return response.sort(sortByOklchHue);
