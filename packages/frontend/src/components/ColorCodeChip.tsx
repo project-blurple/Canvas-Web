@@ -2,7 +2,7 @@
 
 import { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { PrimitiveButton } from "./button/Button";
+import { PrimitiveButton } from "./button";
 
 const StyledButton = styled(PrimitiveButton)`
   background-color: oklch(from var(--discord-white) l c h / 12%);
