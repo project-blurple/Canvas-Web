@@ -4,6 +4,7 @@ import { color, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
+import { checkIfUserIsBlacklisted } from "./blacklistService";
 import { updateCachedCanvasPixel } from "./canvasService";
 
 /** Ensures that the given pixel coordinates are within the bounds of the canvas and the canvas exists
@@ -77,13 +78,7 @@ export async function validateColor(
  * Ensures that the given user is not blacklisted from placing pixels
  */
 export async function validateUser(userId: bigint) {
-  const blacklist = await prisma.blacklist.findFirst({
-    where: {
-      user_id: userId,
-    },
-  });
-
-  if (blacklist) {
+  if (await checkIfUserIsBlacklisted(userId)) {
     throw new ForbiddenError("User is blacklisted");
   }
 }
