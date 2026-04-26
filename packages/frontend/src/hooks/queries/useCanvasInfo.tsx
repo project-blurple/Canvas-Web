@@ -2,15 +2,16 @@
 
 import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import config from "@/config";
+import { useApiContext } from "@/contexts";
 
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
+  const api = useApiContext();
   const getMainCanvasInfo = async () => {
-    const response = await axios.get<CanvasInfoRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
-    );
-    return response.data;
+    return await api
+      .get<CanvasInfoRequest.ResBody>(
+        `/api/v1/canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
+      )
+      .json();
   };
 
   return useQuery<CanvasInfoRequest.ResBody>({

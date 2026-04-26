@@ -1,3 +1,15 @@
+import config from "@/config";
+import {
+  ApiProvider,
+  AuthProvider,
+  CanvasProvider,
+  CanvasViewProvider,
+  QueryClientProvider,
+  SelectedBoundsProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
+import { Theme } from "@/theme";
 import {
   CanvasInfo,
   CanvasInfoRequest,
@@ -8,17 +20,6 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import config from "@/config";
-import {
-  AuthProvider,
-  CanvasProvider,
-  CanvasViewProvider,
-  QueryClientProvider,
-  SelectedBoundsProvider,
-  SelectedColorProvider,
-  SelectedFrameProvider,
-} from "@/contexts";
-import { Theme } from "@/theme";
 import "../styles/core.css";
 
 export const metadata: Metadata = {
@@ -98,21 +99,23 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <AppRouterCacheProvider>
-      <QueryClientProvider>
-        <AuthProvider profile={profile}>
-          <SelectedColorProvider>
-            <SelectedFrameProvider>
-              <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <CanvasViewProvider>
-                  <SelectedBoundsProvider>
-                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </SelectedBoundsProvider>
-                </CanvasViewProvider>
-              </CanvasProvider>
-            </SelectedFrameProvider>
-          </SelectedColorProvider>
-        </AuthProvider>
-      </QueryClientProvider>
+      <ApiProvider>
+        <QueryClientProvider>
+          <AuthProvider profile={profile}>
+            <SelectedColorProvider>
+              <SelectedFrameProvider>
+                <CanvasProvider mainCanvasInfo={canvasInfo}>
+                  <CanvasViewProvider>
+                    <SelectedBoundsProvider>
+                      <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                    </SelectedBoundsProvider>
+                  </CanvasViewProvider>
+                </CanvasProvider>
+              </SelectedFrameProvider>
+            </SelectedColorProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ApiProvider>
     </AppRouterCacheProvider>
   );
 }
