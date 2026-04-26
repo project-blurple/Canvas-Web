@@ -17,13 +17,15 @@ export function usePixelHistory(
     }
 
     const { x, y } = coordinates;
-    return await api.get<HistoryRequest.ResBody>(
-      `canvas/${encodeURIComponent(canvasId)}/pixel/history`,
-      {
-        searchParams: { x, y },
-        signal,
-      },
-    );
+    return await api
+      .get<HistoryRequest.ResBody>(
+        `canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+        {
+          searchParams: { x, y },
+          signal,
+        },
+      )
+      .json();
   };
 
   return useQuery({
