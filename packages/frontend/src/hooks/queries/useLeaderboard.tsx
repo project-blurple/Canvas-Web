@@ -2,7 +2,6 @@
 
 import { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import config from "@/config";
 import { useApiContext } from "@/contexts";
 
 export function useLeaderboard(
@@ -14,7 +13,7 @@ export function useLeaderboard(
   const getLeaderboard = async () => {
     return await api
       .get<LeaderboardRequest.ResBody>(
-        `/api/v1/statistics/leaderboard/${encodeURIComponent(canvasId)}`,
+        `statistics/leaderboard/${encodeURIComponent(canvasId)}`,
         { searchParams: { page, size } },
       )
       .json();

@@ -8,7 +8,7 @@ export function useEventInfo(eventId?: BlurpleEvent["id"]) {
   const api = useApiContext();
   const getEvent = async () => {
     return await api.get<EventRequest.ResBody>(
-      `/api/v1/event/${eventId ? encodeURIComponent(eventId) : "current"}`,
+      `event/${eventId ? encodeURIComponent(eventId) : "current"}`,
     );
   };
 

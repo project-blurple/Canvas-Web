@@ -1,21 +1,18 @@
 "use client";
 
-import ky, { KyInstance, type Options as KyOptions } from "ky";
-import { createContext, useContext, useState } from "react";
+import ky, { KyInstance } from "ky";
+import { createContext, useContext } from "react";
 import config from "@/config";
 
 import { UsageError } from "@/util/errors";
 
-const defaultKyOptions = {
-  baseUrl: config.apiUrl,
-} as const satisfies KyOptions;
-
 const ApiContext = createContext<KyInstance | undefined>(undefined);
+
+const api = ky.create({ baseUrl: new URL("/api/v1/", config.apiUrl) });
 
 export function ApiProvider({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [api] = useState<KyInstance>(() => ky.create(defaultKyOptions));
   return <ApiContext.Provider value={api}>{children}</ApiContext.Provider>;
 }
 
