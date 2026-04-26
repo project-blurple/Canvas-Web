@@ -6,12 +6,13 @@ const Wrapper = styled("div")`
   align-items: baseline;
   color: oklch(from var(--discord-white) l c h / 60%);
   display: grid;
-  font-size: 1.375rem;
+  font-size: 1.125rem;
   grid-template-columns: 1fr auto;
 `;
 
 const Heading = styled("h3")`
   color: var(--discord-white);
+  font-size: inherit;
   font-weight: 900;
   line-height: 1.1;
 `;

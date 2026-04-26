@@ -9,3 +9,15 @@ export const Button = styled(MuiButton)`
     scale: 99%;
   }
 `;
+
+export const PrimitiveButton = styled("button")`
+  appearance: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  touch-action: manipulation;
+`;

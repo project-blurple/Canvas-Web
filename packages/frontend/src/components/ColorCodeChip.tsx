@@ -2,16 +2,17 @@
 
 import { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { PrimitiveButton } from "./button/Button";
 
-const Container = styled("code", {
-  shouldForwardProp: (prop) => prop !== "backgroundColor",
-})<ColorCodeChipProps>`
+const StyledButton = styled(PrimitiveButton)`
   background-color: oklch(from var(--discord-white) l c h / 12%);
   border-radius: 0.25rem;
   cursor: pointer;
+  display: inline-block;
   font-size: 0.9rem;
-  padding: 0.25rem 0.5rem;
-  transition: background-color var(--transition-duration-fast) ease;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
+  text-box-trim: trim-both;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -29,18 +30,16 @@ const Container = styled("code", {
   }
 `;
 
-interface ColorCodeChipProps {
-  onClick?: () => void;
-}
-
 const copyToClipBoard = (str: string) => navigator.clipboard.writeText(str);
 
-export default function ColorCodeChip({
-  color,
-  ...props
-}: {
+interface ColorCodeChipProps extends Omit<
+  React.ComponentPropsWithRef<typeof StyledButton>,
+  "color"
+> {
   color: PaletteColorSummary;
-}) {
+}
+
+export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
   const clickHandler = () => copyToClipBoard(colorCode);
@@ -49,13 +48,8 @@ export default function ColorCodeChip({
   };
 
   return (
-    <Container
-      onClick={clickHandler}
-      onKeyUp={keyUpHandler}
-      tabIndex={0}
-      {...props}
-    >
-      {colorCode}
-    </Container>
+    <StyledButton onClick={clickHandler} onKeyUp={keyUpHandler} {...props}>
+      <code>{colorCode}</code>
+    </StyledButton>
   );
 }
