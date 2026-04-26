@@ -1,15 +1,15 @@
 import fs from "node:fs";
-import {
+import type {
   CanvasInfo,
   CanvasSummary,
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
-import { canvas, prisma } from "@/client";
+import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
-import { PlacePixelArray } from "@/models/bodyModels";
+import type { PlacePixelArray } from "@/models/bodyModels";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the

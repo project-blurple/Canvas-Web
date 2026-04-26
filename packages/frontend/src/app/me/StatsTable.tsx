@@ -1,6 +1,6 @@
 "use client";
 
-import { UserStats } from "@blurple-canvas-web/types";
+import type { UserStats } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import {
   formatTimestamp,

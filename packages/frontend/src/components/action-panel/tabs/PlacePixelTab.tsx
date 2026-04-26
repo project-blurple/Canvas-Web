@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import {

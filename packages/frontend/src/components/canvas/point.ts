@@ -1,4 +1,4 @@
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 
 export const ORIGIN: Point = { x: 0, y: 0 };
 

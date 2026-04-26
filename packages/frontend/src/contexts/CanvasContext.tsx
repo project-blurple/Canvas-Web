@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
+import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState } from "react";

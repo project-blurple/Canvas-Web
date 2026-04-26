@@ -1,4 +1,4 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import passport from "passport";
 
