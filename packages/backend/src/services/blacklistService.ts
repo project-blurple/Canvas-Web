@@ -1,4 +1,4 @@
-import { BlacklistEntry } from "@blurple-canvas-web/types";
+import type { BlacklistEntry } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import BadRequestError from "@/errors/BadRequestError";
 import { PrismaErrorCode } from "@/utils";

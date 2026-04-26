@@ -1,5 +1,5 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
-import { discord_user_profile, prisma } from "@/client";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
+import { type discord_user_profile, prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 
 export async function getDiscordProfile(

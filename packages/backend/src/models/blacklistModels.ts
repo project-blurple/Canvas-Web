@@ -1,4 +1,4 @@
-import { BlacklistEntry } from "@blurple-canvas-web/types";
+import type { BlacklistEntry } from "@blurple-canvas-web/types";
 import z from "zod";
 import { BadRequestError } from "@/errors";
 

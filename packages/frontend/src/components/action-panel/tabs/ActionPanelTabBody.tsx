@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import React from "react";
+import type React from "react";
 
 export const ActionPanelTabBody = styled("div")`
   display: block flex;
@@ -24,7 +24,7 @@ export const ActionPanelTabBody = styled("div")`
   }
 `;
 
-export const ScrollView = styled("div")`
+const ScrollView = styled("div")`
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {

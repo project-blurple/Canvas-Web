@@ -1,4 +1,4 @@
-import { PixelHistoryRecord } from "@blurple-canvas-web/types";
+import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";

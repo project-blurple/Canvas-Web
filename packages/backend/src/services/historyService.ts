@@ -1,4 +1,4 @@
-import { PixelHistoryWrapper, Point } from "@blurple-canvas-web/types";
+import type { PixelHistoryWrapper, Point } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { addUsersToBlacklist } from "./blacklistService";
 import { toPaletteColorSummary } from "./paletteService";

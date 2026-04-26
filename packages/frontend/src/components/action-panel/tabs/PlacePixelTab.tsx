@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -49,7 +49,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-export const partitionPalette = (palette: Palette) => {
+const partitionPalette = (palette: Palette) => {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {

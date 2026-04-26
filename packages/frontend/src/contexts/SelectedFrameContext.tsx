@@ -1,10 +1,10 @@
 "use client";
 
-import { Frame } from "@blurple-canvas-web/types";
+import type { Frame } from "@blurple-canvas-web/types";
 import {
   createContext,
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useState,
 } from "react";

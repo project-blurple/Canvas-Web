@@ -1,12 +1,12 @@
 "use client";
 
-import {
+import type {
   DiscordGuildRecord,
   DiscordUserProfile,
   Frame,
   FrameRequest,
 } from "@blurple-canvas-web/types";
-import { UseQueryOptions, useQuery } from "@tanstack/react-query";
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
 

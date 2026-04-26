@@ -1,4 +1,4 @@
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
 import {
@@ -7,7 +7,7 @@ import {
   PixelHistoryDeleteBodyModel,
   PixelHistoryParamModel,
 } from "@/models/historyModels";
-import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
+import { type CanvasIdParam, parseCanvasId } from "@/models/paramModels";
 import { assertCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,

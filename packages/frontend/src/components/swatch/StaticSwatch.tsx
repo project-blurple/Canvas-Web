@@ -1,4 +1,4 @@
-import { PaletteColor } from "@blurple-canvas-web/types";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { SwatchBase } from "./SwatchBase";
 
 export interface StaticSwatchProps {

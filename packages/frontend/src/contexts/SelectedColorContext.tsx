@@ -1,10 +1,10 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import {
   createContext,
-  Dispatch,
-  SetStateAction,
+  type Dispatch,
+  type SetStateAction,
   useContext,
   useState,
 } from "react";

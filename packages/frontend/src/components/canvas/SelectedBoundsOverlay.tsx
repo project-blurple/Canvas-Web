@@ -1,7 +1,13 @@
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { Dispatch, PointerEvent, SetStateAction, useMemo, useRef } from "react";
-import { clamp, ViewBounds } from "@/util";
+import {
+  type Dispatch,
+  type PointerEvent,
+  type SetStateAction,
+  useMemo,
+  useRef,
+} from "react";
+import { clamp, type ViewBounds } from "@/util";
 
 const OverlayReticleContainer = styled("div")`
   position: absolute;

@@ -1,6 +1,6 @@
 "use client";
 
-import { LeaderboardEntry } from "@blurple-canvas-web/types";
+import type { LeaderboardEntry } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import Avatar, { AvatarSkeleton } from "@/components/Avatar";
 
@@ -62,16 +62,6 @@ const StyledAvatar = styled(Avatar)`
   align-self: center;
   grid-row: 1 / -1;
 `;
-
-interface LoadingEntry extends Pick<LeaderboardEntry, "userId" | "rank"> {
-  isLoading: true;
-}
-
-interface LoadedEntry extends LeaderboardEntry {
-  isLoading: false;
-}
-
-export type LeaderboardRowEntry = LoadingEntry | LoadedEntry;
 
 export interface LeaderboardRowProps {
   entry: LeaderboardEntry;

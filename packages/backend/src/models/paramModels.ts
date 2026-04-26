@@ -1,4 +1,4 @@
-import { CanvasInfo } from "@blurple-canvas-web/types";
+import type { CanvasInfo } from "@blurple-canvas-web/types";
 import z from "zod";
 import BadRequestError from "@/errors/BadRequestError";
 
@@ -81,7 +81,7 @@ export async function parseCanvasId(
   return result.data.canvasId;
 }
 
-export interface FrameIdParam {
+interface FrameIdParam {
   frameId: string;
   [key: string]: string;
 }
