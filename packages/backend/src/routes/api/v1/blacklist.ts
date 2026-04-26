@@ -1,13 +1,21 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
 import { parseBlacklistParams } from "@/models/blacklistModels";
-import { addUsersToBlacklist, getBlacklist, removeUsersFromBlacklist } from "@/services/blacklistService";
+import {
+  addUsersToBlacklist,
+  getBlacklist,
+  removeUsersFromBlacklist,
+} from "@/services/blacklistService";
+import { assertCanvasModerator } from "@/services/discordGuildService";
+import { assertLoggedIn } from "@/utils";
 
 export const blacklistRouter = Router();
 
-blacklistRouter.get("/", async (_req, res) => {
+blacklistRouter.get("/", async (req, res) => {
   try {
-    // TODO: restrict by Canvas Manager auth
+    assertLoggedIn(req);
+    assertCanvasModerator(req.user);
+
     return await getBlacklist();
   } catch (error) {
     ApiError.sendError(res, error);
@@ -16,7 +24,8 @@ blacklistRouter.get("/", async (_req, res) => {
 
 blacklistRouter.post("/", async (req, res) => {
   try {
-    // TODO: restrict by Canvas Manager auth
+    assertLoggedIn(req);
+    assertCanvasModerator(req.user);
     const userIds = await parseBlacklistParams(req.body);
 
     await addUsersToBlacklist(userIds);
@@ -29,7 +38,8 @@ blacklistRouter.post("/", async (req, res) => {
 
 blacklistRouter.delete("/", async (req, res) => {
   try {
-    // TODO: restrict by Canvas Manager auth
+    assertLoggedIn(req);
+    assertCanvasModerator(req.user);
     const userIds = await parseBlacklistParams(req.body);
 
     await removeUsersFromBlacklist(userIds);

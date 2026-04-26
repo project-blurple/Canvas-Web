@@ -8,10 +8,12 @@ import {
   PixelHistoryParamModel,
 } from "@/models/historyModels";
 import { CanvasIdParam, parseCanvasId } from "@/models/paramModels";
+import { assertCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
   getPixelHistory,
 } from "@/services/historyService";
+import { assertLoggedIn } from "@/utils";
 
 export const historyRouter = Router({ mergeParams: true });
 
@@ -100,7 +102,9 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
 
 historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
   try {
-    // TODO: restrict by Canvas Manager auth
+    assertLoggedIn(req);
+    assertCanvasModerator(req.user);
+
     const canvasId = await parseCanvasId(req.params);
 
     const bodyResult = await PixelHistoryDeleteBodyModel.safeParseAsync(
@@ -115,7 +119,11 @@ historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
 
     const historyIds = bodyResult.data.historyIds.map(BigInt);
 
-    await deletePixelHistoryEntries(canvasId, historyIds, bodyResult.data.blacklistAuthors);
+    await deletePixelHistoryEntries(
+      canvasId,
+      historyIds,
+      bodyResult.data.blacklistAuthors,
+    );
 
     res.status(204).send();
   } catch (error) {
