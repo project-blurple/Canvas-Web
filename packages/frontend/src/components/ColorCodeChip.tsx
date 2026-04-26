@@ -3,6 +3,7 @@
 import { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { PrimitiveButton } from "./button";
+import VisuallyHidden from "./VisuallyHidden";
 
 const StyledButton = styled(PrimitiveButton)`
   background-color: oklch(from var(--discord-white) l c h / 12%);
@@ -49,7 +50,10 @@ export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
 
   return (
     <StyledButton onClick={clickHandler} onKeyUp={keyUpHandler} {...props}>
-      <code>{colorCode}</code>
+      <code aria-hidden>{colorCode}</code>
+      <VisuallyHidden>
+        Code {colorCode.split("").join("-")}. Click to copy.
+      </VisuallyHidden>
     </StyledButton>
   );
 }
