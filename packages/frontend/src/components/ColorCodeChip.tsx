@@ -30,7 +30,7 @@ const StyledButton = styled(PrimitiveButton)`
   }
 `;
 
-const copyToClipBoard = (str: string) => navigator.clipboard.writeText(str);
+const copyToClipboard = (str: string) => navigator.clipboard.writeText(str);
 
 interface ColorCodeChipProps extends Omit<
   React.ComponentPropsWithRef<typeof StyledButton>,
@@ -42,9 +42,9 @@ interface ColorCodeChipProps extends Omit<
 export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
-  const clickHandler = () => copyToClipBoard(colorCode);
+  const clickHandler = () => copyToClipboard(colorCode);
   const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") copyToClipBoard(colorCode);
+    if (event.key === "Enter" || event.key === " ") copyToClipboard(colorCode);
   };
 
   return (
