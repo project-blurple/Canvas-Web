@@ -10,8 +10,8 @@ const StyledButton = styled(PrimitiveButton)`
   cursor: pointer;
   display: inline-block;
   font-size: 0.9rem;
-  padding-block: 0.25rem;
-  padding-inline: 0.5rem;
+  padding-block: 0.2em;
+  padding-inline: 0.5em;
   text-box-trim: trim-both;
 
   @media (hover: hover) and (pointer: fine) {
