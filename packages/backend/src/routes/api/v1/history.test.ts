@@ -66,7 +66,7 @@ describe("History route tests", () => {
     expect(getPixelHistory).toHaveBeenCalledTimes(1);
     expect(getPixelHistory).toHaveBeenCalledWith({
       canvasId: 1,
-      coordinates: {
+      points: {
         x: 2,
         y: 3,
       },
@@ -97,7 +97,7 @@ describe("History route tests", () => {
     expect(getPixelHistory).toHaveBeenCalledTimes(1);
     expect(getPixelHistory).toHaveBeenCalledWith({
       canvasId: 9,
-      coordinates: [
+      points: [
         { x: 1, y: 2 },
         { x: 3, y: 4 },
       ],

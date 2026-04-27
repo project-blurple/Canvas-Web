@@ -30,9 +30,9 @@ blocklistRouter.post("/", async (req, res) => {
     assertIsCanvasModerator(req.user);
     const userIds = await parseBlocklistParams(req.body);
 
-    await addUsersToBlocklist(userIds);
+    const addedUsers = await addUsersToBlocklist(userIds);
 
-    res.status(200).json({ message: "Users added to blocklist" });
+    res.status(201).json(addedUsers);
   } catch (error) {
     ApiError.sendError(res, error);
   }

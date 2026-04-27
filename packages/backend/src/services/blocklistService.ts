@@ -1,6 +1,6 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
-import BadRequestError from "@/errors/BadRequestError";
+import ConflictError from "@/errors/ConflictError";
 import { PrismaErrorCode } from "@/utils";
 
 export async function getBlocklist() {
@@ -29,7 +29,7 @@ export async function addUsersToBlocklist(
 ) {
   try {
     const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
-    await prisma.blacklist.createMany({
+    return await prisma.blacklist.createManyAndReturn({
       data: userIdsArray.map((userId) => ({
         user_id: userId,
       })),
@@ -40,7 +40,7 @@ export async function addUsersToBlocklist(
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === PrismaErrorCode.UniqueConstraintViolation
     ) {
-      throw new BadRequestError("User is already in the blocklist");
+      throw new ConflictError("User is already in the blocklist");
     }
     throw error;
   }

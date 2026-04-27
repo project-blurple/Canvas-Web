@@ -1,4 +1,4 @@
-import express from "express";
+import express, { type RequestHandler } from "express";
 import request from "supertest";
 import {
   addUsersToBlocklist,
@@ -19,7 +19,8 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
   const app = express();
   app.use(express.json());
   app.use(mockAuth);
-  app.use((req, _res, next) => {
+
+  const setTestRequestState: RequestHandler = (req, _res, next) => {
     req.session = {} as typeof req.session;
     if (authenticated) {
       req.session.discordAccessToken = "test-access-token";
@@ -31,7 +32,9 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
       };
     }
     next();
-  });
+  };
+
+  app.use(setTestRequestState);
   app.use("/api/v1/blocklist", blocklistRouter);
   return app;
 };
@@ -42,10 +45,11 @@ describe("Blocklist route tests", () => {
   });
 
   it("returns the blocklist for a moderator", async () => {
+    const dateAdded = new Date();
     const blocklist = [
       {
         user_id: 9n,
-        date_added: new Date(0),
+        date_added: dateAdded,
       },
     ];
     vi.mocked(getBlocklist).mockResolvedValueOnce(blocklist as never);
@@ -59,7 +63,7 @@ describe("Blocklist route tests", () => {
     expect(response.body).toStrictEqual([
       {
         user_id: "9",
-        date_added: new Date(0).toISOString(),
+        date_added: dateAdded.toISOString(),
       },
     ]);
     expect(getBlocklist).toHaveBeenCalledTimes(1);
@@ -67,7 +71,17 @@ describe("Blocklist route tests", () => {
 
   it("adds users to the blocklist for a moderator", async () => {
     const app = createApp({ authenticated: true, moderator: true });
-    vi.mocked(addUsersToBlocklist).mockResolvedValueOnce(undefined);
+    const dateAdded = new Date();
+    vi.mocked(addUsersToBlocklist).mockResolvedValueOnce([
+      {
+        user_id: 1n,
+        date_added: dateAdded,
+      },
+      {
+        user_id: 2n,
+        date_added: dateAdded,
+      },
+    ] as never);
 
     const response = await request(app)
       .post("/api/v1/blocklist")
@@ -76,11 +90,18 @@ describe("Blocklist route tests", () => {
         userId: ["1", "2"],
       })
       .type("json")
-      .expect(200);
+      .expect(201);
 
-    expect(response.body).toStrictEqual({
-      message: "Users added to blocklist",
-    });
+    expect(response.body).toStrictEqual([
+      {
+        user_id: "1",
+        date_added: dateAdded.toISOString(),
+      },
+      {
+        user_id: "2",
+        date_added: dateAdded.toISOString(),
+      },
+    ]);
     expect(addUsersToBlocklist).toHaveBeenCalledTimes(1);
     expect(addUsersToBlocklist).toHaveBeenCalledWith([1n, 2n]);
   });
