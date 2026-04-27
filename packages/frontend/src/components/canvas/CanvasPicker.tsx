@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasSummary } from "@blurple-canvas-web/types";
+import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { NativeSelect, nativeSelectClasses, styled } from "@mui/material";
 import { ChevronsUpDown } from "lucide-react";
 import { useCanvasContext } from "@/contexts";

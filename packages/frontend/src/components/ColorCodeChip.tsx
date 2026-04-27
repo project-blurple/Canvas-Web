@@ -1,6 +1,6 @@
 "use client";
 
-import { PaletteColorSummary } from "@blurple-canvas-web/types";
+import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 
 const Container = styled("code", {

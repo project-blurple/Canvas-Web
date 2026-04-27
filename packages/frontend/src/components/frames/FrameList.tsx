@@ -1,4 +1,4 @@
-import {
+import type {
   FrameRequest,
   GuildOwnedFrame,
   SystemOwnedFrame,

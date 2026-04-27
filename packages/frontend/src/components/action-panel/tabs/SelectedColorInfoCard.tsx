@@ -1,4 +1,4 @@
-import { PaletteColor } from "@blurple-canvas-web/types";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useCanvasContext } from "@/contexts";
 

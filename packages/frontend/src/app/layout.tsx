@@ -1,26 +1,25 @@
+import type {
+  CanvasInfo,
+  CanvasInfoRequest,
+  DiscordUserProfile,
+} from "@blurple-canvas-web/types";
 import { ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
-
+import { cookies } from "next/headers";
 import config from "@/config";
 import {
+  AuthProvider,
+  CanvasProvider,
   CanvasViewProvider,
   QueryClientProvider,
   SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
-import "../styles/core.css";
-import {
-  CanvasInfo,
-  CanvasInfoRequest,
-  DiscordUserProfile,
-} from "@blurple-canvas-web/types";
-import { cookies } from "next/headers";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
 import { Theme } from "@/theme";
+import "../styles/core.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),

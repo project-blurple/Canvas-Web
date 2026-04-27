@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import {
@@ -14,7 +14,7 @@ import {
   PlacePixelBodyModel,
 } from "@/models/bodyModels";
 import {
-  CanvasIdParam,
+  type CanvasIdParam,
   PixelHistoryParamModel,
   parseCanvasId,
 } from "@/models/paramModels";

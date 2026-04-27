@@ -1,16 +1,16 @@
 "use client";
 
-import { CanvasInfo, Point } from "@blurple-canvas-web/types";
+import type { CanvasInfo, Point } from "@blurple-canvas-web/types";
 import {
   createContext,
-  Dispatch,
-  RefObject,
-  SetStateAction,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
   useCallback,
   useContext,
   useState,
 } from "react";
-import { ViewBounds } from "@/util";
+import type { ViewBounds } from "@/util";
 import { useCanvasContext } from "./CanvasContext";
 import { useCanvasViewContext } from "./CanvasViewContext";
 
@@ -26,7 +26,7 @@ interface SelectedBoundsContextType {
   setBoundsToCurrentView: (fillRatio: number) => void;
 }
 
-export const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
+const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   canEdit: false,
   minHeight: 5,
   minWidth: 5,
