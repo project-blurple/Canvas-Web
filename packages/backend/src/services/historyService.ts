@@ -128,6 +128,13 @@ export async function getPixelHistory({
   };
 }
 
+/**
+ * Deletes pixel history entries for the given canvas and history IDs
+ *
+ * @param canvasId - The ID of the canvas
+ * @param historyIds - The IDs of the history entries to delete
+ * @param shouldBlockAuthors - Whether to add authors of the deleted entries to the blocklist
+ */
 export async function deletePixelHistoryEntries(
   canvasId: CanvasInfo["id"],
   historyIds: bigint[],
