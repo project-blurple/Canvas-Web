@@ -89,6 +89,7 @@ describe("History route tests", () => {
         fromDateTime: "1970-01-01T00:00:00.000Z",
         toDateTime: "1970-01-02T00:00:00.000Z",
         includeUserIds: ["1", "2"],
+        includeColors: [1, 2],
       })
       .type("json")
       .expect(200);
@@ -109,7 +110,67 @@ describe("History route tests", () => {
         ids: [1n, 2n],
         include: true,
       },
+      colorFilter: {
+        colors: [1, 2],
+        include: true,
+      },
     });
+  });
+
+  it("returns pixel history for a range and excluded color filter", async () => {
+    const responseBody = {
+      pixelHistory: [],
+      totalEntries: 0,
+    };
+    vi.mocked(getPixelHistory).mockResolvedValueOnce(
+      responseBody as Awaited<ReturnType<typeof getPixelHistory>>,
+    );
+
+    const app = createApp();
+    const response = await request(app)
+      .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
+      .send({
+        excludeColors: [3, 4],
+      })
+      .type("json")
+      .expect(200);
+
+    expect(response.body).toStrictEqual(responseBody);
+    expect(getPixelHistory).toHaveBeenCalledTimes(1);
+    expect(getPixelHistory).toHaveBeenCalledWith({
+      canvasId: 9,
+      points: [
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+      ],
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
+      userIdFilter: undefined,
+      colorFilter: {
+        colors: [3, 4],
+        include: false,
+      },
+    });
+  });
+
+  it("returns 400 when both includeColors and excludeColors are provided", async () => {
+    const app = createApp();
+
+    const response = await request(app)
+      .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
+      .send({
+        includeColors: [1],
+        excludeColors: [2],
+      })
+      .type("json");
+
+    expect(response.status).toBe(400);
+    expect(response.body).toMatchObject({
+      message: "Invalid request body. Expected a valid history query object",
+    });
+    expect(getPixelHistory).not.toHaveBeenCalled();
   });
 
   it("deletes history entries for a moderator", async () => {
