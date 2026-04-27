@@ -8,7 +8,7 @@ import {
   PixelHistoryParamModel,
 } from "@/models/historyModels";
 import { type CanvasIdParam, parseCanvasId } from "@/models/paramModels";
-import { assertCanvasModerator } from "@/services/discordGuildService";
+import { assertIsCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
   getPixelHistory,
@@ -19,10 +19,8 @@ export const historyRouter = Router({ mergeParams: true });
 
 historyRouter.get<CanvasIdParam>("/", async (req, res) => {
   try {
-    // grabbing the canvasId from the path
     const canvasId = await parseCanvasId(req.params);
 
-    // grabbing the x and y from the query
     const queryResult = await PixelHistoryParamModel.safeParseAsync(req.query);
     if (!queryResult.success) {
       throw new BadRequestError(
@@ -32,7 +30,10 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     }
 
     const coordinates = queryResult.data;
-    const pixelHistory = await getPixelHistory({ canvasId, coordinates });
+    const pixelHistory = await getPixelHistory({
+      canvasId,
+      points: coordinates,
+    });
 
     res.status(200).json(pixelHistory);
   } catch (error) {
@@ -65,15 +66,15 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
       );
     }
 
-    const coordinate0 = {
+    const point0 = {
       x: queryResult.data.x0,
       y: queryResult.data.y0,
     };
-    const coordinate1 = {
+    const point1 = {
       x: queryResult.data.x1 ?? queryResult.data.x0,
       y: queryResult.data.y1 ?? queryResult.data.y0,
     };
-    const coordinates: [Point, Point] = [coordinate0, coordinate1];
+    const points: [Point, Point] = [point0, point1];
 
     const dateRange = {
       from: bodyResult.data.fromDateTime,
@@ -89,7 +90,7 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
 
     const pixelHistory = await getPixelHistory({
       canvasId,
-      coordinates,
+      points,
       dateRange,
       userIdFilter,
     });
@@ -103,7 +104,7 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
 historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
   try {
     assertLoggedIn(req);
-    assertCanvasModerator(req.user);
+    assertIsCanvasModerator(req.user);
 
     const canvasId = await parseCanvasId(req.params);
 

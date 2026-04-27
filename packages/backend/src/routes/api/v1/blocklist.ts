@@ -6,7 +6,7 @@ import {
   getBlocklist,
   removeUsersFromBlocklist,
 } from "@/services/blocklistService";
-import { assertCanvasModerator } from "@/services/discordGuildService";
+import { assertIsCanvasModerator } from "@/services/discordGuildService";
 import { assertLoggedIn } from "@/utils";
 
 export const blocklistRouter = Router();
@@ -14,7 +14,7 @@ export const blocklistRouter = Router();
 blocklistRouter.get("/", async (req, res) => {
   try {
     assertLoggedIn(req);
-    assertCanvasModerator(req.user);
+    assertIsCanvasModerator(req.user);
 
     const blocklist = await getBlocklist();
 
@@ -27,7 +27,7 @@ blocklistRouter.get("/", async (req, res) => {
 blocklistRouter.post("/", async (req, res) => {
   try {
     assertLoggedIn(req);
-    assertCanvasModerator(req.user);
+    assertIsCanvasModerator(req.user);
     const userIds = await parseBlocklistParams(req.body);
 
     await addUsersToBlocklist(userIds);
@@ -41,7 +41,7 @@ blocklistRouter.post("/", async (req, res) => {
 blocklistRouter.delete("/", async (req, res) => {
   try {
     assertLoggedIn(req);
-    assertCanvasModerator(req.user);
+    assertIsCanvasModerator(req.user);
     const userIds = await parseBlocklistParams(req.body);
 
     await removeUsersFromBlocklist(userIds);

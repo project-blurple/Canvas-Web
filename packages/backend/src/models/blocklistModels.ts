@@ -24,8 +24,6 @@ export async function parseBlocklistParams(params: {
   if (!userId) {
     throw new BadRequestError("userId is required");
   }
-  if (Array.isArray(userId)) {
-    return userId.map((id) => BigInt(id));
-  }
-  return [BigInt(userId)];
+  const ids = Array.isArray(userId) ? userId : [userId];
+  return ids.map(BigInt);
 }

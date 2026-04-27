@@ -196,7 +196,7 @@ export function assertCanvasAdmin(
   }
 }
 
-export function assertCanvasModerator(
+export function assertIsCanvasModerator(
   user: DiscordUserProfile,
 ): asserts user is CanvasModeratorUser | CanvasAdminUser {
   if (!user.isCanvasModerator) {

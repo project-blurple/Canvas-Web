@@ -27,6 +27,7 @@ export function normalizeBounds({ x0, y0, x1, y1 }: Bounds): Bounds {
     y1: Math.max(y0, y1),
   };
 }
+
 interface AuthenticatedRequest extends Request {
   user: Express.User;
   session: Request["session"] & {

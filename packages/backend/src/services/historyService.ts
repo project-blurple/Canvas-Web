@@ -1,12 +1,17 @@
-import type { PixelHistoryWrapper, Point } from "@blurple-canvas-web/types";
+import type {
+  CanvasInfo,
+  PixelHistory,
+  PixelHistoryWrapper,
+  Point,
+} from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import { validatePixel } from "./pixelService";
 
 interface GetPixelHistoryParams {
-  canvasId: number;
-  coordinates: Point | [Point, Point];
+  canvasId: CanvasInfo["id"];
+  points: Point | [Point, Point];
   dateRange?: {
     from?: Date;
     to?: Date;
@@ -21,44 +26,48 @@ interface GetPixelHistoryParams {
  * Gets the pixel history for the given canvas and coordinates
  *
  * @param canvasId - The ID of the canvas
- * @param coordinates - The coordinates of the pixel
+ * @param points - The coordinates of the pixel
  */
 export async function getPixelHistory({
   canvasId,
-  coordinates,
+  points,
   dateRange,
   userIdFilter,
 }: GetPixelHistoryParams): Promise<PixelHistoryWrapper> {
-  if (!Array.isArray(coordinates)) {
-    await validatePixel(canvasId, coordinates, false);
-    coordinates = [coordinates, coordinates];
+  if (!Array.isArray(points)) {
+    await validatePixel(canvasId, points, false);
+    points = [points, points];
   } else {
     await Promise.all([
-      validatePixel(canvasId, coordinates[0], false),
-      validatePixel(canvasId, coordinates[1], false),
+      validatePixel(canvasId, points[0], false),
+      validatePixel(canvasId, points[1], false),
     ]);
   }
 
-  const whereFilter = {
+  const where = {
     canvas_id: canvasId,
     x: {
-      gte: coordinates[0].x,
-      lte: coordinates[1].x,
+      gte: points[0].x,
+      lte: points[1].x,
     },
     y: {
-      gte: coordinates[0].y,
-      lte: coordinates[1].y,
+      gte: points[0].y,
+      lte: points[1].y,
     },
     timestamp: {
       gte: dateRange?.from,
       lte: dateRange?.to,
     },
-    user_id:
-      userIdFilter ?
-        userIdFilter.include ?
-          { in: userIdFilter.ids }
-        : { notIn: userIdFilter.ids }
-      : undefined,
+    user_id: (() => {
+      if (!userIdFilter) {
+        return undefined;
+      }
+      if (userIdFilter.include) {
+        return { in: userIdFilter.ids };
+      } else {
+        return { notIn: userIdFilter.ids };
+      }
+    })(),
   };
 
   const [pixelHistory, totalEntries] = await Promise.all([
@@ -67,7 +76,7 @@ export async function getPixelHistory({
       orderBy: {
         timestamp: "desc",
       },
-      where: whereFilter,
+      where,
       select: {
         id: true,
         color: true,
@@ -78,7 +87,7 @@ export async function getPixelHistory({
       },
     }),
     prisma.history.count({
-      where: whereFilter,
+      where: where,
     }),
   ]);
 
@@ -103,7 +112,7 @@ export async function getPixelHistory({
 }
 
 export async function deletePixelHistoryEntries(
-  canvasId: number,
+  canvasId: CanvasInfo["id"],
   historyIds: bigint[],
   shouldBlockAuthors: boolean = false,
 ): Promise<void> {
@@ -123,12 +132,11 @@ export async function deletePixelHistoryEntries(
 
   const existingEntryIds = new Set(existingEntries.map((entry) => entry.id));
 
-  const invalidIds = historyIds.filter((id) => !existingEntryIds.has(id));
-  if (invalidIds.length > 0) {
+  const invalidIds = new Set(historyIds).difference(existingEntryIds);
+  if (invalidIds.size > 0) {
+    const formatter = new Intl.ListFormat("en-US");
     throw new Error(
-      `The following history IDs do not exist for canvas ${canvasId}: ${invalidIds
-        .map((id) => id.toString())
-        .join(", ")}`,
+      `The following history IDs do not exist for canvas ${canvasId}: ${formatter.format([...invalidIds].map((id) => id.toString()))}`,
     );
   }
 
@@ -142,9 +150,7 @@ export async function deletePixelHistoryEntries(
   });
 
   if (shouldBlockAuthors) {
-    const authorIds = [
-      ...new Set(existingEntries.map((entry) => entry.user_id)),
-    ];
+    const authorIds = new Set(existingEntries.map((entry) => entry.user_id));
     await addUsersToBlocklist(authorIds, true);
   }
 }

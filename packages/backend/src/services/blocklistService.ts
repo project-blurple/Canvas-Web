@@ -24,12 +24,13 @@ export async function userIsBlocklisted(
 }
 
 export async function addUsersToBlocklist(
-  userIds: BlocklistEntry["userId"][],
+  userIds: Iterable<BlocklistEntry["userId"]>,
   ignoreDuplicates = false,
 ) {
   try {
+    const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
     await prisma.blacklist.createMany({
-      data: userIds.map((userId) => ({
+      data: userIdsArray.map((userId) => ({
         user_id: userId,
       })),
       skipDuplicates: ignoreDuplicates,
@@ -46,12 +47,12 @@ export async function addUsersToBlocklist(
 }
 
 export async function removeUsersFromBlocklist(
-  userIds: BlocklistEntry["userId"][],
+  userIds: Iterable<BlocklistEntry["userId"]>,
 ) {
   await prisma.blacklist.deleteMany({
     where: {
       user_id: {
-        in: userIds,
+        in: Array.isArray(userIds) ? userIds : Array.from(userIds),
       },
     },
   });
