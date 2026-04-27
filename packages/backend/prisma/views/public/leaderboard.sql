@@ -1,7 +1,6 @@
 SELECT
   leaderboard_guild.user_id,
   leaderboard_guild.canvas_id,
-  leaderboard_guild.discord_user_profile,
   (sum(leaderboard_guild.total_pixels)) :: integer AS total_pixels,
   rank() OVER (
     PARTITION BY leaderboard_guild.canvas_id
