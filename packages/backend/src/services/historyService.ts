@@ -151,6 +151,6 @@ export async function deletePixelHistoryEntries(
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(existingEntries.map((entry) => entry.user_id));
-    await addUsersToBlocklist(authorIds, true);
+    await addUsersToBlocklist(authorIds);
   }
 }

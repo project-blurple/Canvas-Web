@@ -24,7 +24,7 @@ blocklistRouter.get("/", async (req, res) => {
   }
 });
 
-blocklistRouter.post("/", async (req, res) => {
+blocklistRouter.put("/", async (req, res) => {
   try {
     assertLoggedIn(req);
     assertIsCanvasModerator(req.user);

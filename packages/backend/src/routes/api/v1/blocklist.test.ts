@@ -84,7 +84,7 @@ describe("Blocklist route tests", () => {
     ] as never);
 
     const response = await request(app)
-      .post("/api/v1/blocklist")
+      .put("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .send({
         userId: ["1", "2"],
@@ -138,7 +138,7 @@ describe("Blocklist route tests", () => {
     const app = createApp({ authenticated: true, moderator: false });
 
     const response = await request(app)
-      .post("/api/v1/blocklist")
+      .put("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .send({
         userId: "1",
