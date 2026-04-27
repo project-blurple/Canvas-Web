@@ -1,4 +1,4 @@
-export interface BlacklistEntry {
+export interface BlocklistEntry {
   userId: bigint;
   dateAdded: Date;
 }

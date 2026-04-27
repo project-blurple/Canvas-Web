@@ -122,7 +122,7 @@ historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
     await deletePixelHistoryEntries(
       canvasId,
       historyIds,
-      bodyResult.data.blacklistAuthors,
+      bodyResult.data.shouldBlockAuthors,
     );
 
     res.status(204).send();

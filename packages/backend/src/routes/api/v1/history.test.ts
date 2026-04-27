@@ -121,7 +121,7 @@ describe("History route tests", () => {
       .set("X-TestUserId", "1")
       .send({
         historyIds: [1, 2],
-        blacklistAuthors: true,
+        shouldBlockAuthors: true,
       })
       .type("json")
       .expect(204);

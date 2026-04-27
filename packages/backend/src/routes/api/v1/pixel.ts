@@ -65,7 +65,7 @@ pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
 
 /*
  * Endpoint for placing a pixel on the canvas
- * Requires the user to be authenticated and not blacklisted
+ * Requires the user to be authenticated and not blocklisted
  */
 pixelRouter.post<CanvasIdParam>("/", tenSecondLimiter, async (req, res) => {
   if (!config.webPlacingEnabled) {

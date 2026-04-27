@@ -1,4 +1,4 @@
-import type { BlacklistEntry } from "@blurple-canvas-web/types";
+import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import z from "zod";
 import { BadRequestError } from "@/errors";
 
@@ -6,17 +6,17 @@ const snowflakeString = z
   .string()
   .regex(/^\d+$/, "userId must be a numeric string");
 
-const BlacklistParamModel = z.object({
+const BlocklistParamModel = z.object({
   userId: z.union([snowflakeString, z.array(snowflakeString)]).optional(),
 });
 
-export async function parseBlacklistParams(params: {
+export async function parseBlocklistParams(params: {
   userId?: string | string[];
-}): Promise<BlacklistEntry["userId"][]> {
-  const result = await BlacklistParamModel.safeParseAsync(params);
+}): Promise<BlocklistEntry["userId"][]> {
+  const result = await BlocklistParamModel.safeParseAsync(params);
   if (!result.success) {
     throw new BadRequestError(
-      `Invalid blacklist parameters: ${result.error.message}`,
+      `Invalid blocklist parameters: ${result.error.message}`,
       result.error.issues,
     );
   }

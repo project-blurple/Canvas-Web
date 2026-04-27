@@ -1,19 +1,19 @@
 import express from "express";
 import request from "supertest";
 import {
-  addUsersToBlacklist,
-  getBlacklist,
-  removeUsersFromBlacklist,
-} from "@/services/blacklistService";
+  addUsersToBlocklist,
+  getBlocklist,
+  removeUsersFromBlocklist,
+} from "@/services/blocklistService";
 import { mockAuth } from "@/test/mockAuth";
 
-vi.mock("@/services/blacklistService", () => ({
-  addUsersToBlacklist: vi.fn(),
-  getBlacklist: vi.fn(),
-  removeUsersFromBlacklist: vi.fn(),
+vi.mock("@/services/blocklistService", () => ({
+  addUsersToBlocklist: vi.fn(),
+  getBlocklist: vi.fn(),
+  removeUsersFromBlocklist: vi.fn(),
 }));
 
-import { blacklistRouter } from "./blacklist";
+import { blocklistRouter } from "./blocklist";
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
   const app = express();
@@ -32,27 +32,27 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
     }
     next();
   });
-  app.use("/api/v1/blacklist", blacklistRouter);
+  app.use("/api/v1/blocklist", blocklistRouter);
   return app;
 };
 
-describe("Blacklist route tests", () => {
+describe("Blocklist route tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("returns the blacklist for a moderator", async () => {
-    const blacklist = [
+  it("returns the blocklist for a moderator", async () => {
+    const blocklist = [
       {
         user_id: 9n,
         date_added: new Date(0),
       },
     ];
-    vi.mocked(getBlacklist).mockResolvedValueOnce(blacklist as never);
+    vi.mocked(getBlocklist).mockResolvedValueOnce(blocklist as never);
 
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
-      .get("/api/v1/blacklist")
+      .get("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .expect(200);
 
@@ -62,15 +62,15 @@ describe("Blacklist route tests", () => {
         date_added: new Date(0).toISOString(),
       },
     ]);
-    expect(getBlacklist).toHaveBeenCalledTimes(1);
+    expect(getBlocklist).toHaveBeenCalledTimes(1);
   });
 
-  it("adds users to the blacklist for a moderator", async () => {
+  it("adds users to the blocklist for a moderator", async () => {
     const app = createApp({ authenticated: true, moderator: true });
-    vi.mocked(addUsersToBlacklist).mockResolvedValueOnce(undefined);
+    vi.mocked(addUsersToBlocklist).mockResolvedValueOnce(undefined);
 
     const response = await request(app)
-      .post("/api/v1/blacklist")
+      .post("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .send({
         userId: ["1", "2"],
@@ -79,18 +79,18 @@ describe("Blacklist route tests", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual({
-      message: "Users added to blacklist",
+      message: "Users added to blocklist",
     });
-    expect(addUsersToBlacklist).toHaveBeenCalledTimes(1);
-    expect(addUsersToBlacklist).toHaveBeenCalledWith([1n, 2n]);
+    expect(addUsersToBlocklist).toHaveBeenCalledTimes(1);
+    expect(addUsersToBlocklist).toHaveBeenCalledWith([1n, 2n]);
   });
 
-  it("removes users from the blacklist for a moderator", async () => {
+  it("removes users from the blocklist for a moderator", async () => {
     const app = createApp({ authenticated: true, moderator: true });
-    vi.mocked(removeUsersFromBlacklist).mockResolvedValueOnce(undefined);
+    vi.mocked(removeUsersFromBlocklist).mockResolvedValueOnce(undefined);
 
     const response = await request(app)
-      .delete("/api/v1/blacklist")
+      .delete("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .send({
         userId: "9",
@@ -99,25 +99,25 @@ describe("Blacklist route tests", () => {
       .expect(204);
 
     expect(response.body).toStrictEqual({});
-    expect(removeUsersFromBlacklist).toHaveBeenCalledTimes(1);
-    expect(removeUsersFromBlacklist).toHaveBeenCalledWith([9n]);
+    expect(removeUsersFromBlocklist).toHaveBeenCalledTimes(1);
+    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n]);
   });
 
-  it("returns 401 when blacklist access is unauthenticated", async () => {
+  it("returns 401 when blocklist access is unauthenticated", async () => {
     const app = createApp();
 
-    const response = await request(app).get("/api/v1/blacklist");
+    const response = await request(app).get("/api/v1/blocklist");
 
     expect(response.status).toBe(401);
     expect(response.body).toStrictEqual({ message: "Unauthorized" });
-    expect(getBlacklist).not.toHaveBeenCalled();
+    expect(getBlocklist).not.toHaveBeenCalled();
   });
 
-  it("returns 403 when blacklist mutation permissions are missing", async () => {
+  it("returns 403 when blocklist mutation permissions are missing", async () => {
     const app = createApp({ authenticated: true, moderator: false });
 
     const response = await request(app)
-      .post("/api/v1/blacklist")
+      .post("/api/v1/blocklist")
       .set("X-TestUserId", "1")
       .send({
         userId: "1",
@@ -128,6 +128,6 @@ describe("Blacklist route tests", () => {
     expect(response.body).toStrictEqual({
       message: "You do not have permission to perform this action",
     });
-    expect(addUsersToBlacklist).not.toHaveBeenCalled();
+    expect(addUsersToBlocklist).not.toHaveBeenCalled();
   });
 });

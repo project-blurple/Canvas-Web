@@ -52,5 +52,5 @@ export const PixelHistoryComplexBodyModel = z
 
 export const PixelHistoryDeleteBodyModel = z.object({
   historyIds: z.array(z.coerce.number().int().nonnegative()),
-  blacklistAuthors: z.boolean().optional(),
+  shouldBlockAuthors: z.boolean().optional(),
 });

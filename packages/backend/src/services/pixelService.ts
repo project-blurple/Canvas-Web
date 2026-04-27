@@ -8,7 +8,7 @@ import { type color, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
-import { checkIfUserIsBlacklisted } from "./blacklistService";
+import { userIsBlocklisted } from "./blocklistService";
 import { updateCachedCanvasPixel } from "./canvasService";
 
 /** Ensures that the given pixel coordinates are within the bounds of the canvas and the canvas exists
@@ -79,11 +79,11 @@ export async function validateColor(
 }
 
 /**
- * Ensures that the given user is not blacklisted from placing pixels
+ * Ensures that the given user is not blocklisted from placing pixels
  */
 export async function validateUser(userId: bigint) {
-  if (await checkIfUserIsBlacklisted(userId)) {
-    throw new ForbiddenError("User is blacklisted");
+  if (await userIsBlocklisted(userId)) {
+    throw new ForbiddenError("User is blocklisted");
   }
 }
 
