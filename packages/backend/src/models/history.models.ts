@@ -31,9 +31,21 @@ export const PixelHistoryComplexBodyModel = z
     excludeUserIds: z
       .array(z.string().regex(/^\d+$/, "user IDs must be numeric strings"))
       .optional(),
+    includeColors: z.array(z.coerce.number().int().nonnegative()).optional(),
+    excludeColors: z.array(z.coerce.number().int().nonnegative()).optional(),
   })
   .superRefine(
-    ({ fromDateTime, toDateTime, includeUserIds, excludeUserIds }, ctx) => {
+    (
+      {
+        fromDateTime,
+        toDateTime,
+        includeUserIds,
+        excludeUserIds,
+        includeColors,
+        excludeColors,
+      },
+      ctx,
+    ) => {
       if (fromDateTime && toDateTime && fromDateTime >= toDateTime) {
         ctx.addIssue({
           code: "custom",
@@ -45,6 +57,13 @@ export const PixelHistoryComplexBodyModel = z
         ctx.addIssue({
           code: "custom",
           message: "Cannot have both includeUserIds and excludeUserIds",
+        });
+      }
+
+      if (includeColors && excludeColors) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Cannot have both includeColors and excludeColors",
         });
       }
     },

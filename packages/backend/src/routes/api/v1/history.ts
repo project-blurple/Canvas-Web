@@ -88,11 +88,19 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
         { ids: bodyResult.data.excludeUserIds.map(BigInt), include: false }
       : undefined;
 
+    const colorFilter =
+      bodyResult.data.includeColors ?
+        { colors: bodyResult.data.includeColors, include: true }
+      : bodyResult.data.excludeColors ?
+        { colors: bodyResult.data.excludeColors, include: false }
+      : undefined;
+
     const pixelHistory = await getPixelHistory({
       canvasId,
       points,
       dateRange,
       userIdFilter,
+      colorFilter,
     });
 
     res.status(200).json(pixelHistory);

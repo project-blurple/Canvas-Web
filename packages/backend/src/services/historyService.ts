@@ -1,6 +1,5 @@
 import type {
   CanvasInfo,
-  PixelHistory,
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
@@ -20,6 +19,10 @@ interface GetPixelHistoryParams {
     ids: bigint[];
     include: boolean;
   };
+  colorFilter?: {
+    colors: number[];
+    include: boolean;
+  };
 }
 
 /**
@@ -27,12 +30,16 @@ interface GetPixelHistoryParams {
  *
  * @param canvasId - The ID of the canvas
  * @param points - The coordinates of the pixel
+ * @param dateRange - The date range for filtering history
+ * @param userIdFilter - The user ID filter
+ * @param colorFilter - The color filter
  */
 export async function getPixelHistory({
   canvasId,
   points,
   dateRange,
   userIdFilter,
+  colorFilter,
 }: GetPixelHistoryParams): Promise<PixelHistoryWrapper> {
   if (!Array.isArray(points)) {
     await validatePixel(canvasId, points, false);
@@ -66,6 +73,16 @@ export async function getPixelHistory({
         return { in: userIdFilter.ids };
       } else {
         return { notIn: userIdFilter.ids };
+      }
+    })(),
+    color_id: (() => {
+      if (!colorFilter) {
+        return undefined;
+      }
+      if (colorFilter.include) {
+        return { in: colorFilter.colors };
+      } else {
+        return { notIn: colorFilter.colors };
       }
     })(),
   };
