@@ -3,7 +3,7 @@ import rateLimit from "express-rate-limit";
 /**
  * Rate limiter for the pixel placement endpoint. Allows 3 requests per 30 seconds per IP address.
  */
-export const tenSecondLimiter = rateLimit({
+export const pixelPlacementLimiter = rateLimit({
   windowMs: 30 * 1000, // 30 seconds
   max: 3, // 3 requests per 30 seconds
   message: "You have been rate limited",

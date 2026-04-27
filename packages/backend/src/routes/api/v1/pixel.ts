@@ -8,7 +8,7 @@ import {
   UnauthorizedError,
 } from "@/errors";
 import { socketHandler } from "@/index";
-import { tenSecondLimiter } from "@/middleware/ratelimit";
+import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import {
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
@@ -92,41 +92,46 @@ pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
  * Endpoint for placing a pixel on the canvas
  * Requires the user to be authenticated and not blacklisted
  */
-pixelRouter.post<CanvasIdParam>("/", tenSecondLimiter, async (req, res) => {
-  if (!config.webPlacingEnabled) {
-    throw new ForbiddenError("Web placing is disabled");
-  }
-
-  try {
-    const result = await PlacePixelBodyModel.safeParseAsync(req.body);
-    if (!result.success) {
-      throw new BadRequestError("Body is not valid", result.error.issues);
+pixelRouter.post<CanvasIdParam>(
+  "/",
+  pixelPlacementLimiter,
+  async (req, res) => {
+    if (!config.webPlacingEnabled) {
+      throw new ForbiddenError("Web placing is disabled");
     }
 
-    const { x, y, colorId } = result.data;
-    const canvasId = await parseCanvasId(req.params);
-    const profile = req.user as DiscordUserProfile;
+    try {
+      const result = await PlacePixelBodyModel.safeParseAsync(req.body);
+      if (!result.success) {
+        throw new BadRequestError("Body is not valid", result.error.issues);
+      }
 
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
+      const { x, y, colorId } = result.data;
+      const canvasId = await parseCanvasId(req.params);
+      const profile = req.user as DiscordUserProfile;
+
+      if (!profile?.id) {
+        throw new UnauthorizedError("User is not authenticated");
+      }
+
+      // TODO: see if Promise.all() can work here
+      const coordinates: Point = { x, y };
+      await validatePixel(canvasId, coordinates, true);
+      await validateUser(BigInt(profile.id));
+      const color = await validateColor(colorId);
+      const { futureCooldown } = await placePixel(
+        canvasId,
+        BigInt(profile.id),
+        coordinates,
+        color,
+      );
+      if (!futureCooldown)
+        return res.status(201).json({ cooldownEndTime: null });
+      return res
+        .status(201)
+        .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
+    } catch (error) {
+      ApiError.sendError(res, error);
     }
-
-    // TODO: see if Promise.all() can work here
-    const coordinates: Point = { x, y };
-    await validatePixel(canvasId, coordinates, true);
-    await validateUser(BigInt(profile.id));
-    const color = await validateColor(colorId);
-    const { futureCooldown } = await placePixel(
-      canvasId,
-      BigInt(profile.id),
-      coordinates,
-      color,
-    );
-    if (!futureCooldown) return res.status(201).json({ cooldownEndTime: null });
-    return res
-      .status(201)
-      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
