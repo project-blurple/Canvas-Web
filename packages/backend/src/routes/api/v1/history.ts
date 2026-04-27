@@ -6,7 +6,7 @@ import {
   PixelHistoryComplexParamModel,
   PixelHistoryDeleteBodyModel,
   PixelHistoryParamModel,
-} from "@/models/historyModels";
+} from "@/models/history.models";
 import { type CanvasIdParam, parseCanvasId } from "@/models/paramModels";
 import { assertIsCanvasModerator } from "@/services/discordGuildService";
 import {

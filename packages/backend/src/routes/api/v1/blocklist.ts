@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
-import { parseBlocklistParams } from "@/models/blocklistModels";
+import { parseBlocklistParams } from "@/models/blocklist.models";
 import {
   addUsersToBlocklist,
   getBlocklist,
