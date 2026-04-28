@@ -114,6 +114,11 @@ const InviteButton = styled(Button)`
   ${({ theme }) => theme.breakpoints.up("md")} {
     border-radius: 0.5rem 0.5rem 1rem 0.5rem;
     inset-block-end: 0.5rem;
+
+    #canvas-container:fullscreen &,
+    #canvas-container:-webkit-full-screen & {
+      border-radius: 1rem 0.5rem 0.5rem 0.5rem;
+    }
   }
 
   ${({ theme }) => theme.breakpoints.down("md")} {
@@ -133,6 +138,11 @@ const FullscreenButton = styled(Button)`
   position: absolute;
   text-decoration: none;
   z-index: 1;
+
+  #canvas-container:fullscreen &,
+  #canvas-container:-webkit-full-screen & {
+    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
 
   @media (hover: hover) and (pointer: fine) {
     :hover {
@@ -1048,7 +1058,11 @@ export default function CanvasView() {
   }, [containerRef.current]);
 
   return (
-    <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
+    <CanvasContainer
+      id="canvas-container"
+      ref={containerRef}
+      onPointerDown={handlePointerDown}
+    >
       {canUseFullscreen && (
         <FullscreenButton
           onClick={toggleFullscreen}
