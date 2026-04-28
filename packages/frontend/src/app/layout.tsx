@@ -53,6 +53,11 @@ async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
 }
 
 async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
+  // Skip during build - data will be fetched fresh on client startup
+  if (process.env.npm_lifecycle_event === "build") {
+    return getDefaultCanvasInfo();
+  }
+
   try {
     const response = await axios.get<CanvasInfoRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/current/info`,
@@ -62,18 +67,22 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
     console.error(error);
 
     // Fallback in case something goes wrong
-    return {
-      id: 1,
-      name: "Something went wrong...",
-      isLocked: true,
-      width: 600,
-      height: 600,
-      startCoordinates: [1, 1],
-      eventId: 1,
-      webPlacingEnabled: false,
-      allColorsGlobal: false,
-    };
+    return getDefaultCanvasInfo();
   }
+}
+
+function getDefaultCanvasInfo(): CanvasInfo {
+  return {
+    id: 1,
+    name: "Something went wrong...",
+    isLocked: true,
+    width: 600,
+    height: 600,
+    startCoordinates: [1, 1],
+    eventId: 1,
+    webPlacingEnabled: false,
+    allColorsGlobal: false,
+  };
 }
 
 export default async function RootLayout({
