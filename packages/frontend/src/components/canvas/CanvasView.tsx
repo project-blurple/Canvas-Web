@@ -7,11 +7,18 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
-import { Maximize2, Minimize2 } from "lucide-react";
+import {
+  Maximize2,
+  Minimize2,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActionPanel } from "@/components/action-panel";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
 import {
+  useActionPanelContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedBoundsContext,
@@ -88,7 +95,10 @@ const PreviewPixel = styled("div")`
   position: absolute;
 `;
 
-const InviteButton = styled(Button)`
+const InviteButton = styled(Button, {
+  shouldForwardProp: (prop: string) =>
+    !["$isPanelVisible", "$isFullscreen"].includes(prop),
+})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
@@ -98,7 +108,10 @@ const InviteButton = styled(Button)`
   font-weight: 900;
   font-stretch: 125%;
   font-width: 125%;
-  inset-inline-end: 0.5rem;
+  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
+    $isPanelVisible && $isFullscreen ?
+      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+    : "0.5rem"};
   padding-block: 0.1rem;
   padding-inline: 1rem;
   position: absolute;
@@ -127,12 +140,18 @@ const InviteButton = styled(Button)`
   }
 `;
 
-const FullscreenButton = styled(Button)`
+const FullscreenButton = styled(Button, {
+  shouldForwardProp: (prop: string) =>
+    !["$isPanelVisible", "$isFullscreen"].includes(prop),
+})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
   border-radius: 0.5rem 1rem 0.5rem 0.5rem;
   border-color: transparent;
   color: white;
   inset-block-start: 0.5rem;
-  inset-inline-end: 0.5rem;
+  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
+    $isPanelVisible && $isFullscreen ?
+      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+    : "0.5rem"};
   min-width: auto;
   padding: 0.5rem;
   position: absolute;
@@ -153,6 +172,48 @@ const FullscreenButton = styled(Button)`
 
   ${({ theme }) => theme.breakpoints.down("md")} {
     display: none;
+  }
+`;
+
+const FullscreenPanelButton = styled(Button, {
+  shouldForwardProp: (prop: string) =>
+    !["$isPanelVisible", "$isFullscreen"].includes(prop),
+})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
+  border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  border-color: transparent;
+  color: white;
+  inset-block-start: 4rem;
+  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
+    $isPanelVisible && $isFullscreen ?
+      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+    : "0.5rem"};
+  min-width: auto;
+  padding: 0.5rem;
+  position: absolute;
+  text-decoration: none;
+  z-index: 3;
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      border-color: inherit;
+      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+    }
+  }
+`;
+
+const FullscreenPanelOverlay = styled("div")`
+  box-sizing: border-box;
+  height: 100%;
+  inset-block: 0;
+  inset-inline-end: 0;
+  padding: 0.5rem;
+  pointer-events: auto;
+  position: absolute;
+  width: min(var(--action-panel-width), calc(100vw - 1rem));
+  z-index: 2;
+
+  > * {
+    width: 100%;
   }
 `;
 
@@ -425,6 +486,8 @@ export default function CanvasView() {
     setZoom,
     zoom,
   } = useCanvasViewContext();
+  const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
+    useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -484,7 +547,12 @@ export default function CanvasView() {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === containerRef.current);
+      const isCanvasFullscreen =
+        document.fullscreenElement === containerRef.current;
+      setIsFullscreen(isCanvasFullscreen);
+      if (!isCanvasFullscreen) {
+        setFullscreenPanelVisible(false);
+      }
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -493,7 +561,7 @@ export default function CanvasView() {
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
     };
-  }, [containerRef.current]);
+  }, [containerRef.current, setFullscreenPanelVisible]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -1042,6 +1110,10 @@ export default function CanvasView() {
 
   const reticleOffset = calculateReticleOffset(coords);
 
+  const toggleFullscreenPanel = useCallback(() => {
+    setFullscreenPanelVisible((visible) => !visible);
+  }, [setFullscreenPanelVisible]);
+
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
@@ -1065,6 +1137,8 @@ export default function CanvasView() {
     >
       {canUseFullscreen && (
         <FullscreenButton
+          $isFullscreen={isFullscreen}
+          $isPanelVisible={isFullscreenPanelVisible}
           onClick={toggleFullscreen}
           onPointerDown={(event) => event.stopPropagation()}
           type="button"
@@ -1074,9 +1148,28 @@ export default function CanvasView() {
           : <Maximize2 />}
         </FullscreenButton>
       )}
+      {canUseFullscreen && isFullscreen && (
+        <FullscreenPanelButton
+          $isFullscreen={isFullscreen}
+          $isPanelVisible={isFullscreenPanelVisible}
+          aria-label={
+            isFullscreenPanelVisible ? "Hide action panel" : "Show action panel"
+          }
+          aria-pressed={isFullscreenPanelVisible}
+          onClick={toggleFullscreenPanel}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {isFullscreenPanelVisible ?
+            <PanelRightClose />
+          : <PanelRightOpen />}
+        </FullscreenPanelButton>
+      )}
       {config.discordServerInvite && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
           <InviteButton
+            $isFullscreen={isFullscreen}
+            $isPanelVisible={isFullscreenPanelVisible}
             onPointerDown={(event) => event.stopPropagation()}
             type="button"
           >
@@ -1161,6 +1254,15 @@ export default function CanvasView() {
           />
         </CanvasImageWrapper>
       </div>
+      {isFullscreen && isFullscreenPanelVisible && (
+        <FullscreenPanelOverlay
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerMove={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+        >
+          <ActionPanel />
+        </FullscreenPanelOverlay>
+      )}
       {isLoading && <CircularProgress style={{ position: "absolute" }} />}
     </CanvasContainer>
   );

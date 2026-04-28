@@ -10,6 +10,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config";
 import {
+  ActionPanelProvider,
   AuthProvider,
   CanvasProvider,
   CanvasViewProvider,
@@ -103,11 +104,13 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
           <SelectedColorProvider>
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <CanvasViewProvider>
-                  <SelectedBoundsProvider>
-                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </SelectedBoundsProvider>
-                </CanvasViewProvider>
+                <ActionPanelProvider>
+                  <CanvasViewProvider>
+                    <SelectedBoundsProvider>
+                      <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                    </SelectedBoundsProvider>
+                  </CanvasViewProvider>
+                </ActionPanelProvider>
               </CanvasProvider>
             </SelectedFrameProvider>
           </SelectedColorProvider>
