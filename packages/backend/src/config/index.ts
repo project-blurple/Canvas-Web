@@ -46,6 +46,10 @@ const config = {
   // Keep bot placing enabled by default unless explicitly disabled.
   botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
+  frames: {
+    userLimit: Number(process.env.FRAME_LIMIT_USER || 32),
+    guildLimit: Number(process.env.FRAME_LIMIT_GUILD || 32),
+  },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
   databaseUrl: requiredEnv("DATABASE_URL"),
