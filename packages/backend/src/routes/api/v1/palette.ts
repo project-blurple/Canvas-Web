@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
-import { ColorBodyModel, parseColorId } from "@/models/colorModels";
-import { parseEventId } from "@/models/eventModels";
-import { parseGuildId } from "@/models/miscellaneousModels";
+import { ColorBodyModel, parseColorId } from "@/models/color.models";
+import { parseEventId } from "@/models/event.models";
+import { parseGuildId } from "@/models/miscellaneous.models";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
 import {
   assignColorToEvent,

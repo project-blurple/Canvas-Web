@@ -5,7 +5,7 @@ import {
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
   parseCanvasId,
-} from "@/models/canvasModels";
+} from "@/models/canvas.models";
 import {
   type CachedCanvas,
   createCanvas,

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
-import { parseCanvasId } from "@/models/canvasModels";
-import { LeaderboardQueryModel } from "@/models/pixelModels";
+import { parseCanvasId } from "@/models/canvas.models";
+import { LeaderboardQueryModel } from "@/models/pixel.models";
 import { getLeaderboard, getUserStats } from "@/services/statisticsService";
 
 export const statisticsRouter = Router();

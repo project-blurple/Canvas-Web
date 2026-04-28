@@ -9,7 +9,7 @@ import { PNG } from "pngjs";
 import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
-import type { PlacePixelArray } from "@/models/pixelModels";
+import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
 
 /**

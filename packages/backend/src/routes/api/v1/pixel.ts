@@ -9,12 +9,12 @@ import {
 } from "@/errors";
 import { socketHandler } from "@/index";
 import { tenSecondLimiter } from "@/middleware/ratelimit";
-import { type CanvasIdParam, parseCanvasId } from "@/models/canvasModels";
+import { type CanvasIdParam, parseCanvasId } from "@/models/canvas.models";
 import {
   PixelHistoryParamModel,
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
-} from "@/models/pixelModels";
+} from "@/models/pixel.models";
 import { updateManyCachedPixels } from "@/services/canvasService";
 import {
   getPixelHistory,

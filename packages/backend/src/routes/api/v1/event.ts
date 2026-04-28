@@ -5,7 +5,7 @@ import {
   CreateEventBodyModel,
   EditEventBodyModel,
   parseEventId,
-} from "@/models/eventModels";
+} from "@/models/event.models";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
 import {
   createEvent,
