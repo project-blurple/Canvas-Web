@@ -8,6 +8,7 @@ import {
   parseFrameId,
 } from "@/models/paramModels";
 import {
+  assertOwnerFrameLimitNotExceeded,
   createFrame,
   deleteFrame,
   editFrame,
@@ -128,14 +129,20 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
-    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
-
     if (!ownerQueryResult.success) {
       throw new BadRequestError(
         "Invalid body parameters",
         ownerQueryResult.error.issues,
       );
     }
+
+    await assertOwnerFrameLimitNotExceeded(
+      canvasId,
+      ownerQueryResult.data.ownerId,
+      ownerQueryResult.data.isGuildOwned,
+    );
+
+    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
     const frame = await createFrame(
       req.user,

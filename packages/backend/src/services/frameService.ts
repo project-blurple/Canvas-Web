@@ -5,6 +5,7 @@ import type {
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
+import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
@@ -399,5 +400,41 @@ export async function createFrame(
       }
       throw error;
     }
+  }
+}
+
+async function getFrameCountForOwner(
+  canvasId: number,
+  ownerId: string,
+  isGuildOwned: boolean,
+) {
+  return prisma.frame.count({
+    where: {
+      canvas_id: canvasId,
+      owner_id: BigInt(ownerId),
+      is_guild_owned: isGuildOwned,
+    },
+  });
+}
+
+export async function assertOwnerFrameLimitNotExceeded(
+  canvasId: number,
+  ownerId: string,
+  isGuildOwned: boolean,
+) {
+  const frameCount = await getFrameCountForOwner(
+    canvasId,
+    ownerId,
+    isGuildOwned,
+  );
+  const limit =
+    isGuildOwned ? config.frames.guildLimit : config.frames.userLimit;
+
+  if (frameCount >= limit) {
+    throw new BadRequestError(
+      `Frame limit of ${limit} exceeded for this ${
+        isGuildOwned ? "guild" : "user"
+      } on this canvas`,
+    );
   }
 }
