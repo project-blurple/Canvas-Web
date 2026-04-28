@@ -47,7 +47,7 @@ export const FrameGuildIdsQueryModel = z.object({
     ),
 });
 
-export interface FrameIdParam {
+interface FrameIdParam {
   frameId: string;
   [key: string]: string;
 }

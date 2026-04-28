@@ -1,4 +1,4 @@
-import Tooltip, { TooltipProps } from "@mui/material/Tooltip";
+import Tooltip, { type TooltipProps } from "@mui/material/Tooltip";
 import { useState } from "react";
 import DynamicButton from "@/components/button/DynamicButton";
 
@@ -9,10 +9,7 @@ type TooltipDynamicButtonProps = React.ComponentPropsWithoutRef<
   tooltipTitle: string;
 };
 
-export function ActionPanelTooltip({
-  children,
-  ...props
-}: ActionPanelTooltipProps) {
+function ActionPanelTooltip({ children, ...props }: ActionPanelTooltipProps) {
   return (
     <Tooltip
       placement="top"

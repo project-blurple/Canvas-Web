@@ -6,7 +6,7 @@
   "linter": {
     "rules": {
       "style": {
-        "useImportType": "off"
+        "useImportType": "error"
       },
       "suspicious": {
         "noArrayIndexKey": "warn"

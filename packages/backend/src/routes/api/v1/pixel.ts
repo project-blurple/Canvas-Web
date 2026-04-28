@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import {
@@ -9,7 +9,7 @@ import {
 } from "@/errors";
 import { socketHandler } from "@/index";
 import { tenSecondLimiter } from "@/middleware/ratelimit";
-import { CanvasIdParam, parseCanvasId } from "@/models/canvasModels";
+import { type CanvasIdParam, parseCanvasId } from "@/models/canvasModels";
 import {
   PixelHistoryParamModel,
   PlacePixelArrayBodyModel,

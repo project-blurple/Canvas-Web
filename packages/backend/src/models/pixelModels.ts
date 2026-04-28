@@ -1,5 +1,5 @@
 import z from "zod";
-import { CanvasIdParamModel } from "./canvasModels";
+import type { CanvasIdParamModel } from "./canvasModels";
 
 export type LeaderboardParamModel = typeof CanvasIdParamModel;
 

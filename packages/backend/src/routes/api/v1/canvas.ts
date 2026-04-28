@@ -1,13 +1,13 @@
-import { Response, Router } from "express";
+import { type Response, Router } from "express";
 import { ApiError } from "@/errors";
 import {
-  CanvasIdParam,
+  type CanvasIdParam,
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
   parseCanvasId,
 } from "@/models/canvasModels";
 import {
-  CachedCanvas,
+  type CachedCanvas,
   createCanvas,
   editCanvas,
   getCanvases,

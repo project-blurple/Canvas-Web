@@ -1,11 +1,11 @@
 "use client";
 
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import axios from "axios";
 import Cookies from "js-cookie";
 import {
   createContext,
-  ReactNode,
+  type ReactNode,
   useCallback,
   useContext,
   useState,

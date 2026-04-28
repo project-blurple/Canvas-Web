@@ -1,4 +1,4 @@
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 
 const Wrapper = styled("div")`

@@ -1,4 +1,4 @@
-import { BlurpleEvent } from "@blurple-canvas-web/types";
+import type { BlurpleEvent } from "@blurple-canvas-web/types";
 import z from "zod";
 import { BadRequestError } from "@/errors";
 

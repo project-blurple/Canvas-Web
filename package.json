@@ -32,7 +32,8 @@
     "check:fix": "pnpm --recursive check:fix",
     "prepare": "husky",
     "clean": "pnpm --recursive clean && rm -rf node_modules/",
-    "knip": "knip"
+    "prisma:push": "pnpm --filter=backend prisma:push",
+    "prisma:seed": "pnpm --filter=backend prisma:seed --"
   },
   "lint-staged": {
     "*.{css,html,md,markdown,yaml,yml}": "pnpm exec prettier --write",
@@ -48,14 +49,16 @@
   "pnpm": {
     "ignoredBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "overrides": {
+      "protobufjs": "^7.5.5"
+    }
   },
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "devDependencies": {
     "@biomejs/biome": "^2.4.12",
     "@types/node": "^24.12.2",
     "husky": "^9.1.7",
-    "knip": "^6.4.1",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3"
