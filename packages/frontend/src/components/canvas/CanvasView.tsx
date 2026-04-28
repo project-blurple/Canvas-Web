@@ -95,41 +95,27 @@ const PreviewPixel = styled("div")`
   position: absolute;
 `;
 
-const BaseCanvasViewButton = styled(Button, {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  color: white;
-  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
-    $isPanelVisible && $isFullscreen ?
-      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
-    : "0.5rem"};
-  position: absolute;
-  text-decoration: none;
-`;
-
-const InviteButton = styled(BaseCanvasViewButton)`
+const InviteButton = styled(Button)`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
   box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+  color: white;
   font-size: 1.2rem;
   font-weight: 900;
   font-stretch: 125%;
   font-width: 125%;
+  inset-inline-end: 0.5rem;
   padding-block: 0.1rem;
   padding-inline: 1rem;
+  position: absolute;
+  text-decoration: none;
   z-index: 1;
 
   @media (hover: hover) and (pointer: fine) {
     :hover {
       background-color: var(--discord-blurple);
     }
-  }
-
-  #canvas-container:fullscreen &,
-  #canvas-container:-webkit-full-screen & {
-    display: none;
   }
 
   ${({ theme }) => theme.breakpoints.up("md")} {
@@ -143,7 +129,18 @@ const InviteButton = styled(BaseCanvasViewButton)`
   }
 `;
 
-const BaseFullscreenButton = styled(BaseCanvasViewButton)`
+const BaseFullscreenButton = styled(Button, {
+  shouldForwardProp: (prop: string) =>
+    !["$isPanelVisible", "$isFullscreen"].includes(prop),
+})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
+  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
+    $isPanelVisible && $isFullscreen ?
+      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+    : "0.5rem"};
+
+  color: white;
+  position: absolute;
+  text-decoration: none;
   border-color: transparent;
   min-width: auto;
   padding: 0.5rem;
@@ -1141,16 +1138,9 @@ export default function CanvasView() {
           : <PanelRightOpen />}
         </FullscreenPanelButton>
       )}
-      {config.discordServerInvite && (
+      {config.discordServerInvite && !isFullscreen && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-          <InviteButton
-            $isFullscreen={isFullscreen}
-            $isPanelVisible={isFullscreenPanelVisible}
-            onPointerDown={(event) => event.stopPropagation()}
-            type="button"
-          >
-            Project Blurple
-          </InviteButton>
+          <InviteButton>Project Blurple</InviteButton>
         </a>
       )}
       <div
