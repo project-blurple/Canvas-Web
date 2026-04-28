@@ -95,27 +95,30 @@ const PreviewPixel = styled("div")`
   position: absolute;
 `;
 
-const InviteButton = styled(Button, {
+const BaseCanvasViewButton = styled(Button, {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  background-color: oklch(
-    from var(--discord-legacy-dark-but-not-black) l c h / 80%
-  );
-  box-shadow: 0 0 10px rgba(0 0 0 / 25%);
   color: white;
-  font-size: 1.2rem;
-  font-weight: 900;
-  font-stretch: 125%;
-  font-width: 125%;
   inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
     $isPanelVisible && $isFullscreen ?
       "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
     : "0.5rem"};
-  padding-block: 0.1rem;
-  padding-inline: 1rem;
   position: absolute;
   text-decoration: none;
+`;
+
+const InviteButton = styled(BaseCanvasViewButton)`
+  background-color: oklch(
+    from var(--discord-legacy-dark-but-not-black) l c h / 80%
+  );
+  box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-stretch: 125%;
+  font-width: 125%;
+  padding-block: 0.1rem;
+  padding-inline: 1rem;
   z-index: 1;
 
   @media (hover: hover) and (pointer: fine) {
@@ -140,22 +143,22 @@ const InviteButton = styled(Button, {
   }
 `;
 
-const FullscreenButton = styled(Button, {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+const BaseFullscreenButton = styled(BaseCanvasViewButton)`
   border-color: transparent;
-  color: white;
-  inset-block-start: 0.5rem;
-  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
-    $isPanelVisible && $isFullscreen ?
-      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
-    : "0.5rem"};
   min-width: auto;
   padding: 0.5rem;
-  position: absolute;
-  text-decoration: none;
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      border-color: inherit;
+      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+    }
+  }
+`;
+
+const FullscreenButton = styled(BaseFullscreenButton)`
+  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+  inset-block-start: 0.5rem;
   z-index: 1;
 
   #canvas-container:fullscreen &,
@@ -163,42 +166,15 @@ const FullscreenButton = styled(Button, {
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
 
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      border-color: inherit;
-      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
-    }
-  }
-
   ${({ theme }) => theme.breakpoints.down("md")} {
     display: none;
   }
 `;
 
-const FullscreenPanelButton = styled(Button, {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
+const FullscreenPanelButton = styled(BaseFullscreenButton)`
   border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  border-color: transparent;
-  color: white;
   inset-block-start: 4rem;
-  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
-    $isPanelVisible && $isFullscreen ?
-      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
-    : "0.5rem"};
-  min-width: auto;
-  padding: 0.5rem;
-  position: absolute;
-  text-decoration: none;
   z-index: 3;
-
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      border-color: inherit;
-      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
-    }
-  }
 `;
 
 const FullscreenPanelOverlay = styled("div")`
