@@ -127,14 +127,14 @@ const InviteButton = styled(BaseCanvasViewButton)`
     }
   }
 
+  #canvas-container:fullscreen &,
+  #canvas-container:-webkit-full-screen & {
+    display: none;
+  }
+
   ${({ theme }) => theme.breakpoints.up("md")} {
     border-radius: 0.5rem 0.5rem 1rem 0.5rem;
     inset-block-end: 0.5rem;
-
-    #canvas-container:fullscreen &,
-    #canvas-container:-webkit-full-screen & {
-      border-radius: 1rem 0.5rem 0.5rem 0.5rem;
-    }
   }
 
   ${({ theme }) => theme.breakpoints.down("md")} {

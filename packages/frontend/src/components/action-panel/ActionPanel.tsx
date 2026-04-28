@@ -26,6 +26,12 @@ const Wrapper = styled("div")`
   overflow-block: auto;
   padding: var(--padding-width);
 
+  #canvas-container:fullscreen &,
+  #canvas-container:-webkit-full-screen & {
+    height: auto;
+    max-height: 100%;
+  }
+
   > * {
     border-radius: calc(var(--card-border-radius) - var(--padding-width));
   }
