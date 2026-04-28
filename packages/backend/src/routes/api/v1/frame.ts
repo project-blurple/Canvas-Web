@@ -1,4 +1,5 @@
 import { Router } from "express";
+import config from "@/config";
 import { ApiError, BadRequestError } from "@/errors";
 import {
   FrameDataParamModel,
@@ -31,11 +32,14 @@ frameRouter.get("/:frameId", async (req, res) => {
 
 frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
   try {
-    const frame = await getFramesByUserId(
+    const frames = await getFramesByUserId(
       req.params.userId,
       await parseCanvasId(req.params),
     );
-    res.status(200).json(frame);
+    res.status(200).json({
+      data: frames,
+      isAtCountLimit: frames.length >= config.frames.userLimit,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -51,11 +55,22 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
       );
     }
 
-    const frame = await getFramesByGuildIds(
+    const frames = await getFramesByGuildIds(
       queryResult.data.guildIds,
       await parseCanvasId(req.params),
     );
-    res.status(200).json(frame);
+
+    const countLimitResults: Record<string, boolean> = {};
+    for (const guildId of queryResult.data.guildIds) {
+      countLimitResults[guildId] =
+        frames.filter((frame) => frame.owner.guild.guild_id === guildId)
+          .length >= config.frames.guildLimit;
+    }
+
+    res.status(200).json({
+      data: frames,
+      isAtCountLimit: countLimitResults,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }

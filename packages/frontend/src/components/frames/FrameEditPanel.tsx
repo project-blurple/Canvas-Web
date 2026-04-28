@@ -33,7 +33,7 @@ import {
   useSelectedBoundsContext,
   useSelectedFrameContext,
 } from "@/contexts";
-import { useGuildFrames } from "@/hooks/queries/useFrame";
+import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
 import {
   hexStringToPixelColor,
@@ -214,14 +214,23 @@ export default function FrameEditPanel({
     isDirtyTrackingReady,
   ]);
 
+  const { data: userFramesResponse } = useUserFrames({
+    canvasId: canvas.id,
+    userId: user?.id,
+  });
+  const userFrameLimit = userFramesResponse?.isAtCountLimit;
+
   const managedGuildEntries = Object.entries(user?.guilds ?? {})
     .filter(([, guild]) => guild.administrator || guild.manageGuild)
     .toSorted(([, a], [, b]) => (b.memberCount ?? 0) - (a.memberCount ?? 0));
 
-  const { data: guildFrames = [] } = useGuildFrames({
+  const { data: guildFramesResponse } = useGuildFrames({
     canvasId: canvas.id,
     guildIds: managedGuildEntries.map(([guildId]) => guildId),
   });
+
+  const guildFrames = guildFramesResponse?.data ?? [];
+  const guildFrameLimits = guildFramesResponse?.isAtCountLimit;
 
   const guildOptions = useMemo<GuildOption[]>(() => {
     const [guildsWithFrames, otherManagedGuilds] = splitGuildsByFramePresence(
@@ -466,6 +475,11 @@ export default function FrameEditPanel({
     }
   }, [user, setActivePanel, clearSelectedBounds]);
 
+  const isAtFrameLimit =
+    selectedOwner === "user" ? userFrameLimit : (
+      guildFrameLimits?.[selectedGuildId]
+    );
+
   return (
     <>
       <FullWidthScrollView>
@@ -550,7 +564,7 @@ export default function FrameEditPanel({
         <ButtonRow>
           {!isCreateMode ?
             <>
-              <DynamicButton
+              <DynamicButton // Edit mode
                 color={hexStringToPixelColor(frameId)}
                 onAction={handleSaveAction}
                 disabled={!frameName || !frameBounds || !isDirty}
@@ -564,16 +578,17 @@ export default function FrameEditPanel({
                 Delete
               </DynamicButton>
             </>
-          : <DynamicButton
+          : <DynamicButton // Create mode
               color={hexStringToPixelColor(frameId)}
               onAction={handleCreateAction}
               disabled={
                 !frameName ||
                 !frameBounds ||
-                (!selectedGuildId && selectedOwner === "guild")
+                (!selectedGuildId && selectedOwner === "guild") ||
+                isAtFrameLimit
               }
             >
-              Create
+              {isAtFrameLimit ? "Frame limit reached" : "Create"}
             </DynamicButton>
           }
         </ButtonRow>
