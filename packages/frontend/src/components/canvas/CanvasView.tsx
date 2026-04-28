@@ -7,6 +7,7 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
+import { Maximize2, Minimize2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
@@ -62,6 +63,12 @@ const CanvasContainer = styled("div")`
     cursor: grabbing;
   }
 
+  &:fullscreen,
+  &:-webkit-full-screen {
+    border-radius: 0;
+    border: none;
+  }
+
   & {
     user-select: none;
   }
@@ -112,6 +119,30 @@ const InviteButton = styled(Button)`
   ${({ theme }) => theme.breakpoints.down("md")} {
     inset-block-start: 0.5rem;
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+`;
+
+const FullscreenButton = styled(Button)`
+  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+  border-color: transparent;
+  color: white;
+  inset-block-start: 0.5rem;
+  inset-inline-end: 0.5rem;
+  min-width: auto;
+  padding: 0.5rem;
+  position: absolute;
+  text-decoration: none;
+  z-index: 1;
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      border-color: inherit;
+      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+    }
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    display: none;
   }
 `;
 
@@ -397,6 +428,8 @@ export default function CanvasView() {
   const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [canUseFullscreen, setCanUseFullscreen] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -431,6 +464,26 @@ export default function CanvasView() {
   const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
+
+  useEffect(() => {
+    setCanUseFullscreen(
+      document.fullscreenEnabled &&
+        window.matchMedia("(pointer: fine)").matches,
+    );
+  }, []);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(document.fullscreenElement === containerRef.current);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    handleFullscreenChange();
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+    };
+  }, [containerRef.current]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -979,11 +1032,42 @@ export default function CanvasView() {
 
   const reticleOffset = calculateReticleOffset(coords);
 
+  const toggleFullscreen = useCallback(async () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await container.requestFullscreen();
+      }
+    } catch (error) {
+      console.error("[CanvasView] fullscreen toggle failed", error);
+    }
+  }, [containerRef.current]);
+
   return (
     <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
+      {canUseFullscreen && (
+        <FullscreenButton
+          onClick={toggleFullscreen}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {isFullscreen ?
+            <Minimize2 />
+          : <Maximize2 />}
+        </FullscreenButton>
+      )}
       {config.discordServerInvite && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-          <InviteButton>Project Blurple</InviteButton>
+          <InviteButton
+            onPointerDown={(event) => event.stopPropagation()}
+            type="button"
+          >
+            Project Blurple
+          </InviteButton>
         </a>
       )}
       <div
