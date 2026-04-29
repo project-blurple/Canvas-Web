@@ -92,7 +92,6 @@ canvasRouter.post("/", async (req, res) => {
       width: canvasData.data.width,
       height: canvasData.data.height,
       startCoordinates: canvasData.data.startCoordinates,
-      allColorsGlobal: canvasData.data.allColorsGlobal,
       cooldownLength: canvasData.data.cooldownLength,
     });
 
@@ -120,7 +119,6 @@ canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
     await editCanvas({
       canvasId,
       name: canvasData.data.name,
-      allColorsGlobal: canvasData.data.allColorsGlobal,
       cooldownLength: canvasData.data.cooldownLength,
       isLocked: canvasData.data.isLocked,
     });

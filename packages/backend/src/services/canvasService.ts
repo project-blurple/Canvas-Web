@@ -364,12 +364,11 @@ export async function createCanvas({
   width,
   height,
   startCoordinates = [1, 1],
-  allColorsGlobal = false,
   cooldownLength = 15,
 }: CreateCanvasParams) {
   const currentEventId = await getCurrentEvent();
 
-  await prisma.canvas.create({
+  const canvas = await prisma.canvas.create({
     data: {
       name,
       width,
@@ -377,10 +376,38 @@ export async function createCanvas({
       event_id: currentEventId.id,
       start_coordinates: startCoordinates,
       locked: true,
-      all_colors_global: allColorsGlobal,
       cooldown_length: cooldownLength,
     },
   });
+
+  await createCanvasPixelEntries(canvas.id, width, height);
+}
+
+async function createCanvasPixelEntries(
+  canvasId: number,
+  width: number,
+  height: number,
+): Promise<void> {
+  const pixelsData = [];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      pixelsData.push({
+        canvas_id: canvasId,
+        x,
+        y,
+        color_id: 1, // Defaults to blank color (ID #1)
+      });
+    }
+  }
+
+  // Insert pixels in batches to avoid overwhelming the database
+  const batchSize = 10_000;
+  for (let i = 0; i < pixelsData.length; i += batchSize) {
+    const batch = pixelsData.slice(i, i + batchSize);
+    await prisma.pixel.createMany({
+      data: batch,
+    });
+  }
 }
 
 interface EditCanvasParams {
@@ -395,7 +422,6 @@ export async function editCanvas({
   canvasId,
   name,
   isLocked,
-  allColorsGlobal,
   cooldownLength,
 }: EditCanvasParams) {
   const canvas = await prisma.canvas.update({
@@ -405,7 +431,6 @@ export async function editCanvas({
     data: {
       name,
       locked: isLocked,
-      all_colors_global: allColorsGlobal,
       cooldown_length: cooldownLength,
     },
   });

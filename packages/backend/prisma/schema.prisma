@@ -108,7 +108,7 @@ model guild {
   manager_role         BigInt?
   invite               String?
   history              history[]
-  participantions      participation[]
+  participations       participation[]
   guild_stats          guild_stats[]
   leaderboard          leaderboard_guild[]
 }
