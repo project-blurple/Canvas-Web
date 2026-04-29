@@ -1,26 +1,25 @@
+import type {
+  CanvasInfo,
+  CanvasInfoRequest,
+  DiscordUserProfile,
+} from "@blurple-canvas-web/types";
 import { ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
-
+import { cookies } from "next/headers";
 import config from "@/config";
 import {
+  AuthProvider,
+  CanvasProvider,
   CanvasViewProvider,
   QueryClientProvider,
   SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
-import "../styles/core.css";
-import {
-  CanvasInfo,
-  CanvasInfoRequest,
-  DiscordUserProfile,
-} from "@blurple-canvas-web/types";
-import { cookies } from "next/headers";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
 import { Theme } from "@/theme";
+import "../styles/core.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(config.baseUrl),
@@ -54,6 +53,11 @@ async function getServerSideProfile(): Promise<DiscordUserProfile | null> {
 }
 
 async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
+  // Skip during build - data will be fetched fresh on client startup
+  if (process.env.npm_lifecycle_event === "build") {
+    return defaultCanvasInfo;
+  }
+
   try {
     const response = await axios.get<CanvasInfoRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/current/info`,
@@ -63,19 +67,21 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
     console.error(error);
 
     // Fallback in case something goes wrong
-    return {
-      id: 1,
-      name: "Something went wrong...",
-      isLocked: true,
-      width: 600,
-      height: 600,
-      startCoordinates: [1, 1],
-      eventId: 1,
-      webPlacingEnabled: false,
-      allColorsGlobal: false,
-    };
+    return defaultCanvasInfo;
   }
 }
+
+const defaultCanvasInfo = {
+  id: 1,
+  name: "Something went wrong...",
+  isLocked: true,
+  width: 600,
+  height: 600,
+  startCoordinates: [1, 1],
+  eventId: 1,
+  webPlacingEnabled: false,
+  allColorsGlobal: false,
+} satisfies CanvasInfo;
 
 export default async function RootLayout({
   children,

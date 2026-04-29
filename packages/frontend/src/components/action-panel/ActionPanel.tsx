@@ -1,8 +1,9 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import React, { useId, useState } from "react";
+import type React from "react";
+import { useId, useState } from "react";
 import {
   useCanvasContext,
   useCanvasViewContext,

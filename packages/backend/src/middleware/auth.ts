@@ -1,6 +1,6 @@
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
-import { Express } from "express";
+import type { Express } from "express";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as DiscordStrategy } from "passport-discord";

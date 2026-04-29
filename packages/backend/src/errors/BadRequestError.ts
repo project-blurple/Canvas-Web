@@ -1,5 +1,5 @@
-import { Response } from "express";
-import { ZodIssue } from "zod";
+import type { Response } from "express";
+import type { ZodIssue } from "zod";
 import ApiError from "./ApiError";
 
 export default class BadRequestError extends ApiError {

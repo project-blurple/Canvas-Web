@@ -1,10 +1,10 @@
-import {
+import type {
   PaletteColor,
   PaletteColorSummary,
   PixelColor,
 } from "@blurple-canvas-web/types";
 
-import { color, prisma } from "@/client";
+import { type color, prisma } from "@/client";
 import { getCurrentEvent } from "./eventService";
 
 type ColorSummary = Pick<color, "id" | "code" | "name" | "rgba" | "global">;

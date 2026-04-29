@@ -1,4 +1,4 @@
-import { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
 import {
   useAuthContext,
   useCanvasContext,
@@ -109,7 +109,7 @@ function FrameInfoPanelBody({
             setActivePanel(FramePanelMode.Create);
           }}
         >
-          Create frame
+          New frame
         </DynamicButton>
       </ActionPanelTabBody>
     );

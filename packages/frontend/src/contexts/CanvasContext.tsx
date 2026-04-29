@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
+import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState } from "react";
@@ -14,7 +14,7 @@ interface CanvasContextType {
   setCanvas: (canvasId: CanvasInfo["id"], redirect?: boolean) => Promise<void>;
 }
 
-export const CanvasContext = createContext<CanvasContextType>({
+const CanvasContext = createContext<CanvasContextType>({
   canvas: {
     id: -1,
     name: "",

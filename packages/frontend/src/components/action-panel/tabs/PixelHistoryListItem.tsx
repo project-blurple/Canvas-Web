@@ -1,4 +1,4 @@
-import { PixelHistoryRecord } from "@blurple-canvas-web/types";
+import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 
 import ColorCodeChip from "@/components/ColorCodeChip";
@@ -24,14 +24,14 @@ const SwatchSkeleton = styled(Skeleton)`
 `;
 
 const Username = styled("p")`
-  font-size: 1.125rem;
-  letter-spacing: 0.005em;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   word-break: break-word;
 `;
 
 const ColorName = styled("p")`
   color: oklch(from var(--discord-white) l c h / 60%);
-  letter-spacing: 0.005em;
+  letter-spacing: 0.01em;
 `;
 
 export default function PixelHistoryListItem({
@@ -55,7 +55,11 @@ export default function PixelHistoryListItem({
         <ColorName>
           {color ?
             <>
-              {color.name} <ColorCodeChip color={color} />
+              {color.name}
+              <ColorCodeChip
+                color={color}
+                style={{ marginInlineStart: ".3em" }}
+              />
             </>
           : <Skeleton width={120} />}
         </ColorName>

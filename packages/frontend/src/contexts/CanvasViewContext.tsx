@@ -1,11 +1,11 @@
 "use client";
 
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 import {
   createContext,
-  Dispatch,
-  RefObject,
-  SetStateAction,
+  type Dispatch,
+  type RefObject,
+  type SetStateAction,
   useContext,
   useMemo,
   useRef,
@@ -27,7 +27,7 @@ interface CanvasViewContextType {
   setZoom: Dispatch<SetStateAction<number>>;
 }
 
-export const CanvasViewContext = createContext<CanvasViewContextType>({
+const CanvasViewContext = createContext<CanvasViewContextType>({
   adjustedCoords: null,
   containerRef: { current: null },
   coords: null,

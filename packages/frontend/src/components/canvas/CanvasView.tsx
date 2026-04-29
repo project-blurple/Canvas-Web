@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import type {
   CanvasInfo,
   Frame,
   PlacePixelSocket,
@@ -19,7 +19,7 @@ import {
 } from "@/contexts";
 import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
-import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";

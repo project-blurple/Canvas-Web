@@ -1,5 +1,5 @@
-import { PlacePixelSocket } from "@blurple-canvas-web/types";
-import { Server, Socket } from "socket.io";
+import type { PlacePixelSocket } from "@blurple-canvas-web/types";
+import type { Server, Socket } from "socket.io";
 import { prisma } from "@/client";
 
 const TEN_MINUTES_IN_MS = 10 * 60 * 1000;

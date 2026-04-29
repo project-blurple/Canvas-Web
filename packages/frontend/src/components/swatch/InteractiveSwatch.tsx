@@ -1,6 +1,6 @@
 import { styled } from "@mui/material";
 
-import { StaticSwatchProps } from "./StaticSwatch";
+import type { StaticSwatchProps } from "./StaticSwatch";
 import { SwatchBase } from "./SwatchBase";
 
 export const StyledSwatchBase = styled(SwatchBase)`

@@ -83,6 +83,7 @@ const getServiceMock = (serviceName: EndpointCase["serviceName"]) => {
 
 const createApp = (includeAccessToken: boolean) => {
   const app = express();
+  app.set("trust proxy", 1);
   app.use(express.json());
   app.use(mockAuth);
   app.use((req, _res, next) => {
@@ -108,6 +109,13 @@ const sendMutationRequest = (
     body: Record<string, unknown>;
   },
 ) => request(app)[method](path).send(body).type("json");
+
+const FRAME_MUTATION_LIMIT = 10;
+
+const getRateLimitHeaders = (ipSuffix: string) => ({
+  "X-TestUserId": "1",
+  "X-Forwarded-For": `203.0.113.${ipSuffix}`,
+});
 
 describe("Frame mutation route tests", () => {
   beforeEach(() => {
@@ -181,4 +189,104 @@ describe("Frame mutation route tests", () => {
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  describe("rate limit", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date(0));
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it.each(endpointCases)(
+      "returns 429 for $name after exceeding limiter threshold",
+      async ({ method, path, body, successStatus, serviceName }) => {
+        const app = createApp(true);
+        const serviceMock = getServiceMock(serviceName);
+
+        switch (serviceName) {
+          case "create":
+            vi.mocked(createFrame).mockResolvedValue(undefined);
+            break;
+          case "edit":
+            vi.mocked(editFrame).mockResolvedValue({
+              id: "abc123",
+            } as Awaited<ReturnType<typeof editFrame>>);
+            break;
+          case "delete":
+            vi.mocked(deleteFrame).mockResolvedValue(undefined);
+            break;
+        }
+
+        const ipSuffix =
+          serviceName === "create" ? "11"
+          : serviceName === "edit" ? "12"
+          : "13";
+
+        for (let index = 0; index < FRAME_MUTATION_LIMIT; index++) {
+          const response = await sendMutationRequest(path, {
+            app,
+            method,
+            body,
+          }).set(getRateLimitHeaders(ipSuffix));
+          expect(response.status).toBe(successStatus);
+        }
+
+        const blockedResponse = await sendMutationRequest(path, {
+          app,
+          method,
+          body,
+        }).set(getRateLimitHeaders(ipSuffix));
+
+        expect(blockedResponse.status).toBe(429);
+        expect(blockedResponse.text).toContain("You have been rate limited");
+        expect(serviceMock).toHaveBeenCalledTimes(FRAME_MUTATION_LIMIT);
+      },
+    );
+
+    it("allows create requests again after the limiter window resets", async () => {
+      const app = createApp(true);
+      vi.mocked(createFrame).mockResolvedValue(undefined);
+      const requestBody = {
+        canvasId: 1,
+        name: "Frame name",
+        ownerId: "1",
+        isGuildOwned: false,
+        x0: 0,
+        y0: 0,
+        x1: 10,
+        y1: 10,
+      };
+
+      for (let index = 0; index < FRAME_MUTATION_LIMIT; index++) {
+        const response = await sendMutationRequest("/api/v1/frame", {
+          app,
+          method: "post",
+          body: requestBody,
+        }).set(getRateLimitHeaders("21"));
+        expect(response.status).toBe(201);
+      }
+
+      const blockedResponse = await sendMutationRequest("/api/v1/frame", {
+        app,
+        method: "post",
+        body: requestBody,
+      }).set(getRateLimitHeaders("21"));
+      expect(blockedResponse.status).toBe(429);
+
+      vi.advanceTimersByTime(60_001);
+
+      const allowedResponse = await sendMutationRequest("/api/v1/frame", {
+        app,
+        method: "post",
+        body: requestBody,
+      }).set(getRateLimitHeaders("21"));
+
+      expect(allowedResponse.status).toBe(201);
+      expect(createFrame).toHaveBeenCalledTimes(FRAME_MUTATION_LIMIT + 1);
+    });
+  });
 });
