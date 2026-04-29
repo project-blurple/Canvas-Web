@@ -7,6 +7,8 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Maximize2,
   Minimize2,
@@ -511,17 +513,22 @@ export default function CanvasView() {
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+
   useEffect(() => {
-    setCanUseFullscreen(
-      document.fullscreenEnabled &&
-        window.matchMedia("(pointer: fine)").matches,
-    );
-  }, []);
+    // Use the theme breakpoint as the source-of-truth for whether fullscreen
+    // controls should be shown; ensure the browser supports the API as well.
+    setCanUseFullscreen(!isSmall && document.fullscreenEnabled);
+  }, [isSmall]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
+      const container = containerRef.current;
       const isCanvasFullscreen =
-        document.fullscreenElement === containerRef.current;
+        !!container &&
+        (container.matches(":fullscreen") ||
+          container.matches(":-webkit-full-screen"));
       setIsFullscreen(isCanvasFullscreen);
       if (!isCanvasFullscreen) {
         setFullscreenPanelVisible(false);
@@ -529,12 +536,21 @@ export default function CanvasView() {
     };
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
+    // webkit fallback event for older Safari
+    document.addEventListener(
+      "webkitfullscreenchange",
+      handleFullscreenChange as EventListener,
+    );
     handleFullscreenChange();
 
     return () => {
       document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange as EventListener,
+      );
     };
-  }, [containerRef.current, setFullscreenPanelVisible]);
+  }, [containerRef, setFullscreenPanelVisible]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -1100,7 +1116,7 @@ export default function CanvasView() {
     } catch (error) {
       console.error("[CanvasView] fullscreen toggle failed", error);
     }
-  }, [containerRef.current]);
+  }, [containerRef]);
 
   return (
     <CanvasContainer
