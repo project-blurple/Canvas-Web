@@ -90,7 +90,7 @@ export default function createPixelUrl({
     frameId,
   });
 
-  const url = new URL(config.baseUrl);
+  const url = new URL(location.origin);
 
   if (canvasId !== undefined) {
     url.pathname = `/canvas/${encodeURIComponent(canvasId)}`;
