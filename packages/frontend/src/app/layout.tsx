@@ -20,9 +20,10 @@ import {
 } from "@/contexts";
 import { Theme } from "@/theme";
 import "../styles/core.css";
+import serverConfig from "@/config/serverSideConfig";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(config.baseUrl),
+  metadataBase: new URL(serverConfig.baseUrl),
   title: "Blurple Canvas",
   description: "Part of Project Blurple",
 };
