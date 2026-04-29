@@ -1,5 +1,4 @@
 import type { Point } from "@blurple-canvas-web/types";
-import config from "@/config";
 
 interface SearchParamConfig {
   readonly canonical: string;
