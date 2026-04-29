@@ -1,5 +1,9 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
+import type {
+  CreateNoticeBody,
+  UpdateNoticeBody,
+} from "@/models/notice.models";
 
 type NoticeDbRecord = NonNullable<
   Awaited<ReturnType<typeof prisma.notice.findFirst>>
@@ -26,16 +30,6 @@ export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
   return notices.map(noticeFromDb);
 }
 
-interface CreateNoticeParams {
-  type: NoticeType;
-  header?: string;
-  content?: string;
-  priority?: number;
-  active?: boolean;
-  persistOnDismiss?: boolean;
-  canvasId?: number;
-}
-
 export async function createNotice({
   type,
   header,
@@ -44,7 +38,7 @@ export async function createNotice({
   active,
   persistOnDismiss,
   canvasId,
-}: CreateNoticeParams): Promise<Notice> {
+}: CreateNoticeBody): Promise<Notice> {
   const notice = await prisma.notice.create({
     data: {
       type,
@@ -60,17 +54,6 @@ export async function createNotice({
   return noticeFromDb(notice);
 }
 
-interface ModifyNoticeParams {
-  noticeId: number;
-  type?: NoticeType;
-  header?: string | null;
-  content?: string | null;
-  priority?: number;
-  active?: boolean;
-  persistOnDismiss?: boolean;
-  canvasId?: number | null;
-}
-
 export async function updateNotice({
   noticeId,
   type,
@@ -80,7 +63,7 @@ export async function updateNotice({
   active,
   persistOnDismiss,
   canvasId,
-}: ModifyNoticeParams): Promise<Notice> {
+}: UpdateNoticeBody): Promise<Notice> {
   const notice = await prisma.notice.update({
     where: {
       id: noticeId,
