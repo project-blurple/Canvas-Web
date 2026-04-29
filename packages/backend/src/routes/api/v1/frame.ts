@@ -113,7 +113,7 @@ frameRouter.delete<FrameIdParam>(
       const frameId = await parseFrameId(req.params);
 
       await deleteFrame(req.user, req.session.discordAccessToken, frameId);
-      res.status(204).json({ message: "Frame deleted" });
+      res.status(204).end();
     } catch (error) {
       ApiError.sendError(res, error);
     }

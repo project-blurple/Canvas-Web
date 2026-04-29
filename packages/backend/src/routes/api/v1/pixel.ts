@@ -114,11 +114,12 @@ pixelRouter.post<CanvasIdParam>(
         throw new UnauthorizedError("User is not authenticated");
       }
 
-      // TODO: see if Promise.all() can work here
       const coordinates: Point = { x, y };
-      await validatePixel(canvasId, coordinates, true);
-      await validateUser(BigInt(profile.id));
-      const color = await validateColor(colorId);
+      const [color] = await Promise.all([
+        validateColor(colorId),
+        validatePixel(canvasId, coordinates, true),
+        validateUser(BigInt(profile.id)),
+      ]);
       const { futureCooldown } = await placePixel(
         canvasId,
         BigInt(profile.id),
