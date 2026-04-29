@@ -167,7 +167,6 @@ model pixel {
   color     color  @relation(fields: [color_id], references: [id])
 
   @@id([canvas_id, x, y])
-  // Necessary to get update and upsert working with prismock
   @@unique([canvas_id, x, y])
 }
 

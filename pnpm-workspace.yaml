@@ -4,3 +4,5 @@ packages:
   - "packages/backend"
   - "packages/frontend"
   - "packages/types"
+
+injectWorkspacePackages: true
