@@ -1,6 +1,12 @@
 import { Router } from "express";
-import { ApiError } from "@/errors";
-import { getNotices } from "@/services/noticeService";
+import { ApiError, BadRequestError } from "@/errors";
+import { ModifyNoticeBodyModel, parseNoticeId } from "@/models/notice.models";
+import {
+  createNotice,
+  deleteNotice,
+  getNotices,
+  updateNotice,
+} from "@/services/noticeService";
 
 export const noticeRouter = Router();
 
@@ -23,17 +29,62 @@ noticeRouter.get("/all", async (_req, res) => {
   }
 });
 
-noticeRouter.post("/", async (_req, res) => {
-  // admin auth
-  res.status(501).json({ message: "Not implemented" });
+noticeRouter.post("/", async (req, res) => {
+  try {
+    // TODO: admin auth here
+
+    const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
+      req.body,
+    );
+    if (!bodyQueryResult.success) {
+      throw new BadRequestError(
+        "Invalid request body",
+        bodyQueryResult.error.issues,
+      );
+    }
+
+    const notice = await createNotice(bodyQueryResult.data);
+    res.status(201).json(notice);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });
 
-noticeRouter.put("/:noticeId", async (_req, res) => {
-  // admin auth
-  res.status(501).json({ message: "Not implemented" });
+noticeRouter.put("/:noticeId", async (req, res) => {
+  try {
+    // TODO: admin auth here
+
+    const noticeId = await parseNoticeId(req.body);
+
+    const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
+      req.body,
+    );
+    if (!bodyQueryResult.success) {
+      throw new BadRequestError(
+        "Invalid request body",
+        bodyQueryResult.error.issues,
+      );
+    }
+
+    const notice = await updateNotice({
+      noticeId,
+      ...bodyQueryResult.data,
+    });
+    res.status(200).json(notice);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });
 
-noticeRouter.delete("/:noticeId", async (_req, res) => {
-  // admin auth
-  res.status(501).json({ message: "Not implemented" });
+noticeRouter.delete("/:noticeId", async (req, res) => {
+  try {
+    // TODO: admin auth
+
+    const noticeId = await parseNoticeId(req.body);
+
+    await deleteNotice(noticeId);
+    res.status(204).end();
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
 });

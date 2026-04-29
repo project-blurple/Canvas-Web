@@ -23,7 +23,7 @@ export async function parseNoticeId(
   return result.data.noticeId;
 }
 
-export const CreateNoticeBodyModel = z.object({
+export const ModifyNoticeBodyModel = z.object({
   type: z.string(),
   header: z.string().nullable().optional(),
   content: z.string().nullable().optional(),
@@ -33,10 +33,4 @@ export const CreateNoticeBodyModel = z.object({
   canvasId: z.number().int().positive().nullable().optional(),
 });
 
-export type CreateNoticeBody = z.infer<typeof CreateNoticeBodyModel>;
-
-export const UpdateNoticeBodyModel = CreateNoticeBodyModel.partial().extend({
-  noticeId: z.coerce.number().int().positive(),
-});
-
-export type UpdateNoticeBody = z.infer<typeof UpdateNoticeBodyModel>;
+export type CreateNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;

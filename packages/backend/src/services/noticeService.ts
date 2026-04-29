@@ -1,9 +1,6 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
-import type {
-  CreateNoticeBody,
-  UpdateNoticeBody,
-} from "@/models/notice.models";
+import type { CreateNoticeBody } from "@/models/notice.models";
 
 type NoticeDbRecord = NonNullable<
   Awaited<ReturnType<typeof prisma.notice.findFirst>>
@@ -52,6 +49,10 @@ export async function createNotice({
   });
 
   return noticeFromDb(notice);
+}
+
+interface UpdateNoticeBody extends CreateNoticeBody {
+  noticeId: number;
 }
 
 export async function updateNotice({
