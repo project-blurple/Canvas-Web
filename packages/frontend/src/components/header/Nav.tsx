@@ -1,8 +1,12 @@
 "use client";
 
-import { IconButton, Menu, MenuItem, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import IconButton from "@mui/material/IconButton";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
+import type React from "react";
 import { useState } from "react";
 import { useAuthContext } from "@/contexts";
 
@@ -70,7 +74,7 @@ const StyledMenuItem = styled(MenuItem)`
 
 interface LinkInfo {
   href: string;
-  label: string;
+  label: React.ReactNode;
 }
 
 export default function Nav() {
@@ -80,6 +84,7 @@ export default function Nav() {
 
   const links: LinkInfo[] = [
     { href: "/leaderboard", label: "Leaderboard" },
+    { href: "/settings", label: "Settings" },
     user ?
       { href: "/me", label: user.username }
     : { href: "/signin", label: "Sign in" },

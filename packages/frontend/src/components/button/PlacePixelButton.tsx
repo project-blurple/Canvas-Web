@@ -1,8 +1,8 @@
 import type { Cooldown } from "@blurple-canvas-web/types";
-import { CircularProgress, styled } from "@mui/material";
+import { styled } from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
 import { useEffect, useState } from "react";
-
 import config from "@/config";
 import {
   useAuthContext,
@@ -10,10 +10,12 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
+import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { Button } from "./Button";
 import DynamicButton from "./DynamicButton";
 
 const CoordinateLabel = styled("span")`
+  margin-inline-start: 0.25em;
   opacity: 0.6;
 `;
 
@@ -34,9 +36,12 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();
   const { coords, adjustedCoords, setCoords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
+  const playCooldownExpirySound = usePlayCooldownExpirySound();
+  const playPixelPlacementSound = usePlaySound("place_pixel");
   const isSelected = adjustedCoords && color;
   const [timeLeft, setTimeLeft] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
+  const [previousTimeLeft, setPreviousTimeLeft] = useState(0);
   const { user, signOut } = useAuthContext();
 
   // cooldown timer
@@ -50,10 +55,17 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
     setTimeLeft(0);
   }, [timeLeft]);
 
+  useEffect(() => {
+    if (previousTimeLeft > 0 && timeLeft === 0) {
+      playCooldownExpirySound();
+    }
+    setPreviousTimeLeft(timeLeft);
+  }, [playCooldownExpirySound, previousTimeLeft, timeLeft]);
+
   const handlePixelRequest = () => {
     if (!coords || !color) return;
 
-    const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel`;
+    playPixelPlacementSound();
 
     const body = {
       x: coords.x,
@@ -63,9 +75,11 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
 
     setIsPlacing(true);
     axios
-      .post<Cooldown>(requestUrl, body, {
-        withCredentials: true,
-      })
+      .post<Cooldown>(
+        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel`,
+        body,
+        { withCredentials: true },
+      )
       .then((res) => res.data)
       .then((data) => {
         const cooldown = data.cooldownEndTime;

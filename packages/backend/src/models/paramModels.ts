@@ -81,7 +81,7 @@ export async function parseCanvasId(
   return result.data.canvasId;
 }
 
-interface FrameIdParam {
+export interface FrameIdParam {
   frameId: string;
   [key: string]: string;
 }
