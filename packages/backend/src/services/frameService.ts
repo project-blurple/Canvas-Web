@@ -403,11 +403,17 @@ export async function createFrame(
   }
 }
 
-async function getFrameCountForOwner(
-  canvasId: number,
-  ownerId: string,
-  isGuildOwned: boolean,
-) {
+interface GetFrameCountForOwnerParams {
+  canvasId: number;
+  ownerId: string;
+  isGuildOwned: boolean;
+}
+
+async function getFrameCountForOwner({
+  canvasId,
+  ownerId,
+  isGuildOwned,
+}: GetFrameCountForOwnerParams) {
   return prisma.frame.count({
     where: {
       canvas_id: canvasId,
@@ -417,16 +423,16 @@ async function getFrameCountForOwner(
   });
 }
 
-export async function assertOwnerFrameLimitNotExceeded(
-  canvasId: number,
-  ownerId: string,
-  isGuildOwned: boolean,
-) {
-  const frameCount = await getFrameCountForOwner(
+export async function assertOwnerFrameLimitNotExceeded({
+  canvasId,
+  ownerId,
+  isGuildOwned,
+}: GetFrameCountForOwnerParams) {
+  const frameCount = await getFrameCountForOwner({
     canvasId,
     ownerId,
     isGuildOwned,
-  );
+  });
   const limit =
     isGuildOwned ? config.frames.guildLimit : config.frames.userLimit;
 

@@ -14,18 +14,17 @@ export interface Params {
 }
 
 export type ResBody = Frame[];
+export type ReqBody = Record<string, never>;
+export type ReqQuery = Record<string, never>;
 export type FrameByIdResBody = Frame;
 
-export type UserFramesResBody = {
+export interface UserFramesResBody {
   data: UserOwnedFrame[];
   isAtCountLimit: boolean;
-};
-export type GuildFramesResBody = {
+}
+export interface GuildFramesResBody {
   data: GuildOwnedFrame[];
   isAtCountLimit: {
     [guildId: string]: boolean;
   };
-};
-
-export type ReqBody = Record<string, never>;
-export type ReqQuery = Record<string, never>;
+}

@@ -564,7 +564,7 @@ export default function FrameEditPanel({
         <ButtonRow>
           {!isCreateMode ?
             <>
-              <DynamicButton // Edit mode
+              <DynamicButton
                 color={hexStringToPixelColor(frameId)}
                 onAction={handleSaveAction}
                 disabled={!frameName || !frameBounds || !isDirty}
@@ -578,14 +578,14 @@ export default function FrameEditPanel({
                 Delete
               </DynamicButton>
             </>
-          : <DynamicButton // Create mode
+          : <DynamicButton
               color={hexStringToPixelColor(frameId)}
               onAction={handleCreateAction}
               disabled={
                 !frameName ||
                 !frameBounds ||
                 (!selectedGuildId && selectedOwner === "guild") ||
-                isAtFrameLimit
+                isAtFrameLimit // Only restrict when creating, not when editing
               }
             >
               {isAtFrameLimit ? "Frame limit reached" : "Create"}

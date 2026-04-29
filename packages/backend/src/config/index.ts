@@ -20,7 +20,7 @@ const config = {
    */
   environment: process.env.NODE_ENV || "production",
   api: {
-    port: Number(process.env.PORT || 8000),
+    port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000,
   },
   paths: {
     root: path.resolve(),
@@ -47,8 +47,14 @@ const config = {
   botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
   frames: {
-    userLimit: Number(process.env.FRAME_LIMIT_USER || 32),
-    guildLimit: Number(process.env.FRAME_LIMIT_GUILD || 32),
+    userLimit:
+      process.env.FRAME_LIMIT_USER ?
+        Number.parseInt(process.env.FRAME_LIMIT_USER, 10)
+      : 32,
+    guildLimit:
+      process.env.FRAME_LIMIT_GUILD ?
+        Number.parseInt(process.env.FRAME_LIMIT_GUILD, 10)
+      : 32,
   },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,

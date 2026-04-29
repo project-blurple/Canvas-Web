@@ -62,9 +62,11 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
 
     const countLimitResults: Record<string, boolean> = {};
     for (const guildId of queryResult.data.guildIds) {
-      countLimitResults[guildId] =
-        frames.filter((frame) => frame.owner.guild.guild_id === guildId)
-          .length >= config.frames.guildLimit;
+      const frameCount = frames.reduce((count, frame) => {
+        if (frame.owner.guild.guild_id === guildId) count++;
+        return count;
+      }, 0);
+      countLimitResults[guildId] = frameCount >= config.frames.guildLimit;
     }
 
     res.status(200).json({
@@ -151,11 +153,11 @@ frameRouter.post("/", async (req, res) => {
       );
     }
 
-    await assertOwnerFrameLimitNotExceeded(
+    await assertOwnerFrameLimitNotExceeded({
       canvasId,
-      ownerQueryResult.data.ownerId,
-      ownerQueryResult.data.isGuildOwned,
-    );
+      ownerId: ownerQueryResult.data.ownerId,
+      isGuildOwned: ownerQueryResult.data.isGuildOwned,
+    });
 
     const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
