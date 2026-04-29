@@ -1,9 +1,11 @@
 import { Router } from "express";
 import config from "@/config";
 import { ApiError, BadRequestError } from "@/errors";
+import { frameMutationLimiter } from "@/middleware/ratelimit";
 import {
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
+  type FrameIdParam,
   FrameOwnerParamModel,
   parseCanvasId,
   parseFrameId,
@@ -78,57 +80,65 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
   }
 });
 
-frameRouter.put("/:frameId/edit", async (req, res) => {
-  try {
-    if (!req.user || !req.session.discordAccessToken) {
-      throw new ApiError("Unauthorized", 401);
-    }
+frameRouter.put<FrameIdParam>(
+  "/:frameId/edit",
+  frameMutationLimiter,
+  async (req, res) => {
+    try {
+      if (!req.user || !req.session.discordAccessToken) {
+        throw new ApiError("Unauthorized", 401);
+      }
 
-    const [frameId, bodyQueryResult] = await Promise.all([
-      parseFrameId(req.params),
-      FrameDataParamModel.safeParseAsync(req.body),
-    ]);
-    if (!bodyQueryResult.success) {
-      throw new BadRequestError(
-        "Invalid body parameters",
-        bodyQueryResult.error.issues,
+      const [frameId, bodyQueryResult] = await Promise.all([
+        parseFrameId(req.params),
+        FrameDataParamModel.safeParseAsync(req.body),
+      ]);
+      if (!bodyQueryResult.success) {
+        throw new BadRequestError(
+          "Invalid body parameters",
+          bodyQueryResult.error.issues,
+        );
+      }
+
+      const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
+
+      const frame = await editFrame(
+        req.user,
+        req.session.discordAccessToken,
+        frameId,
+        bodyQueryResult.data.name,
+        x0,
+        y0,
+        x1,
+        y1,
       );
+      res.status(200).json(frame);
+    } catch (error) {
+      ApiError.sendError(res, error);
     }
+  },
+);
 
-    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
+frameRouter.delete<FrameIdParam>(
+  "/:frameId/delete",
+  frameMutationLimiter,
+  async (req, res) => {
+    try {
+      if (!req.user || !req.session.discordAccessToken) {
+        throw new ApiError("Unauthorized", 401);
+      }
 
-    const frame = await editFrame(
-      req.user,
-      req.session.discordAccessToken,
-      frameId,
-      bodyQueryResult.data.name,
-      x0,
-      y0,
-      x1,
-      y1,
-    );
-    res.status(200).json(frame);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+      const frameId = await parseFrameId(req.params);
 
-frameRouter.delete("/:frameId/delete", async (req, res) => {
-  try {
-    if (!req.user || !req.session.discordAccessToken) {
-      throw new ApiError("Unauthorized", 401);
+      await deleteFrame(req.user, req.session.discordAccessToken, frameId);
+      res.status(204).end();
+    } catch (error) {
+      ApiError.sendError(res, error);
     }
+  },
+);
 
-    const frameId = await parseFrameId(req.params);
-
-    await deleteFrame(req.user, req.session.discordAccessToken, frameId);
-    res.status(204).json({ message: "Frame deleted" });
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
-
-frameRouter.post("/", async (req, res) => {
+frameRouter.post<FrameIdParam>("/", frameMutationLimiter, async (req, res) => {
   try {
     if (!req.user || !req.session.discordAccessToken) {
       throw new ApiError("Unauthorized", 401);
