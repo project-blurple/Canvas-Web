@@ -65,7 +65,6 @@ describe("Canvas admin route tests", () => {
       width: 16,
       height: 16,
       startCoordinates: [1, 1],
-      allColorsGlobal: true,
       cooldownLength: 30,
     });
   });
@@ -88,7 +87,6 @@ describe("Canvas admin route tests", () => {
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,
       name: "Updated Canvas",
-      allColorsGlobal: false,
       cooldownLength: 45,
       isLocked: true,
     });
