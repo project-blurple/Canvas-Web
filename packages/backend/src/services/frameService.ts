@@ -6,7 +6,12 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnprocessableError,
+} from "@/errors";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
@@ -437,7 +442,7 @@ export async function assertOwnerFrameLimitNotExceeded({
     isGuildOwned ? config.frames.guildLimit : config.frames.userLimit;
 
   if (frameCount >= limit) {
-    throw new BadRequestError(
+    throw new UnprocessableError(
       `Frame limit of ${limit} exceeded for this ${
         isGuildOwned ? "guild" : "user"
       } on this canvas`,

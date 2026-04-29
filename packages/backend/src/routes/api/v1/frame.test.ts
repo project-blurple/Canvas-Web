@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
 
-import { BadRequestError, ForbiddenError } from "@/errors";
+import { ForbiddenError, UnprocessableError } from "@/errors";
 import {
   assertOwnerFrameLimitNotExceeded,
   createFrame,
@@ -154,10 +154,10 @@ describe("Frame mutation route tests", () => {
     },
   );
 
-  it("returns 400 when the create frame limit is exceeded", async () => {
+  it("returns 422 when the create frame limit is exceeded", async () => {
     const app = createApp(true);
     vi.mocked(assertOwnerFrameLimitNotExceeded).mockRejectedValueOnce(
-      new BadRequestError("Frame limit reached"),
+      new UnprocessableError("Frame limit reached"),
     );
 
     const response = await sendMutationRequest("/api/v1/frame", {
@@ -175,11 +175,8 @@ describe("Frame mutation route tests", () => {
       },
     }).set("X-TestUserId", "1");
 
-    expect(response.status).toBe(400);
-    expect(response.body).toStrictEqual({
-      message: "Frame limit reached",
-      errors: [],
-    });
+    expect(response.status).toBe(422);
+    expect(response.body).toStrictEqual({ message: "Frame limit reached" });
     expect(assertOwnerFrameLimitNotExceeded).toHaveBeenCalledTimes(1);
     expect(createFrame).not.toHaveBeenCalled();
   });
