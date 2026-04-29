@@ -51,7 +51,7 @@ const Aside = styled("aside")`
 `;
 
 function SoundEffectsSetting() {
-  const [value, setValue] = useLocalStorage("sound-fx");
+  const [value, setValue] = useLocalStorage("audio/sound-fx");
   return (
     <CheckboxSetting
       aria-busy={value === undefined}
@@ -65,7 +65,7 @@ function SoundEffectsSetting() {
 }
 
 function CooldownExpiryJingleSetting() {
-  const [value, setValue] = useLocalStorage("cooldown-jingle");
+  const [value, setValue] = useLocalStorage("audio/cooldown-jingle");
   return (
     <CheckboxSetting
       aria-busy={value === undefined}

@@ -6,7 +6,8 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import { MenuIcon } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useAuthContext } from "@/contexts";
 
 const Links = styled("ul")`
