@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasSummary } from "@blurple-canvas-web/types";
+import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { LockKeyhole, Paintbrush } from "lucide-react";
 import { CanvasView } from "@/components/canvas";

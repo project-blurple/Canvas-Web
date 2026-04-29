@@ -1,9 +1,9 @@
 "use client";
 
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { redirect, usePathname, useRouter } from "next/navigation";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
 
