@@ -1144,9 +1144,7 @@ export default function CanvasView() {
         <FullscreenButton
           $isFullscreen={isFullscreen}
           $isPanelVisible={isFullscreenPanelVisible}
-          aria-label={
-            isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
-          }
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
           aria-pressed={isFullscreen}
           onClick={toggleFullscreen}
           onPointerDown={(event) => event.stopPropagation()}
