@@ -76,18 +76,17 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
-function verifyAdmin(user: DiscordUserProfile | null) {
-  if (!user?.isCanvasAdmin) {
-    redirect("/");
-  }
+function verifyAdmin(user: DiscordUserProfile | null, isAuthResolved: boolean) {
+  if (!isAuthResolved) return;
+  if (!user?.isCanvasAdmin) redirect("/");
 }
 
 export default function Admin({ children }: { children?: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
-  const { user } = useAuthContext();
-  verifyAdmin(user);
+  const { user, isAuthResolved } = useAuthContext();
+  verifyAdmin(user, isAuthResolved);
 
   return (
     <LayoutWithHeader>
