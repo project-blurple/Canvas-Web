@@ -1,6 +1,6 @@
-import { DiscordGuildRecord } from "./discordGuildRecord";
-import { DiscordUserProfile } from "./discordUserProfile";
-import { Satisfies } from "./util";
+import type { DiscordGuildRecord } from "./discordGuildRecord";
+import type { DiscordUserProfile } from "./discordUserProfile";
+import type { Satisfies } from "./util";
 
 export type FrameOwnerType = "guild" | "system" | "user";
 

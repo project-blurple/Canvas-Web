@@ -1,15 +1,16 @@
-import {
+import type {
   PaletteColor,
   PixelColor,
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
 
-import { color, prisma } from "@/client";
+import { type color, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
 import { updateCachedCanvasPixel } from "./canvasService";
+import { toPaletteColorSummary } from "./paletteService";
 
 /**
  * Gets the pixel history for the given canvas and coordinates
@@ -54,7 +55,7 @@ export async function getPixelHistory(
   return {
     pixelHistory: pixelHistory.map((history) => ({
       id: history.id.toString(),
-      color: history.color,
+      color: toPaletteColorSummary(history.color),
       timestamp: history.timestamp,
       guildId: history.guild_id?.toString(),
       userId: history.user_id.toString(),

@@ -72,14 +72,12 @@ model discord_user_profile {
   history             history[]
   leaderboard_guild   leaderboard_guild[]
   leaderboard         leaderboard[]
-  frame               frame[]
 }
 
 model discord_guild_record {
   guild_id BigInt  @id
   name     String
   guild    guild[]
-  frame    frame[]
 }
 
 model event {
@@ -91,12 +89,10 @@ model event {
 }
 
 model frame {
-  id             String                @id
+  id             String  @id
   canvas_id      Int
-  canvas         canvas                @relation(fields: [canvas_id], references: [id])
+  canvas         canvas  @relation(fields: [canvas_id], references: [id])
   owner_id       BigInt
-  owner_user     discord_user_profile? @relation(fields: [owner_id], references: [user_id], map: "user")
-  owner_guild    discord_guild_record? @relation(fields: [owner_id], references: [guild_id], map: "guild")
   is_guild_owned Boolean
   name           String
   x_0            Int
@@ -104,8 +100,6 @@ model frame {
   y_0            Int
   y_1            Int
   style_id       Int?
-  user           user?                 @relation(fields: [userId], references: [id])
-  userId         BigInt?
 }
 
 model guild {
@@ -188,7 +182,6 @@ model user {
   user_stats        user_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
-  frame             frame[]
 }
 
 model session {

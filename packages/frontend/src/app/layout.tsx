@@ -1,4 +1,4 @@
-import {
+import type {
   CanvasInfo,
   CanvasInfoRequest,
   DiscordUserProfile,
@@ -10,13 +10,14 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config";
 import {
+  AuthProvider,
+  CanvasProvider,
   CanvasViewProvider,
   QueryClientProvider,
+  SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
-import { AuthProvider } from "@/contexts/AuthProvider";
-import { CanvasProvider } from "@/contexts/CanvasContext";
 import { Theme } from "@/theme";
 import "../styles/core.css";
 
@@ -103,7 +104,9 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
                 <CanvasViewProvider>
-                  <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  <SelectedBoundsProvider>
+                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                  </SelectedBoundsProvider>
                 </CanvasViewProvider>
               </CanvasProvider>
             </SelectedFrameProvider>

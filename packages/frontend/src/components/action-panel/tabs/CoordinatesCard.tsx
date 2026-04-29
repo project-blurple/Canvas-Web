@@ -1,7 +1,7 @@
-import { Point } from "@blurple-canvas-web/types";
+import type { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 
-export const Wrapper = styled("div")`
+const Wrapper = styled("div")`
   color: var(--discord-white);
   display: block flex;
   gap: 2rem;
@@ -9,13 +9,18 @@ export const Wrapper = styled("div")`
   padding: 0.5rem;
 `;
 
+interface CoordinatesCardProps extends React.ComponentPropsWithRef<
+  typeof Wrapper
+> {
+  coordinates: Point;
+}
+
 export default function CoordinatesCard({
   coordinates,
-}: {
-  coordinates: Point;
-}) {
+  ...props
+}: CoordinatesCardProps) {
   return (
-    <Wrapper>
+    <Wrapper {...props}>
       <code>x:&nbsp;{coordinates.x}</code>
       <code>y:&nbsp;{coordinates.y}</code>
     </Wrapper>

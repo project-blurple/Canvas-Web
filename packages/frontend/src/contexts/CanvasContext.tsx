@@ -1,12 +1,11 @@
 "use client";
 
-import { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
+import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState } from "react";
 import config from "@/config";
 import { socket } from "@/socket";
-import { useCanvasViewContext } from "./CanvasViewContext";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
 
@@ -15,7 +14,7 @@ interface CanvasContextType {
   setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
 
-export const CanvasContext = createContext<CanvasContextType>({
+const CanvasContext = createContext<CanvasContextType>({
   canvas: {
     id: -1,
     name: "",
@@ -41,10 +40,9 @@ export const CanvasProvider = ({
 }: CanvasProviderProps) => {
   const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
-  const { setCoords } = useCanvasViewContext();
 
   const { setColor } = useSelectedColorContext();
-  const [, setFrame] = useSelectedFrameContext();
+  const { setFrame } = useSelectedFrameContext();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"]) => {
@@ -53,7 +51,6 @@ export const CanvasProvider = ({
       );
       setActiveCanvas(response.data);
       setColor(null);
-      setCoords(null);
       setFrame(null);
 
       const url = new URL(window.location.href);
@@ -70,7 +67,7 @@ export const CanvasProvider = ({
         pixelTimestamp: new Date().toISOString(),
       };
     },
-    [router, setColor, setFrame, setCoords, mainCanvasInfo.id],
+    [router, setColor, setFrame, mainCanvasInfo.id],
   );
 
   return (

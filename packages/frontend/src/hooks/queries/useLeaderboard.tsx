@@ -1,6 +1,6 @@
 "use client";
 
-import { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
+import type { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";

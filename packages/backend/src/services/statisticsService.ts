@@ -1,4 +1,4 @@
-import {
+import type {
   CanvasInfo,
   LeaderboardEntry,
   Paginated,
@@ -6,6 +6,7 @@ import {
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { createDefaultAvatarUrl } from "./discordProfileService";
+import { toPaletteColorSummary } from "./paletteService";
 
 export async function getUserStats(
   userId: string,
@@ -28,6 +29,7 @@ export async function getUserStats(
           name: true,
           code: true,
           rgba: true,
+          global: true,
         },
       },
     },
@@ -42,7 +44,7 @@ export async function getUserStats(
     canvasId: canvasId,
     totalPixels: stats.total_pixels,
     rank: stats.rank,
-    mostFrequentColor: stats.most_frequent_color,
+    mostFrequentColor: toPaletteColorSummary(stats.most_frequent_color),
     // placeFrequency: place_frequency,
     mostRecentTimestamp: stats.most_recent_timestamp?.toISOString(),
   };

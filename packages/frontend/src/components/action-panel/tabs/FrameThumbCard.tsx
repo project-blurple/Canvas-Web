@@ -1,10 +1,13 @@
-import { Frame } from "@blurple-canvas-web/types";
+import type { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef } from "react";
 import { useCanvasContext } from "@/contexts";
-import { clamp } from "@/util";
+import {
+  drawSourceRectToCanvas,
+  getFrameCropRect,
+  PreviewCanvas,
+} from "../../frames/FramePreview";
 
-const FRAME_FILL_RATIO = 0.9;
 const DESKTOP_THUMB_WIDTH = 1600;
 const DESKTOP_THUMB_HEIGHT = 900;
 const MOBILE_THUMB_WIDTH = 500;
@@ -24,14 +27,7 @@ const CardBody = styled("div")`
   }
 `;
 
-const ThumbnailCanvas = styled("canvas")`
-  border-radius: 0.375rem;
-  display: block;
-  image-rendering: pixelated;
-  width: 100%;
-`;
-
-const DesktopThumbnailCanvas = styled(ThumbnailCanvas)`
+const DesktopThumbnailCanvas = styled(PreviewCanvas)`
   aspect-ratio: 16 / 9;
 
   ${({ theme }) => theme.breakpoints.down("md")} {
@@ -39,7 +35,7 @@ const DesktopThumbnailCanvas = styled(ThumbnailCanvas)`
   }
 `;
 
-const MobileThumbnailCanvas = styled(ThumbnailCanvas)`
+const MobileThumbnailCanvas = styled(PreviewCanvas)`
   aspect-ratio: 1 / 1;
 
   ${({ theme }) => theme.breakpoints.up("md")} {
@@ -58,61 +54,6 @@ interface FrameThumbCardProps {
   sourceImage: CanvasImageSource | null;
 }
 
-export function normalizeFrameBounds(frame: Frame) {
-  const left = Math.min(frame.x0, frame.x1);
-  const right = Math.max(frame.x0, frame.x1);
-  const top = Math.min(frame.y0, frame.y1);
-  const bottom = Math.max(frame.y0, frame.y1);
-
-  return {
-    left,
-    right,
-    top,
-    bottom,
-    width: Math.max(1, right - left),
-    height: Math.max(1, bottom - top),
-  };
-}
-
-function getFrameCropRect(
-  frame: Frame,
-  canvasWidth: number,
-  canvasHeight: number,
-  targetAspectRatio: number,
-) {
-  const bounds = normalizeFrameBounds(frame);
-  const centerX = (bounds.left + bounds.right) / 2;
-  const centerY = (bounds.top + bounds.bottom) / 2;
-
-  // Expand the frame bounds so the frame occupies ~90% of the resulting thumbnail.
-  let cropWidth = bounds.width / FRAME_FILL_RATIO;
-  let cropHeight = bounds.height / FRAME_FILL_RATIO;
-  const frameAspectRatio = cropWidth / cropHeight;
-
-  if (frameAspectRatio > targetAspectRatio) {
-    cropHeight = cropWidth / targetAspectRatio;
-  } else {
-    cropWidth = cropHeight * targetAspectRatio;
-  }
-
-  // Keep a strict 16:9 crop while fitting within canvas bounds.
-  const fitScale = Math.min(
-    1,
-    canvasWidth / cropWidth,
-    canvasHeight / cropHeight,
-  );
-  cropWidth *= fitScale;
-  cropHeight *= fitScale;
-
-  let cropX = centerX - cropWidth / 2;
-  let cropY = centerY - cropHeight / 2;
-
-  cropX = clamp(cropX, 0, canvasWidth - cropWidth);
-  cropY = clamp(cropY, 0, canvasHeight - cropHeight);
-
-  return { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
-}
-
 export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
   const { canvas } = useCanvasContext();
   const mobileCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -129,8 +70,6 @@ export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
         thumbHeight: number,
       ) => {
         if (!thumbCanvas) return;
-        const context = thumbCanvas.getContext("2d");
-        if (!context) return;
 
         const crop = getFrameCropRect(
           frame,
@@ -139,16 +78,12 @@ export function FrameThumbCard({ frame, sourceImage }: FrameThumbCardProps) {
           thumbWidth / thumbHeight,
         );
 
-        context.clearRect(0, 0, thumbWidth, thumbHeight);
-        context.imageSmoothingEnabled = false;
-        context.drawImage(
+        if (!crop) return;
+
+        drawSourceRectToCanvas(
+          thumbCanvas,
           sourceImage,
-          crop.x,
-          crop.y,
-          crop.width,
-          crop.height,
-          0,
-          0,
+          crop,
           thumbWidth,
           thumbHeight,
         );

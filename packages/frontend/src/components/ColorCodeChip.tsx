@@ -1,17 +1,19 @@
 "use client";
 
-import { PaletteColor } from "@blurple-canvas-web/types";
+import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { PrimitiveButton } from "./button";
+import VisuallyHidden from "./VisuallyHidden";
 
-const Container = styled("code", {
-  shouldForwardProp: (prop) => prop !== "backgroundColor",
-})<ColorCodeChipProps>`
+const StyledButton = styled(PrimitiveButton)`
   background-color: oklch(from var(--discord-white) l c h / 12%);
   border-radius: 0.25rem;
   cursor: pointer;
+  display: inline-block;
   font-size: 0.9rem;
-  padding: 0.25rem 0.5rem;
-  transition: background-color var(--transition-duration-fast) ease;
+  padding-block: 0.175em;
+  padding-inline: 0.5em;
+  text-box-trim: trim-both;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -29,33 +31,29 @@ const Container = styled("code", {
   }
 `;
 
-interface ColorCodeChipProps {
-  onClick?: () => void;
+const copyToClipboard = (str: string) => navigator.clipboard.writeText(str);
+
+interface ColorCodeChipProps extends Omit<
+  React.ComponentPropsWithRef<typeof StyledButton>,
+  "color"
+> {
+  color: PaletteColorSummary;
 }
 
-const copyToClipBoard = (str: string) => navigator.clipboard.writeText(str);
-
-export default function ColorCodeChip({
-  color,
-  ...props
-}: {
-  color: PaletteColor;
-}) {
+export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
-  const clickHandler = () => copyToClipBoard(colorCode);
+  const clickHandler = () => copyToClipboard(colorCode);
   const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") copyToClipBoard(colorCode);
+    if (event.key === "Enter" || event.key === " ") copyToClipboard(colorCode);
   };
 
   return (
-    <Container
-      onClick={clickHandler}
-      onKeyUp={keyUpHandler}
-      tabIndex={0}
-      {...props}
-    >
-      {colorCode}
-    </Container>
+    <StyledButton onClick={clickHandler} onKeyUp={keyUpHandler} {...props}>
+      <code aria-hidden>{colorCode}</code>
+      <VisuallyHidden>
+        Code {colorCode.split("").join("-")}. Click to copy.
+      </VisuallyHidden>
+    </StyledButton>
   );
 }

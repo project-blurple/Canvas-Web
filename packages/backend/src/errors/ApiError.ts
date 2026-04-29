@@ -1,4 +1,4 @@
-import { Response } from "express";
+import type { Response } from "express";
 
 export default class ApiError extends Error {
   constructor(

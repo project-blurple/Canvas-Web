@@ -1,7 +1,21 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type {
+  DiscordUserProfile,
+  Frame,
+  GuildData,
+  PixelColor,
+} from "@blurple-canvas-web/types";
 import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
+
+export interface ViewBounds {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  width: number;
+  height: number;
+}
 
 /**
  * Return the value clamped so that it is within the range [min, max].
@@ -27,22 +41,6 @@ export function getOrdinalSuffix(rank: number) {
   }
 }
 
-export function formatInterval(interval: string) {
-  const [daysStr, time] = interval.split(" ");
-  const days = Number.parseInt(daysStr, 10);
-  const [hours, minutes, seconds] = time
-    .split(":")
-    .map((num) => Number.parseInt(num, 10));
-  const components = [];
-  if (days > 0) components.push(`${days} ${days === 1 ? "day" : "days"}`);
-  if (hours > 0) components.push(`${hours} ${hours === 1 ? "hour" : "hours"}`);
-  if (minutes > 0)
-    components.push(`${minutes} ${minutes === 1 ? "minute" : "minutes"}`);
-  if (seconds > 0)
-    components.push(`${seconds} ${seconds === 1 ? "second" : "seconds"}`);
-  return components.join("");
-}
-
 export function formatTimestamp(timestamp: string, utc = true) {
   const date = new Date(timestamp);
   date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
@@ -53,7 +51,7 @@ export function formatTimestampLocalTZ(timestamp: string) {
   return formatTimestamp(timestamp, false);
 }
 
-export function dateToString(date: Date, utc?: boolean) {
+function dateToString(date: Date, utc?: boolean) {
   let luxonDate = DateTime.fromJSDate(date);
   let format = DateTime.DATETIME_FULL;
   if (utc) {
@@ -68,8 +66,39 @@ export function getUserGuildIds(user: DiscordUserProfile) {
   return Object.keys(getUserGuildFlags(user));
 }
 
-export function getUserGuildFlags(
+function getUserGuildFlags(
   user: DiscordUserProfile,
 ): Record<string, GuildData> {
   return user.guilds ?? {};
+}
+
+export function normalizeFrameBounds({ x0, x1, y0, y1 }: Frame): ViewBounds {
+  const left = Math.min(x0, x1);
+  const right = Math.max(x0, x1);
+  const top = Math.min(y0, y1);
+  const bottom = Math.max(y0, y1);
+
+  return {
+    left,
+    right,
+    top,
+    bottom,
+    width: right - left,
+    height: bottom - top,
+  };
+}
+
+export function hexStringToPixelColor(hex: string | null): PixelColor | null {
+  if (hex === null) {
+    return null;
+  }
+
+  if (!/^#?([0-9A-Fa-f]{6})$/.test(hex)) {
+    return null;
+  }
+
+  const r = Number.parseInt(hex.slice(-6, -4), 16);
+  const g = Number.parseInt(hex.slice(-4, -2), 16);
+  const b = Number.parseInt(hex.slice(-2, 0), 16);
+  return [r, g, b, 255];
 }

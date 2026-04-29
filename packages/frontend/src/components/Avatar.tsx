@@ -1,6 +1,6 @@
 "use client";
 
-import { DiscordUserProfile } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 
 interface AvatarProps

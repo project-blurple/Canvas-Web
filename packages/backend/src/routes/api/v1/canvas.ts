@@ -1,8 +1,8 @@
-import { Response, Router } from "express";
+import { type Response, Router } from "express";
 import { ApiError } from "@/errors";
 import { parseCanvasId } from "@/models/paramModels";
 import {
-  CachedCanvas,
+  type CachedCanvas,
   getCanvases,
   getCanvasFilename,
   getCanvasInfo,

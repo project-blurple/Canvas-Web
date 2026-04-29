@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import type {
   CanvasInfo,
   Frame,
   PlacePixelSocket,
@@ -8,20 +8,20 @@ import {
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-
+import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
 import {
   useCanvasContext,
   useCanvasViewContext,
+  useSelectedBoundsContext,
   useSelectedColorContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
-import { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
-import { clamp } from "@/util";
-import { normalizeFrameBounds } from "../action-panel/tabs/FrameThumbCard";
+import { clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
 import {
   addPoints,
@@ -370,10 +370,20 @@ export default function CanvasView() {
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
-  const [frame, setFrame] = useSelectedFrameContext();
+  const { frame, setFrame } = useSelectedFrameContext();
+  const { canEdit, minHeight, minWidth, selectedBounds, setSelectedBounds } =
+    useSelectedBoundsContext();
   const { canvas, setCanvas } = useCanvasContext();
-  const { containerRef, coords, isReticleVisible, zoom, setCoords, setZoom } =
-    useCanvasViewContext();
+  const {
+    containerRef,
+    coords,
+    isReticleVisible,
+    offset,
+    setCoords,
+    setOffset,
+    setZoom,
+    zoom,
+  } = useCanvasViewContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -383,7 +393,6 @@ export default function CanvasView() {
   zoomRef.current = zoom;
 
   const [initialZoom, setInitialZoom] = useState(1);
-  const [offset, setOffset] = useState(ORIGIN);
   const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
   const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
@@ -796,6 +805,7 @@ export default function CanvasView() {
     setCoords,
     clampOffset,
     setZoom,
+    setOffset,
   ]);
 
   const updateOffset = useCallback(
@@ -808,7 +818,7 @@ export default function CanvasView() {
         return clampOffset(newOffset, zoomRef.current);
       });
     },
-    [clampOffset],
+    [clampOffset, setOffset],
   );
 
   const handlePan = useCallback(
@@ -980,6 +990,7 @@ export default function CanvasView() {
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
         style={{
+          isolation: "isolate",
           transform: `matrix(${zoom}, 0, 0, ${zoom}, ${offset.x}, ${offset.y})`,
           // Only apply transition when zooming is triggered by wheel event
           transition:
@@ -1021,6 +1032,18 @@ export default function CanvasView() {
             }}
           />
         </ReticleContainer>
+        <SelectedBoundsOverlay
+          canvasWidth={canvas.width}
+          canvasHeight={canvas.height}
+          canEdit={canEdit}
+          minHeight={minHeight}
+          minWidth={minWidth}
+          selectedBounds={selectedBounds}
+          reticleScale={RETICLE_SCALE}
+          reticleSize={RETICLE_SIZE}
+          setSelectedBounds={setSelectedBounds}
+          zoom={zoom}
+        />
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}

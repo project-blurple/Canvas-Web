@@ -1,11 +1,15 @@
-import { Tooltip, TooltipProps } from "@mui/material";
+import Tooltip, { type TooltipProps } from "@mui/material/Tooltip";
+import { useState } from "react";
+import DynamicButton from "@/components/button/DynamicButton";
 
 type ActionPanelTooltipProps = Omit<TooltipProps, "placement" | "slotProps">;
+type TooltipDynamicButtonProps = React.ComponentPropsWithoutRef<
+  typeof DynamicButton
+> & {
+  tooltipTitle: string;
+};
 
-export default function ActionPanelTooltip({
-  children,
-  ...props
-}: ActionPanelTooltipProps) {
+function ActionPanelTooltip({ children, ...props }: ActionPanelTooltipProps) {
   return (
     <Tooltip
       placement="top"
@@ -31,5 +35,31 @@ export default function ActionPanelTooltip({
     >
       {children}
     </Tooltip>
+  );
+}
+
+export function TooltipDynamicButton({
+  tooltipTitle,
+  onAction,
+  ...dynamicButtonProps
+}: TooltipDynamicButtonProps) {
+  const [tooltipIsOpen, setTooltipIsOpen] = useState(false);
+
+  return (
+    <ActionPanelTooltip
+      title={tooltipTitle}
+      onClose={() => {
+        setTooltipIsOpen(false);
+      }}
+      open={tooltipIsOpen}
+    >
+      <DynamicButton
+        {...dynamicButtonProps}
+        onAction={() => {
+          setTooltipIsOpen(true);
+          onAction?.();
+        }}
+      />
+    </ActionPanelTooltip>
   );
 }
