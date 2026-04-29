@@ -11,9 +11,9 @@ function serverSideOnly<T>(value: T): T {
 }
 
 /**
- * Configuration only available in server components. These values will always be the default value
- * in client components, and attempting to access them will throw an error to ensure they're not
- * accidentally used.
+ * Configuration only available in server components. These environment variables do not exist in
+ * the client bundle, however, default values can confusingly make it seem like they do. To prevent
+ * accidental usage, an error will be thrown if they're accessed from a client component.
  */
 const serverConfig = {
   get baseUrl() {
