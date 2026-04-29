@@ -1,4 +1,8 @@
-import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import type {
+  DiscordUserProfile,
+  Palette,
+  PaletteColor,
+} from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -6,7 +10,7 @@ import {
   useCanvasContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette } from "@/hooks";
+import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
@@ -39,6 +43,7 @@ const PlacePixelTabBlock = styled(TabPanel)`
 `;
 
 export const CoordinateLabel = styled("span")`
+  margin-inline-start: 0.25em;
   opacity: 0.6;
 `;
 
@@ -81,6 +86,7 @@ export default function PlacePixelTab({
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
+  const playSound = usePlaySound("pick_color");
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -103,8 +109,7 @@ export default function PlacePixelTab({
     [remPixels],
   );
 
-  const { color: selectedColor, setColor: setSelectedColor } =
-    useSelectedColorContext();
+  const { color: selectedColor, setColor } = useSelectedColorContext();
 
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -134,6 +139,11 @@ export default function PlacePixelTab({
       !selectedColor.global &&
       isUserInServer(user, selectedColor?.guildId)) ??
     false;
+
+  function setSelectedColor(color: PaletteColor | null) {
+    playSound();
+    setColor(color);
+  }
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
