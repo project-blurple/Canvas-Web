@@ -71,7 +71,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
   }
 }
 
-const defaultCanvasInfo: CanvasInfo = {
+const defaultCanvasInfo = {
   id: 1,
   name: "Something went wrong...",
   isLocked: true,
@@ -81,7 +81,7 @@ const defaultCanvasInfo: CanvasInfo = {
   eventId: 1,
   webPlacingEnabled: false,
   allColorsGlobal: false,
-};
+} satisfies CanvasInfo;
 
 export default async function RootLayout({
   children,
