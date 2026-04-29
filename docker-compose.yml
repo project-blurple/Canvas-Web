@@ -19,6 +19,8 @@ services:
       dockerfile: Dockerfile.frontend
     depends_on:
       - backend
+    env_file:
+      - ./packages/frontend/.env
     environment:
       # 'backend' here is referencing the backend service. Docker compose automatically interprets
       # this and forwards traffic to the appropriate container.
