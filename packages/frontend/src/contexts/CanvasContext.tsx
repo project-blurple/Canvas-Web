@@ -56,7 +56,9 @@ export const CanvasProvider = ({
       if (redirect) {
         const url = new URL(window.location.href);
         url.pathname =
-          canvasId === mainCanvasInfo.id ? "/" : `/canvas/${canvasId}`;
+          canvasId === mainCanvasInfo.id ?
+            "/"
+          : `/canvas/${encodeURIComponent(canvasId)}`;
         url.search = "";
         router.replace(`${url.pathname}${url.search}${url.hash}`);
       }

@@ -82,7 +82,7 @@ const CanvasOptionsWrapper = styled("div")`
   height: 100%;
 `;
 
-const CanvasOptionButtonStyle = styled("button")`
+const CanvasOptionButtonStyled = styled("button")`
   appearance: none;
   border: none;
   color: inherit;
@@ -126,14 +126,14 @@ function CanvasOptionButton({
   canvas: CanvasSummary;
 } & React.ComponentPropsWithoutRef<"button">) {
   return (
-    <CanvasOptionButtonStyle {...props}>
+    <CanvasOptionButtonStyled {...props}>
       <CanvasOptionHeader>
         <CanvasOptionTitle>{canvas.name}</CanvasOptionTitle>
         {canvas.isLocked ?
           <LockKeyhole />
         : <Paintbrush />}
       </CanvasOptionHeader>
-    </CanvasOptionButtonStyle>
+    </CanvasOptionButtonStyled>
   );
 }
 
@@ -146,9 +146,9 @@ export default function AdminCanvasPage() {
     <Admin>
       <CanvasInfoWrapper>
         {canvasListIsLoading ?
-          "Loading..."
+          "Loading…"
         : canvases.length === 0 ?
-          "No canvases found."
+          "No canvases found"
         : <>
             <CanvasWrapper>
               {/* Maybe just have cards with image previews instead? idk */}

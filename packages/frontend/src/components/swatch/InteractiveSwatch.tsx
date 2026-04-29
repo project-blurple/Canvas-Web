@@ -26,11 +26,12 @@ export const StyledSwatchBase = styled(SwatchBase)`
   }
 `;
 
-export const rgbaToCssString = (rgba: [number, number, number, number]) => {
+export const rgbaToCssString = (
+  rgba: [number, number, number, number],
+): `rgb(${string} ${string} ${string} / ${string})` => {
   // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const rgb = rgba.slice(0, 3).join(" ");
   const alphaFloat = rgba[3] / 0xff;
-  return `rgb(${rgb} / ${alphaFloat})`;
+  return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
 };
 
 type InteractiveSwatchProps = StaticSwatchProps & {
