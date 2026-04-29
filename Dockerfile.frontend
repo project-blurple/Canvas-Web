@@ -25,6 +25,7 @@ FROM node:24-alpine AS production
 WORKDIR /app
 ENV NODE_ENV=production
 
+# The standalone directory includes /packages/frontend due to the structure of this project.
 COPY --from=builder /app/packages/frontend/.next/standalone ./
 COPY --from=builder /app/packages/frontend/.next/static ./packages/frontend/.next/static
 COPY --from=builder /app/packages/frontend/public ./packages/frontend/public
