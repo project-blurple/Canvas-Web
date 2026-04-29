@@ -519,16 +519,32 @@ export default function CanvasView() {
   useEffect(() => {
     // Use the theme breakpoint as the source-of-truth for whether fullscreen
     // controls should be shown; ensure the browser supports the API as well.
-    setCanUseFullscreen(!isSmall && document.fullscreenEnabled);
-  }, [isSmall]);
+    const fullscreenDocument = document as Document & {
+      webkitFullscreenEnabled?: boolean;
+    };
+    const fullscreenContainer = containerRef.current as
+      | (HTMLElement & {
+          webkitRequestFullscreen?: () => Promise<void> | void;
+        })
+      | null;
+    const supportsFullscreen =
+      document.fullscreenEnabled ||
+      !!fullscreenDocument.webkitFullscreenEnabled ||
+      !!fullscreenContainer?.webkitRequestFullscreen;
+
+    setCanUseFullscreen(!isSmall && supportsFullscreen);
+  }, [containerRef.current, isSmall]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       const container = containerRef.current;
+      const fullscreenDocument = document as Document & {
+        webkitFullscreenElement?: Element | null;
+      };
       const isCanvasFullscreen =
         !!container &&
-        (container.matches(":fullscreen") ||
-          container.matches(":-webkit-full-screen"));
+        (document.fullscreenElement === container ||
+          fullscreenDocument.webkitFullscreenElement === container);
       setIsFullscreen(isCanvasFullscreen);
       if (!isCanvasFullscreen) {
         setFullscreenPanelVisible(false);
@@ -1128,6 +1144,10 @@ export default function CanvasView() {
         <FullscreenButton
           $isFullscreen={isFullscreen}
           $isPanelVisible={isFullscreenPanelVisible}
+          aria-label={
+            isFullscreen ? "Exit fullscreen" : "Enter fullscreen"
+          }
+          aria-pressed={isFullscreen}
           onClick={toggleFullscreen}
           onPointerDown={(event) => event.stopPropagation()}
           type="button"
