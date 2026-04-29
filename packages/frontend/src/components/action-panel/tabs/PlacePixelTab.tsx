@@ -49,7 +49,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-const partitionPalette = (palette: Palette) => {
+export const partitionPalette = (palette: Palette) => {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
