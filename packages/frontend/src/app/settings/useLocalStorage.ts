@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  UseMutateFunction,
+  type UseMutateFunction,
   useMutation,
   useQuery,
   useQueryClient,
@@ -20,9 +20,8 @@ type Satisfies<T extends BaseT, BaseT> = T;
 
 interface LocalStorageValueTypes extends Satisfies<
   {
-    "cooldown-jingle": boolean;
-    "sound-fx": boolean;
-    webfonts: boolean;
+    "audio/cooldown-jingle": boolean;
+    "audio/sound-fx": boolean;
   },
   { [key: string]: JsonDataType }
 > {}
@@ -30,9 +29,8 @@ interface LocalStorageValueTypes extends Satisfies<
 export type LocalStorageKey = keyof LocalStorageValueTypes;
 
 const defaults = {
-  "cooldown-jingle": true,
-  "sound-fx": true,
-  webfonts: true,
+  "audio/cooldown-jingle": true,
+  "audio/sound-fx": true,
 } as const satisfies LocalStorageValueTypes;
 
 export default function useLocalStorage<Key extends LocalStorageKey>(

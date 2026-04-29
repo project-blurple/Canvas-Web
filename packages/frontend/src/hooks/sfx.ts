@@ -8,7 +8,7 @@ export function usePlaySound(
   options: { enabled?: boolean } = {},
 ) {
   const { enabled } = options;
-  const [globallyEnabled] = useLocalStorage("sound-fx");
+  const [globallyEnabled] = useLocalStorage("audio/sound-fx");
   const play = useCallback(
     () =>
       void new Audio(`/audio/${stem}.ogg`).play().catch(
@@ -18,12 +18,12 @@ export function usePlaySound(
   );
 
   // If `enabled` option is explicitly provided, it takes precedence…
-  if (typeof enabled === "undefined") return enabled ? play : noop;
+  if (typeof enabled !== "undefined") return enabled ? play : noop;
   // …otherwise defer to user preference
   return globallyEnabled ? play : noop;
 }
 
 export function usePlayCooldownExpirySound() {
-  const [enabled] = useLocalStorage("cooldown-jingle");
+  const [enabled] = useLocalStorage("audio/cooldown-jingle");
   return usePlaySound("cooldown_notification", { enabled });
 }
