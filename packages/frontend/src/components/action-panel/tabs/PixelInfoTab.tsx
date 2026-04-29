@@ -1,5 +1,6 @@
 import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { ButtonSupplement } from "@/components/button";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { createPixelUrl } from "@/util";
@@ -12,7 +13,6 @@ import {
 import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
-import { CoordinateLabel } from "./PlacePixelTab";
 
 const PixelInfoTabBlock = styled(TabPanel)`
   grid-template-rows: auto 1fr;
@@ -129,9 +129,9 @@ export default function PixelInfoTab({
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >
             Copy pixel link
-            <CoordinateLabel>
+            <ButtonSupplement>
               ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
-            </CoordinateLabel>
+            </ButtonSupplement>
           </TooltipDynamicButton>
         )}
       </ActionPanelTabBody>

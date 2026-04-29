@@ -12,12 +12,8 @@ import {
 } from "@/contexts";
 import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { Button } from "./Button";
+import ButtonSupplement from "./ButtonSupplement";
 import DynamicButton from "./DynamicButton";
-
-const CoordinateLabel = styled("span")`
-  margin-inline-start: 0.25em;
-  opacity: 0.6;
-`;
 
 const Time = styled("time")`
   font-variant-numeric: tabular-nums;
@@ -159,10 +155,10 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
     <DynamicButton color={color.rgba} onAction={handlePixelRequest}>
       {isSelected ? placePixelMessage : "Select a pixel"}
       {isSelected && (
-        <CoordinateLabel>
+        <ButtonSupplement>
           {/* String interpolation is required to prevent https://github.com/project-blurple/Canvas-Web/issues/255 */}
           {`(${x},${nbsp}${y})`}
-        </CoordinateLabel>
+        </ButtonSupplement>
       )}
     </DynamicButton>
   );
