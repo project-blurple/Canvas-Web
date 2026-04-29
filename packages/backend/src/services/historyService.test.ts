@@ -1,10 +1,7 @@
 import { prisma } from "@/client";
 import seedAll from "@/test";
 import { userIsBlocklisted } from "./blocklistService";
-import {
-  deletePixelHistoryEntries,
-  getPixelHistory,
-} from "./historyService";
+import { deletePixelHistoryEntries, getPixelHistory } from "./historyService";
 
 vi.mock("@/index", () => ({
   socketHandler: {
