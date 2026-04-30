@@ -23,7 +23,7 @@ pnpm build
 Then apply schema changes and seed test data:
 
 ```sh
-pnpm prisma:push
+pnpm prisma:migrate
 pnpm prisma:seed
 ```
 
