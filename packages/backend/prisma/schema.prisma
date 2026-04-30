@@ -37,8 +37,7 @@ model canvas {
   guild_stats       guild_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
-
-  notices notice[]
+  notices           notice[]
 }
 
 model color {
