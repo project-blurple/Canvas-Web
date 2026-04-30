@@ -32,7 +32,10 @@ describe("Event admin route tests", () => {
 
   it("creates an event", async () => {
     const app = createApp();
-    vi.mocked(createEvent).mockResolvedValueOnce(undefined);
+    vi.mocked(createEvent).mockResolvedValueOnce({
+      id: 42,
+      name: "Spring Event",
+    });
 
     const response = await request(app).post("/api/v1/event/").send({
       id: 42,
@@ -48,7 +51,10 @@ describe("Event admin route tests", () => {
 
   it("edits an event", async () => {
     const app = createApp();
-    vi.mocked(editEvent).mockResolvedValueOnce(undefined);
+    vi.mocked(editEvent).mockResolvedValueOnce({
+      id: 42,
+      name: "Updated Event",
+    });
 
     const response = await request(app).put("/api/v1/event/42").send({
       name: "Updated Event",
