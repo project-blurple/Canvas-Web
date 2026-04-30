@@ -14,7 +14,7 @@ datasource db {
 model blacklist {
   user_id    BigInt   @id
   user       user     @relation(fields: [user_id], references: [id])
-  date_added DateTime @db.Timestamptz(6)
+  date_added DateTime @default(now()) @db.Timestamptz(6)
 }
 
 model canvas {

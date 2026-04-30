@@ -17,11 +17,6 @@ export const LeaderboardQueryModel = z.object({
   size: z.coerce.number().int().positive().optional(),
 });
 
-export const PixelHistoryParamModel = z.object({
-  x: z.coerce.number().int().nonnegative(),
-  y: z.coerce.number().int().nonnegative(),
-});
-
 export const FrameGuildIdsQueryModel = z.object({
   guildIds: z
     .union([z.string(), z.array(z.string())])
