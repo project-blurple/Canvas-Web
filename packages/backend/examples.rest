@@ -94,11 +94,34 @@ GET {{basePath}}/canvas/{{canvasId}}/pixel/history
   &y=1 HTTP/1.1
 Content-Type: application/json
 
+### Query pixel history (POST)
+# Requires moderator session
+POST {{basePath}}/canvas/3/pixel/history
+  ?x0=1
+  &y0=1
+  &x1=2
+  &y1=2 HTTP/1.1
+content-type: application/json
+{
+    "fromDateTime": "2023-01-01T00:00:00.000Z",
+    "toDateTime": "2023-02-01T00:00:00.000Z",
+    "includeUserIds": ["204778476102877187"],
+    "excludeColors": [5]
+}
+
+### Delete pixel history entries
+# Requires moderator session
+DELETE {{basePath}}/canvas/3/pixel/history HTTP/1.1
+content-type: application/json
+{
+    "historyIds": [1, 2, 3],
+    "shouldBlockAuthors": true
+}
+
 ### Place pixel (requires session)
 # This will not work as sessions are required
 POST {{basePath}}/canvas/{{canvasId}}/pixel HTTP/1.1
 Content-Type: application/json
-
 {
   "x": 1,
   "y": 1,
@@ -122,6 +145,46 @@ x-api-key: {{botApiKey}}
     "colorId": 2
   }
 ]
+
+### Place bot pixels in batch (requires x-api-key)
+POST {{basePath}}/canvas/{{canvasId}}/pixel/bot HTTP/1.1
+Content-Type: application/json
+x-api-key: {{botApiKey}}
+
+[
+  {
+    "x": 1,
+    "y": 1,
+    "colorId": 1
+  },
+  {
+    "x": 2,
+    "y": 1,
+    "colorId": 2
+  }
+]
+
+### Blocklist
+
+### Get blocklist
+GET {{basePath}}/blocklist HTTP/1.1
+Content-Type: application/json
+
+### Add users to blocklist
+# Requires moderator session
+PUT {{basePath}}/blocklist HTTP/1.1
+content-type: application/json
+{
+  "userId": "204778476102877187"
+}
+
+### Remove users from blocklist
+# Requires moderator session
+DELETE {{basePath}}/blocklist HTTP/1.1
+content-type: application/json
+{
+  "userId": ["204778476102877187", "123456789012345678"]
+}
 
 ### Event Palette
 

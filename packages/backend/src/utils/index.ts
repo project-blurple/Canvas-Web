@@ -1,3 +1,6 @@
+import type { Request } from "express";
+import ApiError from "@/errors/ApiError";
+
 // Make BigInt JSON serializable. See: https://github.com/GoogleChromeLabs/jsbi/issues/30
 
 import type { Request } from "express";
@@ -10,6 +13,7 @@ BigInt.prototype.toJSON = function (): string {
 
 export const PrismaErrorCode = {
   UniqueConstraintViolation: "P2002",
+  RecordNotFound: "P2025",
 } as const;
 
 interface Bounds {

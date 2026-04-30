@@ -42,11 +42,6 @@ const PlacePixelTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
-export const CoordinateLabel = styled("span")`
-  margin-inline-start: 0.25em;
-  opacity: 0.6;
-`;
-
 const SwatchSkeleton = styled(Skeleton)`
   aspect-ratio: 1;
   border-radius: 0.5rem;
