@@ -1,10 +1,10 @@
 "use client";
 
-import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import type React from "react";
-import { useId, useState } from "react";
+import { useId } from "react";
 import {
+  useActionPanelContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
@@ -20,9 +20,17 @@ const Wrapper = styled("div")`
   display: grid;
   gap: 0.5rem;
   grid-template-rows: auto 1fr;
+  height: 100%;
+  min-height: 0;
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   padding: var(--padding-width);
+
+  #canvas-container:fullscreen &,
+  #canvas-container:-webkit-full-screen & {
+    height: auto;
+    max-height: 100%;
+  }
 
   > * {
     border-radius: calc(var(--card-border-radius) - var(--padding-width));
@@ -131,9 +139,14 @@ function Tab({
 }
 
 export default function ActionPanel() {
-  const [currentTab, setCurrentTab] = useState("place");
-  const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
-  const [areTabsLocked, setAreTabsLocked] = useState(false);
+  const {
+    areTabsLocked,
+    currentTab,
+    setAreTabsLocked,
+    setCurrentTab,
+    setTempColor,
+    tempColor,
+  } = useActionPanelContext();
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();

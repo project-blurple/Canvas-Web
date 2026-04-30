@@ -7,10 +7,20 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import {
+  Maximize2,
+  Minimize2,
+  PanelRightClose,
+  PanelRightOpen,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ActionPanel } from "@/components/action-panel";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
 import {
+  useActionPanelContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedBoundsContext,
@@ -60,6 +70,12 @@ const CanvasContainer = styled("div")`
 
   &:active {
     cursor: grabbing;
+  }
+
+  &:fullscreen,
+  &:-webkit-full-screen {
+    border-radius: 0;
+    border: none;
   }
 
   & {
@@ -112,6 +128,67 @@ const InviteButton = styled(Button)`
   ${({ theme }) => theme.breakpoints.down("md")} {
     inset-block-start: 0.5rem;
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+`;
+
+const BaseFullscreenButton = styled(Button, {
+  shouldForwardProp: (prop: string) =>
+    !["$isPanelVisible", "$isFullscreen"].includes(prop),
+})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
+  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
+    $isPanelVisible && $isFullscreen ?
+      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+    : "0.5rem"};
+
+  color: white;
+  position: absolute;
+  text-decoration: none;
+  border-color: transparent;
+  min-width: auto;
+  padding: 0.5rem;
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      border-color: inherit;
+      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+    }
+  }
+`;
+
+const FullscreenButton = styled(BaseFullscreenButton)`
+  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+  inset-block-start: 0.5rem;
+  z-index: 1;
+
+  #canvas-container:fullscreen &,
+  #canvas-container:-webkit-full-screen & {
+    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    display: none;
+  }
+`;
+
+const FullscreenPanelButton = styled(BaseFullscreenButton)`
+  border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  inset-block-start: 4rem;
+  z-index: 3;
+`;
+
+const FullscreenPanelOverlay = styled("div")`
+  box-sizing: border-box;
+  height: 100%;
+  inset-block: 0;
+  inset-inline-end: 0;
+  padding: 0.5rem;
+  pointer-events: auto;
+  position: absolute;
+  width: min(var(--action-panel-width), calc(100vw - 1rem));
+  z-index: 2;
+
+  > * {
+    width: 100%;
   }
 `;
 
@@ -384,6 +461,8 @@ export default function CanvasView() {
     setZoom,
     zoom,
   } = useCanvasViewContext();
+  const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
+    useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -397,6 +476,8 @@ export default function CanvasView() {
   const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [canUseFullscreen, setCanUseFullscreen] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -431,6 +512,61 @@ export default function CanvasView() {
   const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
+
+  const theme = useTheme();
+  const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+
+  useEffect(() => {
+    // Use the theme breakpoint as the source-of-truth for whether fullscreen
+    // controls should be shown; ensure the browser supports the API as well.
+    const fullscreenDocument = document as Document & {
+      webkitFullscreenEnabled?: boolean;
+    };
+    const fullscreenContainer = containerRef.current as
+      | (HTMLElement & {
+          webkitRequestFullscreen?: () => Promise<void> | void;
+        })
+      | null;
+    const supportsFullscreen =
+      document.fullscreenEnabled ||
+      !!fullscreenDocument.webkitFullscreenEnabled ||
+      !!fullscreenContainer?.webkitRequestFullscreen;
+
+    setCanUseFullscreen(!isSmall && supportsFullscreen);
+  }, [containerRef.current, isSmall]);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const container = containerRef.current;
+      const fullscreenDocument = document as Document & {
+        webkitFullscreenElement?: Element | null;
+      };
+      const isCanvasFullscreen =
+        !!container &&
+        (document.fullscreenElement === container ||
+          fullscreenDocument.webkitFullscreenElement === container);
+      setIsFullscreen(isCanvasFullscreen);
+      if (!isCanvasFullscreen) {
+        setFullscreenPanelVisible(false);
+      }
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    // webkit fallback event for older Safari
+    document.addEventListener(
+      "webkitfullscreenchange",
+      handleFullscreenChange as EventListener,
+    );
+    handleFullscreenChange();
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener(
+        "webkitfullscreenchange",
+        handleFullscreenChange as EventListener,
+      );
+    };
+  }, [containerRef, setFullscreenPanelVisible]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -979,9 +1115,64 @@ export default function CanvasView() {
 
   const reticleOffset = calculateReticleOffset(coords);
 
+  const toggleFullscreenPanel = useCallback(() => {
+    setFullscreenPanelVisible((visible) => !visible);
+  }, [setFullscreenPanelVisible]);
+
+  const toggleFullscreen = useCallback(async () => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await container.requestFullscreen();
+      }
+    } catch (error) {
+      console.error("[CanvasView] fullscreen toggle failed", error);
+    }
+  }, [containerRef]);
+
   return (
-    <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
-      {config.discordServerInvite && (
+    <CanvasContainer
+      id="canvas-container"
+      ref={containerRef}
+      onPointerDown={handlePointerDown}
+    >
+      {canUseFullscreen && (
+        <FullscreenButton
+          $isFullscreen={isFullscreen}
+          $isPanelVisible={isFullscreenPanelVisible}
+          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+          aria-pressed={isFullscreen}
+          onClick={toggleFullscreen}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {isFullscreen ?
+            <Minimize2 />
+          : <Maximize2 />}
+        </FullscreenButton>
+      )}
+      {canUseFullscreen && isFullscreen && (
+        <FullscreenPanelButton
+          $isFullscreen={isFullscreen}
+          $isPanelVisible={isFullscreenPanelVisible}
+          aria-label={
+            isFullscreenPanelVisible ? "Hide action panel" : "Show action panel"
+          }
+          aria-pressed={isFullscreenPanelVisible}
+          onClick={toggleFullscreenPanel}
+          onPointerDown={(event) => event.stopPropagation()}
+          type="button"
+        >
+          {isFullscreenPanelVisible ?
+            <PanelRightClose />
+          : <PanelRightOpen />}
+        </FullscreenPanelButton>
+      )}
+      {config.discordServerInvite && !isFullscreen && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
           <InviteButton>Project Blurple</InviteButton>
         </a>
@@ -1063,6 +1254,15 @@ export default function CanvasView() {
           />
         </CanvasImageWrapper>
       </div>
+      {isFullscreen && isFullscreenPanelVisible && (
+        <FullscreenPanelOverlay
+          onPointerDown={(event) => event.stopPropagation()}
+          onPointerMove={(event) => event.stopPropagation()}
+          onPointerUp={(event) => event.stopPropagation()}
+        >
+          <ActionPanel />
+        </FullscreenPanelOverlay>
+      )}
       {isLoading && <CircularProgress style={{ position: "absolute" }} />}
     </CanvasContainer>
   );
