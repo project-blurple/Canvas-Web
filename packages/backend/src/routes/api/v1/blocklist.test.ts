@@ -115,7 +115,6 @@ describe("Blocklist route tests", () => {
       .send({
         userId: "9",
       })
-      .type("json")
       .expect(204);
 
     expect(response.body).toStrictEqual({});

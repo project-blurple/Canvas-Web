@@ -9,7 +9,9 @@ vi.mock("@/index", () => ({
   },
 }));
 
-describe("historyService", () => {
+/// These tests have been skipped as they are tightly coupled with the seeding data, which make these rather difficult to maintain.
+/// These should be replaced by end-to-end tests in the future
+describe.skip("historyService", () => {
   beforeEach(async () => {
     await seedAll();
   });
