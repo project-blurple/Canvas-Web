@@ -1,16 +1,17 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Header } from "@/components/header";
 
 export default function LayoutWithHeader({
-  content,
+  children,
 }: {
-  content: React.ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <>
       <Header />
-      {content}
+      {children}
     </>
   );
 }

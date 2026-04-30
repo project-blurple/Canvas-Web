@@ -102,6 +102,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
       id: true,
       name: true,
       event_id: true,
+      locked: true,
     },
   });
 
@@ -109,6 +110,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     id: canvas.id,
     name: canvas.name,
     eventId: canvas.event_id,
+    isLocked: canvas.locked,
   }));
 }
 

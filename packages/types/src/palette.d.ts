@@ -12,7 +12,7 @@ export interface PaletteColorSummary {
 export interface PaletteColor extends PaletteColorSummary {
   invite: string | null;
   guildName: string | null;
-  guildId: string;
+  guildId: string | null;
 }
 
 export type Palette = PaletteColor[];

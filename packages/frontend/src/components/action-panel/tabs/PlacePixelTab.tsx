@@ -49,7 +49,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-const partitionPalette = (palette: Palette) => {
+export const partitionPalette = (palette: Palette) => {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
@@ -59,7 +59,8 @@ const partitionPalette = (palette: Palette) => {
   return [mainColors, partnerColors];
 };
 
-function isUserInServer(user: DiscordUserProfile, serverId: string) {
+function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
+  if (!serverId) return false;
   const guildIds = getUserGuildIds(user);
   return guildIds.includes(serverId);
 }

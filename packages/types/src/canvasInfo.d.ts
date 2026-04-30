@@ -10,4 +10,7 @@ export interface CanvasInfo {
   allColorsGlobal: boolean;
 }
 
-export type CanvasSummary = Pick<CanvasInfo, "id" | "name" | "eventId">;
+export type CanvasSummary = Pick<
+  CanvasInfo,
+  "id" | "name" | "eventId" | "isLocked"
+>;

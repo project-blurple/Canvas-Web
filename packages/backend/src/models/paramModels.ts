@@ -28,6 +28,13 @@ export const FrameGuildIdsQueryModel = z.object({
     ),
 });
 
+export const PaletteQueryModel = z.object({
+  allColors: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "true"),
+});
+
 const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
 });
