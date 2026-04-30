@@ -1,6 +1,6 @@
 import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
-import { CircleX, Info, TriangleAlert } from "lucide-react";
+import { CircleX, Info, TriangleAlert, X } from "lucide-react";
 
 type BannerComponent = typeof StyledBanner;
 
@@ -9,24 +9,43 @@ const StyledBanner = styled("div")`
   background-color: var(--discord-legacy-dark-but-not-black);
   border-radius: var(--card-border-radius);
   border: 3px solid;
-  box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+  box-shadow: 0 0 10px rgba(0 0 0 / 50%);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   justify-content: center;
+  gap: 1rem;
   padding: 1rem;
   width: fit-content;
 `;
 
 const StyledInfoBanner = styled(StyledBanner)`
-  border-color: oklch(from var(--discord-white) l c h / 12%);
+  border-color: oklch(from var(--discord-white) l c h / 50%);
 `;
 
 const StyledWarningBanner = styled(StyledBanner)`
-  border-color: oklch(from var(--discord-blurple) l c h / 25%);
+  border-color: var(--discord-blurple);
 `;
 
 const StyledErrorBanner = styled(StyledBanner)`
-  border-color: oklch(from var(--discord-red) l c h / 50%);
+  border-color: var(--discord-red);
+`;
+
+const BannerBody = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const DismissButton = styled("button")`
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 25%;
+  transition: opacity var(--transition-duration-fast) ease;
+
+  :hover {
+    opacity: 75%;
+  }
 `;
 
 function Banner({
@@ -41,8 +60,13 @@ function Banner({
   return (
     <BannerRoot>
       {icon}
-      {notice.header && <h3>{notice.header}</h3>}
-      {notice.content && <p>{notice.content}</p>}
+      <BannerBody>
+        {notice.header && <h3>{notice.header}</h3>}
+        {notice.content && <p>{notice.content}</p>}
+      </BannerBody>
+      <DismissButton>
+        <X />
+      </DismissButton>
     </BannerRoot>
   );
 }

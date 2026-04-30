@@ -8,7 +8,7 @@ const NoticeWrapper = styled("div")`
   flex-direction: column;
   gap: 0.5rem;
   left: 50%;
-  margin-top: 1rem;
+  margin-top: 2.5rem;
   pointer-events: auto;
   position: absolute;
   top: 0;
