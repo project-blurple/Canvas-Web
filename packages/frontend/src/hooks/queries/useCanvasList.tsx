@@ -2,15 +2,12 @@
 
 import type { CanvasListRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import config from "@/config";
+import { useApiContext } from "@/contexts/ApiProvider";
 
 export function useCanvasList() {
+  const api = useApiContext();
   const getCanvasList = async () => {
-    const response = await axios.get<CanvasListRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/`,
-    );
-    return response.data;
+    return await api.get<CanvasListRequest.ResBody>("canvas").json();
   };
 
   return useQuery({

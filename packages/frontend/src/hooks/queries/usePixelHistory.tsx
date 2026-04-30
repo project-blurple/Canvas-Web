@@ -6,31 +6,36 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import config from "@/config";
+import { useApiContext } from "@/contexts";
 
 export function usePixelHistory(
   canvasId: CanvasInfo["id"],
   coordinates: Point | null,
 ) {
+  const api = useApiContext();
   const fetchHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!coordinates)
-      return { pixelHistory: [], totalEntries: 0 } as HistoryRequest.ResBody;
+    if (!coordinates) {
+      throw new Error(
+        `usePixelHistory query function called with ${coordinates} \`coordinates\``,
+      );
+    }
 
     const { x, y } = coordinates;
-    const response = await axios.get<HistoryRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
-      {
-        params: { x, y },
-        signal,
-      },
-    );
-    return response.data;
+    return await api
+      .get<HistoryRequest.ResBody>(
+        `canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+        {
+          searchParams: { x, y },
+          signal,
+        },
+      )
+      .json();
   };
 
   return useQuery({
     queryKey: ["pixelHistory", canvasId, coordinates],
     queryFn: fetchHistory,
+    enabled: coordinates !== null,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
