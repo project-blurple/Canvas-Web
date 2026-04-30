@@ -22,7 +22,7 @@ interface EndpointCase {
 }
 
 vi.mock("@/services/frameService", () => ({
-  assertOwnerFrameLimitNotExceeded: vi.fn(),
+  assertMaxOwnerFramesNotExceeded: vi.fn(),
   createFrame: vi.fn(),
   deleteFrame: vi.fn(),
   editFrame: vi.fn(),
