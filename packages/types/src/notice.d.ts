@@ -8,6 +8,6 @@ export interface Notice {
   priority: number;
   active: boolean;
   persistOnDismiss: boolean;
-  canvasId?: number;
+  canvasId: number | null;
   createdAt: Date;
 }

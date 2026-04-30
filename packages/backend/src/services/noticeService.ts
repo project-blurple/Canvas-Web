@@ -8,9 +8,15 @@ type NoticeDbRecord = NonNullable<
 
 function noticeFromDb(notice: NoticeDbRecord): Notice {
   return {
-    ...notice,
+    id: notice.id,
     type: notice.type as NoticeType,
+    header: notice.header,
+    content: notice.content,
+    priority: notice.priority,
+    active: notice.active,
     persistOnDismiss: notice.persist_on_dismiss,
+    canvasId: notice.canvas_id,
+    createdAt: notice.created_at,
   };
 }
 

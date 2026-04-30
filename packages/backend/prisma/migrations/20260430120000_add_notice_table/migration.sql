@@ -8,7 +8,7 @@ CREATE TABLE "notice" (
     "active" BOOLEAN NOT NULL DEFAULT false,
     "persist_on_dismiss" BOOLEAN NOT NULL DEFAULT false,
     "canvas_id" INTEGER,
-    "createdAt" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "notice_pkey" PRIMARY KEY ("id")
 );

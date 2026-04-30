@@ -202,7 +202,7 @@ model notice {
   persist_on_dismiss Boolean  @default(false)
   canvas_id          Int?
   canvas             canvas?  @relation(fields: [canvas_id], references: [id])
-  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  created_at         DateTime @default(now()) @db.Timestamptz(6)
 }
 
 view user_stats {
