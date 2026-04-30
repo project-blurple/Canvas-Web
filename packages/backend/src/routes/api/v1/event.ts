@@ -1,6 +1,6 @@
 import { Router } from "express";
 
-import { ApiError, NotFoundError } from "@/errors";
+import { ApiError } from "@/errors";
 import {
   CreateEventBodyModel,
   EditEventBodyModel,
