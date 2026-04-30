@@ -1,4 +1,17 @@
 import z from "zod";
+import type { CanvasIdParamModel } from "./canvas.models";
+
+export type LeaderboardParamModel = typeof CanvasIdParamModel;
+
+export const LeaderboardQueryModel = z.object({
+  page: z.coerce.number().int().positive().optional(),
+  size: z.coerce.number().int().positive().optional(),
+});
+
+export const PixelHistoryParamModel = z.object({
+  x: z.coerce.number().int().nonnegative(),
+  y: z.coerce.number().int().nonnegative(),
+});
 
 export const PlacePixelBodyModel = z.object({
   x: z.number().int().nonnegative(),

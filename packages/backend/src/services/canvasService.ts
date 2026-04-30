@@ -9,7 +9,8 @@ import { PNG } from "pngjs";
 import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
-import type { PlacePixelArray } from "@/models/bodyModels";
+import type { PlacePixelArray } from "@/models/pixel.models";
+import { getCurrentEvent } from "./eventService";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -347,4 +348,94 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
   // image hasn’t finished being written to the file system when Express tries to send it in the
   // response.
   return unlockedCanvas;
+}
+
+interface CreateCanvasParams {
+  name: string;
+  width: number;
+  height: number;
+  startCoordinates?: [number, number];
+  allColorsGlobal?: boolean;
+  cooldownLength?: number;
+}
+
+export async function createCanvas({
+  name,
+  width,
+  height,
+  startCoordinates = [1, 1],
+  cooldownLength = 15,
+}: CreateCanvasParams) {
+  const currentEventId = await getCurrentEvent();
+
+  const canvas = await prisma.canvas.create({
+    data: {
+      name,
+      width,
+      height,
+      event_id: currentEventId.id,
+      start_coordinates: startCoordinates,
+      locked: true,
+      cooldown_length: cooldownLength,
+    },
+  });
+
+  await createCanvasPixelEntries(canvas.id, width, height);
+}
+
+async function createCanvasPixelEntries(
+  canvasId: number,
+  width: number,
+  height: number,
+): Promise<void> {
+  const pixelsData = [];
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      pixelsData.push({
+        canvas_id: canvasId,
+        x,
+        y,
+        color_id: 1, // Defaults to blank color (ID #1)
+      });
+    }
+  }
+
+  // Insert pixels in batches to avoid overwhelming the database
+  const batchSize = 10_000;
+  for (let i = 0; i < pixelsData.length; i += batchSize) {
+    const batch = pixelsData.slice(i, i + batchSize);
+    await prisma.pixel.createMany({
+      data: batch,
+    });
+  }
+}
+
+interface EditCanvasParams {
+  canvasId: number;
+  name?: string;
+  isLocked?: boolean;
+  allColorsGlobal?: boolean;
+  cooldownLength?: number;
+}
+
+export async function editCanvas({
+  canvasId,
+  name,
+  isLocked,
+  cooldownLength,
+}: EditCanvasParams) {
+  const canvas = await prisma.canvas.update({
+    where: {
+      id: canvasId,
+    },
+    data: {
+      name,
+      locked: isLocked,
+      cooldown_length: cooldownLength,
+    },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
 }
