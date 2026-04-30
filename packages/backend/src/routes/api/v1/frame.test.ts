@@ -1,8 +1,13 @@
 import express from "express";
 import request from "supertest";
 
-import { ForbiddenError } from "@/errors";
-import { createFrame, deleteFrame, editFrame } from "@/services/frameService";
+import { ForbiddenError, UnprocessableError } from "@/errors";
+import {
+  assertMaxOwnerFramesNotExceeded,
+  createFrame,
+  deleteFrame,
+  editFrame,
+} from "@/services/frameService";
 import { mockAuth } from "@/test/mockAuth";
 import { frameRouter } from "./frame";
 
@@ -17,6 +22,7 @@ interface EndpointCase {
 }
 
 vi.mock("@/services/frameService", () => ({
+  assertMaxOwnerFramesNotExceeded: vi.fn(),
   createFrame: vi.fn(),
   deleteFrame: vi.fn(),
   editFrame: vi.fn(),
@@ -129,6 +135,9 @@ describe("Frame mutation route tests", () => {
       const serviceMock = getServiceMock(serviceName);
       switch (serviceName) {
         case "create":
+          vi.mocked(assertMaxOwnerFramesNotExceeded).mockResolvedValueOnce(
+            undefined,
+          );
           vi.mocked(createFrame).mockResolvedValueOnce(undefined);
           break;
         case "edit":
@@ -152,6 +161,33 @@ describe("Frame mutation route tests", () => {
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("returns 422 when the create frame limit is exceeded", async () => {
+    const app = createApp(true);
+    vi.mocked(assertMaxOwnerFramesNotExceeded).mockRejectedValueOnce(
+      new UnprocessableError("Frame limit reached"),
+    );
+
+    const response = await sendMutationRequest("/api/v1/frame", {
+      app,
+      method: "post",
+      body: {
+        canvasId: 1,
+        name: "Frame name",
+        ownerId: "1",
+        isGuildOwned: false,
+        x0: 0,
+        y0: 0,
+        x1: 10,
+        y1: 10,
+      },
+    }).set("X-TestUserId", "1");
+
+    expect(response.status).toBe(422);
+    expect(response.body).toStrictEqual({ message: "Frame limit reached" });
+    expect(assertMaxOwnerFramesNotExceeded).toHaveBeenCalledTimes(1);
+    expect(createFrame).not.toHaveBeenCalled();
+  });
 
   it.each(endpointCases)(
     "returns 401 for $name when authentication is missing",
