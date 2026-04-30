@@ -1,4 +1,5 @@
 export type * from "./api";
+export type * from "./blocklist";
 export type * from "./canvasInfo";
 export type * from "./cooldown";
 export type * from "./discordGuildRecord";

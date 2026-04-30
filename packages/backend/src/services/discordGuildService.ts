@@ -196,9 +196,9 @@ export function assertCanvasAdmin(
   }
 }
 
-export function assertCanvasModerator(
+export function assertIsCanvasModerator(
   user: DiscordUserProfile,
-): asserts user is CanvasModeratorUser {
+): asserts user is CanvasModeratorUser | CanvasAdminUser {
   if (!user.isCanvasModerator) {
     throw new ForbiddenError(
       "You do not have permission to perform this action",
