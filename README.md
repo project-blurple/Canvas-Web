@@ -104,7 +104,7 @@ pnpm -F backend build
 Then, from the monorepo root:
 
 ```sh
-pnpm prisma:push
+pnpm prisma:migrate
 pnpm prisma:seed
 ```
 
