@@ -1,6 +1,7 @@
 import type { BlurpleEvent } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
+import ConflictError from "@/errors/ConflictError";
 
 export async function getEventById(
   eventId: BlurpleEvent["id"],
@@ -45,7 +46,7 @@ export async function createEvent(
 ): Promise<BlurpleEvent> {
   const existingEvent = await getEventById(id).catch(() => null);
   if (existingEvent) {
-    throw new NotFoundError(`An event with ID ${id} already exists`);
+    throw new ConflictError(`An event with ID ${id} already exists`);
   }
 
   // Gotta provide your own ID ¯\_(ツ)_/¯

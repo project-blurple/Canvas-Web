@@ -1,6 +1,6 @@
 import type { BlurpleEvent } from "@blurple-canvas-web/types";
 import z from "zod";
-import { BadRequestError } from "@/errors";
+import { assertZodSuccess } from "@/utils/models";
 
 const EventIdParamModel = z.object({
   eventId: z.coerce.number().int().positive(),
@@ -14,13 +14,7 @@ export async function parseEventId(
   params: EventIdParam,
 ): Promise<BlurpleEvent["id"]> {
   const result = await EventIdParamModel.safeParseAsync(params);
-  if (!result.success) {
-    throw new BadRequestError(
-      `${params.eventId} is not a valid event ID`,
-      result.error.issues,
-    );
-  }
-
+  assertZodSuccess(result, `${params.eventId} is not a valid event ID`);
   return result.data.eventId;
 }
 

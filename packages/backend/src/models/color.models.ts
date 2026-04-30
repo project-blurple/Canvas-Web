@@ -1,6 +1,6 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import z from "zod";
-import { BadRequestError } from "@/errors";
+import { assertZodSuccess } from "@/utils/models";
 
 const ColorIdParamModel = z.object({
   colorId: z.coerce.number().int().positive(),
@@ -14,13 +14,7 @@ export async function parseColorId(
   params: ColorIdParam,
 ): Promise<PaletteColor["id"]> {
   const result = await ColorIdParamModel.safeParseAsync(params);
-  if (!result.success) {
-    throw new BadRequestError(
-      `${params.colorId} is not a valid color ID`,
-      result.error.issues,
-    );
-  }
-
+  assertZodSuccess(result, `${params.colorId} is not a valid color ID`);
   return result.data.colorId;
 }
 

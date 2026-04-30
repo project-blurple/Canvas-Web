@@ -3,7 +3,7 @@ import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
 import { ColorBodyModel, parseColorId } from "@/models/color.models";
 import { parseEventId } from "@/models/event.models";
-import { parseGuildId } from "@/models/miscellaneous.models";
+import { parseGuildId } from "@/models/guild.models";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
 import {
   assignColorToEvent,
@@ -15,6 +15,7 @@ import {
   unassignColorFromEvent,
 } from "@/services/paletteService";
 import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 
 export const paletteRouter = Router();
 
@@ -44,9 +45,7 @@ paletteRouter.post("/", async (req, res) => {
     assertCanvasAdmin(req.user);
 
     const colorData = await ColorBodyModel.safeParseAsync(req.body);
-    if (!colorData.success) {
-      throw new BadRequestError("Invalid color data", colorData.error.issues);
-    }
+    assertZodSuccess(colorData);
 
     await createColor(colorData.data);
 
@@ -65,10 +64,7 @@ paletteRouter.put("/:colorId", async (req, res) => {
       parseColorId(req.params),
       ColorBodyModel.safeParseAsync(req.body),
     ]);
-
-    if (!colorData.success) {
-      throw new BadRequestError("Invalid color data", colorData.error.issues);
-    }
+    assertZodSuccess(colorData);
 
     await editColor({
       colorId,

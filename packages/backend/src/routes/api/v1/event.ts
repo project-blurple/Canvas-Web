@@ -14,6 +14,7 @@ import {
   getEventById,
 } from "@/services/eventService";
 import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 
 export const eventRouter = Router();
 
@@ -42,16 +43,13 @@ eventRouter.post("/", async (req, res) => {
     assertLoggedIn(req);
     assertCanvasAdmin(req.user);
 
-    const eventData = await CreateEventBodyModel.parseAsync(req.body);
+    const eventData = await CreateEventBodyModel.safeParseAsync(req.body);
+    assertZodSuccess(eventData);
 
-    await createEvent(eventData.name, eventData.id);
+    await createEvent(eventData.data.name, eventData.data.id);
 
     res.status(201).json({ message: "Event created successfully" });
   } catch (error) {
-    if (error instanceof NotFoundError) {
-      return res.status(409).json({ message: error.message });
-    }
-
     ApiError.sendError(res, error);
   }
 });
@@ -63,10 +61,11 @@ eventRouter.put("/:eventId", async (req, res) => {
 
     const [eventId, eventData] = await Promise.all([
       parseEventId(req.params),
-      EditEventBodyModel.parseAsync(req.body),
+      EditEventBodyModel.safeParseAsync(req.body),
     ]);
+    assertZodSuccess(eventData);
 
-    await editEvent(eventId, eventData.name);
+    await editEvent(eventId, eventData.data.name);
 
     res.status(200).json({ message: "Event edited successfully" });
   } catch (error) {

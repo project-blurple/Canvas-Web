@@ -20,6 +20,7 @@ import {
 } from "@/services/canvasService";
 import { assertCanvasAdmin } from "@/services/discordGuildService";
 import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = Router();
@@ -81,11 +82,7 @@ canvasRouter.post("/", async (req, res) => {
     assertCanvasAdmin(req.user);
 
     const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
-
-    if (!canvasData.success) {
-      res.status(400).json({ message: "Invalid canvas data" });
-      return;
-    }
+    assertZodSuccess(canvasData);
 
     await createCanvas({
       name: canvasData.data.name,
@@ -95,7 +92,7 @@ canvasRouter.post("/", async (req, res) => {
       cooldownLength: canvasData.data.cooldownLength,
     });
 
-    res.status(201).json({ message: "Canvas created successfully" });
+    res.status(201).json({ message: "Canvas created" });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -111,10 +108,7 @@ canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
       EditCanvasBodyModel.safeParseAsync(req.body),
     ]);
 
-    if (!canvasData.success) {
-      res.status(400).json({ message: "Invalid canvas data" });
-      return;
-    }
+    assertZodSuccess(canvasData);
 
     await editCanvas({
       canvasId,
