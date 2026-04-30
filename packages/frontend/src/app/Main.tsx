@@ -4,7 +4,6 @@ import { styled } from "@mui/material";
 
 import { ActionPanel } from "@/components/action-panel";
 import { CanvasView } from "@/components/canvas";
-import Notices from "@/components/notices/Notices";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 
 const Wrapper = styled("main")`
@@ -40,14 +39,11 @@ const Wrapper = styled("main")`
 
 export default function Main() {
   return (
-    <>
-      <Notices />
-      <Wrapper>
-        <CanvasView />
-        <SlideableDrawer>
-          <ActionPanel />
-        </SlideableDrawer>
-      </Wrapper>
-    </>
+    <Wrapper>
+      <CanvasView showNotices />
+      <SlideableDrawer>
+        <ActionPanel />
+      </SlideableDrawer>
+    </Wrapper>
   );
 }

@@ -23,6 +23,7 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
+import Notices from "../notices/Notices";
 import {
   addPoints,
   diffPoints,
@@ -364,7 +365,7 @@ function getViewForFrame({
   return { targetZoom, offset, targetPoint };
 }
 
-export default function CanvasView() {
+export default function CanvasView({ showNotices }: { showNotices?: boolean }) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
@@ -981,6 +982,7 @@ export default function CanvasView() {
 
   return (
     <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
+      {showNotices && <Notices />}
       {config.discordServerInvite && (
         <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
           <InviteButton>Project Blurple</InviteButton>

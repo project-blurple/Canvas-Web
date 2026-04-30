@@ -1,28 +1,35 @@
+import { styled } from "@mui/material";
 import { useCanvasContext } from "@/contexts";
 import { useNotices } from "@/hooks/queries/useNotice";
+import NoticeBanner from "./NoticeBanner";
+
+const NoticeWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  left: 50%;
+  margin-top: 1rem;
+  pointer-events: auto;
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 2000;
+  align-items: center;
+`;
 
 export default function Notices() {
-  const { data: notices } = useNotices();
+  const { data: notices = [] } = useNotices();
   const { canvas } = useCanvasContext();
 
-  if (!notices || notices.length === 0) return <h1>no notices</h1>;
-
-  console.log("notices", notices);
-  console.log("canvas id", canvas?.id);
   const filteredNotices = notices.filter(
     (notice) => notice.canvasId === null || notice.canvasId === canvas?.id,
   );
-  console.log("filteredNotices", filteredNotices);
 
   return (
-    <div>
-      <h1>Notices</h1>
+    <NoticeWrapper>
       {filteredNotices.map((notice) => (
-        <div key={notice.id}>
-          <h2>{notice.header}</h2>
-          <p>{notice.content}</p>
-        </div>
+        <NoticeBanner key={notice.id} notice={notice} />
       ))}
-    </div>
+    </NoticeWrapper>
   );
 }
