@@ -1,6 +1,6 @@
 import type { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
-import { ApiError, BadRequestError } from "@/errors";
+import { ApiError } from "@/errors";
 import {
   PixelHistoryComplexBodyModel,
   PixelHistoryComplexParamModel,
@@ -14,6 +14,7 @@ import {
   getPixelHistory,
 } from "@/services/historyService";
 import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 
 export const historyRouter = Router({ mergeParams: true });
 
@@ -22,12 +23,10 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     const canvasId = await parseCanvasId(req.params);
 
     const queryResult = await PixelHistoryParamModel.safeParseAsync(req.query);
-    if (!queryResult.success) {
-      throw new BadRequestError(
-        "Invalid query parameters. Expected x, and y as positive integers",
-        queryResult.error.issues,
-      );
-    }
+    assertZodSuccess(
+      queryResult,
+      "Invalid query parameters. Expected x, and y as positive integers",
+    );
 
     const coordinates = queryResult.data;
     const pixelHistory = await getPixelHistory({
@@ -43,28 +42,24 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
 
 historyRouter.post<CanvasIdParam>("/", async (req, res) => {
   // Could become a QUERY endpoint in the future once it becomes supported
-  // TODO: restrict by Canvas Manager auth?
   try {
-    // grabbing the canvasId from the path
+    assertLoggedIn(req);
+    assertIsCanvasModerator(req.user);
+
     const canvasId = await parseCanvasId(req.params);
 
     const [queryResult, bodyResult] = await Promise.all([
       PixelHistoryComplexParamModel.safeParseAsync(req.query),
       PixelHistoryComplexBodyModel.safeParseAsync(req.body),
     ]);
-
-    if (!queryResult.success) {
-      throw new BadRequestError(
-        "Invalid query parameters. Expected x0, y0, x1, and y1 as positive integers, with x1 and y1 being optional",
-        queryResult.error.issues,
-      );
-    }
-    if (!bodyResult.success) {
-      throw new BadRequestError(
-        "Invalid request body. Expected a valid history query object",
-        bodyResult.error.issues,
-      );
-    }
+    assertZodSuccess(
+      queryResult,
+      "Invalid query parameters. Expected x0, y0, x1, and y1 as positive integers, with x1 and y1 being optional",
+    );
+    assertZodSuccess(
+      bodyResult,
+      "Invalid request body. Expected a valid history query object",
+    );
 
     const point0 = {
       x: queryResult.data.x0,
@@ -119,12 +114,10 @@ historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
     const bodyResult = await PixelHistoryDeleteBodyModel.safeParseAsync(
       req.body,
     );
-    if (!bodyResult.success) {
-      throw new BadRequestError(
-        "Invalid request body. Expected an object with a historyIds property that is an array of non-negative integers",
-        bodyResult.error.issues,
-      );
-    }
+    assertZodSuccess(
+      bodyResult,
+      "Invalid request body. Expected an object with a historyIds property that is an array of non-negative integers",
+    );
 
     const historyIds = bodyResult.data.historyIds.map(BigInt);
 
