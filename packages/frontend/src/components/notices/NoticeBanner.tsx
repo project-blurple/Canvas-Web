@@ -1,6 +1,7 @@
 import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { CircleX, Info, TriangleAlert, X } from "lucide-react";
+import Markdown from "markdown-to-jsx";
 
 type BannerComponent = typeof StyledBanner;
 
@@ -79,8 +80,12 @@ function Banner({
     >
       {icon}
       <BannerBody>
-        {notice.header && <h3>{notice.header}</h3>}
-        {notice.content && <p>{notice.content}</p>}
+        {notice.header && (
+          <span>
+            <Markdown>{`### ${notice.header}`}</Markdown>
+          </span>
+        )}
+        {notice.content && <Markdown>{notice.content}</Markdown>}
       </BannerBody>
       <DismissButton
         aria-label="Dismiss notice"
