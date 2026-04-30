@@ -1,9 +1,12 @@
 import { styled } from "@mui/material";
+import { useCallback, useMemo, useState } from "react";
+import useLocalStorage from "@/app/settings/useLocalStorage";
 import { useCanvasContext } from "@/contexts";
 import { useNotices } from "@/hooks/queries/useNotice";
 import NoticeBanner from "./NoticeBanner";
 
 const NoticeWrapper = styled("div")`
+  align-items: center;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -13,22 +16,61 @@ const NoticeWrapper = styled("div")`
   position: absolute;
   top: 0;
   transform: translateX(-50%);
+  width: 90%;
   z-index: 2000;
-  align-items: center;
 `;
 
 export default function Notices() {
   const { data: notices = [] } = useNotices();
   const { canvas } = useCanvasContext();
 
+  const [persistedDismissed = [], setPersistedDismissed] =
+    useLocalStorage("notices/dismissed");
+
+  const [transientDismissed, setTransientDismissed] = useState<Set<string>>(
+    () => new Set(),
+  );
+
+  const persistedSet = useMemo(
+    () => new Set<string>(persistedDismissed ?? []),
+    [persistedDismissed],
+  );
+
+  const dismiss = useCallback(
+    (id: string) => {
+      setTransientDismissed((s) => {
+        const next = new Set(s);
+        next.add(id);
+        return next;
+      });
+
+      const n = notices.find((x) => x.id === id);
+      // Persist only when notice.persistOnDismiss === false
+      if (n && n.persistOnDismiss === false) {
+        const nextArr = Array.from(
+          new Set([...(persistedDismissed ?? []), id]),
+        );
+        setPersistedDismissed(nextArr);
+      }
+    },
+    [notices, persistedDismissed, setPersistedDismissed],
+  );
+
   const filteredNotices = notices.filter(
-    (notice) => notice.canvasId === null || notice.canvasId === canvas?.id,
+    (notice) =>
+      (notice.canvasId === null || notice.canvasId === canvas?.id) &&
+      !transientDismissed.has(notice.id) &&
+      !persistedSet.has(notice.id),
   );
 
   return (
     <NoticeWrapper>
       {filteredNotices.map((notice) => (
-        <NoticeBanner key={notice.id} notice={notice} />
+        <NoticeBanner
+          key={notice.id}
+          notice={notice}
+          onDismiss={() => dismiss(notice.id)}
+        />
       ))}
     </NoticeWrapper>
   );

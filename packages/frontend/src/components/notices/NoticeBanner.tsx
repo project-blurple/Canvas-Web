@@ -10,12 +10,19 @@ const StyledBanner = styled("div")`
   border-radius: var(--card-border-radius);
   border: 3px solid;
   box-shadow: 0 0 10px rgba(0 0 0 / 50%);
+  cursor: default;
   display: flex;
   flex-direction: row;
-  justify-content: center;
   gap: 1rem;
+  justify-content: center;
   padding: 1rem;
   width: fit-content;
+
+  & > svg {
+    flex: 0 0 auto;
+    width: 1.25rem;
+    height: 1.25rem;
+  }
 `;
 
 const StyledInfoBanner = styled(StyledBanner)`
@@ -34,12 +41,14 @@ const BannerBody = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 `;
 
 const DismissButton = styled("button")`
   background: transparent;
   border: none;
   cursor: pointer;
+  flex: 0 0 auto;
   opacity: 25%;
   transition: opacity var(--transition-duration-fast) ease;
 
@@ -48,59 +57,89 @@ const DismissButton = styled("button")`
   }
 `;
 
+interface BannerProps {
+  notice: Notice;
+  onDismiss?: () => void;
+}
+
 function Banner({
   notice,
   BannerRoot,
   icon,
+  onDismiss,
 }: {
-  notice: Notice;
   BannerRoot: BannerComponent;
   icon: React.ReactNode;
-}) {
+} & BannerProps) {
   return (
-    <BannerRoot>
+    <BannerRoot
+      onPointerDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       {icon}
       <BannerBody>
         {notice.header && <h3>{notice.header}</h3>}
         {notice.content && <p>{notice.content}</p>}
       </BannerBody>
-      <DismissButton>
+      <DismissButton
+        aria-label="Dismiss notice"
+        onClick={onDismiss}
+        type="button"
+      >
         <X />
       </DismissButton>
     </BannerRoot>
   );
 }
 
-function InfoBanner({ notice }: { notice: Notice }) {
-  return (
-    <Banner notice={notice} BannerRoot={StyledInfoBanner} icon={<Info />} />
-  );
-}
-
-function WarningBanner({ notice }: { notice: Notice }) {
+function InfoBanner({ notice, onDismiss }: BannerProps) {
   return (
     <Banner
+      BannerRoot={StyledInfoBanner}
+      icon={<Info />}
       notice={notice}
-      BannerRoot={StyledWarningBanner}
-      icon={<TriangleAlert />}
+      onDismiss={onDismiss}
     />
   );
 }
 
-function ErrorBanner({ notice }: { notice: Notice }) {
+function WarningBanner({ notice, onDismiss }: BannerProps) {
   return (
-    <Banner notice={notice} BannerRoot={StyledErrorBanner} icon={<CircleX />} />
+    <Banner
+      BannerRoot={StyledWarningBanner}
+      icon={<TriangleAlert />}
+      notice={notice}
+      onDismiss={onDismiss}
+    />
   );
 }
 
-export default function NoticeBanner({ notice }: { notice: Notice }) {
+function ErrorBanner({ notice, onDismiss }: BannerProps) {
+  return (
+    <Banner
+      BannerRoot={StyledErrorBanner}
+      icon={<CircleX />}
+      notice={notice}
+      onDismiss={onDismiss}
+    />
+  );
+}
+
+export default function NoticeBanner({
+  notice,
+  onDismiss,
+}: {
+  notice: Notice;
+  onDismiss?: () => void;
+}) {
   switch (notice.type) {
     case "info":
-      return <InfoBanner notice={notice} />;
+      return <InfoBanner notice={notice} onDismiss={onDismiss} />;
     case "warning":
-      return <WarningBanner notice={notice} />;
+      return <WarningBanner notice={notice} onDismiss={onDismiss} />;
     case "error":
-      return <ErrorBanner notice={notice} />;
+      return <ErrorBanner notice={notice} onDismiss={onDismiss} />;
     default:
       return null;
   }
