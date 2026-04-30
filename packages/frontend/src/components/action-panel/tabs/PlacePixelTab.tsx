@@ -4,7 +4,7 @@ import type {
   PaletteColor,
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -23,7 +23,7 @@ import {
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
-const ColorPicker = styled("div")`
+const Fieldset = styled("fieldset")`
   --min-swatch-width: 3rem;
 
   display: grid;
@@ -49,7 +49,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-const partitionPalette = (palette: Palette) => {
+function partitionPalette(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
@@ -57,7 +57,7 @@ const partitionPalette = (palette: Palette) => {
   }
 
   return [mainColors, partnerColors];
-};
+}
 
 function isUserInServer(user: DiscordUserProfile, serverId: string) {
   const guildIds = getUserGuildIds(user);
@@ -76,8 +76,11 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
-  const { data: palette = [] } = usePalette(eventId ?? undefined);
-  const [mainColors, partnerColors] = partitionPalette(palette);
+  const { data: palette } = usePalette(eventId ?? undefined);
+  const [mainColors, partnerColors] = useMemo(
+    () => (palette !== undefined ? partitionPalette(palette) : []),
+    [palette],
+  );
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
@@ -144,38 +147,42 @@ export default function PlacePixelTab({
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <ColorPicker>
+          <div>
             <Heading>Main colors</Heading>
-            {mainColors.length ?
-              mainColors.map((color) => (
-                <InteractiveSwatch
-                  key={color.code}
-                  rgba={color.rgba}
-                  onAction={() => setSelectedColor(color)}
-                  selected={color === selectedColor}
-                />
-              ))
-            : Array.from({ length: 12 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                <SwatchSkeleton key={i} variant="rectangular" />
-              ))
-            }
+            <Fieldset>
+              {mainColors?.length ?
+                mainColors.map((color) => (
+                  <InteractiveSwatch
+                    aria-selected={color === selectedColor}
+                    key={color.code}
+                    onClick={() => setSelectedColor(color)}
+                    paletteColor={color}
+                  />
+                ))
+              : Array.from({ length: 12 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
+                  <SwatchSkeleton key={i} variant="rectangular" />
+                ))
+              }
+            </Fieldset>
             <Heading>Partner colors</Heading>
-            {partnerColors.length ?
-              partnerColors.map((color) => (
-                <InteractiveSwatch
-                  key={color.code}
-                  onAction={() => setSelectedColor(color)}
-                  rgba={color.rgba}
-                  selected={color === selectedColor}
-                />
-              ))
-            : Array.from({ length: 13 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                <SwatchSkeleton key={i} variant="rectangular" />
-              ))
-            }
-          </ColorPicker>
+            <Fieldset>
+              {partnerColors?.length ?
+                partnerColors.map((color) => (
+                  <InteractiveSwatch
+                    aria-selected={color === selectedColor}
+                    key={color.code}
+                    onClick={() => setSelectedColor(color)}
+                    paletteColor={color}
+                  />
+                ))
+              : Array.from({ length: 13 }).map((_, i) => (
+                  // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
+                  <SwatchSkeleton key={i} variant="rectangular" />
+                ))
+              }
+            </Fieldset>
+          </div>
         </ActionPanelTabBody>
       </FullWidthScrollView>
       <ActionPanelTabBody>
@@ -188,7 +195,11 @@ export default function PlacePixelTab({
         )}
         {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
-          <DynamicAnchorButton color={selectedColor?.rgba} href={serverInvite}>
+          <DynamicAnchorButton
+            color={selectedColor?.rgba}
+            href={serverInvite}
+            type="submit"
+          >
             {!userInServer ? "Join" : "Open"}{" "}
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>
