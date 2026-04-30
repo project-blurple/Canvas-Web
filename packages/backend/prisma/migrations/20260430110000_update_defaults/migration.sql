@@ -20,6 +20,10 @@ UPDATE "info"
 SET "default_canvas_id" = (SELECT "id" FROM "canvas" ORDER BY "id" LIMIT 1)
 WHERE "default_canvas_id" IS NULL;
 
+UPDATE "blacklist"
+SET "date_added" = NOW()
+WHERE "date_added" IS NULL;
+
 ALTER TABLE "discord_user_profile"
 ALTER COLUMN "profile_picture_url" SET NOT NULL;
 
