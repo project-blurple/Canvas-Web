@@ -6,14 +6,13 @@ import {
   removeUsersFromBlocklist,
 } from "@/services/blocklistService";
 import { mockAuth } from "@/test/mockAuth";
+import { blocklistRouter } from "./blocklist";
 
 vi.mock("@/services/blocklistService", () => ({
   addUsersToBlocklist: vi.fn(),
   getBlocklist: vi.fn(),
   removeUsersFromBlocklist: vi.fn(),
 }));
-
-import { blocklistRouter } from "./blocklist";
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
   const app = express();

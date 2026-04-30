@@ -5,13 +5,12 @@ import {
   getPixelHistory,
 } from "@/services/historyService";
 import { mockAuth } from "@/test/mockAuth";
+import { historyRouter } from "./history";
 
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
   getPixelHistory: vi.fn(),
 }));
-
-import { historyRouter } from "./history";
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
   const app = express();
