@@ -56,12 +56,22 @@ export default function Notices() {
     [notices, persistedDismissed, setPersistedDismissed],
   );
 
-  const filteredNotices = notices.filter(
-    (notice) =>
-      (notice.canvasId === null || notice.canvasId === canvas?.id) &&
-      !transientDismissed.has(notice.id) &&
-      !persistedSet.has(notice.id),
-  );
+  const filteredNotices = notices
+    .filter(
+      (notice) =>
+        (notice.canvasId === null || notice.canvasId === canvas?.id) &&
+        !transientDismissed.has(notice.id) &&
+        !persistedSet.has(notice.id),
+    )
+    .sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return b.priority - a.priority;
+      } else {
+        return (
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      }
+    });
 
   return (
     <NoticeWrapper>
