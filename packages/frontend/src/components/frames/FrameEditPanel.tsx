@@ -218,7 +218,7 @@ export default function FrameEditPanel({
     canvasId: canvas.id,
     userId: user?.id,
   });
-  const userFrameLimit = userFramesResponse?.isAtCountLimit;
+  const userHasReachedMaxFrames = userFramesResponse?.hasReachedMaxFrames;
 
   const managedGuildEntries = Object.entries(user?.guilds ?? {})
     .filter(([, guild]) => guild.administrator || guild.manageGuild)
@@ -230,7 +230,7 @@ export default function FrameEditPanel({
   });
 
   const guildFrames = guildFramesResponse?.data ?? [];
-  const guildFrameLimits = guildFramesResponse?.isAtCountLimit;
+  const guildHasReachedMaxFrames = guildFramesResponse?.hasReachedMaxFrames;
 
   const guildOptions = useMemo<GuildOption[]>(() => {
     const [guildsWithFrames, otherManagedGuilds] = splitGuildsByFramePresence(
@@ -475,10 +475,10 @@ export default function FrameEditPanel({
     }
   }, [user, setActivePanel, clearSelectedBounds]);
 
-  const isAtFrameLimit =
-    selectedOwner === "user" ? userFrameLimit : (
-      guildFrameLimits?.[selectedGuildId]
-    );
+  const isAtMaxFrames =
+    selectedOwner === "user" ?
+      userHasReachedMaxFrames
+    : guildHasReachedMaxFrames?.[selectedGuildId];
 
   return (
     <>
@@ -585,10 +585,10 @@ export default function FrameEditPanel({
                 !frameName ||
                 !frameBounds ||
                 (!selectedGuildId && selectedOwner === "guild") ||
-                isAtFrameLimit // Only restrict when creating, not when editing
+                isAtMaxFrames // Only restrict when creating, not when editing
               }
             >
-              {isAtFrameLimit ? "Frame limit reached" : "Create"}
+              {isAtMaxFrames ? "Maximum frames created" : "Create"}
             </DynamicButton>
           }
         </ButtonRow>

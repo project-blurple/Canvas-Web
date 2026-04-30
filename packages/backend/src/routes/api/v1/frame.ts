@@ -11,7 +11,7 @@ import {
   parseFrameId,
 } from "@/models/paramModels";
 import {
-  assertOwnerFrameLimitNotExceeded,
+  assertMaxOwnerFramesNotExceeded,
   createFrame,
   deleteFrame,
   editFrame,
@@ -40,7 +40,7 @@ frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
     );
     res.status(200).json({
       data: frames,
-      isAtCountLimit: frames.length >= config.frames.userLimit,
+      hasReachedMaxFrames: frames.length >= config.frames.maxAllowedUser,
     });
   } catch (error) {
     ApiError.sendError(res, error);
@@ -62,18 +62,19 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
       await parseCanvasId(req.params),
     );
 
-    const countLimitResults: Record<string, boolean> = {};
+    const hasReachedMaxFramesMap: Record<string, boolean> = {};
     for (const guildId of queryResult.data.guildIds) {
       const frameCount = frames.reduce((count, frame) => {
         if (frame.owner.guild.guild_id === guildId) count++;
         return count;
       }, 0);
-      countLimitResults[guildId] = frameCount >= config.frames.guildLimit;
+      hasReachedMaxFramesMap[guildId] =
+        frameCount >= config.frames.maxAllowedGuild;
     }
 
     res.status(200).json({
       data: frames,
-      isAtCountLimit: countLimitResults,
+      hasReachedMaxFrames: hasReachedMaxFramesMap,
     });
   } catch (error) {
     ApiError.sendError(res, error);
@@ -163,7 +164,7 @@ frameRouter.post<FrameIdParam>("/", frameMutationLimiter, async (req, res) => {
       );
     }
 
-    await assertOwnerFrameLimitNotExceeded({
+    await assertMaxOwnerFramesNotExceeded({
       canvasId,
       ownerId: ownerQueryResult.data.ownerId,
       isGuildOwned: ownerQueryResult.data.isGuildOwned,

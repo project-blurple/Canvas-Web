@@ -47,13 +47,13 @@ const config = {
   botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
   frames: {
-    userLimit:
-      process.env.FRAME_LIMIT_USER ?
-        Number.parseInt(process.env.FRAME_LIMIT_USER, 10)
+    maxAllowedUser:
+      process.env.MAX_USER_FRAMES_ALLOWED ?
+        Number.parseInt(process.env.MAX_USER_FRAMES_ALLOWED, 10)
       : 32,
-    guildLimit:
-      process.env.FRAME_LIMIT_GUILD ?
-        Number.parseInt(process.env.FRAME_LIMIT_GUILD, 10)
+    maxAllowedGuild:
+      process.env.MAX_GUILD_FRAMES_ALLOWED ?
+        Number.parseInt(process.env.MAX_GUILD_FRAMES_ALLOWED, 10)
       : 32,
   },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,

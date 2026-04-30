@@ -428,7 +428,7 @@ async function getFrameCountForOwner({
   });
 }
 
-export async function assertOwnerFrameLimitNotExceeded({
+export async function assertMaxOwnerFramesNotExceeded({
   canvasId,
   ownerId,
   isGuildOwned,
@@ -439,7 +439,7 @@ export async function assertOwnerFrameLimitNotExceeded({
     isGuildOwned,
   });
   const limit =
-    isGuildOwned ? config.frames.guildLimit : config.frames.userLimit;
+    isGuildOwned ? config.frames.maxAllowedGuild : config.frames.maxAllowedUser;
 
   if (frameCount >= limit) {
     throw new UnprocessableError(

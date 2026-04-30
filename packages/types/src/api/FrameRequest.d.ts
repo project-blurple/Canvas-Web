@@ -20,11 +20,11 @@ export type FrameByIdResBody = Frame;
 
 export interface UserFramesResBody {
   data: UserOwnedFrame[];
-  isAtCountLimit: boolean;
+  hasReachedMaxFrames: boolean;
 }
 export interface GuildFramesResBody {
   data: GuildOwnedFrame[];
-  isAtCountLimit: {
+  hasReachedMaxFrames: {
     [guildId: string]: boolean;
   };
 }
