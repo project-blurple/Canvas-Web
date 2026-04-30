@@ -24,6 +24,10 @@ UPDATE "blacklist"
 SET "date_added" = NOW()
 WHERE "date_added" IS NULL;
 
+ALTER TABLE "color"
+ALTER COLUMN "emoji_name" DROP NOT NULL,
+ALTER COLUMN "emoji_id" DROP NOT NULL;
+
 ALTER TABLE "discord_user_profile"
 ALTER COLUMN "profile_picture_url" SET NOT NULL;
 
