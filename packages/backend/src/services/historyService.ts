@@ -8,6 +8,8 @@ import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import { validatePixel } from "./pixelService";
 
+const formatter = new Intl.ListFormat("en-US");
+
 interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
   points: Point | [Point, Point];
@@ -66,14 +68,9 @@ export async function getPixelHistory({
       lte: dateRange?.to,
     },
     user_id: (() => {
-      if (!userIdFilter) {
-        return undefined;
-      }
-      if (userIdFilter.include) {
-        return { in: userIdFilter.ids };
-      } else {
-        return { notIn: userIdFilter.ids };
-      }
+      if (!userIdFilter) return undefined;
+      const op = userIdFilter.include ? "in" : "notIn";
+      return { [op]: userIdFilter.ids };
     })(),
     color_id: (() => {
       if (!colorFilter) {
@@ -103,9 +100,7 @@ export async function getPixelHistory({
         discord_user_profile: true,
       },
     }),
-    prisma.history.count({
-      where: where,
-    }),
+    prisma.history.count({ where }),
   ]);
 
   return {
@@ -158,7 +153,6 @@ export async function deletePixelHistoryEntries(
 
   const invalidIds = new Set(historyIds).difference(existingEntryIds);
   if (invalidIds.size > 0) {
-    const formatter = new Intl.ListFormat("en-US");
     throw new Error(
       `The following history IDs do not exist for canvas ${canvasId}: ${formatter.format([...invalidIds].map((id) => id.toString()))}`,
     );
