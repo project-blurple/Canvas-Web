@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
-import BadRequestError from "@/errors/BadRequestError";
 import { ColorBodyModel, parseColorId } from "@/models/color.models";
 import { parseEventId } from "@/models/event.models";
 import { parseGuildId } from "@/models/guild.models";
