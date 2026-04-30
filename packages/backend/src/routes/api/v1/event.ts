@@ -48,7 +48,7 @@ eventRouter.post("/", async (req, res) => {
 
     await createEvent(eventData.data.name, eventData.data.id);
 
-    res.status(201).json({ message: "Event created successfully" });
+    res.status(201).json({ message: "Event created" });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -67,7 +67,7 @@ eventRouter.put("/:eventId", async (req, res) => {
 
     await editEvent(eventId, eventData.data.name);
 
-    res.status(200).json({ message: "Event edited successfully" });
+    res.status(200).json({ message: "Event edited" });
   } catch (error) {
     ApiError.sendError(res, error);
   }

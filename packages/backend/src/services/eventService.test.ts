@@ -1,5 +1,5 @@
 import { prisma } from "@/client";
-import { NotFoundError } from "@/errors";
+import { ConflictError, NotFoundError } from "@/errors";
 import { seedEvents } from "@/test";
 import {
   createEvent,
@@ -79,7 +79,7 @@ describe("Event Mutation Tests", () => {
 
   it("Rejects creating a duplicate event", async () => {
     return expect(createEvent("Duplicate Event", 1)).rejects.toThrow(
-      NotFoundError,
+      ConflictError,
     );
   });
 

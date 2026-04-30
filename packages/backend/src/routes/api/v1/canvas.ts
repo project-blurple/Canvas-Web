@@ -117,7 +117,7 @@ canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
       isLocked: canvasData.data.isLocked,
     });
 
-    res.status(200).json({ message: "Canvas edited successfully" });
+    res.status(200).json({ message: "Canvas edited" });
   } catch (error) {
     ApiError.sendError(res, error);
   }

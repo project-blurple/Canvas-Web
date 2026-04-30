@@ -48,7 +48,7 @@ paletteRouter.post("/", async (req, res) => {
 
     await createColor(colorData.data);
 
-    res.status(201).json({ message: "Color created successfully" });
+    res.status(201).json({ message: "Color created" });
   } catch (error) {
     return ApiError.sendError(res, error);
   }
@@ -70,7 +70,7 @@ paletteRouter.put("/:colorId", async (req, res) => {
       data: colorData.data,
     });
 
-    res.status(200).json({ message: "Color edited successfully" });
+    res.status(200).json({ message: "Color edited" });
   } catch (error) {
     return ApiError.sendError(res, error);
   }
@@ -85,7 +85,7 @@ paletteRouter.delete("/:colorId", async (req, res) => {
 
     await deleteColor(colorId);
 
-    res.status(200).json({ message: "Color deleted successfully" });
+    res.status(200).json({ message: "Color deleted" });
   } catch (error) {
     return ApiError.sendError(res, error);
   }
@@ -108,7 +108,7 @@ paletteRouter.post("/:colorId/assign/:eventId/:guildId", async (req, res) => {
       guildId,
     });
 
-    res.status(200).json({ message: "Color assigned to event successfully" });
+    res.status(200).json({ message: "Color assigned to event" });
   } catch (error) {
     return ApiError.sendError(res, error);
   }
@@ -131,9 +131,7 @@ paletteRouter.delete("/:colorId/assign/:eventId/:guildId", async (req, res) => {
       guildId,
     });
 
-    res
-      .status(200)
-      .json({ message: "Color unassigned from event successfully" });
+    res.status(200).json({ message: "Color unassigned from event" });
   } catch (error) {
     return ApiError.sendError(res, error);
   }

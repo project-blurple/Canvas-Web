@@ -351,7 +351,7 @@ describe("Palette admin route tests", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toStrictEqual({
-      message: "Color created successfully",
+      message: "Color created",
     });
     expect(vi.mocked(createColor)).toHaveBeenCalledWith({
       code: "pink",
@@ -384,7 +384,7 @@ describe("Palette admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Color edited successfully",
+      message: "Color edited",
     });
     expect(vi.mocked(editColor)).toHaveBeenCalledWith({
       colorId: 3,
@@ -405,7 +405,7 @@ describe("Palette admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Color deleted successfully",
+      message: "Color deleted",
     });
     expect(vi.mocked(deleteColor)).toHaveBeenCalledWith(5);
   });
@@ -420,7 +420,7 @@ describe("Palette admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Color assigned to event successfully",
+      message: "Color assigned to event",
     });
     expect(vi.mocked(assignColorToEvent)).toHaveBeenCalledWith({
       colorId: 8,
@@ -439,7 +439,7 @@ describe("Palette admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Color unassigned from event successfully",
+      message: "Color unassigned from event",
     });
     expect(vi.mocked(unassignColorFromEvent)).toHaveBeenCalledWith({
       eventId: 13,

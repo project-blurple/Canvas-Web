@@ -41,7 +41,7 @@ describe("Event admin route tests", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toStrictEqual({
-      message: "Event created successfully",
+      message: "Event created",
     });
     expect(vi.mocked(createEvent)).toHaveBeenCalledWith("Spring Event", 42);
   });
@@ -56,7 +56,7 @@ describe("Event admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Event edited successfully",
+      message: "Event edited",
     });
     expect(vi.mocked(editEvent)).toHaveBeenCalledWith(42, "Updated Event");
   });

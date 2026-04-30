@@ -58,7 +58,7 @@ describe("Canvas admin route tests", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toStrictEqual({
-      message: "Canvas created successfully",
+      message: "Canvas created",
     });
     expect(vi.mocked(createCanvas)).toHaveBeenCalledWith({
       name: "New Canvas",
@@ -82,7 +82,7 @@ describe("Canvas admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Canvas edited successfully",
+      message: "Canvas edited",
     });
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,
