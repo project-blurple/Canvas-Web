@@ -7,8 +7,6 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { CircularProgress, css, styled } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import useMediaQuery from "@mui/material/useMediaQuery";
 import {
   Maximize2,
   Minimize2,
@@ -27,12 +25,17 @@ import {
   useSelectedColorContext,
   useSelectedFrameContext,
 } from "@/contexts";
-import { useCanvasImage, useCanvasSearchParams } from "@/hooks";
+import {
+  useCanvasImage,
+  useCanvasSearchParams,
+  useIsFullscreenAvailable,
+} from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
+import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
   diffPoints,
@@ -478,7 +481,6 @@ export default function CanvasView() {
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [canUseFullscreen, setCanUseFullscreen] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -514,27 +516,7 @@ export default function CanvasView() {
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
-  const theme = useTheme();
-  const isSmall = useMediaQuery(theme.breakpoints.down("md"));
-
-  useEffect(() => {
-    // Use the theme breakpoint as the source-of-truth for whether fullscreen
-    // controls should be shown; ensure the browser supports the API as well.
-    const fullscreenDocument = document as Document & {
-      webkitFullscreenEnabled?: boolean;
-    };
-    const fullscreenContainer = containerRef.current as
-      | (HTMLElement & {
-          webkitRequestFullscreen?: () => Promise<void> | void;
-        })
-      | null;
-    const supportsFullscreen =
-      document.fullscreenEnabled ||
-      !!fullscreenDocument.webkitFullscreenEnabled ||
-      !!fullscreenContainer?.webkitRequestFullscreen;
-
-    setCanUseFullscreen(!isSmall && supportsFullscreen);
-  }, [containerRef.current, isSmall]);
+  const canUseFullscreen = useIsFullscreenAvailable();
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -1160,14 +1142,15 @@ export default function CanvasView() {
         <FullscreenPanelButton
           $isFullscreen={isFullscreen}
           $isPanelVisible={isFullscreenPanelVisible}
-          aria-label={
-            isFullscreenPanelVisible ? "Hide action panel" : "Show action panel"
-          }
-          aria-pressed={isFullscreenPanelVisible}
           onClick={toggleFullscreenPanel}
           onPointerDown={(event) => event.stopPropagation()}
           type="button"
         >
+          <VisuallyHidden>
+            {isFullscreenPanelVisible ?
+              "Hide action panel"
+            : "Show action panel"}
+          </VisuallyHidden>
           {isFullscreenPanelVisible ?
             <PanelRightClose />
           : <PanelRightOpen />}
