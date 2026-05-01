@@ -82,7 +82,6 @@ export default function Nav() {
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const isOpen = anchorElement !== null;
 
-  console.log(user);
   const isModerator = user?.isCanvasModerator;
 
   const links: LinkInfo[] = [

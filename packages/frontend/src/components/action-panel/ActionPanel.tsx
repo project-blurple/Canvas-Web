@@ -34,14 +34,14 @@ export const ActionPanelWrapper = styled("div")`
   }
 `;
 
-const TabBar = styled("div")`
+export const TabBar = styled("div")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
 `;
 
-const StyledTab = styled("button")`
+export const StyledTab = styled("button")`
   appearance: none;
   border: none;
   color: inherit;
@@ -110,7 +110,9 @@ export const Heading = styled("h2")`
 
 type TabKey = "look" | "place" | "frame";
 
-function Tab({
+const Tab = GenericTab<TabKey>;
+
+export function GenericTab<TabKey extends string>({
   tabKey,
   onSwitchTab,
   ...props
