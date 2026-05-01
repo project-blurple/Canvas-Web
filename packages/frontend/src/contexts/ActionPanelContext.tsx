@@ -6,7 +6,6 @@ import {
   type Dispatch,
   type SetStateAction,
   useContext,
-  useMemo,
   useState,
 } from "react";
 
@@ -44,19 +43,16 @@ export const ActionPanelProvider = ({ children }: ActionPanelProviderProps) => {
   const [areTabsLocked, setAreTabsLocked] = useState(false);
   const [isFullscreenPanelVisible, setFullscreenPanelVisible] = useState(false);
 
-  const value = useMemo(
-    () => ({
-      areTabsLocked,
-      currentTab,
-      isFullscreenPanelVisible,
-      setAreTabsLocked,
-      setCurrentTab,
-      setFullscreenPanelVisible,
-      setTempColor,
-      tempColor,
-    }),
-    [areTabsLocked, currentTab, isFullscreenPanelVisible, tempColor],
-  );
+  const value = {
+    areTabsLocked,
+    currentTab,
+    isFullscreenPanelVisible,
+    setAreTabsLocked,
+    setCurrentTab,
+    setFullscreenPanelVisible,
+    setTempColor,
+    tempColor,
+  };
 
   return (
     <ActionPanelContext.Provider value={value}>

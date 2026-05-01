@@ -135,9 +135,10 @@ const BaseFullscreenButton = styled(Button, {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
+  inset-inline-end: calc(min(var(--action-panel-width), calc(100vi - 1rem)));
   inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
     $isPanelVisible && $isFullscreen ?
-      "calc(min(var(--action-panel-width), calc(100vw - 1rem)))"
+      "calc(min(var(--action-panel-width), calc(100dvi - 1rem)))"
     : "0.5rem"};
 
   color: white;
@@ -148,9 +149,9 @@ const BaseFullscreenButton = styled(Button, {
   padding: 0.5rem;
 
   @media (hover: hover) and (pointer: fine) {
-    :hover {
+    &:hover {
       border-color: inherit;
-      box-shadow: 0 0 10px rgba(0 0 0 / 25%);
+      box-shadow: 0 0 10px oklch(0 0 0 / 25%);
     }
   }
 `;
