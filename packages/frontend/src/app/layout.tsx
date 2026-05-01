@@ -8,7 +8,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
   AuthProvider,
   CanvasProvider,
@@ -20,9 +20,10 @@ import {
 } from "@/contexts";
 import { Theme } from "@/theme";
 import "../styles/core.css";
+import serverConfig from "@/config/serverConfig";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(config.baseUrl),
+  metadataBase: new URL(serverConfig.baseUrl),
   title: "Blurple Canvas",
   description: "Part of Project Blurple",
 };

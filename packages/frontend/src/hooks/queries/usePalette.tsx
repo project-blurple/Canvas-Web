@@ -8,7 +8,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Color from "colorjs.io";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
   const rgbA = a.rgba.slice(0, 3) as [number, number, number];

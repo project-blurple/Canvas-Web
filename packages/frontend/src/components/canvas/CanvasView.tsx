@@ -9,7 +9,7 @@ import type {
 import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
   useCanvasContext,
   useCanvasViewContext,
