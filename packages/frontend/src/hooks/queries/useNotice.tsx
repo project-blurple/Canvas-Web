@@ -15,7 +15,7 @@ export function useNotices(fetchAll: boolean = false) {
   };
 
   return useQuery<NoticeRequest.NoticeResBody>({
-    queryKey: ["notices"],
+    queryKey: ["notices", fetchAll],
     queryFn: getNotices,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
