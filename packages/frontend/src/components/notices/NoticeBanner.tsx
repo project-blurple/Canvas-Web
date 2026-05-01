@@ -59,6 +59,13 @@ const DismissButton = styled("button")`
   }
 `;
 
+const ContentSpan = styled("span")`
+  > div {
+    display: flex;
+    flex-direction: column;
+  }
+`;
+
 interface BannerProps {
   notice: Notice;
   onDismiss?: () => void;
@@ -86,11 +93,15 @@ function Banner({
       {icon}
       <BannerBody>
         {headerText && (
-          <span>
+          <ContentSpan>
             <Markdown>{headerText}</Markdown>
-          </span>
+          </ContentSpan>
         )}
-        {contentText && <Markdown>{contentText}</Markdown>}
+        {contentText && (
+          <ContentSpan>
+            <Markdown>{contentText}</Markdown>
+          </ContentSpan>
+        )}
       </BannerBody>
       <DismissButton
         aria-label="Dismiss notice"

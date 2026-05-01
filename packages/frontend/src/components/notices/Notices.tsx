@@ -45,7 +45,8 @@ export default function Notices() {
       });
 
       const n = notices.find((x) => x.id === id);
-      // Persist only when notice.persistOnDismiss === false
+      // Notices should stay dismissed only when notice.persistOnDismiss === false
+      // Otherwise they will reappear on page refresh
       if (n && n.persistOnDismiss === false) {
         const nextArr = Array.from(
           new Set([...(persistedDismissed ?? []), id]),
