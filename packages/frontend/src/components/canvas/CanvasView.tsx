@@ -6,7 +6,7 @@ import type {
   PlacePixelSocket,
   Point,
 } from "@blurple-canvas-web/types";
-import { CircularProgress, css, styled, Theme } from "@mui/material";
+import { CircularProgress, css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";

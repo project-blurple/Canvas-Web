@@ -29,7 +29,7 @@ interface PixelHistoryProps {
   history: PixelHistoryRecord[];
 }
 
-const PixelHistoryPast = ({ isLoading, history }: PixelHistoryProps) => {
+export const PixelHistoryPast = ({ isLoading, history }: PixelHistoryProps) => {
   if (isLoading && history.length === 0) {
     return;
   }

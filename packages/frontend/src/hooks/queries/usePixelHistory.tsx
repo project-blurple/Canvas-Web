@@ -35,3 +35,54 @@ export function usePixelHistory(
     refetchOnWindowFocus: false,
   });
 }
+
+export interface ComplexPixelHistoryQuery {
+  point0: Point;
+  point1?: Point;
+  fromDateTime?: string;
+  toDateTime?: string;
+  includeUserIds?: string[];
+  excludeUserIds?: string[];
+  includeColors?: string[];
+  excludeColors?: string[];
+}
+
+export function useComplexPixelHistory(
+  canvasId: CanvasInfo["id"],
+  query: ComplexPixelHistoryQuery | null,
+) {
+  const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
+    if (!query)
+      return { pixelHistory: [], totalEntries: 0 } as HistoryRequest.ResBody;
+
+    const response = await axios.post<HistoryRequest.ResBody>(
+      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+      {
+        fromDateTime: query.fromDateTime,
+        toDateTime: query.toDateTime,
+        includeUserIds: query.includeUserIds,
+        excludeUserIds: query.excludeUserIds,
+        includeColors: query.includeColors,
+        excludeColors: query.excludeColors,
+      },
+      {
+        params: {
+          x0: query.point0.x,
+          y0: query.point0.y,
+          x1: query.point1?.x,
+          y1: query.point1?.y,
+        },
+        withCredentials: true,
+      },
+    );
+    console.log(response);
+    return response.data;
+  };
+
+  return useQuery({
+    queryKey: ["complexPixelHistory", canvasId, query],
+    queryFn: fetchComplexHistory,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+}
