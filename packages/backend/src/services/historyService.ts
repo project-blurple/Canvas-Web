@@ -3,6 +3,7 @@ import type {
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
+import type { Prisma } from "@/client";
 import { prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
@@ -27,33 +28,27 @@ interface GetPixelHistoryParams {
   };
 }
 
-/**
- * Gets the pixel history for the given canvas and coordinates
- *
- * @param canvasId - The ID of the canvas
- * @param points - The coordinates of the pixel
- * @param dateRange - The date range for filtering history
- * @param userIdFilter - The user ID filter
- * @param colorFilter - The color filter
- */
-export async function getPixelHistory({
-  canvasId,
-  points,
-  dateRange,
-  userIdFilter,
-  colorFilter,
-}: GetPixelHistoryParams): Promise<PixelHistoryWrapper> {
-  if (!Array.isArray(points)) {
-    await validatePixel(canvasId, points, false);
-    points = [points, points];
-  } else {
-    await Promise.all([
-      validatePixel(canvasId, points[0], false),
-      validatePixel(canvasId, points[1], false),
-    ]);
-  }
+const pixelHistorySelect = {
+  id: true,
+  color: true,
+  timestamp: true,
+  guild_id: true,
+  user_id: true,
+  discord_user_profile: true,
+} as const satisfies Prisma.historySelect;
 
-  const where = {
+type PixelHistoryRow = Prisma.historyGetPayload<{
+  select: typeof pixelHistorySelect;
+}>;
+
+function buildPixelHistoryWhere(
+  canvasId: CanvasInfo["id"],
+  points: [Point, Point],
+  dateRange?: GetPixelHistoryParams["dateRange"],
+  userIdFilter?: GetPixelHistoryParams["userIdFilter"],
+  colorFilter?: GetPixelHistoryParams["colorFilter"],
+) {
+  return {
     canvas_id: canvasId,
     x: {
       gte: points[0].x,
@@ -83,42 +78,128 @@ export async function getPixelHistory({
       }
     })(),
   };
+}
 
-  const [pixelHistory, totalEntries] = await Promise.all([
-    prisma.history.findMany({
-      take: 100,
-      orderBy: {
-        timestamp: "desc",
-      },
-      where,
-      select: {
-        id: true,
-        color: true,
-        timestamp: true,
-        guild_id: true,
-        user_id: true,
-        discord_user_profile: true,
-      },
-    }),
-    prisma.history.count({ where }),
-  ]);
+function mapPixelHistoryRow(history: PixelHistoryRow) {
+  return {
+    id: history.id.toString(),
+    color: toPaletteColorSummary(history.color),
+    timestamp: history.timestamp,
+    guildId: history.guild_id?.toString(),
+    userId: history.user_id.toString(),
+    userProfile:
+      history.discord_user_profile ?
+        {
+          id: history.discord_user_profile.user_id.toString(),
+          username: history.discord_user_profile.username,
+          profilePictureUrl: history.discord_user_profile.profile_picture_url,
+        }
+      : null,
+  };
+}
+
+function summarizePixelHistoryRows(pixelHistoryRows: PixelHistoryRow[]) {
+  const users: PixelHistoryWrapper["users"] = {};
+
+  for (const history of pixelHistoryRows) {
+    const userId = history.user_id.toString();
+    const colorId = history.color.id.toString();
+    let userSummary = users[userId];
+
+    if (!userSummary) {
+      userSummary = {
+        count: 0,
+        colors: {},
+        lastPlaced: history.timestamp,
+      };
+      users[userId] = userSummary;
+    }
+
+    userSummary.count += 1;
+    userSummary.colors[colorId] = (userSummary.colors[colorId] ?? 0) + 1;
+  }
 
   return {
-    pixelHistory: pixelHistory.map((history) => ({
-      id: history.id.toString(),
-      color: toPaletteColorSummary(history.color),
-      timestamp: history.timestamp,
-      guildId: history.guild_id?.toString(),
-      userId: history.user_id.toString(),
-      userProfile:
-        history.discord_user_profile ?
-          {
-            id: history.discord_user_profile.user_id.toString(),
-            username: history.discord_user_profile.username,
-            profilePictureUrl: history.discord_user_profile.profile_picture_url,
-          }
-        : null,
-    })),
+    pixelHistory: pixelHistoryRows.slice(0, 100).map(mapPixelHistoryRow),
+    totalEntries: pixelHistoryRows.length,
+    historyIds: pixelHistoryRows.map((history) => history.id.toString()),
+    users,
+  };
+}
+
+async function getPixelHistoryRows({
+  canvasId,
+  points,
+  dateRange,
+  userIdFilter,
+  colorFilter,
+  limit,
+}: GetPixelHistoryParams & { limit?: number }) {
+  if (!Array.isArray(points)) {
+    await validatePixel(canvasId, points, false);
+    points = [points, points];
+  } else {
+    await Promise.all([
+      validatePixel(canvasId, points[0], false),
+      validatePixel(canvasId, points[1], false),
+    ]);
+  }
+
+  return prisma.history.findMany({
+    take: limit,
+    orderBy: {
+      timestamp: "desc",
+    },
+    where: buildPixelHistoryWhere(
+      canvasId,
+      points,
+      dateRange,
+      userIdFilter,
+      colorFilter,
+    ),
+    select: pixelHistorySelect,
+  });
+}
+
+/**
+ * Gets the pixel history summary for the given canvas and coordinates
+ *
+ * @param canvasId - The ID of the canvas
+ * @param points - The coordinates of the pixel
+ * @param dateRange - The date range for filtering history
+ * @param userIdFilter - The user ID filter
+ * @param colorFilter - The color filter
+ */
+export async function getPixelHistorySummary({
+  canvasId,
+  points,
+  dateRange,
+  userIdFilter,
+  colorFilter,
+}: GetPixelHistoryParams): Promise<PixelHistoryWrapper> {
+  const [pixelHistory, totalEntries] = await Promise.all([
+    getPixelHistoryRows({
+      canvasId,
+      points,
+      dateRange,
+      userIdFilter,
+      colorFilter,
+    }),
+    prisma.history.count({
+      where: buildPixelHistoryWhere(
+        canvasId,
+        Array.isArray(points) ? points : [points, points],
+        dateRange,
+        userIdFilter,
+        colorFilter,
+      ),
+    }),
+  ]);
+
+  const summary = summarizePixelHistoryRows(pixelHistory);
+
+  return {
+    ...summary,
     totalEntries,
   };
 }

@@ -11,7 +11,7 @@ import { type CanvasIdParam, parseCanvasId } from "@/models/paramModels";
 import { assertIsCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
-  getPixelHistory,
+  getPixelHistorySummary,
 } from "@/services/historyService";
 import { assertLoggedIn } from "@/utils";
 import { assertZodSuccess } from "@/utils/models";
@@ -29,7 +29,7 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     );
 
     const coordinates = queryResult.data;
-    const pixelHistory = await getPixelHistory({
+    const pixelHistory = await getPixelHistorySummary({
       canvasId,
       points: coordinates,
     });
@@ -90,7 +90,7 @@ historyRouter.post<CanvasIdParam>("/", async (req, res) => {
         { colors: bodyResult.data.excludeColors, include: false }
       : undefined;
 
-    const pixelHistory = await getPixelHistory({
+    const pixelHistory = await getPixelHistorySummary({
       canvasId,
       points,
       dateRange,

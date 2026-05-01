@@ -9,13 +9,19 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config";
 
+const emptyHistoryResult = (): HistoryRequest.ResBody => ({
+  pixelHistory: [],
+  totalEntries: 0,
+  historyIds: [],
+  users: {},
+});
+
 export function usePixelHistory(
   canvasId: CanvasInfo["id"],
   coordinates: Point | null,
 ) {
   const fetchHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!coordinates)
-      return { pixelHistory: [], totalEntries: 0 } as HistoryRequest.ResBody;
+    if (!coordinates) return emptyHistoryResult();
 
     const { x, y } = coordinates;
     const response = await axios.get<HistoryRequest.ResBody>(
@@ -51,9 +57,8 @@ export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
 ) {
-  const fetchComplexHistory = async () => {
-    if (!query)
-      return { pixelHistory: [], totalEntries: 0 } as HistoryRequest.ResBody;
+  const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
+    if (!query) return emptyHistoryResult();
 
     const response = await axios.post<HistoryRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
@@ -72,10 +77,10 @@ export function useComplexPixelHistory(
           x1: query.point1?.x,
           y1: query.point1?.y,
         },
+        signal,
         withCredentials: true,
       },
     );
-    console.log(response);
     return response.data;
   };
 

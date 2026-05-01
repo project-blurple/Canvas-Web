@@ -2,14 +2,14 @@ import express from "express";
 import request from "supertest";
 import {
   deletePixelHistoryEntries,
-  getPixelHistory,
+  getPixelHistorySummary,
 } from "@/services/historyService";
 import { mockAuth } from "@/test/mockAuth";
 import { historyRouter } from "./history";
 
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
-  getPixelHistory: vi.fn(),
+  getPixelHistorySummary: vi.fn(),
 }));
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
@@ -51,9 +51,21 @@ describe("History route tests", () => {
         },
       ],
       totalEntries: 1,
+      historyIds: ["1"],
+      users: {
+        "1": {
+          count: 1,
+          colors: {
+            "1": 1,
+          },
+          lastPlaced: new Date(0).toISOString(),
+        },
+      },
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as unknown as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as unknown as Awaited<
+        ReturnType<typeof getPixelHistorySummary>
+      >,
     );
 
     const app = createApp();
@@ -62,8 +74,8 @@ describe("History route tests", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith({
       canvasId: 1,
       points: {
         x: 2,
@@ -76,9 +88,11 @@ describe("History route tests", () => {
     const responseBody = {
       pixelHistory: [],
       totalEntries: 0,
+      historyIds: [],
+      users: {},
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
     const app = createApp({ authenticated: true, moderator: true });
@@ -95,8 +109,8 @@ describe("History route tests", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith({
       canvasId: 9,
       points: [
         { x: 1, y: 2 },
@@ -121,9 +135,11 @@ describe("History route tests", () => {
     const responseBody = {
       pixelHistory: [],
       totalEntries: 0,
+      historyIds: [],
+      users: {},
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
     const app = createApp({ authenticated: true, moderator: true });
@@ -137,8 +153,8 @@ describe("History route tests", () => {
       .expect(200);
 
     expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith({
       canvasId: 9,
       points: [
         { x: 1, y: 2 },
@@ -172,7 +188,7 @@ describe("History route tests", () => {
     expect(response.body).toMatchObject({
       message: "Invalid request body. Expected a valid history query object",
     });
-    expect(getPixelHistory).not.toHaveBeenCalled();
+    expect(getPixelHistorySummary).not.toHaveBeenCalled();
   });
 
   it("deletes history entries for a moderator", async () => {

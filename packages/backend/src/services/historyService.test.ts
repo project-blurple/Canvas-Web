@@ -1,7 +1,10 @@
 import { prisma } from "@/client";
 import seedAll from "@/test";
 import { userIsBlocklisted } from "./blocklistService";
-import { deletePixelHistoryEntries, getPixelHistory } from "./historyService";
+import {
+  deletePixelHistoryEntries,
+  getPixelHistorySummary,
+} from "./historyService";
 
 vi.mock("@/index", () => ({
   socketHandler: {
@@ -16,14 +19,15 @@ describe.skip("historyService", () => {
     await seedAll();
   });
 
-  describe("getPixelHistory", () => {
+  describe("getPixelHistorySummary", () => {
     it("returns pixel history for a single point", async () => {
-      const history = await getPixelHistory({
+      const history = await getPixelHistorySummary({
         canvasId: 1,
         points: { x: 0, y: 0 },
       });
 
       expect(history.totalEntries).toBe(4);
+      expect(history.historyIds).toEqual(["7", "3", "2", "1"]);
       expect(history.pixelHistory).toHaveLength(4);
       expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
         new Date(7),
@@ -31,6 +35,15 @@ describe.skip("historyService", () => {
         new Date(2),
         new Date(1),
       ]);
+      expect(history.users).toMatchObject({
+        "1": {
+          count: 4,
+          colors: {
+            "1": 4,
+          },
+          lastPlaced: new Date(7),
+        },
+      });
       expect(history.pixelHistory[0]).toMatchObject({
         color: {
           id: 1,
@@ -49,7 +62,7 @@ describe.skip("historyService", () => {
     });
 
     it("applies range and filter conditions", async () => {
-      const history = await getPixelHistory({
+      const history = await getPixelHistorySummary({
         canvasId: 1,
         points: [
           { x: 0, y: 0 },
@@ -66,11 +79,22 @@ describe.skip("historyService", () => {
       });
 
       expect(history.totalEntries).toBe(2);
+      expect(history.historyIds).toEqual(["9", "8"]);
       expect(history.pixelHistory).toHaveLength(2);
       expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
         new Date(9),
         new Date(8),
       ]);
+      expect(history.users).toMatchObject({
+        "1": {
+          count: 2,
+          colors: {
+            "3": 1,
+            "1": 1,
+          },
+          lastPlaced: new Date(9),
+        },
+      });
       expect(history.pixelHistory[0]).toMatchObject({
         color: {
           id: 3,

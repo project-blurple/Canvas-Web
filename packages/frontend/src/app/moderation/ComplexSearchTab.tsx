@@ -27,6 +27,22 @@ const SearchWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
+const SummaryGrid = styled("div")`
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+`;
+
+const SummaryCard = styled("div")`
+  border: 1px solid ${({ theme }) => theme.palette.divider};
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  background: ${({ theme }) => theme.palette.background.paper};
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`;
+
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
   typeof ComplexSearchTabBlock
 > {}
@@ -115,8 +131,49 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               onClick={handleSearchClick}
               disabled={!selectedBounds || historyQuery.isLoading}
             >
-              {!historyQuery.isLoading ? "Search" : "Loading..."}
+              {!historyQuery.isLoading ? "Search" : "Searching..."}
             </DynamicButton>
+            {historyData && (
+              <SummaryGrid>
+                <SummaryCard>
+                  <strong>Total entries</strong>
+                  <span>{historyData.totalEntries}</span>
+                </SummaryCard>
+                <SummaryCard>
+                  <strong>Returned rows</strong>
+                  <span>{historyData.pixelHistory.length}</span>
+                </SummaryCard>
+                <SummaryCard>
+                  <strong>Unique users</strong>
+                  <span>{Object.keys(historyData.users).length}</span>
+                </SummaryCard>
+              </SummaryGrid>
+            )}
+            {historyData && Object.keys(historyData.users).length > 0 && (
+              <div>
+                <Heading>User breakdown</Heading>
+                <SummaryGrid>
+                  {Object.entries(historyData.users).map(
+                    ([userId, summary]) => (
+                      <SummaryCard key={userId}>
+                        <strong>User {userId}</strong>
+                        <span>Count: {summary.count}</span>
+                        <span>
+                          Last placed:{" "}
+                          {new Date(summary.lastPlaced).toLocaleString()}
+                        </span>
+                        <span>
+                          Colors:{" "}
+                          {Object.entries(summary.colors)
+                            .map(([colorId, count]) => `${colorId}: ${count}`)
+                            .join(", ")}
+                        </span>
+                      </SummaryCard>
+                    ),
+                  )}
+                </SummaryGrid>
+              </div>
+            )}
             <PixelHistoryPast
               history={historyData?.pixelHistory ?? []}
               isLoading={historyQuery.isLoading}
