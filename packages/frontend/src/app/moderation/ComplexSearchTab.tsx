@@ -117,6 +117,12 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     });
   }
 
+  const pixelsInBounds =
+    selectedBounds ?
+      (selectedBounds.right - selectedBounds.left) *
+      (selectedBounds.bottom - selectedBounds.top)
+    : 0;
+
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
@@ -133,6 +139,13 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             >
               {!historyQuery.isLoading ? "Search" : "Searching..."}
             </DynamicButton>
+            {pixelsInBounds > 10_000 && (
+              <span>
+                Warning: The selected area contains{" "}
+                {pixelsInBounds.toLocaleString()} pixels. This may take a while
+                to process.
+              </span>
+            )}
             {historyData && (
               <SummaryGrid>
                 <SummaryCard>
