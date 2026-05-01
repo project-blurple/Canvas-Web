@@ -19,11 +19,13 @@ interface SelectedBoundsContextType {
   minHeight: number;
   minWidth: number;
   selectedBounds: ViewBounds | null;
-  clearSelectedBounds: () => void;
+  showSelectedBounds: boolean;
+  resetSelectedBounds: () => void;
   setCanEdit: Dispatch<SetStateAction<boolean>>;
   setMinimumBounds: (width: number, height: number) => void;
   setSelectedBounds: Dispatch<SetStateAction<ViewBounds | null>>;
   setBoundsToCurrentView: (fillRatio: number) => void;
+  setShowSelectedBounds: Dispatch<SetStateAction<boolean>>;
 }
 
 const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
@@ -31,11 +33,13 @@ const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   minHeight: 5,
   minWidth: 5,
   selectedBounds: null,
-  clearSelectedBounds: () => {},
+  showSelectedBounds: false,
+  resetSelectedBounds: () => {},
   setCanEdit: () => {},
   setMinimumBounds: () => {},
   setSelectedBounds: () => {},
   setBoundsToCurrentView: () => {},
+  setShowSelectedBounds: () => {},
 });
 
 interface CurrentViewParams {
@@ -128,6 +132,8 @@ export const SelectedBoundsProvider = ({
     useState<SelectedBoundsContextType["minHeight"]>(5);
   const [minWidth, setMinWidth] =
     useState<SelectedBoundsContextType["minWidth"]>(5);
+  const [showSelectedBounds, setShowSelectedBounds] =
+    useState<SelectedBoundsContextType["showSelectedBounds"]>(false);
 
   const setMinimumBounds = useCallback((width: number, height: number) => {
     setMinWidth(width);
@@ -137,10 +143,12 @@ export const SelectedBoundsProvider = ({
   const { canvas } = useCanvasContext();
   const { containerRef, offset, zoom } = useCanvasViewContext();
 
-  const clearSelectedBounds = useCallback(() => {
+  const resetSelectedBounds = useCallback(() => {
     setSelectedBounds(null);
+    setMinimumBounds(5, 5);
     setCanEdit(false);
-  }, []);
+    setShowSelectedBounds(false);
+  }, [setMinimumBounds]);
 
   const setBoundsToCurrentView = useCallback(
     (fillRatio: number) => {
@@ -167,11 +175,13 @@ export const SelectedBoundsProvider = ({
         minHeight,
         minWidth,
         selectedBounds,
-        clearSelectedBounds,
+        showSelectedBounds,
+        resetSelectedBounds,
         setSelectedBounds,
         setBoundsToCurrentView,
         setCanEdit,
         setMinimumBounds,
+        setShowSelectedBounds,
       }}
     >
       {children}

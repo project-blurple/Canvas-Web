@@ -1,5 +1,5 @@
 import styled from "@emotion/styled";
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import {
   ActionPanelWrapper,
   GenericTab,
@@ -7,6 +7,7 @@ import {
 } from "@/components/action-panel/ActionPanel";
 import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
+import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import { CanvasWrapper } from "../Main";
 import BlocklistTab from "./BlocklistTab";
 import ComplexSearchTab from "./ComplexSearchTab";
@@ -48,11 +49,26 @@ function ModerationDashboardActionPanel() {
   const [currentTab, setCurrentTab] = useState("search");
   const [areTabsLocked, _setAreTabsLocked] = useState(false);
 
+  const { resetSelectedBounds, setShowSelectedBounds } =
+    useSelectedBoundsContext();
+
   const searchTabId = useId();
   const blocklistTabId = useId();
 
+  useEffect(() => {
+    return () => {
+      resetSelectedBounds();
+    };
+  }, [resetSelectedBounds]);
+
   const onSwitchTab = (newTab: TabKey) => {
     if (areTabsLocked) return;
+
+    if (currentTab === "search" && newTab !== "search") {
+      setShowSelectedBounds(false);
+    } else {
+      setShowSelectedBounds(true);
+    }
 
     setCurrentTab(newTab);
   };

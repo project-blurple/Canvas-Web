@@ -401,8 +401,14 @@ export default function CanvasView({
 
   const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
-  const { canEdit, minHeight, minWidth, selectedBounds, setSelectedBounds } =
-    useSelectedBoundsContext();
+  const {
+    canEdit,
+    minHeight,
+    minWidth,
+    selectedBounds,
+    showSelectedBounds,
+    setSelectedBounds,
+  } = useSelectedBoundsContext();
   const { canvas, setCanvas } = useCanvasContext();
   const {
     containerRef,
@@ -1064,18 +1070,20 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
-        <SelectedBoundsOverlay
-          canvasWidth={canvas.width}
-          canvasHeight={canvas.height}
-          canEdit={canEdit}
-          minHeight={minHeight}
-          minWidth={minWidth}
-          selectedBounds={selectedBounds}
-          reticleScale={RETICLE_SCALE}
-          reticleSize={RETICLE_SIZE}
-          setSelectedBounds={setSelectedBounds}
-          zoom={zoom}
-        />
+        {showSelectedBounds && (
+          <SelectedBoundsOverlay
+            canvasWidth={canvas.width}
+            canvasHeight={canvas.height}
+            canEdit={canEdit}
+            minHeight={minHeight}
+            minWidth={minWidth}
+            selectedBounds={selectedBounds}
+            reticleScale={RETICLE_SCALE}
+            reticleSize={RETICLE_SIZE}
+            setSelectedBounds={setSelectedBounds}
+            zoom={zoom}
+          />
+        )}
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}

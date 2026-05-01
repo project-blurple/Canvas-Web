@@ -131,11 +131,12 @@ export default function FrameEditPanel({
   const { canvas } = useCanvasContext();
   const queryClient = useQueryClient();
   const {
-    clearSelectedBounds,
+    resetSelectedBounds,
     setCanEdit,
     selectedBounds: frameBounds,
     setSelectedBounds: setFrameBounds,
     setBoundsToCurrentView,
+    setShowSelectedBounds,
   } = useSelectedBoundsContext();
   const { frame: selectedFrame, setFrame: setSelectedFrame } =
     useSelectedFrameContext();
@@ -174,10 +175,17 @@ export default function FrameEditPanel({
       }
 
       setCanEdit(true);
+      setShowSelectedBounds(true);
 
       didInitBoundsRef.current = true;
     },
-    [selectedFrame, setFrameBounds, setBoundsToCurrentView, setCanEdit],
+    [
+      selectedFrame,
+      setFrameBounds,
+      setBoundsToCurrentView,
+      setCanEdit,
+      setShowSelectedBounds,
+    ],
   );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
@@ -274,7 +282,7 @@ export default function FrameEditPanel({
 
   const closeEditor = () => {
     setActivePanel(FramePanelMode.Info);
-    clearSelectedBounds();
+    resetSelectedBounds();
   };
 
   const invalidateFrameQueries = async () => {
@@ -462,9 +470,9 @@ export default function FrameEditPanel({
       // Shouldn't be able to get to this tab without being logged in,
       // but this prevents that at the least
       setActivePanel(FramePanelMode.Info);
-      clearSelectedBounds();
+      resetSelectedBounds();
     }
-  }, [user, setActivePanel, clearSelectedBounds]);
+  }, [user, setActivePanel, resetSelectedBounds]);
 
   return (
     <>
