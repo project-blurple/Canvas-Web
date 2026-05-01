@@ -8,7 +8,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
   AuthProvider,
   CanvasProvider,
