@@ -12,7 +12,7 @@ import {
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
-const Wrapper = styled("div")`
+export const ActionPanelWrapper = styled("div")`
   --padding-width: 1rem;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
@@ -161,7 +161,7 @@ export default function ActionPanel() {
   const frameTabId = useId();
 
   return (
-    <Wrapper>
+    <ActionPanelWrapper>
       <TabBar role="tablist">
         <Tab
           aria-controls={placeTabId}
@@ -206,6 +206,6 @@ export default function ActionPanel() {
         id={frameTabId}
         setTabsLocked={setAreTabsLocked}
       />
-    </Wrapper>
+    </ActionPanelWrapper>
   );
 }

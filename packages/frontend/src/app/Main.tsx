@@ -6,7 +6,7 @@ import { ActionPanel } from "@/components/action-panel";
 import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 
-const Wrapper = styled("main")`
+export const CanvasWrapper = styled("main")`
   body:has(&) {
     --action-panel-width: 19rem;
     --navbar-height: 4rem;
@@ -39,11 +39,11 @@ const Wrapper = styled("main")`
 
 export default function Main() {
   return (
-    <Wrapper>
+    <CanvasWrapper>
       <CanvasView />
       <SlideableDrawer>
         <ActionPanel />
       </SlideableDrawer>
-    </Wrapper>
+    </CanvasWrapper>
   );
 }
