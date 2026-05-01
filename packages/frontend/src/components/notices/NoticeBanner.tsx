@@ -1,6 +1,6 @@
 import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
-import { CircleX, Info, TriangleAlert, X } from "lucide-react";
+import { CircleAlert, Info, TriangleAlert, X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { resolveSpecialText } from "@/util/text";
 
@@ -129,7 +129,7 @@ function ErrorBanner({ notice, onDismiss }: BannerProps) {
   return (
     <Banner
       BannerRoot={StyledErrorBanner}
-      icon={<CircleX />}
+      icon={<CircleAlert />}
       notice={notice}
       onDismiss={onDismiss}
     />

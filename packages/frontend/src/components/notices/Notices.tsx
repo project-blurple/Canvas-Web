@@ -65,7 +65,7 @@ export default function Notices() {
     )
     .sort((a, b) => {
       if (a.priority !== b.priority) {
-        return b.priority - a.priority;
+        return a.priority - b.priority;
       } else {
         return (
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

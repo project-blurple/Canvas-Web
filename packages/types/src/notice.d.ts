@@ -5,7 +5,7 @@ export interface Notice {
   type: NoticeType;
   header: string | null;
   content: string | null;
-  priority: number;
+  priority: number; // lower number means higher priority
   active: boolean;
   persistOnDismiss: boolean;
   canvasId: number | null;

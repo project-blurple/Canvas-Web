@@ -26,7 +26,7 @@ export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
       active: activeOnly ? true : undefined,
     },
     orderBy: {
-      priority: "desc",
+      priority: "asc",
     },
   });
 
