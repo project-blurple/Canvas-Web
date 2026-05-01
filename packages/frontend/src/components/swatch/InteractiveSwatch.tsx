@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import type { StaticSwatchProps } from "./StaticSwatch";
 import { SwatchBase } from "./SwatchBase";
 
-const StyledSwatchBase = styled(SwatchBase)`
+export const StyledSwatchBase = styled(SwatchBase)`
   cursor: pointer;
   border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
   transition: var(--transition-duration-fast) ease;
@@ -26,6 +26,14 @@ const StyledSwatchBase = styled(SwatchBase)`
   }
 `;
 
+export const rgbaToCssString = (
+  rgba: [number, number, number, number],
+): `rgb(${string} ${string} ${string} / ${string})` => {
+  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
+  const alphaFloat = rgba[3] / 0xff;
+  return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
+};
+
 type InteractiveSwatchProps = StaticSwatchProps & {
   onAction: () => void;
   selected?: boolean;
@@ -39,10 +47,6 @@ export function InteractiveSwatch({
   selected = false,
   ...props
 }: InteractiveSwatchProps) {
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 0xff;
-
   const clickHandler = onAction;
   const keyUpHandler = (event: React.KeyboardEvent) => {
     if (event.key === "Enter" || event.key === " ") onAction();
@@ -52,7 +56,7 @@ export function InteractiveSwatch({
     <StyledSwatchBase
       aria-disabled={disabled}
       className={selected ? "selected" : undefined}
-      colorString={`rgb(${rgb} / ${alphaFloat})`}
+      colorString={rgbaToCssString(rgba)}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
       tabIndex={0}

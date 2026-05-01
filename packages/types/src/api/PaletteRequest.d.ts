@@ -7,4 +7,6 @@ export interface Params {
 export type ResBody = Palette;
 
 export type ReqBody = Record<string, never>;
-export type ReqQuery = Record<string, never>;
+export type ReqQuery = {
+  allColors?: boolean;
+};
