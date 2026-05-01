@@ -1,4 +1,4 @@
-import type { CanvasInfo } from "@blurple-canvas-web/types";
+import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
@@ -8,6 +8,7 @@ import {
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { PixelHistoryPast } from "@/components/action-panel/tabs/PixelInfoTab";
+import { DynamicButton } from "@/components/button";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
@@ -18,6 +19,12 @@ import {
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
+`;
+
+const SearchWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
@@ -36,8 +43,12 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const { containerRef } = useCanvasViewContext();
   const { canvas } = useCanvasContext();
 
-  const [debouncedQuery, setDebouncedQuery] =
+  const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
+  const [historyData, setHistoryData] = useState<PixelHistoryWrapper | null>(
+    null,
+  );
+  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -67,53 +78,50 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   );
 
   useEffect(
-    function debounceBoundsChange() {
-      if (!props.active) return;
-      if (!selectedBounds) {
-        setDebouncedQuery(null);
-        return;
-      }
+    function updateHistoryFromQuery() {
+      if (!historyQuery.data) return;
 
-      const timeoutId = window.setTimeout(() => {
-        setDebouncedQuery({
-          point0: {
-            x: selectedBounds.left,
-            y: selectedBounds.top,
-          },
-          point1: {
-            x: selectedBounds.right,
-            y: selectedBounds.bottom,
-          },
-        });
-      }, 500);
-
-      return () => window.clearTimeout(timeoutId);
+      setHistoryData(historyQuery.data);
     },
-    [props.active, selectedBounds],
+    [historyQuery.data],
   );
 
-  const { data: history, isLoading: historyIsLoading } = useComplexPixelHistory(
-    canvas.id,
-    debouncedQuery,
-  );
+  function handleSearchClick() {
+    if (!selectedBounds) return;
 
-  console.log(debouncedQuery, history, historyIsLoading, debouncedQuery);
+    setSearchQuery({
+      point0: {
+        x: selectedBounds.left,
+        y: selectedBounds.top,
+      },
+      point1: {
+        x: selectedBounds.right,
+        y: selectedBounds.bottom,
+      },
+    });
+  }
 
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <div>
+          <SearchWrapper>
             <Heading>History Search</Heading>
             <span>
               {selectedBounds?.top},{selectedBounds?.left} -{" "}
               {selectedBounds?.bottom},{selectedBounds?.right}
             </span>
+            <DynamicButton
+              onClick={handleSearchClick}
+              disabled={!selectedBounds || historyQuery.isLoading}
+            >
+              {!historyQuery.isLoading ? "Search" : "Loading..."}
+            </DynamicButton>
             <PixelHistoryPast
-              history={history?.pixelHistory ?? []}
-              isLoading={historyIsLoading}
+              history={historyData?.pixelHistory ?? []}
+              isLoading={historyQuery.isLoading}
             />
-          </div>
+          </SearchWrapper>
         </ActionPanelTabBody>
       </FullWidthScrollView>
     </ComplexSearchTabBlock>

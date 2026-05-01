@@ -51,7 +51,7 @@ export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
 ) {
-  const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
+  const fetchComplexHistory = async () => {
     if (!query)
       return { pixelHistory: [], totalEntries: 0 } as HistoryRequest.ResBody;
 
