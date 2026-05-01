@@ -41,13 +41,13 @@ pnpm prisma migrate dev --name add_published_field_to_posts
 
 ## Common Commands
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm prisma migrate dev --name <name>` | Create and apply a new migration in development |
-| `pnpm prisma migrate status` | Check the status of all migrations |
-| `pnpm prisma migrate resolve --rolled-back <name>` | Manually mark a migration as rolled back |
-| `pnpm prisma migrate reset` | Reset the database and reapply all migrations (⚠️ deletes data) |
-| `pnpm prisma migrate deploy` | Apply pending migrations in production |
+| Command                                            | Purpose                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| `pnpm prisma migrate dev --name <name>`            | Create and apply a new migration in development                 |
+| `pnpm prisma migrate status`                       | Check the status of all migrations                              |
+| `pnpm prisma migrate resolve --rolled-back <name>` | Manually mark a migration as rolled back                        |
+| `pnpm prisma migrate reset`                        | Reset the database and reapply all migrations (⚠️ deletes data) |
+| `pnpm prisma migrate deploy`                       | Apply pending migrations in production                          |
 
 ## Best Practices
 
@@ -69,6 +69,7 @@ For comprehensive information about Prisma Migrate, visit the official documenta
 https://www.prisma.io/docs/orm/prisma-migrate/getting-started
 
 This includes advanced topics like:
+
 - Handling conflicts and edge cases
 - Production deployments
 - Schema validation
