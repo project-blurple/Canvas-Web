@@ -57,19 +57,14 @@ export async function createNotice({
   return noticeFromDb(notice);
 }
 
-interface UpdateNoticeBody extends CreateNoticeBody {
+interface UpdateNoticeBody {
   noticeId: number;
+  data: CreateNoticeBody;
 }
 
 export async function updateNotice({
   noticeId,
-  type,
-  header,
-  content,
-  priority,
-  active,
-  persistOnDismiss,
-  canvasId,
+  data: { type, header, content, priority, active, persistOnDismiss, canvasId },
 }: UpdateNoticeBody): Promise<Notice> {
   const notice = await prisma.notice.update({
     where: {

@@ -68,7 +68,7 @@ noticeRouter.put("/:noticeId", async (req, res) => {
 
     const notice = await updateNotice({
       noticeId,
-      ...bodyQueryResult.data,
+      data: bodyQueryResult.data,
     });
     res.status(200).json(notice);
   } catch (error) {

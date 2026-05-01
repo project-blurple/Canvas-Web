@@ -28,11 +28,11 @@ export default function Notices() {
     useLocalStorage("notices/dismissed");
 
   const [transientDismissed, setTransientDismissed] = useState<Set<string>>(
-    () => new Set(),
+    new Set(),
   );
 
   const persistedSet = useMemo(
-    () => new Set<string>(persistedDismissed ?? []),
+    () => new Set<string>(persistedDismissed),
     [persistedDismissed],
   );
 
