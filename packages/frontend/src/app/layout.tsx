@@ -20,7 +20,7 @@ import {
 } from "@/contexts";
 import { Theme } from "@/theme";
 import "../styles/core.css";
-import serverConfig from "@/config/serverSideConfig";
+import serverConfig from "@/config/serverConfig";
 
 export const metadata: Metadata = {
   metadataBase: new URL(serverConfig.baseUrl),
