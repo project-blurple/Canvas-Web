@@ -2,6 +2,7 @@ import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { CircleX, Info, TriangleAlert, X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
+import { resolveSpecialText } from "@/util/text";
 
 type BannerComponent = typeof StyledBanner;
 
@@ -72,6 +73,10 @@ function Banner({
   BannerRoot: BannerComponent;
   icon: React.ReactNode;
 } & BannerProps) {
+  const headerText =
+    notice.header ? `### ${resolveSpecialText(notice.header)}` : "";
+  const contentText = notice.content ? resolveSpecialText(notice.content) : "";
+
   return (
     <BannerRoot
       onPointerDown={(e) => {
@@ -80,12 +85,12 @@ function Banner({
     >
       {icon}
       <BannerBody>
-        {notice.header && (
+        {headerText && (
           <span>
-            <Markdown>{`### ${notice.header}`}</Markdown>
+            <Markdown>{headerText}</Markdown>
           </span>
         )}
-        {notice.content && <Markdown>{notice.content}</Markdown>}
+        {contentText && <Markdown>{contentText}</Markdown>}
       </BannerBody>
       <DismissButton
         aria-label="Dismiss notice"
