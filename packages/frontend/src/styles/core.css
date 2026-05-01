@@ -247,8 +247,9 @@
     em,
     i,
     var {
-      font-style: normal;
       --text-slnt: -12;
+      font-style: normal;
+      font-variation-settings: "slnt" var(--text-slnt);
     }
   }
 }
