@@ -28,7 +28,11 @@ const ModTabBar = styled(TabBar)`
 export default function ModerationDashboard() {
   return (
     <DashboardWrapper>
-      <CanvasView showInvite={false} showReticle={false} />
+      <CanvasView
+        showInvite={false}
+        showReticle={false}
+        canvasLabel="Moderation Dashboard"
+      />
       <SlideableDrawer>
         <ModerationDashboardActionPanel />
       </SlideableDrawer>

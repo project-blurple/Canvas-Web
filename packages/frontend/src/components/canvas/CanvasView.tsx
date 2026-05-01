@@ -6,7 +6,7 @@ import type {
   PlacePixelSocket,
   Point,
 } from "@blurple-canvas-web/types";
-import { CircularProgress, css, styled } from "@mui/material";
+import { CircularProgress, css, styled, Theme } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config";
@@ -81,7 +81,7 @@ const PreviewPixel = styled("div")`
   position: absolute;
 `;
 
-const InviteButton = styled(Button)`
+const sharedLabelStyles = css`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
@@ -97,6 +97,26 @@ const InviteButton = styled(Button)`
   position: absolute;
   text-decoration: none;
   z-index: 1;
+`;
+
+const CanvasViewLabel = styled("div")`
+  ${sharedLabelStyles}
+  border: oklch(from var(--discord-white) l c h / 12%) 3px solid;
+  padding-block: 0.4rem;
+
+  ${({ theme }) => theme.breakpoints.up("md")} {
+    border-radius: 0.5rem 0.5rem 1rem 0.5rem;
+    inset-block-end: 0.5rem;
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    inset-block-start: 0.5rem;
+    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+`;
+
+const InviteButton = styled(Button)`
+  ${sharedLabelStyles}
 
   @media (hover: hover) and (pointer: fine) {
     :hover {
@@ -367,11 +387,13 @@ function getViewForFrame({
 interface CanvasViewProps {
   showInvite?: boolean;
   showReticle?: boolean;
+  canvasLabel?: string;
 }
 
 export default function CanvasView({
   showInvite = true,
   showReticle = true,
+  canvasLabel,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
@@ -989,11 +1011,13 @@ export default function CanvasView({
 
   return (
     <CanvasContainer ref={containerRef} onPointerDown={handlePointerDown}>
-      {config.discordServerInvite && showInvite && (
-        <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-          <InviteButton>Project Blurple</InviteButton>
-        </a>
-      )}
+      {showInvite ?
+        config.discordServerInvite && (
+          <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
+            <InviteButton>Project Blurple</InviteButton>
+          </a>
+        )
+      : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
       <div
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
