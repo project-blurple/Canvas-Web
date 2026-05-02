@@ -12,6 +12,9 @@ import {
   type SelectChangeEvent,
   styled,
 } from "@mui/material";
+import { SearchFilterMode } from "./ComplexSearchTab";
+import DynamicButton from "@/components/button/DynamicButton";
+import { SquareMinus, SquarePlus } from "lucide-react";
 
 const SelectedColorChips = styled("div")`
   display: flex;
@@ -59,8 +62,13 @@ const ColorSelectChip = styled(Chip, {
 
 const ColorSelectBlock = styled("div")`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 0.5rem;
+  align-items: center;
+`;
+
+const ToggleFilterModeButton = styled(DynamicButton)`
+  min-width: auto;
 `;
 
 function partitionPalette(palette: Palette) {
@@ -77,13 +85,17 @@ function partitionPalette(palette: Palette) {
 interface ComplexSearchColorSelectProps {
   palette: Palette;
   value: string[];
+  filterMode: SearchFilterMode;
   onChange: (value: string[]) => void;
+  onFilterModeChange: (mode: SearchFilterMode) => void;
 }
 
 export default function ComplexSearchColorSelect({
   palette,
   value,
+  filterMode,
   onChange,
+  onFilterModeChange,
 }: ComplexSearchColorSelectProps) {
   const [mainColors, partnerColors] = partitionPalette(palette);
   const paletteById = Object.fromEntries(
@@ -116,12 +128,17 @@ export default function ComplexSearchColorSelect({
     );
   }
 
-  const selectedColors = value
-    .map((colorId) => paletteById[Number(colorId)])
-    .filter(Boolean);
-
   return (
     <ColorSelectBlock>
+      <ToggleFilterModeButton
+        onAction={() => {
+          onFilterModeChange(filterMode === "include" ? "exclude" : "include");
+        }}
+      >
+        {filterMode === "include" ?
+          <SquarePlus />
+        : <SquareMinus />}
+      </ToggleFilterModeButton>
       <FormControl fullWidth size="small">
         <InputLabel id="complex-search-color-label">Colors</InputLabel>
         <Select<string[]>
@@ -146,12 +163,6 @@ export default function ComplexSearchColorSelect({
           ))}
         </Select>
       </FormControl>
-      {selectedColors.length > 0 && (
-        <span>
-          Selected colors:{" "}
-          {selectedColors.map((color) => color.code).join(", ")}
-        </span>
-      )}
     </ColorSelectBlock>
   );
 }

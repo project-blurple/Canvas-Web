@@ -45,6 +45,8 @@ const SummaryCard = styled("div")`
   gap: 0.35rem;
 `;
 
+export type SearchFilterMode = "include" | "exclude";
+
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
   typeof ComplexSearchTabBlock
 > {}
@@ -63,6 +65,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
+  const [colorFilterMode, setColorFilterMode] =
+    useState<SearchFilterMode>("include");
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
@@ -130,7 +134,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         x: selectedBounds.right,
         y: selectedBounds.bottom,
       },
-      includeColors: selectedColorIds.length ? selectedColorIds : undefined,
+      [colorFilterMode === "include" ? "includeColors" : "excludeColors"]:
+        selectedColorIds.length ? selectedColorIds : undefined,
     });
   }
 
@@ -153,7 +158,9 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             <ComplexSearchColorSelect
               palette={palette}
               value={selectedColorIds}
+              filterMode={colorFilterMode}
               onChange={setSelectedColorIds}
+              onFilterModeChange={setColorFilterMode}
             />
             <DynamicButton
               onClick={handleSearchClick}
