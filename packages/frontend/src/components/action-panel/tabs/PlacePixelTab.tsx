@@ -4,6 +4,7 @@ import type {
   PaletteColor,
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
+import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAuthContext,
@@ -148,40 +149,8 @@ export default function PlacePixelTab({
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <div>
-            <Heading>Main colors</Heading>
-            <Fieldset>
-              {mainColors?.length ?
-                mainColors.map((color) => (
-                  <InteractiveSwatch
-                    aria-selected={color === selectedColor}
-                    key={color.code}
-                    onClick={() => setSelectedColor(color)}
-                    paletteColor={color}
-                  />
-                ))
-              : Array.from({ length: 12 }).map((_, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                  <SwatchSkeleton key={i} variant="rectangular" />
-                ))
-              }
-            </Fieldset>
-            <Heading>Partner colors</Heading>
-            <Fieldset>
-              {partnerColors?.length ?
-                partnerColors.map((color) => (
-                  <InteractiveSwatch
-                    aria-selected={color === selectedColor}
-                    key={color.code}
-                    onClick={() => setSelectedColor(color)}
-                    paletteColor={color}
-                  />
-                ))
-              : Array.from({ length: 13 }).map((_, i) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                  <SwatchSkeleton key={i} variant="rectangular" />
-                ))
-              }
-            </Fieldset>
+            <NamedPalette colors={mainColors} name="Main colors" />
+            <NamedPalette colors={partnerColors} name="Partner colors" />
           </div>
         </ActionPanelTabBody>
       </FullWidthScrollView>
@@ -207,5 +176,37 @@ export default function PlacePixelTab({
         {!readOnly && isLarge && <BotPlaceCommandCard />}
       </ActionPanelTabBody>
     </PlacePixelTabBlock>
+  );
+}
+
+interface NamedPaletteProps {
+  colors: Palette | undefined;
+  name: React.ReactNode;
+}
+
+function NamedPalette({ colors, name }: NamedPaletteProps) {
+  const { color: selectedColor, setColor } = useSelectedColorContext();
+  if (colors?.length === 0) return null;
+  const isLoading = colors === undefined;
+  return (
+    <>
+      <Heading>{name}</Heading>
+      <Fieldset>
+        {isLoading ?
+          Array.from({ length: 12 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
+            <SwatchSkeleton key={i} variant="rectangular" />
+          ))
+        : colors.map((color) => (
+            <InteractiveSwatch
+              aria-selected={color === selectedColor}
+              key={color.code}
+              onClick={() => setColor(color)}
+              paletteColor={color}
+            />
+          ))
+        }
+      </Fieldset>
+    </>
   );
 }
