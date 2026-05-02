@@ -5,7 +5,7 @@ import type {
   PaletteColor,
   PaletteRequest,
 } from "@blurple-canvas-web/types";
-import { useQuery } from "@tanstack/react-query";
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Color from "colorjs.io";
 import config from "@/config/clientConfig";
@@ -22,7 +22,13 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
   return 0;
 }
 
-export function usePalette(eventId?: BlurpleEvent["id"]) {
+export function usePalette(
+  eventId?: BlurpleEvent["id"],
+  useQueryOptions?: Omit<
+    UseQueryOptions<PaletteRequest.ResBody>,
+    "queryKey" | "queryFn"
+  >,
+) {
   const getPalette = async () => {
     const response = await axios.get<PaletteRequest.ResBody>(
       `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
@@ -30,11 +36,12 @@ export function usePalette(eventId?: BlurpleEvent["id"]) {
     return response.data.sort(sortByOklchHue);
   };
 
-  return useQuery({
+  return useQuery<PaletteRequest.ResBody>({
     queryKey: ["palette", eventId],
     queryFn: getPalette,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: [] as PaletteRequest.ResBody,
+    ...useQueryOptions,
   });
 }
