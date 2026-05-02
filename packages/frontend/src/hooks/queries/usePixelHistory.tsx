@@ -7,6 +7,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
+import { useState } from "react";
 import config from "@/config";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
@@ -57,37 +58,50 @@ export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
 ) {
+  const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
+
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
     if (!query) return emptyHistoryResult();
 
-    const response = await axios.post<HistoryRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
-      {
-        fromDateTime: query.fromDateTime,
-        toDateTime: query.toDateTime,
-        includeUserIds: query.includeUserIds,
-        excludeUserIds: query.excludeUserIds,
-        includeColors: query.includeColors,
-        excludeColors: query.excludeColors,
-      },
-      {
-        params: {
-          x0: query.point0.x,
-          y0: query.point0.y,
-          x1: query.point1?.x,
-          y1: query.point1?.y,
+    const startedAt = performance.now();
+
+    try {
+      const response = await axios.post<HistoryRequest.ResBody>(
+        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+        {
+          fromDateTime: query.fromDateTime,
+          toDateTime: query.toDateTime,
+          includeUserIds: query.includeUserIds,
+          excludeUserIds: query.excludeUserIds,
+          includeColors: query.includeColors,
+          excludeColors: query.excludeColors,
         },
-        signal,
-        withCredentials: true,
-      },
-    );
-    return response.data;
+        {
+          params: {
+            x0: query.point0.x,
+            y0: query.point0.y,
+            x1: query.point1?.x,
+            y1: query.point1?.y,
+          },
+          signal,
+          withCredentials: true,
+        },
+      );
+      return response.data;
+    } finally {
+      setLastDurationMs(performance.now() - startedAt);
+    }
   };
 
-  return useQuery({
+  const queryResult = useQuery({
     queryKey: ["complexPixelHistory", canvasId, query],
     queryFn: fetchComplexHistory,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
+
+  return {
+    ...queryResult,
+    lastDurationMs,
+  };
 }

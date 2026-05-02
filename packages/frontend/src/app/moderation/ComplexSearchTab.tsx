@@ -102,8 +102,19 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     [historyQuery.data],
   );
 
+  useEffect(
+    function reenableEditOnQueryCompletion() {
+      if (!historyQuery.isLoading) {
+        setCanEdit(true);
+      }
+    },
+    [historyQuery.isLoading, setCanEdit],
+  );
+
   function handleSearchClick() {
     if (!selectedBounds) return;
+
+    setCanEdit(false);
 
     setSearchQuery({
       point0: {
@@ -153,8 +164,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                   <span>{historyData.totalEntries ?? 0}</span>
                 </SummaryCard>
                 <SummaryCard>
-                  <strong>Returned rows</strong>
-                  <span>{historyData.pixelHistory.length}</span>
+                  <strong>Query duration</strong>
+                  <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Unique users</strong>
