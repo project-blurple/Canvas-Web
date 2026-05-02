@@ -1,8 +1,4 @@
-import type {
-  DiscordUserProfile,
-  Palette,
-  PaletteColor,
-} from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -85,7 +81,6 @@ export default function PlacePixelTab({
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
-  const playSound = usePlaySound("pick_color");
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -108,7 +103,7 @@ export default function PlacePixelTab({
     [remPixels],
   );
 
-  const { color: selectedColor, setColor } = useSelectedColorContext();
+  const { color: selectedColor } = useSelectedColorContext();
 
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -138,11 +133,6 @@ export default function PlacePixelTab({
       !selectedColor.global &&
       isUserInServer(user, selectedColor?.guildId)) ??
     false;
-
-  function setSelectedColor(color: PaletteColor | null) {
-    playSound();
-    setColor(color);
-  }
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
@@ -186,6 +176,8 @@ interface NamedPaletteProps {
 
 function NamedPalette({ colors, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
+  const playSound = usePlaySound("pick_color");
+
   if (colors?.length === 0) return null;
   const isLoading = colors === undefined;
   return (
@@ -201,7 +193,10 @@ function NamedPalette({ colors, name }: NamedPaletteProps) {
             <InteractiveSwatch
               aria-selected={color === selectedColor}
               key={color.code}
-              onClick={() => setColor(color)}
+              onClick={() => {
+                playSound();
+                setColor(color);
+              }}
               paletteColor={color}
             />
           ))
