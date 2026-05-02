@@ -128,6 +128,8 @@ export default function ComplexSearchColorSelect({
     );
   }
 
+  const label = `Colors to ${filterMode}`;
+
   return (
     <ColorSelectBlock>
       <ToggleFilterModeButton
@@ -140,13 +142,12 @@ export default function ComplexSearchColorSelect({
         : <SquareMinus />}
       </ToggleFilterModeButton>
       <FormControl fullWidth size="small">
-        <InputLabel id="complex-search-color-label">Colors</InputLabel>
+        <InputLabel>{label}</InputLabel>
         <Select<string[]>
-          labelId="complex-search-color-label"
           multiple
           value={value}
           onChange={handleColorChange}
-          input={<OutlinedInput label="Colors" />}
+          input={<OutlinedInput label={label} />}
           renderValue={renderSelectedColorChips}
         >
           <ListSubheader>Global colors</ListSubheader>
