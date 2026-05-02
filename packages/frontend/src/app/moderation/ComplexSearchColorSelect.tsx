@@ -1,17 +1,8 @@
 "use client";
 
+import * as React from "react";
 import type { Palette } from "@blurple-canvas-web/types";
-import {
-  Chip,
-  FormControl,
-  InputLabel,
-  ListSubheader,
-  MenuItem,
-  OutlinedInput,
-  Select,
-  type SelectChangeEvent,
-  styled,
-} from "@mui/material";
+import { Chip, Autocomplete, TextField, styled } from "@mui/material";
 import { SearchFilterMode } from "./ComplexSearchTab";
 import DynamicButton from "@/components/button/DynamicButton";
 import { SquareMinus, SquarePlus } from "lucide-react";
@@ -71,17 +62,6 @@ const ToggleFilterModeButton = styled(DynamicButton)`
   min-width: auto;
 `;
 
-function partitionPalette(palette: Palette) {
-  const mainColors: Palette = [];
-  const partnerColors: Palette = [];
-
-  for (const color of palette) {
-    (color.global ? mainColors : partnerColors).push(color);
-  }
-
-  return [mainColors, partnerColors];
-}
-
 interface ComplexSearchColorSelectProps {
   palette: Palette;
   value: string[];
@@ -97,36 +77,26 @@ export default function ComplexSearchColorSelect({
   onChange,
   onFilterModeChange,
 }: ComplexSearchColorSelectProps) {
-  const [mainColors, partnerColors] = partitionPalette(palette);
+  palette.sort((a, b) =>
+    a.global === b.global ? 0
+    : a.global ? -1
+    : 1,
+  ); // Ensure palette is sorted for consistent option order
   const paletteById = Object.fromEntries(
     palette.map((color) => [color.id, color]),
   );
 
-  function handleColorChange(event: SelectChangeEvent<string[]>) {
-    const nextValue = event.target.value;
-    onChange(typeof nextValue === "string" ? nextValue.split(",") : nextValue);
+  function handleColorChange(
+    _event: React.SyntheticEvent,
+    newValues: Palette[number][],
+  ) {
+    onChange(newValues.map((c) => String(c.id)));
   }
 
-  function renderSelectedColorChips(selectedIds: string[]) {
-    return (
-      <SelectedColorChips>
-        {selectedIds.map((colorId) => {
-          const color = paletteById[Number(colorId)];
-          if (!color) return null;
-
-          const rgb = color.rgba.slice(0, 3).join(" ");
-          return (
-            <ColorSelectChip
-              key={color.id}
-              backgroundColorStr={`rgb(${rgb})`}
-              label={color.code}
-              size="small"
-            />
-          );
-        })}
-      </SelectedColorChips>
-    );
-  }
+  // map selected ids to palette objects (may be undefined for stale ids)
+  const selectedOptions = value
+    .map((id) => paletteById[Number(id)])
+    .filter((c): c is Palette[number] => !!c);
 
   const label = `Colors to ${filterMode}`;
 
@@ -141,29 +111,55 @@ export default function ComplexSearchColorSelect({
           <SquarePlus />
         : <SquareMinus />}
       </ToggleFilterModeButton>
-      <FormControl fullWidth size="small">
-        <InputLabel>{label}</InputLabel>
-        <Select<string[]>
-          multiple
-          value={value}
-          onChange={handleColorChange}
-          input={<OutlinedInput label={label} />}
-          renderValue={renderSelectedColorChips}
-        >
-          <ListSubheader>Global colors</ListSubheader>
-          {mainColors.map((color) => (
-            <MenuItem key={color.id} value={String(color.id)}>
-              {color.name} ({color.code})
-            </MenuItem>
-          ))}
-          <ListSubheader>Partner colors</ListSubheader>
-          {partnerColors.map((color) => (
-            <MenuItem key={color.id} value={String(color.id)}>
-              {color.name} ({color.code})
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+
+      <Autocomplete
+        fullWidth
+        size="small"
+        multiple
+        autoHighlight
+        filterOptions={(options, { inputValue }) => {
+          const q = inputValue.trim().toLowerCase();
+          if (!q) return options;
+          return options.filter((opt) =>
+            opt.name.toLowerCase().includes(q) || opt.code.toLowerCase().includes(q),
+          );
+        }}
+        options={palette}
+        value={selectedOptions}
+        onChange={handleColorChange}
+        groupBy={(option) =>
+          option.global ? "Global colors" : "Partner colors"
+        }
+        getOptionLabel={(option) => `${option.name} (${option.code})`}
+        renderInput={(params) => <TextField {...params} label={label} />}
+        renderOption={(props, option) => (
+          <li {...props} key={option.id}>
+            {option.name} ({option.code})
+          </li>
+        )}
+        isOptionEqualToValue={(option, value) =>
+          option.id === (value as Palette[number]).id
+        }
+        renderValue={(
+          values: Palette[number][],
+          getItemProps: (args: { index: number }) => any,
+        ) => (
+          <SelectedColorChips>
+            {values.map((tag, index) => {
+              const rgb = tag.rgba.slice(0, 3).join(" ");
+              return (
+                <ColorSelectChip
+                  key={tag.id}
+                  {...getItemProps({ index })}
+                  backgroundColorStr={`rgb(${rgb})`}
+                  label={tag.name}
+                  size="small"
+                />
+              );
+            })}
+          </SelectedColorChips>
+        )}
+      />
     </ColorSelectBlock>
   );
 }
