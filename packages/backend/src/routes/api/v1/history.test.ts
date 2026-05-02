@@ -58,6 +58,7 @@ describe("History route tests", () => {
           colors: {
             "1": 1,
           },
+          firstPlaced: new Date(0).toISOString(),
           lastPlaced: new Date(0).toISOString(),
         },
       },
@@ -75,13 +76,16 @@ describe("History route tests", () => {
 
     expect(response.body).toStrictEqual(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
-    expect(getPixelHistorySummary).toHaveBeenCalledWith({
-      canvasId: 1,
-      points: {
-        x: 2,
-        y: 3,
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: {
+          x: 2,
+          y: 3,
+        },
       },
-    });
+      false,
+    );
   });
 
   it("returns pixel history for a range and user filter", async () => {
@@ -110,25 +114,28 @@ describe("History route tests", () => {
 
     expect(response.body).toStrictEqual(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
-    expect(getPixelHistorySummary).toHaveBeenCalledWith({
-      canvasId: 9,
-      points: [
-        { x: 1, y: 2 },
-        { x: 3, y: 4 },
-      ],
-      dateRange: {
-        from: new Date("1970-01-01T00:00:00.000Z"),
-        to: new Date("1970-01-02T00:00:00.000Z"),
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 9,
+        points: [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+        dateRange: {
+          from: new Date("1970-01-01T00:00:00.000Z"),
+          to: new Date("1970-01-02T00:00:00.000Z"),
+        },
+        userIdFilter: {
+          ids: [1n, 2n],
+          include: true,
+        },
+        colorFilter: {
+          colors: [1, 2],
+          include: true,
+        },
       },
-      userIdFilter: {
-        ids: [1n, 2n],
-        include: true,
-      },
-      colorFilter: {
-        colors: [1, 2],
-        include: true,
-      },
-    });
+      true,
+    );
   });
 
   it("returns pixel history for a range and excluded color filter", async () => {
@@ -154,22 +161,25 @@ describe("History route tests", () => {
 
     expect(response.body).toStrictEqual(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
-    expect(getPixelHistorySummary).toHaveBeenCalledWith({
-      canvasId: 9,
-      points: [
-        { x: 1, y: 2 },
-        { x: 3, y: 4 },
-      ],
-      dateRange: {
-        from: undefined,
-        to: undefined,
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 9,
+        points: [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        },
+        userIdFilter: undefined,
+        colorFilter: {
+          colors: [3, 4],
+          include: false,
+        },
       },
-      userIdFilter: undefined,
-      colorFilter: {
-        colors: [3, 4],
-        include: false,
-      },
-    });
+      true,
+    );
   });
 
   it("returns 400 when both includeColors and excludeColors are provided", async () => {

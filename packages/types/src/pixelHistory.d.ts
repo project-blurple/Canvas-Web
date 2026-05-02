@@ -13,14 +13,15 @@ export interface PixelHistoryRecord {
 export interface PixelHistoryUserSummary {
   count: number;
   colors: Record<string, number>;
+  firstPlaced: Date;
   lastPlaced: Date;
 }
 
 export interface PixelHistoryWrapper {
   pixelHistory: PixelHistoryRecord[];
   totalEntries: number;
-  historyIds: string[];
-  users: Record<string, PixelHistoryUserSummary>;
+  historyIds?: string[];
+  users?: Record<string, PixelHistoryUserSummary>;
 }
 
 export type PixelHistory = PixelHistoryWrapper;

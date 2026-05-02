@@ -41,6 +41,7 @@ describe.skip("historyService", () => {
           colors: {
             "1": 4,
           },
+          firstPlaced: new Date(1),
           lastPlaced: new Date(7),
         },
       });
@@ -92,6 +93,7 @@ describe.skip("historyService", () => {
             "3": 1,
             "1": 1,
           },
+          firstPlaced: new Date(8),
           lastPlaced: new Date(9),
         },
       });

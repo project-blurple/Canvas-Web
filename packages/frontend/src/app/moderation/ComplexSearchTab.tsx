@@ -150,7 +150,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               <SummaryGrid>
                 <SummaryCard>
                   <strong>Total entries</strong>
-                  <span>{historyData.totalEntries}</span>
+                  <span>{historyData.totalEntries ?? 0}</span>
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Returned rows</strong>
@@ -158,15 +158,15 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Unique users</strong>
-                  <span>{Object.keys(historyData.users).length}</span>
+                  <span>{Object.keys(historyData.users ?? {}).length}</span>
                 </SummaryCard>
               </SummaryGrid>
             )}
-            {historyData && Object.keys(historyData.users).length > 0 && (
+            {historyData && Object.keys(historyData.users ?? {}).length > 0 && (
               <div>
                 <Heading>User breakdown</Heading>
                 <SummaryGrid>
-                  {Object.entries(historyData.users).map(
+                  {Object.entries(historyData.users ?? {}).map(
                     ([userId, summary]) => (
                       <SummaryCard key={userId}>
                         <strong>User {userId}</strong>
