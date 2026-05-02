@@ -1,15 +1,5 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import {
-  Chip,
-  FormControl,
-  InputLabel,
-  ListSubheader,
-  MenuItem,
-  OutlinedInput,
-  Select,
-  type SelectChangeEvent,
-  styled,
-} from "@mui/material";
+import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
 import {
@@ -26,8 +16,8 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
+import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
 import { usePalette } from "@/hooks";
-import { partitionPalette } from "@/components/action-panel/tabs/PlacePixelTab";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -55,50 +45,6 @@ const SummaryCard = styled("div")`
   gap: 0.35rem;
 `;
 
-const SelectedColorChips = styled("div")`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-`;
-
-const ColorSelectChip = styled(Chip, {
-  shouldForwardProp: (prop) => prop !== "backgroundColorStr",
-})<{ backgroundColorStr?: string }>`
-  background-color: ${({ backgroundColorStr }) =>
-    backgroundColorStr ?? "var(--discord-blurple)"};
-  font-weight: 600;
-
-  & .MuiChip-label {
-    color: ${({ backgroundColorStr }) =>
-      backgroundColorStr ?? "var(--discord-blurple)"};
-    transition:
-      color var(--transition-duration-fast) ease,
-      filter var(--transition-duration-fast) ease;
-  }
-
-  @supports (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      color: color-mix(
-        in oklab,
-        contrast-color(
-            ${({ backgroundColorStr }) =>
-              backgroundColorStr ?? "var(--discord-blurple)"}
-          )
-          94%,
-        ${({ backgroundColorStr }) =>
-          backgroundColorStr ?? "var(--discord-blurple)"}
-      );
-    }
-  }
-
-  @supports not (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-      mix-blend-mode: luminosity;
-    }
-  }
-`;
-
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
   typeof ComplexSearchTabBlock
 > {}
@@ -116,17 +62,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
-  const [mainColors, partnerColors] = partitionPalette(palette);
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
-
-  palette.sort((a, b) =>
-    a.global === b.global ? 0
-    : a.global ? -1
-    : 1,
-  );
-  const paletteById = Object.fromEntries(
-    palette.map((color) => [color.id, color]),
-  );
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
@@ -180,11 +116,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     [historyQuery.isLoading, setCanEdit],
   );
 
-  function handleColorChange(event: SelectChangeEvent<string[]>) {
-    const value = event.target.value;
-    setSelectedColorIds(typeof value === "string" ? value.split(",") : value);
-  }
-
   function handleSearchClick() {
     if (!selectedBounds) return;
 
@@ -209,31 +140,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       (selectedBounds.bottom - selectedBounds.top)
     : 0;
 
-  const selectedColors = selectedColorIds
-    .map((colorId) => paletteById[Number(colorId)])
-    .filter(Boolean);
-
-  function renderSelectedColorChips(value: string[]) {
-    return (
-      <SelectedColorChips>
-        {value.map((colorId) => {
-          const color = paletteById[Number(colorId)];
-          if (!color) return null;
-
-          const rgb = color.rgba.slice(0, 3).join(" ");
-          return (
-            <ColorSelectChip
-              key={color.id}
-              backgroundColorStr={`rgb(${rgb})`}
-              label={color.code}
-              size="small"
-            />
-          );
-        })}
-      </SelectedColorChips>
-    );
-  }
-
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
@@ -244,36 +150,11 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               {selectedBounds?.top},{selectedBounds?.left} -{" "}
               {selectedBounds?.bottom},{selectedBounds?.right}
             </span>
-            <FormControl fullWidth size="small">
-              <InputLabel id="complex-search-color-label">Colors</InputLabel>
-              <Select<string[]>
-                labelId="complex-search-color-label"
-                multiple
-                value={selectedColorIds}
-                onChange={handleColorChange}
-                input={<OutlinedInput label="Colors" />}
-                renderValue={renderSelectedColorChips}
-              >
-                <ListSubheader>Global colors</ListSubheader>
-                {mainColors.map((color) => (
-                  <MenuItem key={color.id} value={String(color.id)}>
-                    {color.name} ({color.code})
-                  </MenuItem>
-                ))}
-                <ListSubheader>Partner colors</ListSubheader>
-                {partnerColors.map((color) => (
-                  <MenuItem key={color.id} value={String(color.id)}>
-                    {color.name} ({color.code})
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {selectedColors.length > 0 && (
-              <span>
-                Selected colors:{" "}
-                {selectedColors.map((color) => color.code).join(", ")}
-              </span>
-            )}
+            <ComplexSearchColorSelect
+              palette={palette}
+              value={selectedColorIds}
+              onChange={setSelectedColorIds}
+            />
             <DynamicButton
               onClick={handleSearchClick}
               disabled={!selectedBounds || historyQuery.isLoading}
