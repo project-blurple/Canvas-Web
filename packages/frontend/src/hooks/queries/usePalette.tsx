@@ -6,9 +6,8 @@ import type {
   PaletteRequest,
 } from "@blurple-canvas-web/types";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import Color from "colorjs.io";
-import config from "@/config/clientConfig";
+import { useApiContext } from "@/contexts";
 
 function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
   const rgbA = a.rgba.slice(0, 3) as [number, number, number];
@@ -23,17 +22,18 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
 }
 
 export function usePalette(
-  eventId?: BlurpleEvent["id"],
+  eventId: BlurpleEvent["id"] | "current" = "current",
   useQueryOptions?: Omit<
     UseQueryOptions<PaletteRequest.ResBody>,
     "queryKey" | "queryFn"
   >,
 ) {
+  const api = useApiContext();
   const getPalette = async () => {
-    const response = await axios.get<PaletteRequest.ResBody>(
-      `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
-    );
-    return response.data.sort(sortByOklchHue);
+    const response = await api
+      .get<PaletteRequest.ResBody>(`palette/${encodeURIComponent(eventId)}`)
+      .json();
+    return response.sort(sortByOklchHue);
   };
 
   return useQuery<PaletteRequest.ResBody>({
