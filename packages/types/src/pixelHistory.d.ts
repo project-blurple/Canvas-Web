@@ -15,6 +15,7 @@ export interface PixelHistoryUserSummary {
   colors: Record<string, number>;
   firstPlaced: Date;
   lastPlaced: Date;
+  userProfile: DiscordUserProfile | null;
 }
 
 export interface PixelHistoryWrapper {

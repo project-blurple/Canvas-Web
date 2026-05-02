@@ -17,6 +17,7 @@ import {
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
 import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
+import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
 import { usePalette } from "@/hooks";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
@@ -66,6 +67,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
 
   const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
   const [colorFilterMode, setColorFilterMode] =
+    useState<SearchFilterMode>("include");
+
+  const [selectedUserIds, setSelectedUserIds] = useState<bigint[]>([]);
+  const [userFilterMode, setUserFilterMode] =
     useState<SearchFilterMode>("include");
 
   const [searchQuery, setSearchQuery] =
@@ -136,6 +141,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       },
       [colorFilterMode === "include" ? "includeColors" : "excludeColors"]:
         selectedColorIds.length ? selectedColorIds : undefined,
+      [userFilterMode === "include" ? "includeUserIds" : "excludeUserIds"]:
+        selectedUserIds.length ?
+          selectedUserIds.map((id) => id.toString())
+        : undefined,
     });
   }
 
@@ -161,6 +170,13 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               filterMode={colorFilterMode}
               onChange={setSelectedColorIds}
               onFilterModeChange={setColorFilterMode}
+            />
+            <ComplexSearchUserSelect
+              historyData={historyData}
+              value={selectedUserIds}
+              filterMode={userFilterMode}
+              onChange={setSelectedUserIds}
+              onFilterModeChange={setUserFilterMode}
             />
             <DynamicButton
               onClick={handleSearchClick}

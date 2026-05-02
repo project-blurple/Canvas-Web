@@ -1,5 +1,6 @@
 import type {
   CanvasInfo,
+  PixelHistoryUserSummary,
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
@@ -47,6 +48,11 @@ const pixelHistoryIdSelect = {
 
 type PixelHistoryUserCountRow = {
   user_id: bigint;
+  discord_user_profile: {
+    user_id: bigint;
+    username: string;
+    profile_picture_url: string | null;
+  } | null;
   _count: {
     _all: number;
   };
@@ -61,6 +67,11 @@ type PixelHistoryUserCountRow = {
 type PixelHistoryUserColorCountRow = {
   user_id: bigint;
   color_id: number;
+  discord_user_profile: {
+    user_id: bigint;
+    username: string;
+    profile_picture_url: string | null;
+  } | null;
   _count: {
     _all: number;
   };
@@ -167,7 +178,28 @@ async function getPixelHistoryUserCounts(fetchData: GetPixelHistoryParams) {
     },
   });
 
-  return groupedRows as PixelHistoryUserCountRow[];
+  const userIds = groupedRows.map((row) => row.user_id);
+  const userProfiles = await prisma.discord_user_profile.findMany({
+    where: {
+      user_id: {
+        in: userIds,
+      },
+    },
+    select: {
+      user_id: true,
+      username: true,
+      profile_picture_url: true,
+    },
+  });
+
+  const profileMap = new Map(
+    userProfiles.map((profile) => [profile.user_id, profile]),
+  );
+
+  return groupedRows.map((row) => ({
+    ...row,
+    discord_user_profile: profileMap.get(row.user_id) ?? null,
+  })) as PixelHistoryUserCountRow[];
 }
 
 async function getPixelHistoryUserColorCounts(
@@ -181,7 +213,28 @@ async function getPixelHistoryUserColorCounts(
     },
   });
 
-  return groupedRows as PixelHistoryUserColorCountRow[];
+  const userIds = [...new Set(groupedRows.map((row) => row.user_id))];
+  const userProfiles = await prisma.discord_user_profile.findMany({
+    where: {
+      user_id: {
+        in: userIds,
+      },
+    },
+    select: {
+      user_id: true,
+      username: true,
+      profile_picture_url: true,
+    },
+  });
+
+  const profileMap = new Map(
+    userProfiles.map((profile) => [profile.user_id, profile]),
+  );
+
+  return groupedRows.map((row) => ({
+    ...row,
+    discord_user_profile: profileMap.get(row.user_id) ?? null,
+  })) as PixelHistoryUserColorCountRow[];
 }
 
 function buildPixelHistoryUsers(
@@ -196,6 +249,15 @@ function buildPixelHistoryUsers(
       colors: {},
       firstPlaced: userCount._min.timestamp ?? new Date(0),
       lastPlaced: userCount._max.timestamp ?? new Date(0),
+      userProfile:
+        userCount.discord_user_profile ?
+          ({
+            id: userCount.discord_user_profile.user_id.toString(),
+            username: userCount.discord_user_profile.username,
+            profilePictureUrl:
+              userCount.discord_user_profile.profile_picture_url,
+          } as PixelHistoryUserSummary["userProfile"])
+        : null,
     };
   }
 
