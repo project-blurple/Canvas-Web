@@ -114,39 +114,6 @@ function Banner({
   );
 }
 
-function InfoBanner({ notice, onDismiss }: BannerProps) {
-  return (
-    <Banner
-      BannerRoot={StyledInfoBanner}
-      icon={<Info />}
-      notice={notice}
-      onDismiss={onDismiss}
-    />
-  );
-}
-
-function WarningBanner({ notice, onDismiss }: BannerProps) {
-  return (
-    <Banner
-      BannerRoot={StyledWarningBanner}
-      icon={<TriangleAlert />}
-      notice={notice}
-      onDismiss={onDismiss}
-    />
-  );
-}
-
-function ErrorBanner({ notice, onDismiss }: BannerProps) {
-  return (
-    <Banner
-      BannerRoot={StyledErrorBanner}
-      icon={<CircleAlert />}
-      notice={notice}
-      onDismiss={onDismiss}
-    />
-  );
-}
-
 export default function NoticeBanner({
   notice,
   onDismiss,
@@ -156,11 +123,32 @@ export default function NoticeBanner({
 }) {
   switch (notice.type) {
     case "info":
-      return <InfoBanner notice={notice} onDismiss={onDismiss} />;
+      return (
+        <Banner
+          BannerRoot={StyledInfoBanner}
+          icon={<Info />}
+          notice={notice}
+          onDismiss={onDismiss}
+        />
+      );
     case "warning":
-      return <WarningBanner notice={notice} onDismiss={onDismiss} />;
+      return (
+        <Banner
+          BannerRoot={StyledWarningBanner}
+          icon={<TriangleAlert />}
+          notice={notice}
+          onDismiss={onDismiss}
+        />
+      );
     case "error":
-      return <ErrorBanner notice={notice} onDismiss={onDismiss} />;
+      return (
+        <Banner
+          BannerRoot={StyledErrorBanner}
+          icon={<CircleAlert />}
+          notice={notice}
+          onDismiss={onDismiss}
+        />
+      );
     default:
       return null;
   }

@@ -1,6 +1,6 @@
 // Datetime regex: <t:timestamp:format> or <t:timestamp>
 // Discord's format
-const DATETIME_REGEX = /<t:(\d{1,}):?([tTdDfFR])?>/g;
+const DATETIME_REGEX = /<t:(\d+):?([tTdDfFR])?>/g;
 
 function dateToRelativeTime(date: Date): string {
   const now = new Date();
