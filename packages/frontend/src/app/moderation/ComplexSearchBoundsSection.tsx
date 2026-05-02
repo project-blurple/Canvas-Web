@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import type { ViewBounds } from "@/util";
 import { DynamicButton } from "@/components/button";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
+import type { ViewBounds } from "@/util";
 
 interface ComplexSearchBoundsSectionProps {
   active?: boolean;
@@ -69,8 +69,8 @@ export default function ComplexSearchBoundsSection({
   return (
     <>
       <span>
-        {selectedBounds?.top},{selectedBounds?.left} - {selectedBounds?.bottom}
-        ,{selectedBounds?.right}
+        {selectedBounds?.top},{selectedBounds?.left} - {selectedBounds?.bottom},
+        {selectedBounds?.right}
       </span>
       {pixelsInBounds > 10_000 && (
         <span>

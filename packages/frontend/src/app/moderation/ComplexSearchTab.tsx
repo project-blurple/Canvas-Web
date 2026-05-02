@@ -12,13 +12,13 @@ import { DynamicButton } from "@/components/button";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
+import { usePalette } from "@/hooks";
 import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
 import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
 import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
-import { usePalette } from "@/hooks";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;

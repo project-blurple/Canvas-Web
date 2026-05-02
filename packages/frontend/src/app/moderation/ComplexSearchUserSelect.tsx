@@ -1,11 +1,11 @@
 "use client";
 
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import { Autocomplete, TextField, styled } from "@mui/material";
-import { useMemo } from "react";
-import { SearchFilterMode } from "./ComplexSearchTab";
-import DynamicButton from "@/components/button/DynamicButton";
+import { Autocomplete, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
+import { useMemo } from "react";
+import DynamicButton from "@/components/button/DynamicButton";
+import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const UserSelectBlock = styled("div")`
   display: flex;

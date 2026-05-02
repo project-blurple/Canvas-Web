@@ -1,11 +1,11 @@
 "use client";
 
-import * as React from "react";
 import type { Palette } from "@blurple-canvas-web/types";
-import { Chip, Autocomplete, TextField, styled } from "@mui/material";
-import { SearchFilterMode } from "./ComplexSearchTab";
-import DynamicButton from "@/components/button/DynamicButton";
+import { Autocomplete, Chip, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
+import type * as React from "react";
+import DynamicButton from "@/components/button/DynamicButton";
+import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
   display: flex;
@@ -120,8 +120,10 @@ export default function ComplexSearchColorSelect({
         filterOptions={(options, { inputValue }) => {
           const q = inputValue.trim().toLowerCase();
           if (!q) return options;
-          return options.filter((opt) =>
-            opt.name.toLowerCase().includes(q) || opt.code.toLowerCase().includes(q),
+          return options.filter(
+            (opt) =>
+              opt.name.toLowerCase().includes(q) ||
+              opt.code.toLowerCase().includes(q),
           );
         }}
         options={palette}
