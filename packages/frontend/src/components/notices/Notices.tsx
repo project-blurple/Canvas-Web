@@ -37,7 +37,7 @@ export default function Notices() {
   );
 
   const dismiss = useCallback(
-    (id: string) => {
+    (id: string, persist: boolean = false) => {
       setTransientDismissed((s) => {
         const next = new Set(s);
         next.add(id);
@@ -45,9 +45,7 @@ export default function Notices() {
       });
 
       const n = notices.find((x) => x.id === id);
-      // Notices should stay dismissed only when notice.persistOnDismiss === false
-      // Otherwise they will reappear on page refresh
-      if (n && n.persistOnDismiss === false) {
+      if (persist && n && n.persistOnDismiss === false) {
         const nextArr = Array.from(
           new Set([...(persistedDismissed ?? []), id]),
         );
@@ -80,7 +78,8 @@ export default function Notices() {
         <NoticeBanner
           key={notice.id}
           notice={notice}
-          onDismiss={() => dismiss(notice.id)}
+          onDismiss={() => dismiss(notice.id, false)}
+          onDismissPermanently={() => dismiss(notice.id, true)}
         />
       ))}
     </NoticeWrapper>

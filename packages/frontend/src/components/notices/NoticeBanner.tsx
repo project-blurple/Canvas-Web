@@ -1,6 +1,6 @@
 import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
-import { CircleAlert, Info, TriangleAlert, X } from "lucide-react";
+import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { resolveSpecialText } from "@/util/text";
 
@@ -46,19 +46,6 @@ const BannerBody = styled("div")`
   min-width: 0;
 `;
 
-const DismissButton = styled("button")`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  flex: 0 0 auto;
-  opacity: 25%;
-  transition: opacity var(--transition-duration-fast) ease;
-
-  :hover {
-    opacity: 75%;
-  }
-`;
-
 const ContentSpan = styled("span")`
   > div {
     display: flex;
@@ -66,9 +53,29 @@ const ContentSpan = styled("span")`
   }
 `;
 
+const DismissWrapper = styled("div")`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+`;
+
+const DismissButton = styled("button")`
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex: 0 0 auto;
+  opacity: 50%;
+  transition: opacity var(--transition-duration-fast) ease;
+
+  :hover {
+    opacity: 80%;
+  }
+`;
+
 interface BannerProps {
   notice: Notice;
   onDismiss?: () => void;
+  onDismissPermanently?: () => void;
 }
 
 function Banner({
@@ -76,6 +83,7 @@ function Banner({
   BannerRoot,
   icon,
   onDismiss,
+  onDismissPermanently,
 }: {
   BannerRoot: BannerComponent;
   icon: React.ReactNode;
@@ -102,14 +110,15 @@ function Banner({
             <Markdown>{contentText}</Markdown>
           </ContentSpan>
         )}
+        <DismissWrapper>
+          <DismissButton onClick={onDismiss}>Dismiss</DismissButton>
+          {!notice.persistOnDismiss && (
+            <DismissButton onClick={onDismissPermanently}>
+              Don't show again
+            </DismissButton>
+          )}
+        </DismissWrapper>
       </BannerBody>
-      <DismissButton
-        aria-label="Dismiss notice"
-        onClick={onDismiss}
-        type="button"
-      >
-        <X />
-      </DismissButton>
     </BannerRoot>
   );
 }
@@ -117,9 +126,11 @@ function Banner({
 export default function NoticeBanner({
   notice,
   onDismiss,
+  onDismissPermanently,
 }: {
   notice: Notice;
   onDismiss?: () => void;
+  onDismissPermanently?: () => void;
 }) {
   switch (notice.type) {
     case "info":
@@ -129,6 +140,7 @@ export default function NoticeBanner({
           icon={<Info />}
           notice={notice}
           onDismiss={onDismiss}
+          onDismissPermanently={onDismissPermanently}
         />
       );
     case "warning":
@@ -138,6 +150,7 @@ export default function NoticeBanner({
           icon={<TriangleAlert />}
           notice={notice}
           onDismiss={onDismiss}
+          onDismissPermanently={onDismissPermanently}
         />
       );
     case "error":
@@ -147,6 +160,7 @@ export default function NoticeBanner({
           icon={<CircleAlert />}
           notice={notice}
           onDismiss={onDismiss}
+          onDismissPermanently={onDismissPermanently}
         />
       );
     default:
