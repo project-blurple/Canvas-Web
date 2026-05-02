@@ -5,7 +5,7 @@ import type {
   PaletteColor,
   PaletteRequest,
 } from "@blurple-canvas-web/types";
-import { UseQueryOptions, useQuery } from "@tanstack/react-query";
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import Color from "colorjs.io";
 import config from "@/config";
