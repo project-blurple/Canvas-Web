@@ -11,6 +11,7 @@ import {
 } from "@/contexts";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
+import { CANVAS_WRAPPER_CLASS_NAME } from "../canvas/CanvasView";
 
 const Wrapper = styled("div")`
   --padding-width: 1rem;
@@ -26,8 +27,8 @@ const Wrapper = styled("div")`
   overflow-block: auto;
   padding: var(--padding-width);
 
-  #canvas-container:fullscreen &,
-  #canvas-container:-webkit-full-screen & {
+  #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
+  #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
     height: auto;
     max-height: 100%;
   }

@@ -46,7 +46,9 @@ import {
   ORIGIN,
 } from "./point";
 
-const CanvasContainer = styled("div")`
+export const CANVAS_WRAPPER_CLASS_NAME = "canvas-wrapper";
+
+const CanvasWrapper = styled("div")`
   position: relative;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
@@ -138,11 +140,14 @@ const BaseFullscreenButton = styled(Button, {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  inset-inline-end: calc(min(var(--action-panel-width), calc(100vi - 1rem)));
-  inset-inline-end: ${({ $isPanelVisible, $isFullscreen }) =>
-    $isPanelVisible && $isFullscreen ?
-      "calc(min(var(--action-panel-width), calc(100dvi - 1rem)))"
-    : "0.5rem"};
+  inset-inline-end: 0.5rem;
+  inset-inline-end: ${(p) =>
+    p.$isPanelVisible &&
+    p.$isFullscreen &&
+    css`
+      inset-inline-end: calc(100vi);
+      inset-inline-end: calc(100dvi);
+    `};
 
   color: white;
   position: absolute;
@@ -164,8 +169,8 @@ const FullscreenButton = styled(BaseFullscreenButton)`
   inset-block-start: 0.5rem;
   z-index: 1;
 
-  #canvas-container:fullscreen &,
-  #canvas-container:-webkit-full-screen & {
+  #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
+  #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
 
@@ -1118,8 +1123,8 @@ export default function CanvasView() {
   }, [containerRef]);
 
   return (
-    <CanvasContainer
-      id="canvas-container"
+    <CanvasWrapper
+      id={CANVAS_WRAPPER_CLASS_NAME}
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
@@ -1248,6 +1253,6 @@ export default function CanvasView() {
         </FullscreenPanelOverlay>
       )}
       {isLoading && <CircularProgress style={{ position: "absolute" }} />}
-    </CanvasContainer>
+    </CanvasWrapper>
   );
 }
