@@ -4,7 +4,7 @@ import { styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/button";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts";
 
 const Background = styled("div")`
