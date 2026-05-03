@@ -43,7 +43,16 @@ describe("Canvas admin route tests", () => {
 
   it("creates a canvas", async () => {
     const app = createApp();
-    vi.mocked(createCanvas).mockResolvedValueOnce(undefined);
+    vi.mocked(createCanvas).mockResolvedValueOnce({
+      id: 9,
+      name: "New Canvas",
+      width: 16,
+      height: 16,
+      start_coordinates: [1, 1],
+      locked: true,
+      event_id: 1,
+      cooldown_length: 30,
+    });
 
     const response = await request(app)
       .post("/api/v1/canvas/")
@@ -58,7 +67,14 @@ describe("Canvas admin route tests", () => {
 
     expect(response.status).toBe(201);
     expect(response.body).toStrictEqual({
-      message: "Canvas created",
+      id: 9,
+      name: "New Canvas",
+      width: 16,
+      height: 16,
+      start_coordinates: [1, 1],
+      locked: true,
+      event_id: 1,
+      cooldown_length: 30,
     });
     expect(vi.mocked(createCanvas)).toHaveBeenCalledWith({
       name: "New Canvas",
@@ -71,7 +87,16 @@ describe("Canvas admin route tests", () => {
 
   it("edits a canvas", async () => {
     const app = createApp();
-    vi.mocked(editCanvas).mockResolvedValueOnce(undefined);
+    vi.mocked(editCanvas).mockResolvedValueOnce({
+      id: 7,
+      name: "Updated Canvas",
+      width: 32,
+      height: 32,
+      start_coordinates: [1, 1],
+      locked: true,
+      event_id: 1,
+      cooldown_length: 45,
+    });
 
     const response = await request(app).put("/api/v1/canvas/7").send({
       name: "Updated Canvas",
@@ -82,7 +107,14 @@ describe("Canvas admin route tests", () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({
-      message: "Canvas edited",
+      id: 7,
+      name: "Updated Canvas",
+      width: 32,
+      height: 32,
+      start_coordinates: [1, 1],
+      locked: true,
+      event_id: 1,
+      cooldown_length: 45,
     });
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,

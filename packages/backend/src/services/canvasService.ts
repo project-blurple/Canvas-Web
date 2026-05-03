@@ -440,4 +440,5 @@ export async function editCanvas({
   if (!canvas) {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
+  return canvas;
 }

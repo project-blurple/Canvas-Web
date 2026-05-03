@@ -110,14 +110,14 @@ canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
 
     assertZodSuccess(canvasData);
 
-    await editCanvas({
+    const canvas = await editCanvas({
       canvasId,
       name: canvasData.data.name,
       cooldownLength: canvasData.data.cooldownLength,
       isLocked: canvasData.data.isLocked,
     });
 
-    res.status(200).json({ message: "Canvas edited" });
+    res.status(200).json(canvas);
   } catch (error) {
     ApiError.sendError(res, error);
   }
