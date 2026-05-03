@@ -33,7 +33,8 @@
     "prepare": "husky",
     "clean": "pnpm --recursive clean && rm -rf node_modules/",
     "prisma:push": "pnpm --filter=backend prisma:push",
-    "prisma:seed": "pnpm --filter=backend prisma:seed --"
+    "prisma:seed": "pnpm --filter=backend prisma:seed --",
+    "prisma:migrate": "pnpm --filter=backend prisma:migrate"
   },
   "lint-staged": {
     "*.{css,html,md,markdown,yaml,yml}": "pnpm exec prettier --write",

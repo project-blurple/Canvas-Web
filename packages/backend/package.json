@@ -38,7 +38,8 @@
     "check:fix": "pnpm format:fix && pnpm lint:fix",
     "clean": "rm -rf node_modules/ build/",
     "prisma:push": "prisma db push && node --experimental-strip-types prisma/apply-views.ts",
-    "prisma:seed": "prisma db seed --"
+    "prisma:seed": "prisma db seed --",
+    "prisma:migrate": "prisma migrate deploy && node --experimental-strip-types prisma/apply-views.ts"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.61.0",
