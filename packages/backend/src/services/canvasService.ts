@@ -381,6 +381,8 @@ export async function createCanvas({
   });
 
   await createCanvasPixelEntries(canvas.id, width, height);
+
+  return canvas;
 }
 
 async function createCanvasPixelEntries(

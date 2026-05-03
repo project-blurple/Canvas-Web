@@ -1,7 +1,8 @@
 import type { BlurpleEvent } from "@blurple-canvas-web/types";
-import { prisma } from "@/client";
+import { Prisma, prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import ConflictError from "@/errors/ConflictError";
+import { PrismaErrorCode } from "@/utils";
 
 export async function getEventById(
   eventId: BlurpleEvent["id"],
@@ -44,19 +45,20 @@ export async function createEvent(
   name: string,
   id: number,
 ): Promise<BlurpleEvent> {
-  const existingEvent = await getEventById(id).catch(() => null);
-  if (existingEvent) {
-    throw new ConflictError(`An event with ID ${id} already exists`);
+  try {
+    const event = await prisma.event.create({
+      data: { name, id },
+    });
+    return event;
+  } catch (err) {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === PrismaErrorCode.UniqueConstraintViolation
+    ) {
+      throw new ConflictError(`An event with ID ${id} already exists`);
+    }
+    throw err;
   }
-
-  // Gotta provide your own ID ¯\_(ツ)_/¯
-  const event = await prisma.event.create({
-    data: {
-      name,
-      id,
-    },
-  });
-  return event;
 }
 
 export async function editEvent(

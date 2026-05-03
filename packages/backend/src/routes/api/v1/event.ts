@@ -46,9 +46,9 @@ eventRouter.post("/", async (req, res) => {
     const eventData = await CreateEventBodyModel.safeParseAsync(req.body);
     assertZodSuccess(eventData);
 
-    await createEvent(eventData.data.name, eventData.data.id);
+    const event = await createEvent(eventData.data.name, eventData.data.id);
 
-    res.status(201).json({ message: "Event created" });
+    res.status(201).json(event);
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -65,9 +65,9 @@ eventRouter.put("/:eventId", async (req, res) => {
     ]);
     assertZodSuccess(eventData);
 
-    await editEvent(eventId, eventData.data.name);
+    const event = await editEvent(eventId, eventData.data.name);
 
-    res.status(200).json({ message: "Event edited" });
+    res.status(200).json(event);
   } catch (error) {
     ApiError.sendError(res, error);
   }

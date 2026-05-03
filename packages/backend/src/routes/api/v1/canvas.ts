@@ -84,7 +84,7 @@ canvasRouter.post("/", async (req, res) => {
     const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
     assertZodSuccess(canvasData);
 
-    await createCanvas({
+    const canvas = await createCanvas({
       name: canvasData.data.name,
       width: canvasData.data.width,
       height: canvasData.data.height,
@@ -92,7 +92,7 @@ canvasRouter.post("/", async (req, res) => {
       cooldownLength: canvasData.data.cooldownLength,
     });
 
-    res.status(201).json({ message: "Canvas created" });
+    res.status(201).json(canvas);
   } catch (error) {
     ApiError.sendError(res, error);
   }

@@ -102,6 +102,7 @@ POST {{basePath}}/canvas/3/pixel/history
   &x1=2
   &y1=2 HTTP/1.1
 content-type: application/json
+
 {
     "fromDateTime": "2023-01-01T00:00:00.000Z",
     "toDateTime": "2023-02-01T00:00:00.000Z",
@@ -113,6 +114,7 @@ content-type: application/json
 # Requires moderator session
 DELETE {{basePath}}/canvas/3/pixel/history HTTP/1.1
 content-type: application/json
+
 {
     "historyIds": [1, 2, 3],
     "shouldBlockAuthors": true
@@ -122,6 +124,7 @@ content-type: application/json
 # This will not work as sessions are required
 POST {{basePath}}/canvas/{{canvasId}}/pixel HTTP/1.1
 Content-Type: application/json
+
 {
   "x": 1,
   "y": 1,
@@ -174,6 +177,7 @@ Content-Type: application/json
 # Requires moderator session
 PUT {{basePath}}/blocklist HTTP/1.1
 content-type: application/json
+
 {
   "userId": "204778476102877187"
 }
@@ -182,6 +186,7 @@ content-type: application/json
 # Requires moderator session
 DELETE {{basePath}}/blocklist HTTP/1.1
 content-type: application/json
+
 {
   "userId": ["204778476102877187", "123456789012345678"]
 }
