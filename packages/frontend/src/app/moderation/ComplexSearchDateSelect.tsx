@@ -18,6 +18,7 @@ interface ComplexSearchDateSelectProps {
   toTime: DateTime | null;
   setFromTime: (date: DateTime | null) => void;
   setToTime: (date: DateTime | null) => void;
+  disabled: boolean;
 }
 
 export default function ComplexSearchDateSelect({
@@ -25,6 +26,7 @@ export default function ComplexSearchDateSelect({
   toTime,
   setFromTime,
   setToTime,
+  disabled,
 }: ComplexSearchDateSelectProps) {
   const timezone = new Date()
     .toLocaleString("en-US", { timeZoneName: "short" })
@@ -41,6 +43,7 @@ export default function ComplexSearchDateSelect({
           field: { clearable: true },
           textField: { size: "small" },
         }}
+        disabled={disabled}
       />
       <DateTimePickerStyled
         label={`To (${timezone})`}
@@ -50,6 +53,7 @@ export default function ComplexSearchDateSelect({
           field: { clearable: true },
           textField: { size: "small" },
         }}
+        disabled={disabled}
       />
     </DateSelectWrapper>
   );

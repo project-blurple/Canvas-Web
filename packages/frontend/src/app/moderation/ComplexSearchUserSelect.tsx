@@ -30,6 +30,7 @@ interface ComplexSearchUserSelectProps {
   filterMode: SearchFilterMode;
   onChange: (value: bigint[]) => void;
   onFilterModeChange: (mode: SearchFilterMode) => void;
+  disabled: boolean;
 }
 
 export default function ComplexSearchUserSelect({
@@ -38,6 +39,7 @@ export default function ComplexSearchUserSelect({
   filterMode,
   onChange,
   onFilterModeChange,
+  disabled,
 }: ComplexSearchUserSelectProps) {
   // Build list of available users from search results
   const availableUsers = useMemo(() => {
@@ -135,25 +137,27 @@ export default function ComplexSearchUserSelect({
         onAction={() => {
           onFilterModeChange(filterMode === "include" ? "exclude" : "include");
         }}
+        disabled={disabled}
       >
         {filterMode === "include" ?
           <SquarePlus />
         : <SquareMinus />}
       </ToggleFilterModeButton>
       <Autocomplete
-        fullWidth
-        size="small"
-        multiple
+        disabled={disabled}
         freeSolo
-        options={availableUsers}
-        value={selectedUserOptions}
+        fullWidth
+        multiple
         onChange={handleUserChange}
+        options={availableUsers}
+        renderInput={(params) => <TextField {...params} label={label} />}
+        renderOption={(props, option) => <li {...props}>{option.label}</li>}
+        size="small"
+        value={selectedUserOptions}
         getOptionLabel={(option) => {
           if (typeof option === "string") return option;
           return option.label;
         }}
-        renderInput={(params) => <TextField {...params} label={label} />}
-        renderOption={(props, option) => <li {...props}>{option.label}</li>}
       />
     </UserSelectBlock>
   );

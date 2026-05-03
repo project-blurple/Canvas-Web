@@ -162,6 +162,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       (selectedBounds.bottom - selectedBounds.top)
     : 0;
 
+  const disabled = !selectedBounds || historyQuery.isLoading;
+
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
@@ -172,6 +174,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               canvas={canvas}
               selectedBounds={selectedBounds}
               setSelectedBounds={setSelectedBounds}
+              disabled={disabled}
             />
             <ComplexSearchColorSelect
               palette={palette}
@@ -179,6 +182,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               filterMode={colorFilterMode}
               onChange={setSelectedColorIds}
               onFilterModeChange={setColorFilterMode}
+              disabled={disabled}
             />
             <ComplexSearchUserSelect
               historyData={historyData}
@@ -186,12 +190,14 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               filterMode={userFilterMode}
               onChange={setSelectedUserIds}
               onFilterModeChange={setUserFilterMode}
+              disabled={disabled}
             />
             <ComplexSearchDateSelect
               fromTime={fromTime}
               toTime={toTime}
               setFromTime={setFromTime}
               setToTime={setToTime}
+              disabled={disabled}
             />
             <DynamicButton
               onClick={handleSearchClick}

@@ -27,12 +27,14 @@ interface ComplexSearchBoundsSelectProps {
   canvas: CanvasInfo;
   selectedBounds: ViewBounds | null;
   setSelectedBounds: (bounds: ViewBounds) => void;
+  disabled: boolean;
 }
 
 export default function ComplexSearchBoundsSelect({
   canvas,
   selectedBounds,
   setSelectedBounds,
+  disabled,
 }: ComplexSearchBoundsSelectProps) {
   return (
     <CoordinateRangeWrapper>
@@ -52,7 +54,7 @@ export default function ComplexSearchBoundsSelect({
             if (value === null) return;
             setSelectedBounds({ ...selectedBounds, left: value });
           }}
-          disabled={!selectedBounds}
+          disabled={disabled}
         />
         <NumberField
           label="Top (y)"
@@ -69,7 +71,7 @@ export default function ComplexSearchBoundsSelect({
             if (value === null) return;
             setSelectedBounds({ ...selectedBounds, top: value });
           }}
-          disabled={!selectedBounds}
+          disabled={disabled}
         />
       </CoordinateInputWrapper>
       <Scan />
@@ -85,7 +87,7 @@ export default function ComplexSearchBoundsSelect({
             if (value === null) return;
             setSelectedBounds({ ...selectedBounds, right: value });
           }}
-          disabled={!selectedBounds}
+          disabled={disabled}
         />
         <NumberField
           label="Bottom (y)"
@@ -98,7 +100,7 @@ export default function ComplexSearchBoundsSelect({
             if (value === null) return;
             setSelectedBounds({ ...selectedBounds, bottom: value });
           }}
-          disabled={!selectedBounds}
+          disabled={disabled}
         />
       </CoordinateInputWrapper>
     </CoordinateRangeWrapper>

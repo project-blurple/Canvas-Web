@@ -68,6 +68,7 @@ interface ComplexSearchColorSelectProps {
   filterMode: SearchFilterMode;
   onChange: (value: string[]) => void;
   onFilterModeChange: (mode: SearchFilterMode) => void;
+  disabled: boolean;
 }
 
 export default function ComplexSearchColorSelect({
@@ -76,6 +77,7 @@ export default function ComplexSearchColorSelect({
   filterMode,
   onChange,
   onFilterModeChange,
+  disabled,
 }: ComplexSearchColorSelectProps) {
   palette.sort((a, b) =>
     a.global === b.global ? 0
@@ -106,6 +108,7 @@ export default function ComplexSearchColorSelect({
         onAction={() => {
           onFilterModeChange(filterMode === "include" ? "exclude" : "include");
         }}
+        disabled={disabled}
       >
         {filterMode === "include" ?
           <SquarePlus />
@@ -113,10 +116,15 @@ export default function ComplexSearchColorSelect({
       </ToggleFilterModeButton>
 
       <Autocomplete
-        fullWidth
-        size="small"
-        multiple
         autoHighlight
+        disabled={disabled}
+        fullWidth
+        getOptionLabel={(option) => `${option.name} (${option.code})`}
+        multiple
+        onChange={handleColorChange}
+        options={palette}
+        size="small"
+        value={selectedOptions}
         filterOptions={(options, { inputValue }) => {
           const q = inputValue.trim().toLowerCase();
           if (!q) return options;
@@ -126,13 +134,9 @@ export default function ComplexSearchColorSelect({
               opt.code.toLowerCase().includes(q),
           );
         }}
-        options={palette}
-        value={selectedOptions}
-        onChange={handleColorChange}
         groupBy={(option) =>
           option.global ? "Global colors" : "Partner colors"
         }
-        getOptionLabel={(option) => `${option.name} (${option.code})`}
         renderInput={(params) => <TextField {...params} label={label} />}
         renderOption={(props, option) => (
           <li {...props} key={option.id}>
