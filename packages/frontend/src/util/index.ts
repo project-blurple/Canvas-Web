@@ -102,3 +102,7 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
   const b = Number.parseInt(hex.slice(-2, 0), 16);
   return [r, g, b, 255];
 }
+
+export function copyToClipboard(str: string) {
+  navigator.clipboard.writeText(str);
+}

@@ -4,12 +4,15 @@ import type {
   PixelHistoryWrapper,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { Copy } from "lucide-react";
+import { copyToClipboard } from "@/util";
 import ColorCodeChip from "../ColorCodeChip";
+import VisuallyHidden from "../VisuallyHidden";
 
 const UserWrapper = styled("div")`
   display: grid;
   gap: 0.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
 `;
 
 const UserCard = styled("div")`
@@ -47,11 +50,41 @@ const ColorChipWrapper = styled("div")`
   overflow-x: auto;
 `;
 
-const UserId = styled("code")`
+const UserId = styled("button")`
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0;
+
+  align-items: center;
   color: oklch(from var(--discord-white) l c h / 60%);
+  display: flex;
   font-size: 0.75rem;
+  gap: 0.25rem;
   letter-spacing: 0.01em;
   word-break: break-all;
+  width: fit-content;
+  cursor: pointer;
+
+  transition-duration: var(--transition-duration-fast);
+  transition-property: color;
+  transition-timing-function: ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: oklch(from var(--discord-white) l c h / 70%);
+    }
+  }
+
+  &:focus-visible {
+    color: oklch(from var(--discord-white) l c h / 70%);
+    outline: var(--focus-outline);
+  }
+
+  &:active {
+    color: oklch(from var(--discord-white) l c h / 55%);
+  }
 `;
 
 interface SearchUserEntryProps {
@@ -90,7 +123,11 @@ function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
           );
         })}
       </ColorChipWrapper>
-      <UserId>{userId}</UserId>
+      <UserId onClick={() => copyToClipboard(userId.toString())}>
+        <code aria-hidden>{userId}</code>
+        <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
+        <Copy size={12} />
+      </UserId>
     </UserCard>
   );
 }

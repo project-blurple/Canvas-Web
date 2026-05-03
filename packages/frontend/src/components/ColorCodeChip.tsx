@@ -2,6 +2,7 @@
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
+import { copyToClipboard } from "@/util";
 import { PrimitiveButton } from "./button";
 import VisuallyHidden from "./VisuallyHidden";
 
@@ -62,8 +63,6 @@ const ButtonContent = styled("code")`
     );
   }
 `;
-
-const copyToClipboard = (str: string) => navigator.clipboard.writeText(str);
 
 interface ColorCodeChipProps extends Omit<
   React.ComponentPropsWithRef<typeof StyledButton>,
