@@ -9,7 +9,7 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { CANVAS_WRAPPER_CLASS_NAME } from "../canvas/CanvasView";
+import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
