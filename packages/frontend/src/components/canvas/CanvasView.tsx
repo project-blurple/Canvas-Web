@@ -33,7 +33,7 @@ import {
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
-import { clamp, normalizeFrameBounds } from "@/util";
+import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
@@ -46,8 +46,6 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
-
-export const CANVAS_WRAPPER_CLASS_NAME = "canvas-wrapper";
 
 const CanvasWrapper = styled("div")`
   position: relative;
