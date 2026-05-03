@@ -1,5 +1,5 @@
-import { DiscordUserProfile } from "./discordUserProfile";
-import { PaletteColorSummary } from "./palette";
+import type { DiscordUserProfile } from "./discordUserProfile";
+import type { PaletteColorSummary } from "./palette";
 
 export interface PixelHistoryRecord {
   id: string;

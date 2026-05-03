@@ -109,7 +109,7 @@ function FrameInfoPanelBody({
             setActivePanel(FramePanelMode.Create);
           }}
         >
-          Create frame
+          New frame
         </DynamicButton>
       </ActionPanelTabBody>
     );
