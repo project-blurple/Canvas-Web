@@ -18,6 +18,7 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
+import ComplexSearchBoundsSelect from "./ComplexSearchBoundsSelect";
 import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
 import ComplexSearchDateSelect from "./ComplexSearchDateSelect";
 import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
@@ -58,7 +59,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const {
     setCanEdit,
     selectedBounds,
-    // setSelectedBounds,
+    setSelectedBounds,
     setMinimumBounds,
     setBoundsToCurrentView,
     setShowSelectedBounds,
@@ -167,10 +168,11 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         <ActionPanelTabBody>
           <SearchWrapper>
             <Heading>History Search</Heading>
-            <span>
-              {selectedBounds?.top},{selectedBounds?.left} -{" "}
-              {selectedBounds?.bottom},{selectedBounds?.right}
-            </span>
+            <ComplexSearchBoundsSelect
+              canvas={canvas}
+              selectedBounds={selectedBounds}
+              setSelectedBounds={setSelectedBounds}
+            />
             <ComplexSearchColorSelect
               palette={palette}
               value={selectedColorIds}
@@ -195,15 +197,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               onClick={handleSearchClick}
               disabled={!selectedBounds || historyQuery.isLoading}
             >
-              {!historyQuery.isLoading ? "Search" : "Searching..."}
+              {!historyQuery.isLoading ?
+                `Search (${pixelsInBounds.toLocaleString()} pixels)`
+              : "Searching..."}
             </DynamicButton>
-            {pixelsInBounds > 10_000 && (
-              <span>
-                Warning: The selected area contains{" "}
-                {pixelsInBounds.toLocaleString()} pixels. This may take a while
-                to process.
-              </span>
-            )}
             {historyData && (
               <SummaryGrid>
                 <SummaryCard>
