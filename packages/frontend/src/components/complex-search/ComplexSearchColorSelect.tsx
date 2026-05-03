@@ -13,7 +13,7 @@ const SelectedColorChips = styled("div")`
   gap: 0.375rem;
 `;
 
-const ColorSelectChip = styled(Chip, {
+export const ColorSelectChip = styled(Chip, {
   shouldForwardProp: (prop) => prop !== "backgroundColorStr",
 })<{ backgroundColorStr?: string }>`
   background-color: ${({ backgroundColorStr }) =>

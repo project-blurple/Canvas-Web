@@ -1,4 +1,4 @@
-"use client";
+            "use client";
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";

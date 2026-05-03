@@ -8,7 +8,6 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { PixelHistoryPast } from "@/components/action-panel/tabs/PixelInfoTab";
 import { DynamicButton } from "@/components/button";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
@@ -24,6 +23,7 @@ import {
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
 } from ".";
+import SearchUserEntries from "./SearchUserEntry";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -166,6 +166,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
 
   const disabled = !selectedBounds || historyQuery.isLoading;
 
+  console.log(historyData);
+
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
@@ -209,11 +211,16 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                 `Search (${pixelsInBounds.toLocaleString()} pixels)`
               : "Searching..."}
             </DynamicButton>
-            {historyData && (
+          </SearchWrapper>
+        </ActionPanelTabBody>
+        {historyData && (
+          <ActionPanelTabBody>
+            <div>
+              <Heading>Search results</Heading>
               <SummaryGrid>
                 <SummaryCard>
                   <strong>Total entries</strong>
-                  <span>{historyData.totalEntries ?? 0}</span>
+                  <span>{historyData.totalEntries.toLocaleString() ?? 0}</span>
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Query duration</strong>
@@ -221,41 +228,25 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Users</strong>
-                  <span>{Object.keys(historyData.users ?? {}).length}</span>
+                  <span>
+                    {Object.keys(
+                      historyData.users ?? {},
+                    ).length.toLocaleString() ?? 0}
+                  </span>
                 </SummaryCard>
               </SummaryGrid>
-            )}
-            {historyData && Object.keys(historyData.users ?? {}).length > 0 && (
-              <div>
-                <Heading>User breakdown</Heading>
-                <SummaryGrid>
-                  {Object.entries(historyData.users ?? {}).map(
-                    ([userId, summary]) => (
-                      <SummaryCard key={userId}>
-                        <strong>User {userId}</strong>
-                        <span>Count: {summary.count}</span>
-                        <span>
-                          Last placed:{" "}
-                          {new Date(summary.lastPlaced).toLocaleString()}
-                        </span>
-                        <span>
-                          Colors:{" "}
-                          {Object.entries(summary.colors)
-                            .map(([colorId, count]) => `${colorId}: ${count}`)
-                            .join(", ")}
-                        </span>
-                      </SummaryCard>
-                    ),
-                  )}
-                </SummaryGrid>
-              </div>
-            )}
-            <PixelHistoryPast
-              history={historyData?.pixelHistory ?? []}
-              isLoading={historyQuery.isLoading}
-            />
-          </SearchWrapper>
-        </ActionPanelTabBody>
+              {Object.keys(historyData.users ?? {}).length > 0 && (
+                <>
+                  <Heading>User summary</Heading>
+                  <SearchUserEntries
+                    users={historyData.users}
+                    palette={palette}
+                  />
+                </>
+              )}
+            </div>
+          </ActionPanelTabBody>
+        )}
       </FullWidthScrollView>
     </ComplexSearchTabBlock>
   );

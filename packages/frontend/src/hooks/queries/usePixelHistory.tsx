@@ -61,7 +61,7 @@ export function useComplexPixelHistory(
   const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
 
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!query) return emptyHistoryResult();
+    if (!query) return null;
 
     const startedAt = performance.now();
 
