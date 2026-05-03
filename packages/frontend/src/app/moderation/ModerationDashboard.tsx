@@ -6,11 +6,11 @@ import {
   TabBar,
 } from "@/components/action-panel/ActionPanel";
 import { CanvasView } from "@/components/canvas";
+import { ComplexSearchTab } from "@/components/complex-search";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import { CanvasWrapper } from "../Main";
 import BlocklistTab from "./BlocklistTab";
-import ComplexSearchTab from "./ComplexSearchTab";
 
 const DashboardWrapper = styled(CanvasWrapper)`
   body:has(&) {

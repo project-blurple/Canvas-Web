@@ -18,10 +18,12 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
-import ComplexSearchBoundsSelect from "./ComplexSearchBoundsSelect";
-import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
-import ComplexSearchDateSelect from "./ComplexSearchDateSelect";
-import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
+import {
+  ComplexSearchBoundsSelect,
+  ComplexSearchColorSelect,
+  ComplexSearchDateSelect,
+  ComplexSearchUserSelect,
+} from ".";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -218,7 +220,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                   <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
                 </SummaryCard>
                 <SummaryCard>
-                  <strong>Unique users</strong>
+                  <strong>Users</strong>
                   <span>{Object.keys(historyData.users ?? {}).length}</span>
                 </SummaryCard>
               </SummaryGrid>
