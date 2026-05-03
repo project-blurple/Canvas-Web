@@ -26,7 +26,7 @@ import {
   useRef,
   useState,
 } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
   useAuthContext,
   useCanvasContext,

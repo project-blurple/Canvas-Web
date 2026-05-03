@@ -8,7 +8,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 interface UseUserFramesParams {
   canvasId: Frame["canvasId"];

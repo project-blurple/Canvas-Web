@@ -3,7 +3,7 @@
 import type { BlurpleEvent, EventRequest } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 export function useEventInfo(eventId?: BlurpleEvent["id"]) {
   const getEvent = async () => {
