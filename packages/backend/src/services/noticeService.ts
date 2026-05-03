@@ -1,12 +1,8 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
-import { prisma } from "@/client";
+import { type notice as NoticeDbModel, prisma } from "@/client";
 import type { CreateNoticeBody } from "@/models/notice.models";
 
-type NoticeDbRecord = NonNullable<
-  Awaited<ReturnType<typeof prisma.notice.findFirst>>
->;
-
-function noticeFromDb(notice: NoticeDbRecord): Notice {
+function noticeFromDb(notice: NoticeDbModel): Notice {
   return {
     id: notice.id,
     type: notice.type as NoticeType,

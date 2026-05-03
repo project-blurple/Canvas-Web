@@ -56,7 +56,7 @@ const ContentSpan = styled("span")`
 const DismissWrapper = styled("div")`
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: 1rem;
 `;
 
 const DismissButton = styled("button")`
