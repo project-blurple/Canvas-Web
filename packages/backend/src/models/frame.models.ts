@@ -1,32 +1,5 @@
-import type { CanvasInfo } from "@blurple-canvas-web/types";
 import z from "zod";
-import BadRequestError from "@/errors/BadRequestError";
-
-const CanvasIdParamModel = z.object({
-  canvasId: z.coerce.number().int().positive(),
-});
-
-export const EventIdParamModel = z.object({
-  eventId: z.coerce.number().int().positive(),
-});
-
-export type LeaderboardParamModel = typeof CanvasIdParamModel;
-
-export const LeaderboardQueryModel = z.object({
-  page: z.coerce.number().int().positive().optional(),
-  size: z.coerce.number().int().positive().optional(),
-});
-
-export const FrameGuildIdsQueryModel = z.object({
-  guildIds: z
-    .union([z.string(), z.array(z.string())])
-    .optional()
-    .transform((value) =>
-      value === undefined ? []
-      : Array.isArray(value) ? value
-      : [value],
-    ),
-});
+import { BadRequestError } from "@/errors";
 
 const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
@@ -57,29 +30,22 @@ export const FrameDataParamModel = z
       });
     }
   });
+
 export const FrameOwnerParamModel = z.object({
   ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
   isGuildOwned: z.boolean(),
 });
 
-export interface CanvasIdParam {
-  canvasId: string;
-  [key: string]: string;
-}
-
-export async function parseCanvasId(
-  params: CanvasIdParam,
-): Promise<CanvasInfo["id"]> {
-  const result = await CanvasIdParamModel.safeParseAsync(params);
-  if (!result.success) {
-    throw new BadRequestError(
-      `${params.canvasId} is not a valid canvas ID`,
-      result.error.issues,
-    );
-  }
-
-  return result.data.canvasId;
-}
+export const FrameGuildIdsQueryModel = z.object({
+  guildIds: z
+    .union([z.string(), z.array(z.string())])
+    .optional()
+    .transform((value) =>
+      value === undefined ? []
+      : Array.isArray(value) ? value
+      : [value],
+    ),
+});
 
 export interface FrameIdParam {
   frameId: string;

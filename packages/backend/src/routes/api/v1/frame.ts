@@ -2,14 +2,14 @@ import { Router } from "express";
 import config from "@/config";
 import { ApiError, BadRequestError } from "@/errors";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
+import { parseCanvasId } from "@/models/canvas.models";
 import {
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
   type FrameIdParam,
   FrameOwnerParamModel,
-  parseCanvasId,
   parseFrameId,
-} from "@/models/paramModels";
+} from "@/models/frame.models";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -20,6 +20,7 @@ import {
   getFramesByUserId,
 } from "@/services/frameService";
 import { normalizeBounds } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 
 export const frameRouter = Router();
 
@@ -50,12 +51,10 @@ frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
 frameRouter.get("/guilds/:canvasId", async (req, res) => {
   try {
     const queryResult = await FrameGuildIdsQueryModel.safeParseAsync(req.query);
-    if (!queryResult.success) {
-      throw new BadRequestError(
-        "Invalid query parameters. Expected guildIds as a string or string array",
-        queryResult.error.issues,
-      );
-    }
+    assertZodSuccess(
+      queryResult,
+      "Invalid query parameters. Expected guildIds as a string or string array",
+    );
 
     const frames = await getFramesByGuildIds(
       queryResult.data.guildIds,
@@ -94,12 +93,7 @@ frameRouter.put<FrameIdParam>(
         parseFrameId(req.params),
         FrameDataParamModel.safeParseAsync(req.body),
       ]);
-      if (!bodyQueryResult.success) {
-        throw new BadRequestError(
-          "Invalid body parameters",
-          bodyQueryResult.error.issues,
-        );
-      }
+      assertZodSuccess(bodyQueryResult);
 
       const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
@@ -150,12 +144,7 @@ frameRouter.post<FrameIdParam>("/", frameMutationLimiter, async (req, res) => {
       FrameDataParamModel.safeParseAsync(req.body),
       FrameOwnerParamModel.safeParseAsync(req.body),
     ]);
-    if (!bodyQueryResult.success) {
-      throw new BadRequestError(
-        "Invalid body parameters",
-        bodyQueryResult.error.issues,
-      );
-    }
+    assertZodSuccess(bodyQueryResult);
 
     if (!ownerQueryResult.success) {
       throw new BadRequestError(

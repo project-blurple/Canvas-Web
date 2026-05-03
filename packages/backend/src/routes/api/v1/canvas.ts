@@ -1,8 +1,15 @@
 import { type Response, Router } from "express";
 import { ApiError } from "@/errors";
-import { parseCanvasId } from "@/models/paramModels";
+import {
+  type CanvasIdParam,
+  CreateCanvasBodyModel,
+  EditCanvasBodyModel,
+  parseCanvasId,
+} from "@/models/canvas.models";
 import {
   type CachedCanvas,
+  createCanvas,
+  editCanvas,
   getCanvases,
   getCanvasFilename,
   getCanvasInfo,
@@ -11,6 +18,9 @@ import {
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
+import { assertCanvasAdmin } from "@/services/discordGuildService";
+import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = Router();
@@ -61,6 +71,53 @@ canvasRouter.get("/:canvasId", async (req, res) => {
     const cachedCanvas = await getCanvasPng(canvasId);
 
     sendCachedCanvas(res, canvasId, cachedCanvas);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+canvasRouter.post("/", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
+    assertZodSuccess(canvasData);
+
+    const canvas = await createCanvas({
+      name: canvasData.data.name,
+      width: canvasData.data.width,
+      height: canvasData.data.height,
+      startCoordinates: canvasData.data.startCoordinates,
+      cooldownLength: canvasData.data.cooldownLength,
+    });
+
+    res.status(201).json(canvas);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [canvasId, canvasData] = await Promise.all([
+      parseCanvasId(req.params),
+      EditCanvasBodyModel.safeParseAsync(req.body),
+    ]);
+
+    assertZodSuccess(canvasData);
+
+    const canvas = await editCanvas({
+      canvasId,
+      name: canvasData.data.name,
+      cooldownLength: canvasData.data.cooldownLength,
+      isLocked: canvasData.data.isLocked,
+    });
+
+    res.status(200).json(canvas);
   } catch (error) {
     ApiError.sendError(res, error);
   }

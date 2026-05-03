@@ -1,8 +1,20 @@
 import { Router } from "express";
 
-import { ApiError, BadRequestError } from "@/errors";
-import { EventIdParamModel } from "@/models/paramModels";
-import { getCurrentEvent, getEventById } from "@/services/eventService";
+import { ApiError } from "@/errors";
+import {
+  CreateEventBodyModel,
+  EditEventBodyModel,
+  parseEventId,
+} from "@/models/event.models";
+import { assertCanvasAdmin } from "@/services/discordGuildService";
+import {
+  createEvent,
+  editEvent,
+  getCurrentEvent,
+  getEventById,
+} from "@/services/eventService";
+import { assertLoggedIn } from "@/utils";
+import { assertZodSuccess } from "@/utils/models";
 
 export const eventRouter = Router();
 
@@ -17,17 +29,43 @@ eventRouter.get("/current", async (_req, res) => {
 
 eventRouter.get("/:eventId", async (req, res) => {
   try {
-    const pathParams = await EventIdParamModel.safeParseAsync(req.params);
-
-    if (!pathParams.success) {
-      throw new BadRequestError(
-        "Malformed path parameters",
-        pathParams.error.issues,
-      );
-    }
-
-    const { eventId } = pathParams.data;
+    const eventId = await parseEventId(req.params);
     const event = await getEventById(eventId);
+
+    res.status(200).json(event);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+eventRouter.post("/", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const eventData = await CreateEventBodyModel.safeParseAsync(req.body);
+    assertZodSuccess(eventData);
+
+    const event = await createEvent(eventData.data.name, eventData.data.id);
+
+    res.status(201).json(event);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+eventRouter.put("/:eventId", async (req, res) => {
+  try {
+    assertLoggedIn(req);
+    assertCanvasAdmin(req.user);
+
+    const [eventId, eventData] = await Promise.all([
+      parseEventId(req.params),
+      EditEventBodyModel.safeParseAsync(req.body),
+    ]);
+    assertZodSuccess(eventData);
+
+    const event = await editEvent(eventId, eventData.data.name);
 
     res.status(200).json(event);
   } catch (error) {
