@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
   useAuthContext,
   useCanvasContext,

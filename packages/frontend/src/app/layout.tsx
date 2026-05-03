@@ -7,8 +7,9 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
+  ActionPanelProvider,
   AuthProvider,
   CanvasProvider,
   CanvasViewProvider,
@@ -18,10 +19,11 @@ import {
   SelectedFrameProvider,
 } from "@/contexts";
 import "../styles/core.css";
+import serverConfig from "@/config/serverConfig";
 import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
-  metadataBase: new URL(config.baseUrl),
+  metadataBase: new URL(serverConfig.baseUrl),
   title: "Blurple Canvas",
   description: "Part of Project Blurple",
 };
@@ -109,11 +111,13 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
           <SelectedColorProvider>
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <CanvasViewProvider>
-                  <SelectedBoundsProvider>
-                    <AppProviders>{children}</AppProviders>
-                  </SelectedBoundsProvider>
-                </CanvasViewProvider>
+                <ActionPanelProvider>
+                  <CanvasViewProvider>
+                    <SelectedBoundsProvider>
+                      <AppProviders>{children}</AppProviders>
+                    </SelectedBoundsProvider>
+                  </CanvasViewProvider>
+                </ActionPanelProvider>
               </CanvasProvider>
             </SelectedFrameProvider>
           </SelectedColorProvider>

@@ -8,7 +8,7 @@ import type {
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useState } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
   pixelHistory: [],

@@ -1,13 +1,13 @@
 import type { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { ApiError } from "@/errors";
+import { type CanvasIdParam, parseCanvasId } from "@/models/canvas.models";
 import {
   PixelHistoryComplexBodyModel,
   PixelHistoryComplexParamModel,
   PixelHistoryDeleteBodyModel,
   PixelHistoryParamModel,
 } from "@/models/history.models";
-import { type CanvasIdParam, parseCanvasId } from "@/models/paramModels";
 import { assertIsCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,

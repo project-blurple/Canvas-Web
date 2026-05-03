@@ -1,10 +1,7 @@
-import type {
-  DiscordUserProfile,
-  Palette,
-  PaletteColor,
-} from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
-import { useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -23,7 +20,7 @@ import {
 import { BotPlaceCommandCard } from "./BotCommandCard";
 import ColorInfoCard from "./SelectedColorInfoCard";
 
-const ColorPicker = styled("div")`
+const Fieldset = styled("fieldset")`
   --min-swatch-width: 3rem;
 
   display: grid;
@@ -49,7 +46,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-export const partitionPalette = (palette: Palette) => {
+export function partitionPalette(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
@@ -57,7 +54,7 @@ export const partitionPalette = (palette: Palette) => {
   }
 
   return [mainColors, partnerColors];
-};
+}
 
 function isUserInServer(user: DiscordUserProfile, serverId: string) {
   const guildIds = getUserGuildIds(user);
@@ -76,12 +73,14 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
-  const { data: palette = [] } = usePalette(eventId ?? undefined);
-  const [mainColors, partnerColors] = partitionPalette(palette);
+  const { data: palette } = usePalette(eventId ?? undefined);
+  const [mainColors, partnerColors] = useMemo(
+    () => (palette !== undefined ? partitionPalette(palette) : []),
+    [palette],
+  );
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
   const [isLarge, setIsLarge] = useState(true);
-  const playSound = usePlaySound("pick_color");
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -104,7 +103,7 @@ export default function PlacePixelTab({
     [remPixels],
   );
 
-  const { color: selectedColor, setColor } = useSelectedColorContext();
+  const { color: selectedColor } = useSelectedColorContext();
 
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -135,47 +134,14 @@ export default function PlacePixelTab({
       isUserInServer(user, selectedColor?.guildId)) ??
     false;
 
-  function setSelectedColor(color: PaletteColor | null) {
-    playSound();
-    setColor(color);
-  }
-
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <ColorPicker>
-            <Heading>Main colors</Heading>
-            {mainColors.length ?
-              mainColors.map((color) => (
-                <InteractiveSwatch
-                  key={color.code}
-                  rgba={color.rgba}
-                  onAction={() => setSelectedColor(color)}
-                  selected={color === selectedColor}
-                />
-              ))
-            : Array.from({ length: 12 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                <SwatchSkeleton key={i} variant="rectangular" />
-              ))
-            }
-            <Heading>Partner colors</Heading>
-            {partnerColors.length ?
-              partnerColors.map((color) => (
-                <InteractiveSwatch
-                  key={color.code}
-                  onAction={() => setSelectedColor(color)}
-                  rgba={color.rgba}
-                  selected={color === selectedColor}
-                />
-              ))
-            : Array.from({ length: 13 }).map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
-                <SwatchSkeleton key={i} variant="rectangular" />
-              ))
-            }
-          </ColorPicker>
+          <div>
+            <NamedPalette colors={mainColors} name="Main colors" />
+            <NamedPalette colors={partnerColors} name="Partner colors" />
+          </div>
         </ActionPanelTabBody>
       </FullWidthScrollView>
       <ActionPanelTabBody>
@@ -188,7 +154,11 @@ export default function PlacePixelTab({
         )}
         {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
         {isJoinServerShown && (
-          <DynamicAnchorButton color={selectedColor?.rgba} href={serverInvite}>
+          <DynamicAnchorButton
+            color={selectedColor?.rgba}
+            href={serverInvite}
+            type="submit"
+          >
             {!userInServer ? "Join" : "Open"}{" "}
             {selectedColor?.guildName ?? "server"}
           </DynamicAnchorButton>
@@ -196,5 +166,42 @@ export default function PlacePixelTab({
         {!readOnly && isLarge && <BotPlaceCommandCard />}
       </ActionPanelTabBody>
     </PlacePixelTabBlock>
+  );
+}
+
+interface NamedPaletteProps {
+  colors: Palette | undefined;
+  name: React.ReactNode;
+}
+
+function NamedPalette({ colors, name }: NamedPaletteProps) {
+  const { color: selectedColor, setColor } = useSelectedColorContext();
+  const playSound = usePlaySound("pick_color");
+
+  if (colors?.length === 0) return null;
+  const isLoading = colors === undefined;
+  return (
+    <>
+      <Heading>{name}</Heading>
+      <Fieldset>
+        {isLoading ?
+          Array.from({ length: 12 }).map((_, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
+            <SwatchSkeleton key={i} variant="rectangular" />
+          ))
+        : colors.map((color) => (
+            <InteractiveSwatch
+              aria-selected={color === selectedColor}
+              key={color.code}
+              onClick={() => {
+                playSound();
+                setColor(color);
+              }}
+              paletteColor={color}
+            />
+          ))
+        }
+      </Fieldset>
+    </>
   );
 }

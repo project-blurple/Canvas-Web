@@ -1,10 +1,23 @@
 import express from "express";
 import request from "supertest";
 
-import { ForbiddenError } from "@/errors";
-import { createFrame, deleteFrame, editFrame } from "@/services/frameService";
+import { ForbiddenError, UnprocessableError } from "@/errors";
+import {
+  assertMaxOwnerFramesNotExceeded,
+  createFrame,
+  deleteFrame,
+  editFrame,
+} from "@/services/frameService";
+import {
+  assignColorToEvent,
+  createColor,
+  deleteColor,
+  editColor,
+  unassignColorFromEvent,
+} from "@/services/paletteService";
 import { mockAuth } from "@/test/mockAuth";
 import { frameRouter } from "./frame";
+import { paletteRouter } from "./palette";
 
 interface EndpointCase {
   name: string;
@@ -17,12 +30,23 @@ interface EndpointCase {
 }
 
 vi.mock("@/services/frameService", () => ({
+  assertMaxOwnerFramesNotExceeded: vi.fn(),
   createFrame: vi.fn(),
   deleteFrame: vi.fn(),
   editFrame: vi.fn(),
   getFrameById: vi.fn(),
   getFramesByGuildIds: vi.fn(),
   getFramesByUserId: vi.fn(),
+}));
+
+vi.mock("@/services/paletteService", () => ({
+  assignColorToEvent: vi.fn(),
+  createColor: vi.fn(),
+  deleteColor: vi.fn(),
+  editColor: vi.fn(),
+  getCurrentEventPalette: vi.fn(),
+  getEventPalette: vi.fn(),
+  unassignColorFromEvent: vi.fn(),
 }));
 
 const endpointCases = [
@@ -129,6 +153,9 @@ describe("Frame mutation route tests", () => {
       const serviceMock = getServiceMock(serviceName);
       switch (serviceName) {
         case "create":
+          vi.mocked(assertMaxOwnerFramesNotExceeded).mockResolvedValueOnce(
+            undefined,
+          );
           vi.mocked(createFrame).mockResolvedValueOnce(undefined);
           break;
         case "edit":
@@ -152,6 +179,33 @@ describe("Frame mutation route tests", () => {
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("returns 422 when the create frame limit is exceeded", async () => {
+    const app = createApp(true);
+    vi.mocked(assertMaxOwnerFramesNotExceeded).mockRejectedValueOnce(
+      new UnprocessableError("Frame limit reached"),
+    );
+
+    const response = await sendMutationRequest("/api/v1/frame", {
+      app,
+      method: "post",
+      body: {
+        canvasId: 1,
+        name: "Frame name",
+        ownerId: "1",
+        isGuildOwned: false,
+        x0: 0,
+        y0: 0,
+        x1: 10,
+        y1: 10,
+      },
+    }).set("X-TestUserId", "1");
+
+    expect(response.status).toBe(422);
+    expect(response.body).toStrictEqual({ message: "Frame limit reached" });
+    expect(assertMaxOwnerFramesNotExceeded).toHaveBeenCalledTimes(1);
+    expect(createFrame).not.toHaveBeenCalled();
+  });
 
   it.each(endpointCases)(
     "returns 401 for $name when authentication is missing",
@@ -287,6 +341,145 @@ describe("Frame mutation route tests", () => {
 
       expect(allowedResponse.status).toBe(201);
       expect(createFrame).toHaveBeenCalledTimes(FRAME_MUTATION_LIMIT + 1);
+    });
+  });
+});
+
+const createPaletteApp = () => {
+  const app = express();
+  app.use(express.json());
+  app.use((req, _res, next) => {
+    req.user = { isCanvasAdmin: true } as Express.User;
+    req.session = {
+      discordAccessToken: "test-access-token",
+    } as typeof req.session;
+    next();
+  });
+  app.use("/api/v1/palette", paletteRouter);
+  return app;
+};
+
+describe("Palette admin route tests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("creates a color", async () => {
+    const app = createPaletteApp();
+    vi.mocked(createColor).mockResolvedValueOnce({
+      id: 1,
+      code: "pink",
+      name: "Pink",
+      global: true,
+      rgba: [255, 0, 255, 255],
+      emoji_name: null,
+      emoji_id: null,
+    } as Awaited<ReturnType<typeof createColor>>);
+
+    const response = await request(app)
+      .post("/api/v1/palette/")
+      .send({
+        code: "pink",
+        name: "Pink",
+        global: true,
+        rgba: [255, 0, 255, 255],
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toStrictEqual({
+      message: "Color created",
+    });
+    expect(vi.mocked(createColor)).toHaveBeenCalledWith({
+      code: "pink",
+      name: "Pink",
+      global: true,
+      rgba: [255, 0, 255, 255],
+    });
+  });
+
+  it("edits a color", async () => {
+    const app = createPaletteApp();
+    vi.mocked(editColor).mockResolvedValueOnce({
+      id: 3,
+      code: "gren",
+      name: "Green",
+      global: false,
+      rgba: [0, 255, 0, 255],
+      emoji_name: null,
+      emoji_id: null,
+    } as Awaited<ReturnType<typeof editColor>>);
+
+    const response = await request(app)
+      .put("/api/v1/palette/3")
+      .send({
+        code: "gren",
+        name: "Green",
+        global: false,
+        rgba: [0, 255, 0, 255],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({
+      message: "Color edited",
+    });
+    expect(vi.mocked(editColor)).toHaveBeenCalledWith({
+      colorId: 3,
+      data: {
+        code: "gren",
+        name: "Green",
+        global: false,
+        rgba: [0, 255, 0, 255],
+      },
+    });
+  });
+
+  it("deletes a color", async () => {
+    const app = createPaletteApp();
+    vi.mocked(deleteColor).mockResolvedValueOnce(undefined);
+
+    const response = await request(app).delete("/api/v1/palette/5");
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({
+      message: "Color deleted",
+    });
+    expect(vi.mocked(deleteColor)).toHaveBeenCalledWith(5);
+  });
+
+  it("assigns a color to an event", async () => {
+    const app = createPaletteApp();
+    vi.mocked(assignColorToEvent).mockResolvedValueOnce(undefined);
+
+    const response = await request(app).post(
+      "/api/v1/palette/8/assign/13/123456789012345678",
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({
+      message: "Color assigned to event",
+    });
+    expect(vi.mocked(assignColorToEvent)).toHaveBeenCalledWith({
+      colorId: 8,
+      eventId: 13,
+      guildId: 123456789012345678n,
+    });
+  });
+
+  it("unassigns a color from an event", async () => {
+    const app = createPaletteApp();
+    vi.mocked(unassignColorFromEvent).mockResolvedValueOnce(undefined);
+
+    const response = await request(app).delete(
+      "/api/v1/palette/8/assign/13/123456789012345678",
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({
+      message: "Color unassigned from event",
+    });
+    expect(vi.mocked(unassignColorFromEvent)).toHaveBeenCalledWith({
+      eventId: 13,
+      guildId: 123456789012345678n,
     });
   });
 });

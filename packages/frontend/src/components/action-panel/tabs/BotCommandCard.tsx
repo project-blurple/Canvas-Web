@@ -1,7 +1,7 @@
 import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
 import VisuallyHidden from "@/components/VisuallyHidden";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import { useCanvasViewContext, useSelectedColorContext } from "@/contexts";
 
 const Wrapper = styled("div")`
