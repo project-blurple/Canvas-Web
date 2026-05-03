@@ -1,4 +1,5 @@
 import { Router } from "express";
+import config from "@/config";
 import { ApiError, BadRequestError } from "@/errors";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { parseCanvasId } from "@/models/canvas.models";
@@ -10,6 +11,7 @@ import {
   parseFrameId,
 } from "@/models/frame.models";
 import {
+  assertMaxOwnerFramesNotExceeded,
   createFrame,
   deleteFrame,
   editFrame,
@@ -33,11 +35,14 @@ frameRouter.get("/:frameId", async (req, res) => {
 
 frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
   try {
-    const frame = await getFramesByUserId(
+    const frames = await getFramesByUserId(
       req.params.userId,
       await parseCanvasId(req.params),
     );
-    res.status(200).json(frame);
+    res.status(200).json({
+      data: frames,
+      hasReachedMaxFrames: frames.length >= config.frames.maxAllowedUser,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -51,11 +56,25 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
       "Invalid query parameters. Expected guildIds as a string or string array",
     );
 
-    const frame = await getFramesByGuildIds(
+    const frames = await getFramesByGuildIds(
       queryResult.data.guildIds,
       await parseCanvasId(req.params),
     );
-    res.status(200).json(frame);
+
+    const hasReachedMaxFramesMap: Record<string, boolean> = {};
+    for (const guildId of queryResult.data.guildIds) {
+      const frameCount = frames.reduce((count, frame) => {
+        if (frame.owner.guild.guild_id === guildId) count++;
+        return count;
+      }, 0);
+      hasReachedMaxFramesMap[guildId] =
+        frameCount >= config.frames.maxAllowedGuild;
+    }
+
+    res.status(200).json({
+      data: frames,
+      hasReachedMaxFrames: hasReachedMaxFramesMap,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -127,14 +146,20 @@ frameRouter.post<FrameIdParam>("/", frameMutationLimiter, async (req, res) => {
     ]);
     assertZodSuccess(bodyQueryResult);
 
-    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
-
     if (!ownerQueryResult.success) {
       throw new BadRequestError(
         "Invalid body parameters",
         ownerQueryResult.error.issues,
       );
     }
+
+    await assertMaxOwnerFramesNotExceeded({
+      canvasId,
+      ownerId: ownerQueryResult.data.ownerId,
+      isGuildOwned: ownerQueryResult.data.isGuildOwned,
+    });
+
+    const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
     const frame = await createFrame(
       req.user,

@@ -14,8 +14,17 @@ export interface Params {
 }
 
 export type ResBody = Frame[];
-export type FrameByIdResBody = Frame;
-export type UserFramesResBody = UserOwnedFrame[];
-export type GuildFramesResBody = GuildOwnedFrame[];
 export type ReqBody = Record<string, never>;
 export type ReqQuery = Record<string, never>;
+export type FrameByIdResBody = Frame;
+
+export interface UserFramesResBody {
+  data: UserOwnedFrame[];
+  hasReachedMaxFrames: boolean;
+}
+export interface GuildFramesResBody {
+  data: GuildOwnedFrame[];
+  hasReachedMaxFrames: {
+    [guildId: string]: boolean;
+  };
+}
