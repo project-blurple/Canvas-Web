@@ -148,7 +148,7 @@ export default function ComplexSearchColorSelect({
         }
         renderValue={(
           values: Palette[number][],
-          getItemProps: (args: { index: number }) => any,
+          getItemProps: (args: { index: number }) => Record<string, unknown>,
         ) => (
           <SelectedColorChips>
             {values.map((tag, index) => {
