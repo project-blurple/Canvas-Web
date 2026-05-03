@@ -9,9 +9,9 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
+import { CANVAS_WRAPPER_CLASS_NAME } from "../canvas/CanvasView";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
-import { CANVAS_WRAPPER_CLASS_NAME } from "../canvas/CanvasView";
 
 const Wrapper = styled("div")`
   --padding-width: 1rem;
