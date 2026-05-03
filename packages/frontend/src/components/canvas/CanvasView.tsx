@@ -449,7 +449,7 @@ function getViewForFrame({
   return { targetZoom, offset, targetPoint };
 }
 
-export default function CanvasView({ showNotices }: { showNotices?: boolean }) {
+export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
@@ -1127,7 +1127,7 @@ export default function CanvasView({ showNotices }: { showNotices?: boolean }) {
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
-      {showNotices && <Notices />}
+      <Notices />
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}

@@ -40,7 +40,7 @@ const Wrapper = styled("main")`
 export default function Main() {
   return (
     <Wrapper>
-      <CanvasView showNotices />
+      <CanvasView />
       <SlideableDrawer>
         <ActionPanel />
       </SlideableDrawer>
