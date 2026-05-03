@@ -472,12 +472,14 @@ interface CanvasViewProps {
   showInvite?: boolean;
   showReticle?: boolean;
   canvasLabel?: string;
+  actionPanel?: React.ReactNode;
 }
 
 export default function CanvasView({
   showInvite = true,
   showReticle = true,
   canvasLabel,
+  actionPanel,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
@@ -1288,7 +1290,7 @@ export default function CanvasView({
           onPointerMove={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
         >
-          <ActionPanel />
+          {actionPanel}
         </FullscreenPanelOverlay>
       )}
       {isLoading && <CircularProgress style={{ position: "absolute" }} />}
