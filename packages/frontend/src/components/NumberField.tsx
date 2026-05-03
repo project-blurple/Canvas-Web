@@ -1,8 +1,8 @@
 // Copied from https://mui.com/material-ui/react-number-field/
+// Slight modification to use Lucide icons instead of MUI
 
 import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
 import FormControl from "@mui/material/FormControl";
-import FormHelperText from "@mui/material/FormHelperText";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import InputLabel from "@mui/material/InputLabel";

@@ -34,7 +34,7 @@ export default function ComplexSearchDateSelect({
   return (
     <DateSelectWrapper>
       <DateTimePickerStyled
-        label={`From date (${timezone})`}
+        label={`From (${timezone})`}
         value={fromTime}
         onChange={setFromTime}
         slotProps={{
@@ -43,7 +43,7 @@ export default function ComplexSearchDateSelect({
         }}
       />
       <DateTimePickerStyled
-        label={`To date (${timezone})`}
+        label={`To (${timezone})`}
         value={toTime}
         onChange={setToTime}
         slotProps={{
