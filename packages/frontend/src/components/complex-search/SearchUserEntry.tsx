@@ -27,6 +27,16 @@ const CardHeader = styled("div")`
   flex-direction: row;
   justify-content: space-between;
   width: 100%;
+
+  > *:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  > *:last-child {
+    flex: 0 0 auto;
+  }
 `;
 
 const ColorChipWrapper = styled("div")`
@@ -35,6 +45,13 @@ const ColorChipWrapper = styled("div")`
   flex-wrap: nowrap;
   gap: 0.25rem;
   overflow-x: auto;
+`;
+
+const UserId = styled("code")`
+  color: oklch(from var(--discord-white) l c h / 60%);
+  font-size: 0.75rem;
+  letter-spacing: 0.01em;
+  word-break: break-all;
 `;
 
 interface SearchUserEntryProps {
@@ -57,13 +74,23 @@ function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
     <UserCard>
       <CardHeader>
         <strong>{summary.userProfile?.username ?? userId}</strong>
-        {summary.count.toLocaleString()} pixel{summary.count !== 1 && "s"}
+        <span>
+          {summary.count.toLocaleString()} pixel{summary.count !== 1 && "s"}
+        </span>
       </CardHeader>
       <ColorChipWrapper>
-        {colors.slice(0, 5).map(({ color }) => (
-          <ColorCodeChip key={color.id} color={color} />
-        ))}
+        {colors.slice(0, 5).map(({ color }) => {
+          const rgb = color.rgba.slice(0, 3).join(" ");
+          return (
+            <ColorCodeChip
+              key={color.id}
+              color={color}
+              backgroundColorStr={`rgb(${rgb})`}
+            />
+          );
+        })}
       </ColorChipWrapper>
+      <UserId>{userId}</UserId>
     </UserCard>
   );
 }

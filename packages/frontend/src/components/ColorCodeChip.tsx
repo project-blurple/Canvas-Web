@@ -1,12 +1,25 @@
-            "use client";
+"use client";
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { css, styled } from "@mui/material";
 import { PrimitiveButton } from "./button";
 import VisuallyHidden from "./VisuallyHidden";
 
-const StyledButton = styled(PrimitiveButton)`
-  background-color: oklch(from var(--discord-white) l c h / 12%);
+const StyledButton = styled(PrimitiveButton, {
+  shouldForwardProp: (prop) => prop !== "backgroundColorStr",
+})<{ backgroundColorStr?: string }>`
+  --dynamic-bg-color: var(--discord-white);
+  ${({ backgroundColorStr }) =>
+    backgroundColorStr &&
+    css`
+      --dynamic-bg-color: ${backgroundColorStr};
+    `}
+
+  background-color: oklch(
+    from var(--dynamic-bg-color) l c h /
+    ${({ backgroundColorStr }) => (backgroundColorStr ? "100%" : "12%")}
+  );
+
   border-radius: 0.25rem;
   cursor: pointer;
   display: inline-block;
@@ -17,17 +30,36 @@ const StyledButton = styled(PrimitiveButton)`
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      background-color: oklch(from var(--discord-white) l c h / 20%);
+      background-color: oklch(
+        from var(--dynamic-bg-color) l c h /
+          ${({ backgroundColorStr }) => (backgroundColorStr ? "80%" : "20%")}
+      );
     }
   }
 
   &:focus-visible {
-    background-color: oklch(from var(--discord-white) l c h / 20%);
+    background-color: oklch(
+      from var(--dynamic-bg-color) l c h /
+        ${({ backgroundColorStr }) => (backgroundColorStr ? "80%" : "20%")}
+    );
     outline: var(--focus-outline);
   }
 
   &:active {
-    background-color: oklch(from var(--discord-white) l c h / 6%);
+    background-color: oklch(
+      from var(--dynamic-bg-color) l c h /
+        ${({ backgroundColorStr }) => (backgroundColorStr ? "94%" : "6%")}
+    );
+  }
+`;
+
+const ButtonContent = styled("code")`
+  @supports (color: color-mix(in oklab, black, black)) {
+    color: color-mix(
+      in oklab,
+      contrast-color(var(--dynamic-bg-color)) 94%,
+      var(--dynamic-bg-color)
+    );
   }
 `;
 
@@ -50,7 +82,7 @@ export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
 
   return (
     <StyledButton onClick={clickHandler} onKeyUp={keyUpHandler} {...props}>
-      <code aria-hidden>{colorCode}</code>
+      <ButtonContent aria-hidden>{colorCode}</ButtonContent>
       <VisuallyHidden>
         Code {colorCode.split("").join("-")}. Click to copy.
       </VisuallyHidden>
