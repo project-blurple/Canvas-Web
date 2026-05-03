@@ -1,5 +1,6 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
 import {
@@ -18,6 +19,7 @@ import {
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
 import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
+import ComplexSearchDateSelect from "./ComplexSearchDateSelect";
 import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
@@ -72,6 +74,9 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const [selectedUserIds, setSelectedUserIds] = useState<bigint[]>([]);
   const [userFilterMode, setUserFilterMode] =
     useState<SearchFilterMode>("include");
+
+  const [fromTime, setFromTime] = useState<DateTime | null>(null);
+  const [toTime, setToTime] = useState<DateTime | null>(null);
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
@@ -145,6 +150,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         selectedUserIds.length ?
           selectedUserIds.map((id) => id.toString())
         : undefined,
+      fromDateTime: fromTime?.toISO() ?? undefined,
+      toDateTime: toTime?.toISO() ?? undefined,
     });
   }
 
@@ -177,6 +184,12 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               filterMode={userFilterMode}
               onChange={setSelectedUserIds}
               onFilterModeChange={setUserFilterMode}
+            />
+            <ComplexSearchDateSelect
+              fromTime={fromTime}
+              toTime={toTime}
+              setFromTime={setFromTime}
+              setToTime={setToTime}
             />
             <DynamicButton
               onClick={handleSearchClick}
