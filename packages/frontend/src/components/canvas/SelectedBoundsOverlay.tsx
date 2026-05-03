@@ -200,7 +200,7 @@ function renderOverlayShades({
         <path
           d={overlayCutoutPath}
           fill="#000000"
-          fillOpacity={0.25}
+          fillOpacity={0.5}
           fillRule="evenodd"
         />
       </OverlayShade>
@@ -212,9 +212,9 @@ function renderOverlayShades({
       >
         <path
           d={overlayCutoutPath}
-          fill="#808080"
+          fill="#333333"
           fillRule="evenodd"
-          fillOpacity={0.25}
+          fillOpacity={0.5}
         />
       </OverlayDesaturateShade>
     </>
