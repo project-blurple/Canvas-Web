@@ -1293,6 +1293,7 @@ export default function CanvasView({
           onPointerDown={(event) => event.stopPropagation()}
           onPointerMove={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
+          onWheelCapture={(event) => event.stopPropagation()}
         >
           {actionPanel}
         </FullscreenPanelOverlay>
