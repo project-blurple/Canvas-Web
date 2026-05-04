@@ -66,10 +66,6 @@ const EraseWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
-const StyledCheckbox = styled(Checkbox)`
-  padding-block: 0;
-`;
-
 const StyledDialog = styled(Dialog)(() => ({
   "& .MuiDialog-paper": {
     boxShadow: "none",
