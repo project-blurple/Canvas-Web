@@ -1,5 +1,6 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { type notice as NoticeDbModel, prisma } from "@/client";
+import { BadRequestError } from "@/errors";
 import type { CreateNoticeBody } from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
@@ -9,18 +10,56 @@ function noticeFromDb(notice: NoticeDbModel): Notice {
     header: notice.header,
     content: notice.content,
     priority: notice.priority,
-    active: notice.active,
+    startAt: notice.start_at,
+    endAt: notice.end_at,
     persistOnDismiss: notice.persist_on_dismiss,
     canvasId: notice.canvas_id,
     createdAt: notice.created_at,
   };
 }
 
+function normalizeNoticeWindow({
+  startAt,
+  endAt,
+}: {
+  startAt?: Date | null;
+  endAt?: Date | null;
+}): { startAt?: Date | null; endAt?: Date | null } {
+  const normalizedStartAt =
+    endAt !== undefined && endAt !== null && startAt === undefined ?
+      new Date()
+    : startAt;
+
+  if (
+    normalizedStartAt !== undefined &&
+    normalizedStartAt !== null &&
+    endAt !== undefined &&
+    endAt !== null &&
+    endAt <= normalizedStartAt
+  ) {
+    throw new BadRequestError("endAt must be after startAt");
+  }
+
+  return {
+    startAt: normalizedStartAt,
+    endAt,
+  };
+}
+
 export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
+  const now = new Date();
+
   const notices = await prisma.notice.findMany({
-    where: {
-      active: activeOnly ? true : undefined,
-    },
+    where:
+      activeOnly ?
+        {
+          start_at: {
+            not: null,
+            lte: now,
+          },
+          OR: [{ end_at: null }, { end_at: { gt: now } }],
+        }
+      : undefined,
     orderBy: {
       priority: "asc",
     },
@@ -34,17 +73,21 @@ export async function createNotice({
   header,
   content,
   priority,
-  active,
+  startAt,
+  endAt,
   persistOnDismiss,
   canvasId,
 }: CreateNoticeBody): Promise<Notice> {
+  const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
+
   const notice = await prisma.notice.create({
     data: {
       type,
       header,
       content,
       priority,
-      active,
+      start_at: normalizedWindow.startAt,
+      end_at: normalizedWindow.endAt,
       persist_on_dismiss: persistOnDismiss,
       canvas_id: canvasId,
     },
@@ -60,8 +103,19 @@ interface UpdateNoticeBody {
 
 export async function updateNotice({
   noticeId,
-  data: { type, header, content, priority, active, persistOnDismiss, canvasId },
+  data: {
+    type,
+    header,
+    content,
+    priority,
+    startAt,
+    endAt,
+    persistOnDismiss,
+    canvasId,
+  },
 }: UpdateNoticeBody): Promise<Notice> {
+  const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
+
   const notice = await prisma.notice.update({
     where: {
       id: noticeId,
@@ -71,7 +125,8 @@ export async function updateNotice({
       header,
       content,
       priority,
-      active,
+      start_at: normalizedWindow.startAt,
+      end_at: normalizedWindow.endAt,
       persist_on_dismiss: persistOnDismiss,
       canvas_id: canvasId,
     },

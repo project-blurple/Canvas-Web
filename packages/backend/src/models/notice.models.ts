@@ -23,14 +23,25 @@ export async function parseNoticeId(
   return result.data.noticeId;
 }
 
-export const ModifyNoticeBodyModel = z.object({
-  type: z.string(),
-  header: z.string().nullable().optional(),
-  content: z.string().nullable().optional(),
-  priority: z.number().int().nonnegative().optional(),
-  active: z.boolean().optional(),
-  persistOnDismiss: z.boolean().optional(),
-  canvasId: z.number().int().positive().nullable().optional(),
-});
+export const ModifyNoticeBodyModel = z
+  .object({
+    type: z.string(),
+    header: z.string().nullable().optional(),
+    content: z.string().nullable().optional(),
+    priority: z.number().int().nonnegative().optional(),
+    startAt: z.coerce.date().nullable().optional(),
+    endAt: z.coerce.date().nullable().optional(),
+    persistOnDismiss: z.boolean().optional(),
+    canvasId: z.number().int().positive().nullable().optional(),
+  })
+  .superRefine(({ startAt, endAt }, ctx) => {
+    if (startAt && endAt && startAt >= endAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["endAt"],
+        message: "endAt must be after startAt",
+      });
+    }
+  });
 
 export type CreateNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;

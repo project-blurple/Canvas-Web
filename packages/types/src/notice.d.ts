@@ -6,7 +6,8 @@ export interface Notice {
   header: string | null;
   content: string | null;
   priority: number; // lower number means higher priority
-  active: boolean;
+  startAt: Date | null;
+  endAt: Date | null;
   persistOnDismiss: boolean;
   canvasId: number | null;
   createdAt: Date;

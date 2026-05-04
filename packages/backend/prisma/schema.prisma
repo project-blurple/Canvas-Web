@@ -193,16 +193,17 @@ model session {
 }
 
 model notice {
-  id                 Int      @id @default(autoincrement())
-  type               String   @default("info") // info | warning | error
+  id                 Int       @id @default(autoincrement())
+  type               String    @default("info") // info | warning | error
   header             String?
   content            String?
-  priority           Int      @default(0)
-  active             Boolean  @default(false)
-  persist_on_dismiss Boolean  @default(false)
+  priority           Int       @default(0)
+  start_at           DateTime? @db.Timestamptz(6)
+  end_at             DateTime? @db.Timestamptz(6)
+  persist_on_dismiss Boolean   @default(false)
   canvas_id          Int?
-  canvas             canvas?  @relation(fields: [canvas_id], references: [id])
-  created_at         DateTime @default(now()) @db.Timestamptz(6)
+  canvas             canvas?   @relation(fields: [canvas_id], references: [id])
+  created_at         DateTime  @default(now()) @db.Timestamptz(6)
 }
 
 view user_stats {
