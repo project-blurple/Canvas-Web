@@ -11,6 +11,8 @@ import { socketHandler } from "@/index";
 import { userIsBlocklisted } from "./blocklistService";
 import { updateCachedCanvasPixel } from "./canvasService";
 
+const BLANK_PIXEL_COLOR_ID = 1;
+
 /** Ensures that the given pixel coordinates are within the bounds of the canvas and the canvas exists
  *
  * @param canvasId - The ID of the canvas
@@ -236,4 +238,84 @@ export async function placePixel(
   // Only update the cache if the transaction is successful
   updateCachedCanvasPixel(canvasId, coordinates, color.rgba);
   return { futureCooldown };
+}
+
+/**
+ * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ *
+ * @param canvasId - The ID of the canvas
+ * @param coordinates - The coordinates that need to be refreshed
+ */
+export async function restorePixelsAfterHistoryDeletion(
+  canvasId: number,
+  coordinates: Point[],
+): Promise<void> {
+  const uniqueCoordinates = new Map<string, Point>();
+
+  for (const coordinate of coordinates) {
+    uniqueCoordinates.set(`${coordinate.x}:${coordinate.y}`, coordinate);
+  }
+
+  const blankColor = (await prisma.color.findUnique({
+    where: {
+      id: BLANK_PIXEL_COLOR_ID,
+    },
+    select: {
+      rgba: true,
+    },
+  })) as { rgba: PixelColor } | null;
+
+  if (!blankColor) {
+    throw new NotFoundError(
+      `There is no color with ID ${BLANK_PIXEL_COLOR_ID}`,
+    );
+  }
+
+  for (const coordinate of uniqueCoordinates.values()) {
+    const latestHistoryEntry = await prisma.history.findFirst({
+      where: {
+        canvas_id: canvasId,
+        x: coordinate.x,
+        y: coordinate.y,
+      },
+      orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+      select: {
+        color_id: true,
+        color: {
+          select: {
+            rgba: true,
+          },
+        },
+      },
+    });
+
+    const pixelColorId = latestHistoryEntry?.color_id ?? BLANK_PIXEL_COLOR_ID;
+    const pixelColor =
+      (latestHistoryEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
+
+    await prisma.pixel.upsert({
+      where: {
+        canvas_id_x_y: {
+          canvas_id: canvasId,
+          ...coordinate,
+        },
+      },
+      create: {
+        canvas_id: canvasId,
+        ...coordinate,
+        color_id: pixelColorId,
+      },
+      update: {
+        color_id: pixelColorId,
+      },
+    });
+
+    socketHandler.broadcastPixelPlacement(canvasId, {
+      x: coordinate.x,
+      y: coordinate.y,
+      rgba: pixelColor,
+    });
+
+    updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
+  }
 }
