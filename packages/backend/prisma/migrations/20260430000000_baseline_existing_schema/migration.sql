@@ -1,4 +1,4 @@
--- Baseline for the pre-notice database schema.
+-- Baseline for the 2025 and earlier schema.
 -- Resolve this migration as applied for existing databases.
 
 CREATE TABLE public.blacklist (
