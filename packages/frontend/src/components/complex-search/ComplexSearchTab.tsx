@@ -1,13 +1,13 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import {
   Checkbox,
-  FormControlLabel,
-  styled,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
+  styled,
 } from "@mui/material";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
@@ -303,7 +303,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               onClick={handleEraseHistory}
             >
               Erase {entriesCount.toLocaleString()} history{" "}
-              {entriesCount > 1 ? "entries" : "entry"}
+              {entriesCount !== 1 ? "entries" : "entry"}
             </DynamicButton>
           </EraseWrapper>
         </ActionPanelTabBody>
