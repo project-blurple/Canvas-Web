@@ -301,17 +301,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       {historyData && (
         <ActionPanelTabBody>
           <EraseWrapper>
-            <FormControlLabel
-              control={
-                <StyledCheckbox
-                  size="small"
-                  checked={blockWhileErase}
-                  onChange={() => setBlockWhileErase(!blockWhileErase)}
-                />
-              }
-              label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
-              disabled={entriesCount === 0}
-            />
             <DynamicButton
               disabled={entriesCount === 0}
               backgroundColorStr="rgb(255,0,0)" // bright red warning for destructive action >:)
@@ -339,6 +328,17 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you want to
             continue?
           </DialogContentText>
+          <FormControlLabel
+            control={
+              <Checkbox
+                size="small"
+                checked={blockWhileErase}
+                onChange={() => setBlockWhileErase(!blockWhileErase)}
+              />
+            }
+            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
+            disabled={entriesCount === 0}
+          />
         </DialogContent>
         <DialogActions>
           <DynamicButton onClick={handleCancelErase}>Cancel</DynamicButton>
