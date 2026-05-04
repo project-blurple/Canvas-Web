@@ -188,8 +188,8 @@ async function main() {
   };
 
   const seedingOrder: Seeding[] = [
-    "discord_user_profile",
     "user",
+    "discord_user_profile",
     "discord_guild_record",
     "guild",
     "color",
