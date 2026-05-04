@@ -144,8 +144,12 @@ const BaseFullscreenButton = styled(Button, {
     p.$isPanelVisible &&
     p.$isFullscreen &&
     css`
-      inset-inline-end: calc(100vi);
-      inset-inline-end: calc(100dvi);
+      inset-inline-end: calc(
+        min(var(--action-panel-width), calc(100vi - 1rem))
+      );
+      inset-inline-end: calc(
+        min(var(--action-panel-width), calc(100dvi - 1rem))
+      );
     `};
 
   color: white;

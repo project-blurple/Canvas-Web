@@ -2,6 +2,14 @@
 # Amend and uncomment next line to use a remote deployment
 # @basePath = https://example.projectblurple.com/api/v1
 
+@eventId = 2023
+@canvasId = 2023
+@colorId = 1
+@guildId = 204778476102877187
+@userId = 204778476102877187
+@frameId = 1
+@botApiKey = {{$dotenv BOT_API_KEY}}
+
 ### Event
 
 ### Get current event
@@ -9,8 +17,25 @@ GET {{basePath}}/event/current
 Content-Type: application/json
 
 ### Get event by ID
-GET {{basePath}}/event/2023
+GET {{basePath}}/event/{{eventId}}
 Content-Type: application/json
+
+### Create event (requires canvas admin)
+POST {{basePath}}/event HTTP/1.1
+Content-Type: application/json
+
+{
+  "id": 2026,
+  "name": "Canvas 2026"
+}
+
+### Edit event (requires canvas admin)
+PUT {{basePath}}/event/{{eventId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Canvas 2023 - Updated"
+}
 
 ### Canvas
 
@@ -23,21 +48,48 @@ GET {{basePath}}/canvas/current/info HTTP/1.1
 Content-Type: application/json
 
 ### Get canvas info by ID
-GET {{basePath}}/canvas/2022/info HTTP/1.1
+GET {{basePath}}/canvas/{{canvasId}}/info HTTP/1.1
 Content-Type: application/json
 
 ### Get specific canvas
-GET {{basePath}}/canvas/2022 HTTP/1.1
+GET {{basePath}}/canvas/{{canvasId}} HTTP/1.1
 Content-Type: application/json
 
 ### Get current canvas
 GET {{basePath}}/canvas/current HTTP/1.1
 Content-Type: application/json
 
+### Create canvas (requires canvas admin)
+POST {{basePath}}/canvas HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Canvas 2026",
+  "width": 1000,
+  "height": 1000,
+  "startCoordinates": {
+    "x": 0,
+    "y": 0
+  },
+  "allColorsGlobal": false,
+  "cooldownLength": 30
+}
+
+### Edit canvas (requires canvas admin)
+PUT {{basePath}}/canvas/{{canvasId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "Canvas 2023 - Updated",
+  "allColorsGlobal": true,
+  "cooldownLength": 45,
+  "isLocked": false
+}
+
 ### Pixel
 
 ### Get pixel history
-GET {{basePath}}/canvas/2023/pixel/history
+GET {{basePath}}/canvas/{{canvasId}}/pixel/history
   ?x=1
   &y=1 HTTP/1.1
 Content-Type: application/json
@@ -50,6 +102,7 @@ POST {{basePath}}/canvas/3/pixel/history
   &x1=2
   &y1=2 HTTP/1.1
 content-type: application/json
+
 {
     "fromDateTime": "2023-01-01T00:00:00.000Z",
     "toDateTime": "2023-02-01T00:00:00.000Z",
@@ -61,20 +114,58 @@ content-type: application/json
 # Requires moderator session
 DELETE {{basePath}}/canvas/3/pixel/history HTTP/1.1
 content-type: application/json
+
 {
     "historyIds": [1, 2, 3],
     "shouldBlockAuthors": true
 }
 
-### Place Pixel
+### Place pixel (requires session)
 # This will not work as sessions are required
-POST {{basePath}}/canvas/3/pixel
-content-type: application/json
+POST {{basePath}}/canvas/{{canvasId}}/pixel HTTP/1.1
+Content-Type: application/json
+
 {
+  "x": 1,
+  "y": 1,
+  "colorId": 1
+}
+
+### Place bot pixels in batch (requires x-api-key)
+POST {{basePath}}/canvas/{{canvasId}}/pixel/bot HTTP/1.1
+Content-Type: application/json
+x-api-key: {{botApiKey}}
+
+[
+  {
     "x": 1,
     "y": 1,
     "colorId": 1
-}
+  },
+  {
+    "x": 2,
+    "y": 1,
+    "colorId": 2
+  }
+]
+
+### Place bot pixels in batch (requires x-api-key)
+POST {{basePath}}/canvas/{{canvasId}}/pixel/bot HTTP/1.1
+Content-Type: application/json
+x-api-key: {{botApiKey}}
+
+[
+  {
+    "x": 1,
+    "y": 1,
+    "colorId": 1
+  },
+  {
+    "x": 2,
+    "y": 1,
+    "colorId": 2
+  }
+]
 
 ### Blocklist
 
@@ -86,6 +177,7 @@ Content-Type: application/json
 # Requires moderator session
 PUT {{basePath}}/blocklist HTTP/1.1
 content-type: application/json
+
 {
   "userId": "204778476102877187"
 }
@@ -94,6 +186,7 @@ content-type: application/json
 # Requires moderator session
 DELETE {{basePath}}/blocklist HTTP/1.1
 content-type: application/json
+
 {
   "userId": ["204778476102877187", "123456789012345678"]
 }
@@ -101,23 +194,124 @@ content-type: application/json
 ### Event Palette
 
 ### Get palette for an event
-GET {{basePath}}/palette/2022 HTTP/1.1
+GET {{basePath}}/palette/{{eventId}} HTTP/1.1
 Content-Type: application/json
 
 ### Get palette for current event
 GET {{basePath}}/palette/current HTTP/1.1
 Content-Type: application/json
 
+### Create palette color (requires canvas admin)
+POST {{basePath}}/palette HTTP/1.1
+Content-Type: application/json
+
+{
+  "hex": "#4D7CFE",
+  "name": "Blurple"
+}
+
+### Edit palette color (requires canvas admin)
+PUT {{basePath}}/palette/{{colorId}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "hex": "#3B63D6",
+  "name": "Blurple Dark"
+}
+
+### Delete palette color (requires canvas admin)
+DELETE {{basePath}}/palette/{{colorId}} HTTP/1.1
+Content-Type: application/json
+
+### Assign color to event + guild (requires canvas admin)
+POST {{basePath}}/palette/{{colorId}}/assign/{{eventId}}/{{guildId}} HTTP/1.1
+Content-Type: application/json
+
+### Unassign color from event + guild (requires canvas admin)
+DELETE {{basePath}}/palette/{{colorId}}/assign/{{eventId}}/{{guildId}} HTTP/1.1
+Content-Type: application/json
+
+### Frame
+
+### Get frame by ID
+GET {{basePath}}/frame/{{frameId}} HTTP/1.1
+Content-Type: application/json
+
+### Get user frames by canvas
+GET {{basePath}}/frame/user/{{userId}}/{{canvasId}} HTTP/1.1
+Content-Type: application/json
+
+### Get guild frames by canvas
+GET {{basePath}}/frame/guilds/{{canvasId}}
+  ?guildIds={{guildId}}
+  &guildIds=123456789012345678 HTTP/1.1
+Content-Type: application/json
+
+### Create frame (requires session)
+POST {{basePath}}/frame HTTP/1.1
+Content-Type: application/json
+
+{
+  "canvasId": 2023,
+  "name": "My Frame",
+  "ownerId": "204778476102877187",
+  "isGuildOwned": false,
+  "x0": 0,
+  "y0": 0,
+  "x1": 10,
+  "y1": 10
+}
+
+### Edit frame (requires session)
+PUT {{basePath}}/frame/{{frameId}}/edit HTTP/1.1
+Content-Type: application/json
+
+{
+  "name": "My Edited Frame",
+  "x0": 1,
+  "y0": 1,
+  "x1": 12,
+  "y1": 12
+}
+
+### Delete frame (requires session)
+DELETE {{basePath}}/frame/{{frameId}}/delete HTTP/1.1
+Content-Type: application/json
+
 ### Statistics
 
 ### Get leaderboard for a canvas
-GET {{basePath}}/statistics/leaderboard/2022 HTTP/1.1
+GET {{basePath}}/statistics/leaderboard/{{canvasId}} HTTP/1.1
 Content-Type: application/json
 
 ### Get leaderboard of a certain size for a canvas
-GET {{basePath}}/statistics/leaderboard/2022?size=3 HTTP/1.1
+GET {{basePath}}/statistics/leaderboard/{{canvasId}}
+  ?size=3
+  &page=1 HTTP/1.1
 Content-Type: application/json
 
 ### Get user statistics for a canvas
-GET {{basePath}}/statistics/user/204778476102877187/2023 HTTP/1.1
+GET {{basePath}}/statistics/user/{{userId}}/{{canvasId}} HTTP/1.1
+Content-Type: application/json
+
+### Discord
+
+### Start Discord OAuth login (redirect flow)
+GET {{basePath}}/discord HTTP/1.1
+Content-Type: application/json
+
+### OAuth callback route (redirect flow)
+GET {{basePath}}/discord/callback HTTP/1.1
+Content-Type: application/json
+
+### Get permissions for one guild (requires session)
+GET {{basePath}}/discord/guilds/{{guildId}}/permissions HTTP/1.1
+Content-Type: application/json
+
+### Get current user's guild permissions map (requires session)
+GET {{basePath}}/discord/guilds/permissions-map HTTP/1.1
+Content-Type: application/json
+
+### Logout current user session
+POST {{basePath}}/discord/logout HTTP/1.1
 Content-Type: application/json
