@@ -24,3 +24,5 @@ ALTER COLUMN "profile_picture_url" SET NOT NULL;
 ALTER TABLE "info"
 ALTER COLUMN "cached_canvas_ids" SET NOT NULL,
 ALTER COLUMN "default_canvas_id" SET NOT NULL;
+
+ALTER TABLE public.guild DROP CONSTRAINT IF EXISTS guild_id_fkey;

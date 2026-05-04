@@ -146,9 +146,6 @@ ALTER TABLE public.cooldown
     ADD CONSTRAINT cooldown_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id),
     ADD CONSTRAINT cooldown_canvas_id_fkey FOREIGN KEY (canvas_id) REFERENCES public.canvas(id);
 
-ALTER TABLE public.discord_guild_record
-    ADD CONSTRAINT discord_guild_record_guild_id_fkey FOREIGN KEY (guild_id) REFERENCES public.guild(id);
-
 ALTER TABLE public.discord_user_profile
     ADD CONSTRAINT discord_user_profile_user_id_fkey FOREIGN KEY (user_id) REFERENCES public."user"(id);
 
