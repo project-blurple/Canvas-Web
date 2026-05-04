@@ -8,10 +8,13 @@ CREATE TABLE "notice" (
     "start_at" TIMESTAMPTZ(6),
     "end_at" TIMESTAMPTZ(6),
     "persist_on_dismiss" BOOLEAN NOT NULL DEFAULT false,
-    "canvas_id" INTEGER,
+    "canvas_id" INTEGER REFERENCES "canvas"("id") ON DELETE SET NULL ON UPDATE CASCADE,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "notice_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "notice_end_requires_start_chk" CHECK ("end_at" IS NULL OR "start_at" IS NOT NULL),
     CONSTRAINT "notice_end_after_start_chk" CHECK ("end_at" IS NULL OR "end_at" > "start_at")
 );
+
+-- CreateIndex
+CREATE INDEX "notice_canvas_id_idx" ON "notice"("canvas_id");
