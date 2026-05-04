@@ -1,5 +1,5 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { Checkbox, FormControlLabel, styled } from "@mui/material";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
@@ -51,6 +51,16 @@ const SummaryCard = styled("div")`
   gap: 0.35rem;
 `;
 
+const EraseWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const StyledCheckbox = styled(Checkbox)`
+  padding-block: 0;
+`;
+
 export type SearchFilterMode = "include" | "exclude";
 
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
@@ -87,6 +97,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     null,
   );
   const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
+
+  const [blockWhileErase, setBlockWhileErase] = useState(false);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -158,6 +170,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     });
   }
 
+  function handleEraseHistory() {
+    return;
+  }
+
   const pixelsInBounds =
     selectedBounds ?
       (selectedBounds.right - selectedBounds.left) *
@@ -166,7 +182,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
 
   const disabled = !selectedBounds || historyQuery.isLoading;
 
-  console.log(historyData);
+  const entriesCount = historyData?.totalEntries ?? 0;
+  const usersLength = Object.keys(historyData?.users ?? {}).length;
 
   return (
     <ComplexSearchTabBlock {...props}>
@@ -220,7 +237,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               <SummaryGrid>
                 <SummaryCard>
                   <strong>Total entries</strong>
-                  <span>{historyData.totalEntries.toLocaleString() ?? 0}</span>
+                  <span>{entriesCount.toLocaleString()}</span>
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Query duration</strong>
@@ -228,14 +245,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
                 </SummaryCard>
                 <SummaryCard>
                   <strong>Users</strong>
-                  <span>
-                    {Object.keys(
-                      historyData.users ?? {},
-                    ).length.toLocaleString() ?? 0}
-                  </span>
+                  <span>{usersLength.toLocaleString()}</span>
                 </SummaryCard>
               </SummaryGrid>
-              {Object.keys(historyData.users ?? {}).length > 0 && (
+              {usersLength > 0 && (
                 <>
                   <Heading>User summary</Heading>
                   <SearchUserEntries
@@ -248,6 +261,31 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
           </ActionPanelTabBody>
         )}
       </FullWidthScrollView>
+      {historyData && (
+        <ActionPanelTabBody>
+          <EraseWrapper>
+            <FormControlLabel
+              control={
+                <StyledCheckbox
+                  size="small"
+                  checked={blockWhileErase}
+                  onChange={() => setBlockWhileErase(!blockWhileErase)}
+                />
+              }
+              label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
+              disabled={entriesCount === 0}
+            />
+            <DynamicButton
+              disabled={entriesCount === 0}
+              backgroundColorStr="rgb(255,0,0)" // bright red warning for destructive action >:)
+              onClick={handleEraseHistory}
+            >
+              Erase {entriesCount.toLocaleString()} history{" "}
+              {entriesCount > 1 ? "entries" : "entry"}
+            </DynamicButton>
+          </EraseWrapper>
+        </ActionPanelTabBody>
+      )}
     </ComplexSearchTabBlock>
   );
 }
