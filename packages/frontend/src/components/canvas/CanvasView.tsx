@@ -14,7 +14,6 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionPanel } from "@/components/action-panel";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
