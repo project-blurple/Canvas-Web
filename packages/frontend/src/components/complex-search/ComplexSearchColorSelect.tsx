@@ -153,10 +153,12 @@ export default function ComplexSearchColorSelect({
           <SelectedColorChips>
             {values.map((tag, index) => {
               const rgb = tag.rgba.slice(0, 3).join(" ");
+              const itemProps = getItemProps({ index });
+              const { key: _key, ...restProps } = itemProps;
               return (
                 <ColorSelectChip
                   key={tag.id}
-                  {...getItemProps({ index })}
+                  {...restProps}
                   backgroundColorStr={`rgb(${rgb})`}
                   label={tag.name}
                   size="small"
