@@ -75,6 +75,61 @@ const StyledDialog = styled(Dialog)(() => ({
 
 export type SearchFilterMode = "include" | "exclude";
 
+interface EraseHistoryDialogProps {
+  open: boolean;
+  entriesCount: number;
+  usersLength: number;
+  blockWhileErase: boolean;
+  onBlockWhileEraseChange: (value: boolean) => void;
+  onCancel: () => void;
+  onConfirm: () => void;
+}
+
+function EraseHistoryDialog({
+  open,
+  entriesCount,
+  usersLength,
+  blockWhileErase,
+  onBlockWhileEraseChange,
+  onCancel,
+  onConfirm,
+}: EraseHistoryDialogProps) {
+  return (
+    <StyledDialog
+      open={open}
+      onClose={onCancel}
+      aria-labelledby="erase-history-dialog-title"
+      aria-describedby="erase-history-dialog-description"
+    >
+      <DialogTitle id="erase-history-dialog-title">Erase history?</DialogTitle>
+      <DialogContent>
+        <DialogContentText id="erase-history-dialog-description">
+          This will <em>permanently</em> delete {entriesCount.toLocaleString()}{" "}
+          history {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you
+          want to continue?
+        </DialogContentText>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              checked={blockWhileErase}
+              onChange={() => onBlockWhileEraseChange(!blockWhileErase)}
+            />
+          }
+          label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
+          disabled={entriesCount === 0}
+        />
+      </DialogContent>
+      <DialogActions>
+        <DynamicButton onClick={onCancel}>Cancel</DynamicButton>
+        <DynamicButton backgroundColorStr="rgb(255,0,0)" onClick={onConfirm}>
+          Erase
+        </DynamicButton>
+      </DialogActions>
+    </StyledDialog>
+  );
+}
+
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
   typeof ComplexSearchTabBlock
 > {}
@@ -188,8 +243,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   }
 
   async function performErase() {
-    // TODO: implement the actual erase logic (call API, update state)
-    // Placeholder for now — keep console log so flow is visible during testing
+    // TODO: call the actual erase logic (call API, update state)
     console.log("Erasing history...");
   }
 
@@ -308,44 +362,15 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
           </EraseWrapper>
         </ActionPanelTabBody>
       )}
-      <StyledDialog
+      <EraseHistoryDialog
         open={isEraseConfirmOpen}
-        onClose={handleCancelErase}
-        aria-labelledby="erase-history-dialog-title"
-        aria-describedby="erase-history-dialog-description"
-      >
-        <DialogTitle id="erase-history-dialog-title">
-          Erase history?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="erase-history-dialog-description">
-            This will <em>permanently</em> delete{" "}
-            {entriesCount.toLocaleString()} history{" "}
-            {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you want to
-            continue?
-          </DialogContentText>
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                checked={blockWhileErase}
-                onChange={() => setBlockWhileErase(!blockWhileErase)}
-              />
-            }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
-            disabled={entriesCount === 0}
-          />
-        </DialogContent>
-        <DialogActions>
-          <DynamicButton onClick={handleCancelErase}>Cancel</DynamicButton>
-          <DynamicButton
-            backgroundColorStr="rgb(255,0,0)"
-            onClick={handleConfirmErase}
-          >
-            Erase
-          </DynamicButton>
-        </DialogActions>
-      </StyledDialog>
+        entriesCount={entriesCount}
+        usersLength={usersLength}
+        blockWhileErase={blockWhileErase}
+        onBlockWhileEraseChange={setBlockWhileErase}
+        onCancel={handleCancelErase}
+        onConfirm={handleConfirmErase}
+      />
     </ComplexSearchTabBlock>
   );
 }
