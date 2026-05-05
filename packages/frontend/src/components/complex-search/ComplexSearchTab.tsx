@@ -181,6 +181,31 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const entriesCount = historyData?.totalEntries ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
+  if (historyQuery.error instanceof Error) {
+    const { message } = historyQuery.error;
+    const allowed = ["Unauthorized", "Internal Server Error"];
+
+    if (allowed.includes(message)) {
+      const errorText: Record<string, string> = {
+        Unauthorized:
+          "You must be logged in to use this search. How'd you manage to get here?",
+        "Internal Server Error":
+          "Something went wrong on our end while processing this search.",
+      };
+
+      return (
+        <ComplexSearchTabBlock {...props}>
+          <FullWidthScrollView>
+            <ActionPanelTabBody>
+              <Heading>{message}</Heading>
+              <p>{errorText[message]}</p>
+            </ActionPanelTabBody>
+          </FullWidthScrollView>
+        </ComplexSearchTabBlock>
+      );
+    }
+  }
+
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
