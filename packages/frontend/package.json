@@ -21,7 +21,7 @@
     "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=24",
+    "node": ">=25",
     "pnpm": ">=10.33.0"
   },
   "scripts": {
