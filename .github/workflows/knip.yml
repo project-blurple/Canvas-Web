@@ -1,0 +1,38 @@
+name: Knip
+
+permissions:
+  contents: read
+
+on: push
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: ✂️
+    strategy:
+      fail-fast: false
+      matrix:
+        strict:
+          - ""
+          - --strict
+        scope:
+          - --dependencies
+          - --exports
+          - --files
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: "package.json"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run knip
+        run: pnpm run knip --cache ${{ matrix.scope }} ${{ matrix.strict }}
