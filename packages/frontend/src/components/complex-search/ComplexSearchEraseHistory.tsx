@@ -1,5 +1,6 @@
 "use client";
 
+import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import {
   Checkbox,
   Dialog,
@@ -10,12 +11,11 @@ import {
   FormControlLabel,
   styled,
 } from "@mui/material";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { useState } from "react";
 import { DynamicButton } from "@/components/button";
-import { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import config from "@/config/clientConfig";
-import axios from "axios";
 import { useCanvasContext } from "@/contexts";
 
 const StyledDialog = styled(Dialog)(() => ({

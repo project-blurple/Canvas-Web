@@ -1,5 +1,6 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
@@ -25,7 +26,6 @@ import {
 } from ".";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
 import SearchUserEntries from "./SearchUserEntry";
-import { AxiosError } from "axios";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
