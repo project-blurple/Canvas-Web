@@ -12,6 +12,11 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { DynamicButton } from "@/components/button";
+import { PixelHistoryWrapper } from "@blurple-canvas-web/types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import config from "@/config/clientConfig";
+import axios from "axios";
+import { useCanvasContext } from "@/contexts";
 
 const StyledDialog = styled(Dialog)(() => ({
   "& .MuiDialog-paper": {
@@ -23,16 +28,61 @@ const StyledDialog = styled(Dialog)(() => ({
 interface ComplexSearchEraseHistoryProps {
   entriesCount: number;
   usersLength: number;
-  onConfirm: (blockWhileErase: boolean) => Promise<void> | void;
+  historyData: PixelHistoryWrapper;
+  resetResults: () => void;
 }
 
 export default function ComplexSearchEraseHistory({
   entriesCount,
   usersLength,
-  onConfirm,
+  historyData,
+  resetResults,
 }: ComplexSearchEraseHistoryProps) {
+  const { canvas } = useCanvasContext();
+  const queryClient = useQueryClient();
+
   const [blockWhileErase, setBlockWhileErase] = useState(false);
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
+
+  async function performErase(blockWhileErase: boolean) {
+    console.log(
+      "Erasing history...",
+      blockWhileErase,
+      historyData.totalEntries,
+    );
+
+    try {
+      await eraseHistoryMutation.mutateAsync();
+      resetResults();
+    } catch (error) {
+      console.error(error);
+      alert("Failed to erase history");
+    }
+  }
+
+  const invalidateHistoryQueries = async () => {
+    queryClient.invalidateQueries({
+      queryKey: ["complexPixelHistory", canvas.id],
+      // Erasing all complex searches for the canvas - we don't know what previous queries are also invalidated, so we just invalidate them all to be safe
+    });
+  };
+
+  const eraseHistoryMutation = useMutation({
+    mutationFn: async () => {
+      const requestUrl = `${config.apiUrl}/api/v1/history`;
+
+      const body = {
+        historyIds: historyData.historyIds,
+        shouldBlockAuthors: blockWhileErase,
+      };
+
+      await axios.delete(requestUrl, {
+        data: body,
+        withCredentials: true,
+      });
+    },
+    onSuccess: invalidateHistoryQueries,
+  });
 
   function handleEraseHistory() {
     setIsEraseConfirmOpen(true);
@@ -42,7 +92,7 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
 
     try {
-      await onConfirm(blockWhileErase);
+      await performErase(blockWhileErase);
     } catch (error) {
       console.error(error);
       alert("Failed to erase history");

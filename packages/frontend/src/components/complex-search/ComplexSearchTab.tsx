@@ -166,9 +166,9 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     });
   }
 
-  async function performErase(blockWhileErase: boolean) {
-    // TODO: call the actual erase logic (call API, update state)
-    console.log("Erasing history...", blockWhileErase);
+  function resetResults() {
+    setSearchQuery(null);
+    setHistoryData(null);
   }
 
   const pixelsInBounds =
@@ -294,13 +294,14 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         </ActionPanelTabBody>
         {results}
       </FullWidthScrollView>
-      {historyData && (
+      {historyData && searchQuery && (
         <ActionPanelTabBody>
           <EraseWrapper>
             <ComplexSearchEraseHistory
               entriesCount={entriesCount}
               usersLength={usersLength}
-              onConfirm={performErase}
+              historyData={historyData}
+              resetResults={resetResults}
             />
           </EraseWrapper>
         </ActionPanelTabBody>
