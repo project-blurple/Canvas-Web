@@ -87,7 +87,7 @@ async function main() {
       case "history":
         return prisma.history.count({
           where: {
-            recorded: true,
+            erased_at: null,
           },
         });
       case "info":

@@ -4,8 +4,7 @@ import type {
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
-import type { Prisma } from "@/client";
-import { prisma } from "@/client";
+import { Prisma, prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {
@@ -90,7 +89,7 @@ function buildPixelHistoryWhere({
   points = Array.isArray(points) ? points : [points, points];
 
   return {
-    recorded: true,
+    erased_at: null,
     canvas_id: canvasId,
     x: {
       gte: points[0].x,
@@ -372,7 +371,7 @@ export async function deletePixelHistoryEntries(
   // First, check that all history entries exist and belong to the specified canvas
   const existingEntries = await prisma.history.findMany({
     where: {
-      recorded: true,
+      erased_at: null,
       canvas_id: canvasId,
       id: {
         in: historyIds,
@@ -395,6 +394,8 @@ export async function deletePixelHistoryEntries(
     );
   }
 
+  const erasedAt = new Date();
+
   await prisma.history.updateMany({
     where: {
       canvas_id: canvasId,
@@ -403,7 +404,7 @@ export async function deletePixelHistoryEntries(
       },
     },
     data: {
-      recorded: false,
+      erased_at: erasedAt,
     },
   });
 

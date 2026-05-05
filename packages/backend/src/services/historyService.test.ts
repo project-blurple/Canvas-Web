@@ -138,7 +138,7 @@ describe.skip("historyService", () => {
       await expect(
         prisma.history.findMany({
           where: {
-            recorded: true,
+            erased_at: null,
             canvas_id: 1,
             id: {
               in: [entryOne.id, entryTwo.id],
@@ -150,7 +150,9 @@ describe.skip("historyService", () => {
       await expect(
         prisma.history.findMany({
           where: {
-            recorded: false,
+            erased_at: {
+              not: null,
+            },
             canvas_id: 1,
             id: {
               in: [entryOne.id, entryTwo.id],
