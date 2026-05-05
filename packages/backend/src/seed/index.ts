@@ -122,11 +122,11 @@ async function main() {
     "info",
     "history",
     "guild",
+    "discord_guild_record",
     "frame",
     "canvas",
     "user",
     "event",
-    "discord_guild_record",
     "discord_user_profile",
     "color",
   ];
@@ -188,8 +188,8 @@ async function main() {
   };
 
   const seedingOrder: Seeding[] = [
-    "discord_user_profile",
     "user",
+    "discord_user_profile",
     "discord_guild_record",
     "guild",
     "color",

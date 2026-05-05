@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   prisma_seed:
-    name: "Prisma push & seed"
+    name: "Prisma migrate & seed"
     timeout-minutes: 10
     runs-on: ubuntu-latest
     services:
@@ -55,8 +55,8 @@ jobs:
       - name: Build backend
         run: pnpm --filter backend build
 
-      - name: Push Prisma schema
-        run: pnpm prisma:push
+      - name: Migrate Prisma schema
+        run: pnpm prisma:migrate
 
       - name: Seed database
         run: pnpm prisma:seed --overwrite=true
