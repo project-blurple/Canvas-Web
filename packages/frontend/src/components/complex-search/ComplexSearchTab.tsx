@@ -1,14 +1,5 @@
 import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import {
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormControlLabel,
-  styled,
-} from "@mui/material";
+import { styled } from "@mui/material";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import { Heading } from "@/components/action-panel/ActionPanel";
@@ -32,6 +23,7 @@ import {
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
 } from ".";
+import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
 import SearchUserEntries from "./SearchUserEntry";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
@@ -66,69 +58,7 @@ const EraseWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
-const StyledDialog = styled(Dialog)(() => ({
-  "& .MuiDialog-paper": {
-    boxShadow: "none",
-    backgroundImage: "none",
-  },
-}));
-
 export type SearchFilterMode = "include" | "exclude";
-
-interface EraseHistoryDialogProps {
-  open: boolean;
-  entriesCount: number;
-  usersLength: number;
-  blockWhileErase: boolean;
-  onBlockWhileEraseChange: (value: boolean) => void;
-  onCancel: () => void;
-  onConfirm: () => void;
-}
-
-function EraseHistoryDialog({
-  open,
-  entriesCount,
-  usersLength,
-  blockWhileErase,
-  onBlockWhileEraseChange,
-  onCancel,
-  onConfirm,
-}: EraseHistoryDialogProps) {
-  return (
-    <StyledDialog
-      open={open}
-      onClose={onCancel}
-      aria-labelledby="erase-history-dialog-title"
-      aria-describedby="erase-history-dialog-description"
-    >
-      <DialogTitle id="erase-history-dialog-title">Erase history?</DialogTitle>
-      <DialogContent>
-        <DialogContentText id="erase-history-dialog-description">
-          This will <em>permanently</em> delete {entriesCount.toLocaleString()}{" "}
-          history {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you
-          want to continue?
-        </DialogContentText>
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              checked={blockWhileErase}
-              onChange={() => onBlockWhileEraseChange(!blockWhileErase)}
-            />
-          }
-          label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
-          disabled={entriesCount === 0}
-        />
-      </DialogContent>
-      <DialogActions>
-        <DynamicButton onClick={onCancel}>Cancel</DynamicButton>
-        <DynamicButton backgroundColorStr="rgb(255,0,0)" onClick={onConfirm}>
-          Erase
-        </DynamicButton>
-      </DialogActions>
-    </StyledDialog>
-  );
-}
 
 interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
   typeof ComplexSearchTabBlock
@@ -164,9 +94,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     null,
   );
   const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
-
-  const [blockWhileErase, setBlockWhileErase] = useState(false);
-  const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -238,27 +165,9 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     });
   }
 
-  function handleEraseHistory() {
-    setIsEraseConfirmOpen(true);
-  }
-
-  async function performErase() {
+  async function performErase(blockWhileErase: boolean) {
     // TODO: call the actual erase logic (call API, update state)
-    console.log("Erasing history...");
-  }
-
-  async function handleConfirmErase() {
-    setIsEraseConfirmOpen(false);
-    try {
-      await performErase();
-    } catch (e) {
-      console.error(e);
-      alert("Failed to erase history");
-    }
-  }
-
-  function handleCancelErase() {
-    setIsEraseConfirmOpen(false);
+    console.log("Erasing history...", blockWhileErase);
   }
 
   const pixelsInBounds =
@@ -351,26 +260,14 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       {historyData && (
         <ActionPanelTabBody>
           <EraseWrapper>
-            <DynamicButton
-              disabled={entriesCount === 0}
-              backgroundColorStr="rgb(255,0,0)" // bright red warning for destructive action >:)
-              onClick={handleEraseHistory}
-            >
-              Erase {entriesCount.toLocaleString()} history{" "}
-              {entriesCount !== 1 ? "entries" : "entry"}
-            </DynamicButton>
+            <ComplexSearchEraseHistory
+              entriesCount={entriesCount}
+              usersLength={usersLength}
+              onConfirm={performErase}
+            />
           </EraseWrapper>
         </ActionPanelTabBody>
       )}
-      <EraseHistoryDialog
-        open={isEraseConfirmOpen}
-        entriesCount={entriesCount}
-        usersLength={usersLength}
-        blockWhileErase={blockWhileErase}
-        onBlockWhileEraseChange={setBlockWhileErase}
-        onCancel={handleCancelErase}
-        onConfirm={handleConfirmErase}
-      />
     </ComplexSearchTabBlock>
   );
 }
