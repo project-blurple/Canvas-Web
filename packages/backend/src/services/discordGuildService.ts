@@ -230,7 +230,7 @@ export async function syncDiscordGuildRecords(
 
   const toUpdateEntries = entries.filter(([id, data]) => {
     const ex = existingMap.get(id);
-    return !!ex && ex.name !== data.name;
+    return Boolean(ex) && ex.name !== data.name;
   });
 
   if (toCreate.length === 0 && toUpdateEntries.length === 0) return;
