@@ -25,6 +25,7 @@ import {
 } from ".";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
 import SearchUserEntries from "./SearchUserEntry";
+import { AxiosError } from "axios";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -181,30 +182,70 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const entriesCount = historyData?.totalEntries ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
-  if (historyQuery.error instanceof Error) {
-    const { message } = historyQuery.error;
-    const allowed = ["Unauthorized", "Internal Server Error"];
+  const results = (() => {
+    console.log(historyQuery, historyData);
+    if (historyQuery.status === "error") {
+      const { status } = historyQuery.error as AxiosError;
+      const allowed = [401, 500];
 
-    if (allowed.includes(message)) {
-      const errorText: Record<string, string> = {
-        Unauthorized:
-          "You must be logged in to use this search. How'd you manage to get here?",
-        "Internal Server Error":
-          "Something went wrong on our end while processing this search.",
-      };
+      if (status && allowed.includes(status)) {
+        const errorText: Record<string, [string, string]> = {
+          401: [
+            "Unauthorized",
+            "You don't have permission to perform this search. How'd you get here?",
+          ],
+          500: [
+            "Server error",
+            "Something went wrong on our end while processing this search.",
+          ],
+        };
 
+        return (
+          <ActionPanelTabBody>
+            <div>
+              <Heading>{errorText[status][0]}</Heading>
+              <p>{errorText[status][1]}</p>
+            </div>
+          </ActionPanelTabBody>
+        );
+      }
+    }
+
+    if (historyData) {
       return (
-        <ComplexSearchTabBlock {...props}>
-          <FullWidthScrollView>
-            <ActionPanelTabBody>
-              <Heading>{message}</Heading>
-              <p>{errorText[message]}</p>
-            </ActionPanelTabBody>
-          </FullWidthScrollView>
-        </ComplexSearchTabBlock>
+        <ActionPanelTabBody>
+          <div>
+            <Heading>Search results</Heading>
+            <SummaryGrid>
+              <SummaryCard>
+                <strong>Total entries</strong>
+                <span>{entriesCount.toLocaleString()}</span>
+              </SummaryCard>
+              <SummaryCard>
+                <strong>Query duration</strong>
+                <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
+              </SummaryCard>
+              <SummaryCard>
+                <strong>Users</strong>
+                <span>{usersLength.toLocaleString()}</span>
+              </SummaryCard>
+            </SummaryGrid>
+            {usersLength > 0 && (
+              <>
+                <Heading>User summary</Heading>
+                <SearchUserEntries
+                  users={historyData.users}
+                  palette={palette}
+                />
+              </>
+            )}
+          </div>
+        </ActionPanelTabBody>
       );
     }
-  }
+
+    return null;
+  })();
 
   return (
     <ComplexSearchTabBlock {...props}>
@@ -251,36 +292,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             </DynamicButton>
           </SearchWrapper>
         </ActionPanelTabBody>
-        {historyData && (
-          <ActionPanelTabBody>
-            <div>
-              <Heading>Search results</Heading>
-              <SummaryGrid>
-                <SummaryCard>
-                  <strong>Total entries</strong>
-                  <span>{entriesCount.toLocaleString()}</span>
-                </SummaryCard>
-                <SummaryCard>
-                  <strong>Query duration</strong>
-                  <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
-                </SummaryCard>
-                <SummaryCard>
-                  <strong>Users</strong>
-                  <span>{usersLength.toLocaleString()}</span>
-                </SummaryCard>
-              </SummaryGrid>
-              {usersLength > 0 && (
-                <>
-                  <Heading>User summary</Heading>
-                  <SearchUserEntries
-                    users={historyData.users}
-                    palette={palette}
-                  />
-                </>
-              )}
-            </div>
-          </ActionPanelTabBody>
-        )}
+        {results}
       </FullWidthScrollView>
       {historyData && (
         <ActionPanelTabBody>
