@@ -50,6 +50,7 @@ type DiscordRateLimitHeader =
   | "x-ratelimit-reset-after"
   | "x-ratelimit-bucket";
 
+/** @see https://docs.discord.com/developers/topics/rate-limits */
 const discordRateLimitHeaders = new Set<DiscordRateLimitHeader>([
   "x-ratelimit-limit",
   "x-ratelimit-remaining",
