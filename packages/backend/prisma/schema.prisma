@@ -115,6 +115,7 @@ model guild {
 
 model history {
   id                   BigInt                @id @default(autoincrement())
+  recorded             Boolean               @default(true)
   canvas_id            Int
   canvas               canvas                @relation(fields: [canvas_id], references: [id])
   user_id              BigInt

@@ -274,6 +274,7 @@ export async function restorePixelsAfterHistoryDeletion(
   for (const coordinate of uniqueCoordinates.values()) {
     const latestHistoryEntry = await prisma.history.findFirst({
       where: {
+        recorded: true,
         canvas_id: canvasId,
         x: coordinate.x,
         y: coordinate.y,

@@ -138,6 +138,7 @@ describe.skip("historyService", () => {
       await expect(
         prisma.history.findMany({
           where: {
+            recorded: true,
             canvas_id: 1,
             id: {
               in: [entryOne.id, entryTwo.id],
@@ -145,6 +146,18 @@ describe.skip("historyService", () => {
           },
         }),
       ).resolves.toStrictEqual([]);
+
+      await expect(
+        prisma.history.findMany({
+          where: {
+            recorded: false,
+            canvas_id: 1,
+            id: {
+              in: [entryOne.id, entryTwo.id],
+            },
+          },
+        }),
+      ).resolves.toHaveLength(2);
 
       await expect(userIsBlocklisted(1n)).resolves.toBe(true);
     });

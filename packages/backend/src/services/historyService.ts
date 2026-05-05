@@ -90,6 +90,7 @@ function buildPixelHistoryWhere({
   points = Array.isArray(points) ? points : [points, points];
 
   return {
+    recorded: true,
     canvas_id: canvasId,
     x: {
       gte: points[0].x,
@@ -371,6 +372,7 @@ export async function deletePixelHistoryEntries(
   // First, check that all history entries exist and belong to the specified canvas
   const existingEntries = await prisma.history.findMany({
     where: {
+      recorded: true,
       canvas_id: canvasId,
       id: {
         in: historyIds,
@@ -393,12 +395,15 @@ export async function deletePixelHistoryEntries(
     );
   }
 
-  await prisma.history.deleteMany({
+  await prisma.history.updateMany({
     where: {
       canvas_id: canvasId,
       id: {
         in: historyIds,
       },
+    },
+    data: {
+      recorded: false,
     },
   });
 

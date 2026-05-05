@@ -21,6 +21,7 @@ async function resyncClient(
         color: { select: { rgba: true } },
       },
       where: {
+        recorded: true,
         canvas_id: canvasId,
         timestamp: {
           // Greater than or equal as multiple pixels may have been placed at the same time and
