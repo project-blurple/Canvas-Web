@@ -1,13 +1,3 @@
--- AddForeignKey
-ALTER TABLE "notice"
-ADD CONSTRAINT "notice_canvas_id_fkey"
-FOREIGN KEY ("canvas_id") REFERENCES "canvas"("id")
-ON DELETE SET NULL ON UPDATE CASCADE;
-
--- CreateIndex
-CREATE INDEX "notice_canvas_id_idx" ON "notice"("canvas_id");
-
--- Make the existing DB match the current Prisma schema.
 UPDATE "discord_user_profile"
 SET "profile_picture_url" = 'https://discord.com/assets/788f05731f8aa02e.png'
 WHERE "profile_picture_url" IS NULL;
@@ -34,3 +24,5 @@ ALTER COLUMN "profile_picture_url" SET NOT NULL;
 ALTER TABLE "info"
 ALTER COLUMN "cached_canvas_ids" SET NOT NULL,
 ALTER COLUMN "default_canvas_id" SET NOT NULL;
+
+ALTER TABLE public.guild DROP CONSTRAINT IF EXISTS guild_id_fkey;
