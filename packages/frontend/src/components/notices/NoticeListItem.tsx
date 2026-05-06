@@ -58,11 +58,16 @@ const BannerBody = styled("div")`
   }
 `;
 
-interface BannerProps extends React.ComponentPropsWithRef<typeof BannerRoot> {
+interface NoticeListItemProps extends React.ComponentPropsWithRef<
+  typeof BannerRoot
+> {
   notice: Notice;
 }
 
-export default function NoticeBanner({ notice, ...props }: BannerProps) {
+export default function NoticeListItem({
+  notice,
+  ...props
+}: NoticeListItemProps) {
   const headerText =
     notice.header ? `### ${resolveSpecialText(notice.header)}` : "";
   const contentText = notice.content ? resolveSpecialText(notice.content) : "";

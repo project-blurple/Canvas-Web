@@ -184,7 +184,6 @@ const FullscreenButton = styled(BaseFullscreenButton)`
 const FullscreenPanelButton = styled(BaseFullscreenButton)`
   border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   inset-block-start: 4rem;
-  z-index: 3;
 `;
 
 const FullscreenPanelOverlay = styled("div")`
@@ -196,7 +195,6 @@ const FullscreenPanelOverlay = styled("div")`
   pointer-events: auto;
   position: absolute;
   width: min(var(--action-panel-width), calc(100vw - 1rem));
-  z-index: 2;
 
   > * {
     width: 100%;

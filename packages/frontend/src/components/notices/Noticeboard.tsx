@@ -1,82 +1,84 @@
-import { styled } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
-import useLocalStorage from "@/app/settings/useLocalStorage";
-import { useCanvasContext } from "@/contexts";
-import { useNotices } from "@/hooks/queries/useNotice";
-import NoticeBanner from "./NoticeBanner";
+"use client";
 
-const NoticeWrapper = styled("ul")`
-  align-content: flex-start;
-  align-items: center;
-  display: grid;
-  font-size: 1rem;
-  gap: 0.75em;
-  grid-template-columns: auto 1fr;
-  line-height: 1.55;
+import { IconButton, styled } from "@mui/material";
+import { Megaphone } from "lucide-react";
+import { useId, useRef } from "react";
+import { createPortal } from "react-dom";
+import VisuallyHidden from "../VisuallyHidden";
+import NoticeList from "./NoticeList";
+
+const anchorName = "--notices-button";
+
+const StyledIconButton = styled(IconButton)`
+  anchor-name: ${anchorName};
 `;
 
-export default function Noticeboard(
-  props: React.ComponentPropsWithRef<typeof NoticeWrapper>,
-) {
-  const { data: notices = [] } = useNotices();
-  const { canvas } = useCanvasContext();
+const Dialog = styled("dialog")`
+  background-color: var(--discord-legacy-dark-but-not-black);
+  border-radius: var(--card-border-radius);
+  border: var(--card-border);
+  box-shadow: 0 0 10px oklch(0 0 0 / 25%);
+  inline-size: min(100vi, 36rem); /* fallback */
+  inline-size: min(100dvi, 36rem);
+  max-block-size: min(90vh, 60rem); /* fallback */
+  max-block-size: min(90dvh, 60rem);
+  overflow: auto;
+  position-anchor: ${anchorName};
+  position-area: block-end center;
+  position: absolute;
+  transform-origin: top center;
+  transition-duration: 100ms;
+  transition-property: opacity, transform;
+  transition-timing-function: linear, var(--ease-out-quart);
+  z-index: 1; /* Fighting with <CanvasView> here 😔 */
 
-  const [persistedDismissed = [], setPersistedDismissed] =
-    useLocalStorage("notices/dismissed");
+  > * {
+    padding: calc(var(--card-border-radius) - 0.75rem);
+  }
 
-  const [transientDismissed, setTransientDismissed] = useState(
-    new Set<string>(),
-  );
+  opacity: 1;
+  transform: scale(100%);
+  @starting-style {
+    opacity: 0;
+    transform: scale(97%);
+  }
+`;
 
-  const persistedSet = useMemo(
-    () => new Set<string>(persistedDismissed),
-    [persistedDismissed],
-  );
+const Header = styled("header")`
+  align-items: center;
+  border-block-end: var(--card-border);
+  display: flex;
+  position: sticky;
+`;
 
-  const dismiss = useCallback(
-    (id: string, persist: boolean = false) => {
-      setTransientDismissed((s) => {
-        const next = new Set(s);
-        next.add(id);
-        return next;
-      });
+const Heading = styled("h2")`
+  color: unset;
+  font-size: inherit;
+  font-weight: 500;
+  margin-inline: 0.75rem;
+`;
 
-      const n = notices.find((x) => x.id === id);
-      if (persist && n && n.persistOnDismiss === false) {
-        const nextArr = Array.from(new Set([...persistedDismissed, id]));
-        setPersistedDismissed(nextArr);
-      }
-    },
-    [notices, persistedDismissed, setPersistedDismissed],
-  );
-
-  const filteredNotices = notices
-    .filter(
-      (notice) =>
-        (notice.canvasId === null || notice.canvasId === canvas?.id) &&
-        !transientDismissed.has(notice.id) &&
-        !persistedSet.has(notice.id),
-    )
-    .sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      } else {
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }
-    });
+export default function Noticeboard() {
+  const buttonId = useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dialogId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   return (
-    <NoticeWrapper {...props} role="list">
-      {filteredNotices.map((notice) => (
-        <NoticeBanner
-          key={notice.id}
-          notice={notice}
-          onDismiss={() => dismiss(notice.id, false)}
-          onDismissPermanently={() => dismiss(notice.id, true)}
-        />
-      ))}
-    </NoticeWrapper>
+    <>
+      <StyledIconButton id={buttonId} popoverTarget={dialogId} ref={buttonRef}>
+        <Megaphone />
+        <VisuallyHidden>Notices</VisuallyHidden>
+      </StyledIconButton>
+      {createPortal(
+        <Dialog closedby="any" id={dialogId} popover="" ref={dialogRef}>
+          <Header>
+            <Heading>Notices</Heading>
+          </Header>
+          <NoticeList />
+        </Dialog>,
+        document.body,
+      )}
+    </>
   );
 }
