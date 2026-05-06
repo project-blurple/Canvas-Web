@@ -46,7 +46,7 @@ export default async function fetchWithRetries(
 
     await sleep(
       Number.isFinite(waitSeconds) ?
-        // Prefer stand-down period from response header…
+        // When available, prefer stand-down period from response header…
         waitSeconds * 1000
         // …otherwise use exponential backoff
       : backoff ** i * 1000,
