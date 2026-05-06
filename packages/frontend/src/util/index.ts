@@ -106,37 +106,8 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
 }
 
 export async function copyToClipboard(str: string) {
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(str);
-      return;
-    }
-  } catch {
-    // Fall through to the legacy copy path below.
-  }
-
-  if (typeof document === "undefined") {
-    throw new Error("Clipboard API is unavailable.");
-  }
-
-  const textarea = document.createElement("textarea");
-  textarea.value = str;
-  textarea.setAttribute("readonly", "true");
-  textarea.style.position = "fixed";
-  textarea.style.top = "0";
-  textarea.style.left = "0";
-  textarea.style.opacity = "0";
-
-  document.body.appendChild(textarea);
-  textarea.focus();
-  textarea.select();
-
-  // Legacy clipboard fallback: MDN documents execCommand('copy') as a compatibility path.
-  // Source: https://developer.mozilla.org/en-US/docs/Web/API/Document/execCommand
-  const copied = document.execCommand("copy");
-  document.body.removeChild(textarea);
-
-  if (!copied) {
-    throw new Error("Copy to clipboard failed.");
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(str);
+    return;
   }
 }
