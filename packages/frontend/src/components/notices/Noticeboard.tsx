@@ -5,14 +5,14 @@ import { useCanvasContext } from "@/contexts";
 import { useNotices } from "@/hooks/queries/useNotice";
 import NoticeBanner from "./NoticeBanner";
 
-const NoticeWrapper = styled("div")`
+const NoticeWrapper = styled("ul")`
   align-content: flex-start;
   align-items: center;
   display: grid;
+  font-size: 1rem;
   gap: 0.75em;
   grid-template-columns: auto 1fr;
   line-height: 1.55;
-  text-wrap: balance;
 `;
 
 export default function Noticeboard(
@@ -68,7 +68,7 @@ export default function Noticeboard(
     });
 
   return (
-    <NoticeWrapper {...props}>
+    <NoticeWrapper {...props} role="list">
       {filteredNotices.map((notice) => (
         <NoticeBanner
           key={notice.id}

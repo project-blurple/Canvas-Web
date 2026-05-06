@@ -105,14 +105,6 @@ function Banner({
           </div>
         )}
         {contentText && <Markdown>{contentText}</Markdown>}
-        <ButtonBar>
-          <DismissButton onClick={onDismiss}>Dismiss</DismissButton>
-          {!notice.persistOnDismiss && (
-            <DismissButton onClick={onDismissPermanently}>
-              Don’t show again
-            </DismissButton>
-          )}
-        </ButtonBar>
       </BannerBody>
     </BannerRoot>
   );
