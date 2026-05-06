@@ -21,6 +21,7 @@ import {
   validatePixel,
   validateUser,
 } from "@/services/pixelService";
+import { assertZodSuccess } from "@/utils/models";
 import { historyRouter } from "./history";
 
 export const pixelRouter = Router({ mergeParams: true });
@@ -48,9 +49,7 @@ pixelRouter.post<CanvasIdParam>("/bot", async (req, res) => {
     }
 
     const result = await PlacePixelArrayBodyModel.safeParseAsync(req.body);
-    if (!result.success) {
-      throw new BadRequestError("Body is not valid", result.error.issues);
-    }
+    assertZodSuccess(result);
 
     for (const pixel of result.data) {
       socketHandler.broadcastPixelPlacement(canvasId, pixel);
@@ -77,9 +76,7 @@ pixelRouter.post<CanvasIdParam>(
 
     try {
       const result = await PlacePixelBodyModel.safeParseAsync(req.body);
-      if (!result.success) {
-        throw new BadRequestError("Body is not valid", result.error.issues);
-      }
+      assertZodSuccess(result);
 
       const { x, y, colorId } = result.data;
       const canvasId = await parseCanvasId(req.params);

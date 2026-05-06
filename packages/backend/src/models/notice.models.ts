@@ -1,5 +1,6 @@
 import z from "zod";
 import { BadRequestError } from "@/errors";
+import { assertZodSuccess } from "@/utils/models";
 
 const NoticeIdParamModel = z.object({
   noticeId: z.coerce.number().int().positive(),
@@ -13,12 +14,7 @@ export async function parseNoticeId(
   params: NoticeIdParam,
 ): Promise<NoticeIdParam["noticeId"]> {
   const result = await NoticeIdParamModel.safeParseAsync(params);
-  if (!result.success) {
-    throw new BadRequestError(
-      `${params.noticeId} is not a valid notice ID`,
-      result.error.issues,
-    );
-  }
+  assertZodSuccess(result, `${params.noticeId} is not a valid notice ID`);
 
   return result.data.noticeId;
 }

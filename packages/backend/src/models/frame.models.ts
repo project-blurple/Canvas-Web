@@ -1,5 +1,6 @@
 import z from "zod";
 import { BadRequestError } from "@/errors";
+import { assertZodSuccess } from "@/utils/models";
 
 const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
@@ -54,12 +55,7 @@ export interface FrameIdParam {
 
 export async function parseFrameId(params: FrameIdParam): Promise<string> {
   const result = await FrameIdParamModel.safeParseAsync(params);
-  if (!result.success) {
-    throw new BadRequestError(
-      `${params.frameId} is not a valid frame ID`,
-      result.error.issues,
-    );
-  }
+  assertZodSuccess(result, `${params.frameId} is not a valid frame ID`);
 
   return result.data.frameId;
 }

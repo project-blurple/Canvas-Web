@@ -2,12 +2,12 @@ import type { Response } from "express";
 import type { z } from "zod";
 import ApiError from "./ApiError";
 
-export default class BadRequestError extends ApiError {
+export default class NotAcceptableError extends ApiError {
   constructor(
     message: string,
     protected errors: z.core.$ZodIssue[] = [],
   ) {
-    super(message, 400);
+    super(message, 406);
   }
 
   public applyToResponse(res: Response): void {
