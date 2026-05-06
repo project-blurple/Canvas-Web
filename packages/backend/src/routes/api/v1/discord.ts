@@ -8,6 +8,7 @@ import ApiError from "@/errors/ApiError";
 import {
   getCurrentUserGuildFlags,
   getGuildPermissionsForUser,
+  syncDiscordGuildRecords,
 } from "@/services/discordGuildService";
 import { saveDiscordProfile } from "@/services/discordProfileService";
 import { assertIsSnowflake } from "@/utils/discordRouteUtils";
@@ -84,7 +85,7 @@ discordRouter.get(
   passport.authenticate("discord", {
     failureRedirect: `${config.frontendUrl}/signin`,
   }),
-  (req, res) => {
+  async (req, res) => {
     const discordProfile = req.user as DiscordUserProfile;
     const authInfo = req.authInfo as
       | {
@@ -103,7 +104,10 @@ discordRouter.get(
       secure: config.environment !== "development",
     });
 
-    saveDiscordProfile(discordProfile);
+    await saveDiscordProfile(discordProfile);
+
     res.redirect(config.frontendUrl);
+
+    await syncDiscordGuildRecords(authInfo?.discordGuildFlags);
   },
 );
