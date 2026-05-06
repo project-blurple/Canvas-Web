@@ -271,45 +271,68 @@ export async function restorePixelsAfterHistoryDeletion(
     );
   }
 
+  // Fetch all history for affected coordinates in one query
+  const allHistoryEntries = await prisma.history.findMany({
+    where: {
+      erased_at: null,
+      canvas_id: canvasId,
+      OR: Array.from(uniqueCoordinates.values()).map((c) => ({
+        x: c.x,
+        y: c.y,
+      })),
+    },
+    select: {
+      x: true,
+      y: true,
+      color_id: true,
+      timestamp: true,
+      id: true,
+      color: { select: { rgba: true } },
+    },
+    orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+  });
+
+  // Reduce in memory to latest per coordinate
+  const latestByCoord = new Map<string, (typeof allHistoryEntries)[0]>();
+  for (const entry of allHistoryEntries) {
+    const key = `${entry.x}:${entry.y}`;
+    if (!latestByCoord.has(key)) {
+      latestByCoord.set(key, entry);
+    }
+  }
+
+  // Group coordinates by color_id for batch updates
+  const byColorId = new Map<number, Point[]>();
   for (const coordinate of uniqueCoordinates.values()) {
-    const latestHistoryEntry = await prisma.history.findFirst({
-      where: {
-        erased_at: null,
-        canvas_id: canvasId,
-        x: coordinate.x,
-        y: coordinate.y,
-      },
-      orderBy: [{ timestamp: "desc" }, { id: "desc" }],
-      select: {
-        color_id: true,
-        color: {
-          select: {
-            rgba: true,
-          },
-        },
-      },
-    });
+    const key = `${coordinate.x}:${coordinate.y}`;
+    const latestEntry = latestByCoord.get(key);
+    const colorId = latestEntry?.color_id ?? BLANK_PIXEL_COLOR_ID;
 
-    const pixelColorId = latestHistoryEntry?.color_id ?? BLANK_PIXEL_COLOR_ID;
+    const arr = byColorId.get(colorId);
+    if (arr) {
+      arr.push(coordinate);
+    } else {
+      byColorId.set(colorId, [coordinate]);
+    }
+  }
+
+  // Update all pixels grouped by color_id
+  for (const [colorId, coords] of byColorId.entries()) {
+    await prisma.pixel.updateMany({
+      where: {
+        canvas_id: canvasId,
+        OR: coords.map((c) => ({ x: c.x, y: c.y })),
+      },
+      data: { color_id: colorId },
+    });
+  }
+
+  // Broadcast and cache per-pixel
+  for (const coordinate of uniqueCoordinates.values()) {
+    const key = `${coordinate.x}:${coordinate.y}`;
+    const latestEntry = latestByCoord.get(key);
     const pixelColor =
-      (latestHistoryEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
-
-    await prisma.pixel.upsert({
-      where: {
-        canvas_id_x_y: {
-          canvas_id: canvasId,
-          ...coordinate,
-        },
-      },
-      create: {
-        canvas_id: canvasId,
-        ...coordinate,
-        color_id: pixelColorId,
-      },
-      update: {
-        color_id: pixelColorId,
-      },
-    });
+      (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
 
     socketHandler.broadcastPixelPlacement(canvasId, {
       x: coordinate.x,
