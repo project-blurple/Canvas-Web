@@ -2,8 +2,7 @@
 
 import { IconButton, styled } from "@mui/material";
 import { Megaphone } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useId, useRef } from "react";
+import { useId, useRef } from "react";
 import { createPortal } from "react-dom";
 import VisuallyHidden from "../VisuallyHidden";
 import Noticeboard from "./Noticeboard";
@@ -59,44 +58,15 @@ const Heading = styled("h2")`
   margin-inline: 0.75rem;
 `;
 
-const searchParamKey = "notices";
-const searchParamValue = "1";
-
 export default function Notices() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-
-  const isOpen = searchParams.get("notices") === searchParamValue;
-
-  const open: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
-    dialogRef.showModal?.();
-    const next = new URLSearchParams(searchParams);
-    next.set(searchParamKey, searchParamValue);
-    router.push(`?${next}`);
-  }, [searchParams, router.push]);
-
-  const close: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
-    dialogRef.close?.();
-    const next = new URLSearchParams(searchParams);
-    next.delete(searchParamKey);
-    router.push(`?${next}`);
-  }, [searchParams, router.push]);
-
-  const toggle = isOpen ? close : open;
-
   const buttonId = useId();
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogId = useId();
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   return (
     <>
-      <StyledIconButton
-        id={buttonId}
-        onClick={toggle}
-        popoverTarget={dialogId}
-        ref={buttonRef}
-      >
+      <StyledIconButton id={buttonId} popoverTarget={dialogId} ref={buttonRef}>
         <Megaphone />
         <VisuallyHidden>Notices</VisuallyHidden>
       </StyledIconButton>
