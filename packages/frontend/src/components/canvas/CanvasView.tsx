@@ -34,6 +34,7 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
+import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
@@ -1167,6 +1168,7 @@ export default function CanvasView({
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
+      <Notices />
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}

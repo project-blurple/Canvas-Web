@@ -23,6 +23,7 @@
     }
   ],
   "cSpell.words": [
+    "autoincrement",
     "blocklist",
     "blocklisted",
     "Blurple",
@@ -42,6 +43,7 @@
     "Prismock",
     "SOFTENG",
     "Tāmaki",
+    "timestamptz",
     "WCAG",
     "wdth",
     "wght",

@@ -50,6 +50,7 @@
     "js-cookie": "^3.0.5",
     "lucide-react": "^1.8.0",
     "luxon": "^3.7.2",
+    "markdown-to-jsx": "^9.7.16",
     "next": "^16.2.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

@@ -22,6 +22,7 @@ interface LocalStorageValueTypes extends Satisfies<
   {
     "audio/cooldown-jingle": boolean;
     "audio/sound-fx": boolean;
+    "notices/dismissed": string[];
   },
   { [key: string]: JsonDataType }
 > {}
@@ -31,6 +32,7 @@ export type LocalStorageKey = keyof LocalStorageValueTypes;
 const defaults = {
   "audio/cooldown-jingle": true,
   "audio/sound-fx": true,
+  "notices/dismissed": [] as string[],
 } as const satisfies LocalStorageValueTypes;
 
 export default function useLocalStorage<Key extends LocalStorageKey>(

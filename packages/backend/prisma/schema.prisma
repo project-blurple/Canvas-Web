@@ -37,6 +37,7 @@ model canvas {
   guild_stats       guild_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
+  notices           notice[]
 }
 
 model color {
@@ -190,6 +191,20 @@ model session {
   sid       String   @unique
   data      String
   expiresAt DateTime @db.Timestamptz(6)
+}
+
+model notice {
+  id         Int       @id @default(autoincrement())
+  type       String    @default("info") // info | warning | error
+  header     String?
+  content    String?
+  priority   Int       @default(0)
+  start_at   DateTime? @db.Timestamptz(6)
+  end_at     DateTime? @db.Timestamptz(6)
+  persisted  Boolean   @default(false)
+  canvas_id  Int?
+  canvas     canvas?   @relation(fields: [canvas_id], references: [id])
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
 }
 
 view user_stats {
