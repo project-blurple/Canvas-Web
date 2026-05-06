@@ -9,24 +9,15 @@ import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { useAuthContext } from "@/contexts";
+import { Noticeboard } from "../notices";
 
 const Links = styled("ul")`
   display: none;
-
   ${({ theme }) => theme.breakpoints.up("md")} {
     display: flex;
   }
-
   li {
     display: inline-flex;
-  }
-
-  /*
-   * Workaround for accessibility issue with VoiceOver.
-   * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
-   */
-  li::before {
-    content: "\\200B"; /* zero-width space */
   }
 `;
 
@@ -129,6 +120,7 @@ export default function Nav() {
         ))}
       </Menu>
       <Links>
+        <Noticeboard />
         {links.map(({ href, label }) => (
           <li key={href}>
             <NavLink href={href}>{label}</NavLink>

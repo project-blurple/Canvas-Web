@@ -87,6 +87,10 @@
     text-decoration: none;
   }
 
+  dialog {
+    border: 0;
+  }
+
   hr {
     box-sizing: content-box;
     height: 0;
@@ -140,6 +144,13 @@
 
   :is(ol, ul)[role="list"] {
     list-style-type: none;
+    /*
+     * Workaround for accessibility issue with VoiceOver.
+     * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
+     */
+    li::before {
+      content: "\200B"; /* zero-width space */
+    }
   }
 
   table {
