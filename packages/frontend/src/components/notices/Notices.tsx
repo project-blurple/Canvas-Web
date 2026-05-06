@@ -20,13 +20,13 @@ export default function Notices() {
   const open: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
     const next = new URLSearchParams(searchParams);
     next.set(searchParamKey, searchParamValue);
-    router.push(`?${next.toString()}`);
+    router.push(`?${next}`);
   }, [searchParams, router.push]);
 
   const close: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
     const next = new URLSearchParams(searchParams);
     next.delete(searchParamKey);
-    router.push(`?${next.toString()}`);
+    router.push(`?${next}`);
   }, [searchParams, router.push]);
 
   const toggle = isOpen ? close : open;
