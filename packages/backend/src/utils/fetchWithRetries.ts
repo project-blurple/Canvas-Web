@@ -4,6 +4,16 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Parses `Retry-After: <delay-seconds>` from header object, using `X-Ratelimit-Reset-After` as
+ * fallback. Returns `NaN` if neither can be determined.
+ */
+function getStandDownSecondsFromHeaders(headers: Headers): number {
+  const delaySeconds =
+    headers.get("retry-after") ?? headers.get("x-ratelimit-reset-after");
+  return delaySeconds ? Number.parseFloat(delaySeconds) : Number.NaN;
+}
+
 interface RetryOptions {
   maxAttempts: number;
   /**
@@ -47,18 +57,19 @@ export default async function fetchWithRetries(
 
     if (response.ok || !statusCodes.has(response.status)) return response;
 
-    const retryAfter =
-      response.headers.get("retry-after") ||
-      response.headers.get("x-ratelimit-reset-after");
-    const waitSeconds = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
-
-    await sleep(
-      Number.isFinite(waitSeconds) ?
+    const delaySeconds = getStandDownSecondsFromHeaders(response.headers);
+    const delayMs =
+      Number.isFinite(delaySeconds) ?
         // When available, prefer stand-down period from response header…
-        waitSeconds * 1000
+        delaySeconds * 1000
         // …otherwise use exponential backoff
-      : backoff ** i * 1000,
+      : backoff ** i * 1000;
+
+    console.warn(
+      `Received ${response.status} response from ${(init?.method ?? "GET").toUpperCase()} ${input} responded. Retrying in ${delayMs} ms…`,
     );
+
+    await sleep(delayMs);
   }
 
   // @ts-expect-error Definitely initialised
