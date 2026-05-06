@@ -3,6 +3,7 @@ export { default as BadRequestError } from "./BadRequestError";
 export { default as BotNotInGuildError } from "./BotNotInGuildError";
 export { default as ConflictError } from "./ConflictError";
 export { default as ForbiddenError } from "./ForbiddenError";
+export { default as NotAcceptableError } from "./NotAcceptableError";
 export { default as NotFoundError } from "./NotFoundError";
 export { default as UnauthorizedError } from "./UnauthorizedError";
 export { default as UnprocessableError } from "./UnprocessableError";

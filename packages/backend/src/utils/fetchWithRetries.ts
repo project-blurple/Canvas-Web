@@ -1,3 +1,5 @@
+import { NotAcceptableError } from "@/errors";
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -6,7 +8,7 @@ interface RetryOptions {
   maxAttempts: number;
   /**
    * If the response has no `Retry-After` or `X-Ratelimit-Reset-After` header, will retry with delay
-   * of `attemptNumber ** backoff` seconds. (Attempt number starts from 0.)
+   * of `attemptNumber ** backoff` seconds. (Attempt number starts from 0.) Must be at least 1.
    */
   backoff: number;
   /** Retry only with these HTTP status codes. */
@@ -33,6 +35,12 @@ export default async function fetchWithRetries(
   init?: RequestInit,
   { maxAttempts, backoff, statusCodes }: RetryOptions = defaultRetryConfig,
 ) {
+  if (process.env.NODE_ENV !== "production" && backoff < 1) {
+    throw new NotAcceptableError(
+      `RetryOptions backoff must be ≥1.0, but got ${backoff}`,
+    );
+  }
+
   let response: Response;
   for (let i = 0; i < maxAttempts; i++) {
     response = await fetch(input, init);
