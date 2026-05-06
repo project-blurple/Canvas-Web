@@ -30,6 +30,16 @@ interface ComplexSearchBoundsSelectProps {
   disabled: boolean;
 }
 
+function withDerivedDimensions(
+  bounds: Pick<ViewBounds, "left" | "top" | "right" | "bottom">,
+): ViewBounds {
+  return {
+    ...bounds,
+    width: bounds.right - bounds.left,
+    height: bounds.bottom - bounds.top,
+  };
+}
+
 export default function ComplexSearchBoundsSelect({
   canvas,
   selectedBounds,
@@ -64,7 +74,12 @@ export default function ComplexSearchBoundsSelect({
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, left: value - startX });
+            setSelectedBounds(
+              withDerivedDimensions({
+                ...selectedBounds,
+                left: value - startX,
+              }),
+            );
           }}
           disabled={disabled}
         />
@@ -81,7 +96,12 @@ export default function ComplexSearchBoundsSelect({
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, top: value - startY });
+            setSelectedBounds(
+              withDerivedDimensions({
+                ...selectedBounds,
+                top: value - startY,
+              }),
+            );
           }}
           disabled={disabled}
         />
@@ -101,7 +121,12 @@ export default function ComplexSearchBoundsSelect({
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, right: value - startX });
+            setSelectedBounds(
+              withDerivedDimensions({
+                ...selectedBounds,
+                right: value - startX,
+              }),
+            );
           }}
           disabled={disabled}
         />
@@ -118,7 +143,12 @@ export default function ComplexSearchBoundsSelect({
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, bottom: value - startY });
+            setSelectedBounds(
+              withDerivedDimensions({
+                ...selectedBounds,
+                bottom: value - startY,
+              }),
+            );
           }}
           disabled={disabled}
         />
