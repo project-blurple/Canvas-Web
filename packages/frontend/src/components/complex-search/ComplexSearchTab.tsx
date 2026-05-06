@@ -152,8 +152,8 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         y: selectedBounds.top,
       },
       point1: {
-        x: selectedBounds.right,
-        y: selectedBounds.bottom,
+        x: selectedBounds.right - 1,
+        y: selectedBounds.bottom - 1,
       },
       [colorFilterMode === "include" ? "includeColors" : "excludeColors"]:
         selectedColorIds.length ? selectedColorIds : undefined,

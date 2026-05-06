@@ -44,13 +44,7 @@ export default function ComplexSearchEraseHistory({
   const [blockWhileErase, setBlockWhileErase] = useState(false);
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
 
-  async function performErase(blockWhileErase: boolean) {
-    console.log(
-      "Erasing history...",
-      blockWhileErase,
-      historyData.totalEntries,
-    );
-
+  async function performErase() {
     try {
       await eraseHistoryMutation.mutateAsync();
       resetResults();
@@ -70,6 +64,10 @@ export default function ComplexSearchEraseHistory({
   const eraseHistoryMutation = useMutation({
     mutationFn: async () => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel/history`;
+
+      if (historyData.historyIds === undefined) {
+        throw new Error("No history IDs to erase");
+      }
 
       const body = {
         historyIds: historyData.historyIds,
@@ -92,7 +90,7 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
 
     try {
-      await performErase(blockWhileErase);
+      await performErase();
     } catch (error) {
       console.error(error);
       alert("Failed to erase history");
