@@ -1,5 +1,4 @@
 import z from "zod";
-import { BadRequestError } from "@/errors";
 import { assertZodSuccess } from "@/utils/models";
 
 const NoticeIdParamModel = z.object({
