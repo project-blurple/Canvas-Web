@@ -5,20 +5,32 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAuthContext,
   useCanvasContext,
+  useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette, usePlaySound } from "@/hooks";
+import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
-import { DynamicAnchorButton, PlacePixelButton } from "../../button";
-import { InteractiveSwatch } from "../../swatch";
-import { Heading } from "../ActionPanel";
-import {
-  ActionPanelTabBody,
-  FullWidthScrollView,
-  TabPanel,
-} from "./ActionPanelTabBody";
-import { BotPlaceCommandCard } from "./BotCommandCard";
-import ColorInfoCard from "./SelectedColorInfoCard";
+import { DynamicAnchorButton } from "../../../button";
+import { InteractiveSwatch } from "../../../swatch";
+import { Heading } from "../../ActionPanel";
+import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
+import { BotPlaceCommandCard } from "../BotCommandCard";
+import ColorInfoCard from "../SelectedColorInfoCard";
+import PlacePixelButton from "./PlacePixelButton";
+import usePlacePixelMutation from "./usePlacePixelMutation";
+
+/**
+ * Just here for semantics, but let parent grid “pass through”. Similar to setting
+ * `display: contents`, but fewer a11y quirks.
+ * @see https://ericwbailey.design/published/display-contents-considered-harmful
+ */
+const Form = styled("form")`
+  display: inherit;
+  grid-column: 1 / -1;
+  grid-row: 1 / -1;
+  grid-template-columns: subgrid;
+  grid-template-rows: subgrid;
+`;
 
 const Fieldset = styled("fieldset")`
   --min-swatch-width: 3rem;
@@ -73,6 +85,13 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
+  const { signOut } = useAuthContext();
+  const { coords, setCoords } = useCanvasViewContext();
+  const playCooldownExpirySound = usePlayCooldownExpirySound();
+  const playPixelPlacementSound = usePlaySound("place_pixel");
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [prevTimeLeft, setPrevTimeLeft] = useState(0);
+
   const { data: palette } = usePalette(eventId ?? undefined);
   const [mainColors, partnerColors] = useMemo(
     () => (palette !== undefined ? partitionPalette(palette) : []),
@@ -106,75 +125,127 @@ export default function PlacePixelTab({
   const { color: selectedColor } = useSelectedColorContext();
 
   const { user } = useAuthContext();
-  const { canvas } = useCanvasContext();
+  const {
+    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
+  } = useCanvasContext();
 
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
   const serverInvite =
     hasInvite ? `https://discord.gg/${inviteSlug}` : undefined;
 
-  const webPlacingEnabled = canvas.webPlacingEnabled;
-  const allColorsGlobal = canvas.allColorsGlobal;
-
   const canPlacePixel =
     webPlacingEnabled &&
     (!selectedColor || selectedColor.global || allColorsGlobal);
-
-  const readOnly = canvas.isLocked;
 
   const isJoinServerShown =
     (!(canPlacePixel && user) || readOnly) &&
     !selectedColor?.global &&
     serverInvite;
 
-  const userInServer =
-    (user &&
-      selectedColor &&
-      !selectedColor.global &&
-      isUserInServer(user, selectedColor?.guildId)) ??
-    false;
+  const userInServer = Boolean(
+    user &&
+    selectedColor &&
+    !selectedColor.global &&
+    isUserInServer(user, selectedColor?.guildId),
+  );
+
+  const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
+    onError: (e) => {
+      console.error(e);
+      if (e.response?.status === 401) signOut();
+      alert("Failed to place pixel, please refresh the page");
+    },
+    onSuccess: (data) => {
+      const cooldown = data.cooldownEndTime;
+      if (cooldown) setTimeLeft(Math.ceil(cooldown / 1000));
+    },
+  });
+
+  const onSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
+    console.log(e);
+    e.preventDefault();
+    if (!coords || !selectedColor) return;
+    playPixelPlacementSound();
+    await mutateAsync();
+    setCoords(null);
+  };
+
+  useEffect(
+    function tickCountdown() {
+      if (timeLeft > 0) {
+        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+        return () => clearTimeout(timerId);
+      }
+      setTimeLeft(0);
+    },
+    [timeLeft],
+  );
+
+  useEffect(
+    function playJingleWhenCooldownExpires() {
+      if (prevTimeLeft > 0 && timeLeft === 0) playCooldownExpirySound();
+      setPrevTimeLeft(timeLeft);
+    },
+    [playCooldownExpirySound, prevTimeLeft, timeLeft],
+  );
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
-      <FullWidthScrollView>
+      <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette colors={mainColors} name="Main colors" />
-            <NamedPalette colors={partnerColors} name="Partner colors" />
+            <NamedPalette
+              colors={mainColors}
+              disabled={isPlacing}
+              name="Main colors"
+            />
+            <NamedPalette
+              colors={partnerColors}
+              disabled={isPlacing}
+              name="Partner colors"
+            />
           </div>
         </ActionPanelTabBody>
-      </FullWidthScrollView>
-      <ActionPanelTabBody>
-        {isLarge && (
-          <ColorInfoCard
-            color={selectedColor}
-            invite={serverInvite}
-            isUserInServer={userInServer}
-          />
-        )}
-        {canPlacePixel && <PlacePixelButton isVerbose={!isLarge} />}
-        {isJoinServerShown && (
-          <DynamicAnchorButton
-            color={selectedColor?.rgba}
-            href={serverInvite}
-            type="submit"
-          >
-            {!userInServer ? "Join" : "Open"}{" "}
-            {selectedColor?.guildName ?? "server"}
-          </DynamicAnchorButton>
-        )}
-        {!readOnly && isLarge && <BotPlaceCommandCard />}
-      </ActionPanelTabBody>
+        <ActionPanelTabBody>
+          {isLarge && (
+            <ColorInfoCard
+              color={selectedColor}
+              invite={serverInvite}
+              isUserInServer={userInServer}
+            />
+          )}
+          {canPlacePixel && (
+            <PlacePixelButton
+              aria-busy={isPlacing}
+              isVerbose={!isLarge}
+              disabled={!canPlacePixel}
+              type="submit"
+            />
+          )}
+          {isJoinServerShown && (
+            <DynamicAnchorButton
+              color={selectedColor?.rgba}
+              href={serverInvite}
+            >
+              {!userInServer ? "Join" : "Open"}{" "}
+              {selectedColor?.guildName ?? "server"}
+            </DynamicAnchorButton>
+          )}
+          {!readOnly && isLarge && <BotPlaceCommandCard />}
+        </ActionPanelTabBody>
+      </Form>
     </PlacePixelTabBlock>
   );
 }
 
 interface NamedPaletteProps {
   colors: Palette | undefined;
+  disabled?: boolean | undefined;
   name: React.ReactNode;
 }
 
-function NamedPalette({ colors, name }: NamedPaletteProps) {
+function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
   const playSound = usePlaySound("pick_color");
 
@@ -183,7 +254,7 @@ function NamedPalette({ colors, name }: NamedPaletteProps) {
   return (
     <>
       <Heading>{name}</Heading>
-      <Fieldset>
+      <Fieldset disabled={disabled}>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
@@ -198,6 +269,7 @@ function NamedPalette({ colors, name }: NamedPaletteProps) {
                 setColor(color);
               }}
               paletteColor={color}
+              role="option"
             />
           ))
         }
