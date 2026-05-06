@@ -72,7 +72,6 @@ interface DynamicButtonProps extends Omit<
 export default function DynamicButton({
   children,
   color,
-  disabled = false,
   onAction,
   ...props
 }: DynamicButtonProps) {
@@ -89,7 +88,6 @@ export default function DynamicButton({
   return (
     <StyledButton
       backgroundColorStr={backgroundColorStr}
-      disabled={disabled}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
       {...props}
@@ -105,7 +103,7 @@ export function DynamicAnchorButton({
 }: DynamicButtonProps & { href: string }) {
   return (
     <StyledAnchor href={href} target="_blank" rel="noreferrer">
-      <DynamicButton {...props} />
+      <DynamicButton type="button" {...props} />
     </StyledAnchor>
   );
 }

@@ -33,5 +33,13 @@ interface InteractiveSwatchProps extends React.ComponentPropsWithRef<
 > {}
 
 export function InteractiveSwatch(props: InteractiveSwatchProps) {
-  return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
+  return (
+    <StyledSwatch
+      as={PrimitiveButton}
+      role="option"
+      // @ts-expect-error `styled` generic typing can’t handle `as` prop
+      type="button"
+      {...props}
+    />
+  );
 }
