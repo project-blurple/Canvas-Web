@@ -33,14 +33,14 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: "package.json"
-          cache: "pnpm"
+          node-version-file: package.json
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm ci
 
   format_and_lint:
-    name: "Format & lint"
+    name: Format & lint
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
@@ -52,8 +52,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: "package.json"
-          cache: "pnpm"
+          node-version-file: package.json
+          cache: pnpm
 
       - name: Install dependencies
         run: pnpm install
@@ -65,7 +65,7 @@ jobs:
         run: pnpm lint
 
   build:
-    name: "Build"
+    name: Build
     timeout-minutes: 10
     runs-on: ubuntu-latest
     strategy:
@@ -84,8 +84,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: "package.json"
-          cache: "pnpm"
+          node-version-file: package.json
+          cache: pnpm
 
       - name: Restore Next.js cache
         uses: actions/cache@v5
@@ -103,7 +103,7 @@ jobs:
         run: pnpm --filter ${{ matrix.package }} build
 
   backend_tests:
-    name: "Backend tests"
+    name: Backend tests
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
