@@ -10,6 +10,15 @@ const icons = {
   warning: <CircleAlert />,
 } as const;
 
+const IconWrapper = styled("div")`
+  background-color: oklch(from var(--notice-tint) l c h / 15%);
+  border-radius: calc(infinity * 1px);
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+`;
+
 const BannerRoot = styled("li")`
   --notice-tint: var(--discord-white;);
   background-color: oklch(from var(--notice-tint) l c h / 6%);
@@ -37,7 +46,7 @@ const BannerRoot = styled("li")`
     --notice-tint: var(--discord-red);
   }
 
-  svg:first-of-type {
+  ${IconWrapper} {
     opacity: 94%;
     color: var(--notice-tint);
   }
@@ -78,7 +87,7 @@ export default function NoticeListItem({
       onPointerDown={(e) => e.stopPropagation()}
       {...props}
     >
-      {icons[notice.type]}
+      <IconWrapper aria-hidden>{icons[notice.type]}</IconWrapper>
       <BannerBody>
         {headerText && (
           <div style={{ marginBlockEnd: "0.25em" }}>
