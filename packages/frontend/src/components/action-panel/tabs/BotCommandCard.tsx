@@ -3,6 +3,7 @@ import { Copy as CopyIcon } from "lucide-react";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import config from "@/config/clientConfig";
 import { useCanvasViewContext, useSelectedColorContext } from "@/contexts";
+import { copyToClipboard } from "@/util";
 
 const Wrapper = styled("div")`
   align-items: center;
@@ -49,7 +50,7 @@ export default function BotCommandCard({ command }: { command: string }) {
   return (
     <Wrapper>
       <code>{command}</code>
-      <CopyButton onClick={() => navigator.clipboard.writeText(command)}>
+      <CopyButton onClick={() => void copyToClipboard(command)}>
         <StyledCopyIcon aria-hidden />
         <VisuallyHidden>Copy bot command</VisuallyHidden>
       </CopyButton>

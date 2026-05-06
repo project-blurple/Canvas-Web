@@ -4,7 +4,7 @@ import {
   useCanvasContext,
   useSelectedFrameContext,
 } from "@/contexts";
-import { createPixelUrl, hexStringToPixelColor } from "@/util";
+import { copyToClipboard, createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -88,9 +88,7 @@ function FrameInfoPanelBody({
           <TooltipDynamicButton
             color={hexStringToPixelColor(selectedFrame.id)}
             tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(frameUrl);
-            }}
+            onAction={() => void copyToClipboard(frameUrl)}
           >
             Copy frame link
           </TooltipDynamicButton>

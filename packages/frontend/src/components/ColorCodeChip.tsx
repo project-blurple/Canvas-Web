@@ -43,9 +43,10 @@ interface ColorCodeChipProps extends Omit<
 export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
-  const clickHandler = () => copyToClipboard(colorCode);
+  const clickHandler = () => void copyToClipboard(colorCode);
   const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") copyToClipboard(colorCode);
+    if (event.key === "Enter" || event.key === " ")
+      void copyToClipboard(colorCode);
   };
 
   return (

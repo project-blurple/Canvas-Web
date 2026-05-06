@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import { ButtonSupplement } from "@/components/button";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
-import { createPixelUrl } from "@/util";
+import { copyToClipboard, createPixelUrl } from "@/util";
 import { Heading } from "../ActionPanel";
 import {
   ActionPanelTabBody,
@@ -123,9 +123,7 @@ export default function PixelInfoTab({
         {adjustedCoords && (
           <TooltipDynamicButton
             tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(pixelUrl);
-            }}
+            onAction={() => void copyToClipboard(pixelUrl)}
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >
             Copy pixel link
