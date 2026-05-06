@@ -75,19 +75,11 @@ const DismissButton = styled(PrimitiveButton)`
   }
 `;
 
-interface BannerProps {
-  icon: React.ReactNode;
+interface BannerProps extends React.ComponentPropsWithRef<typeof BannerRoot> {
   notice: Notice;
-  onDismiss?: () => void;
-  onDismissPermanently?: () => void;
 }
 
-function Banner({
-  notice,
-  icon,
-  onDismiss,
-  onDismissPermanently,
-}: BannerProps) {
+export default function NoticeBanner({ notice, ...props }: BannerProps) {
   const headerText =
     notice.header ? `### ${resolveSpecialText(notice.header)}` : "";
   const contentText = notice.content ? resolveSpecialText(notice.content) : "";
@@ -96,35 +88,17 @@ function Banner({
     <BannerRoot
       data-severity={notice.type}
       onPointerDown={(e) => e.stopPropagation()}
+      {...props}
     >
-      {icon}
+      {icons[notice.type]}
       <BannerBody>
         {headerText && (
-          <div style={{ marginBlockEnd: ".25em" }}>
+          <div style={{ marginBlockEnd: "0.25em" }}>
             <Markdown>{headerText}</Markdown>
           </div>
         )}
         {contentText && <Markdown>{contentText}</Markdown>}
       </BannerBody>
     </BannerRoot>
-  );
-}
-
-export default function NoticeBanner({
-  notice,
-  onDismiss,
-  onDismissPermanently,
-}: {
-  notice: Notice;
-  onDismiss?: () => void;
-  onDismissPermanently?: () => void;
-}) {
-  return (
-    <Banner
-      icon={icons[notice.type]}
-      notice={notice}
-      onDismiss={onDismiss}
-      onDismissPermanently={onDismissPermanently}
-    />
   );
 }
