@@ -168,7 +168,7 @@ describe("History route tests", () => {
       })
       .type("json");
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(406);
     expect(response.body).toMatchObject({
       message: "Invalid request body. Expected a valid history query object",
     });
