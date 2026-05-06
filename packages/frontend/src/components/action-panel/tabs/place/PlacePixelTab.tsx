@@ -1,5 +1,6 @@
 import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
+import { AxiosError } from "axios";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -151,9 +152,8 @@ export default function PlacePixelTab({
   );
 
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
-    onError: (e) => {
-      console.error(e);
-      if (e.response?.status === 401) signOut();
+    onError: (error) => {
+      if (error instanceof AxiosError && error.status === 401) signOut();
       alert("Failed to place pixel, please refresh the page");
     },
     onSuccess: (data) => {
