@@ -69,7 +69,7 @@ export default function ComplexSearchEraseHistory({
 
   const eraseHistoryMutation = useMutation({
     mutationFn: async () => {
-      const requestUrl = `${config.apiUrl}/api/v1/history`;
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel/history`;
 
       const body = {
         historyIds: historyData.historyIds,

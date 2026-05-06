@@ -183,7 +183,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
   const results = (() => {
-    console.log(historyQuery, historyData);
     if (historyQuery.status === "error") {
       const { status } = historyQuery.error as AxiosError;
       const allowed = [401, 500];
