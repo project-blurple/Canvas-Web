@@ -44,6 +44,9 @@ const BannerRoot = styled("li")`
 `;
 
 const BannerBody = styled("div")`
+  * + * {
+    margin-block-start: 0.5em;
+  }
   h1,
   h2,
   h3,
