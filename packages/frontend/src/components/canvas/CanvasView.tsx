@@ -35,7 +35,6 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
-import Noticeboard from "../notices/Noticeboard";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
