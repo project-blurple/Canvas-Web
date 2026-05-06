@@ -179,9 +179,9 @@
       "Monaspace Neon", ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas,
       Liberation Mono, monospace;
     --border-color: oklch(from var(--discord-white) l c h / 15%);
-    --card-border: var(--border-color) solid max(0.125rem, 1px);
+    --card-border: var(--border-color) solid 1px;
     --card-border-radius: 1.5rem;
-    --focus-outline: var(--discord-blurple) solid max(0.125rem, 1px);
+    --focus-outline: var(--discord-blurple) solid 1px;
     --text-glow: 0 0 1rem var(--discord-blurple);
 
     --transition-duration-fast: 100ms;
