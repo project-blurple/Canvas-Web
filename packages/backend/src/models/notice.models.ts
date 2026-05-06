@@ -31,7 +31,7 @@ export const ModifyNoticeBodyModel = z
     priority: z.number().int().nonnegative().optional(),
     startAt: z.coerce.date().nullable().optional(),
     endAt: z.coerce.date().nullable().optional(),
-    persistOnDismiss: z.boolean().optional(),
+    persisted: z.boolean().optional(),
     canvasId: z.number().int().positive().nullable().optional(),
   })
   .superRefine(({ startAt, endAt }, ctx) => {

@@ -8,7 +8,7 @@ export interface Notice {
   priority: number; // lower number means higher priority
   startAt: Date | null;
   endAt: Date | null;
-  persistOnDismiss: boolean;
+  persisted: boolean;
   canvasId: number | null;
   createdAt: Date;
 }

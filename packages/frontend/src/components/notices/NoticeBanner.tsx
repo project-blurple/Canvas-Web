@@ -112,7 +112,7 @@ function Banner({
         )}
         <DismissWrapper>
           <DismissButton onClick={onDismiss}>Dismiss</DismissButton>
-          {!notice.persistOnDismiss && (
+          {!notice.persisted && (
             <DismissButton onClick={onDismissPermanently}>
               Don't show again
             </DismissButton>

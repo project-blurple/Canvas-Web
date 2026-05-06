@@ -12,7 +12,7 @@ function noticeFromDb(notice: NoticeDbModel): Notice {
     priority: notice.priority,
     startAt: notice.start_at,
     endAt: notice.end_at,
-    persistOnDismiss: notice.persist_on_dismiss,
+    persisted: notice.persisted,
     canvasId: notice.canvas_id,
     createdAt: notice.created_at,
   };
@@ -75,7 +75,7 @@ export async function createNotice({
   priority,
   startAt,
   endAt,
-  persistOnDismiss,
+  persisted,
   canvasId,
 }: CreateNoticeBody): Promise<Notice> {
   const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
@@ -88,7 +88,7 @@ export async function createNotice({
       priority,
       start_at: normalizedWindow.startAt,
       end_at: normalizedWindow.endAt,
-      persist_on_dismiss: persistOnDismiss,
+      persisted: persisted,
       canvas_id: canvasId,
     },
   });
@@ -110,7 +110,7 @@ export async function updateNotice({
     priority,
     startAt,
     endAt,
-    persistOnDismiss,
+    persisted,
     canvasId,
   },
 }: UpdateNoticeBody): Promise<Notice> {
@@ -127,7 +127,7 @@ export async function updateNotice({
       priority,
       start_at: normalizedWindow.startAt,
       end_at: normalizedWindow.endAt,
-      persist_on_dismiss: persistOnDismiss,
+      persisted: persisted,
       canvas_id: canvasId,
     },
   });

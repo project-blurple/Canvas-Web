@@ -45,7 +45,7 @@ export default function Notices() {
       });
 
       const n = notices.find((x) => x.id === id);
-      if (persist && n && n.persistOnDismiss === false) {
+      if (persist && n && n.persisted === false) {
         const nextArr = Array.from(
           new Set([...(persistedDismissed ?? []), id]),
         );

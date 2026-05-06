@@ -7,7 +7,7 @@ CREATE TABLE "notice" (
     "priority" INTEGER NOT NULL DEFAULT 0,
     "start_at" TIMESTAMPTZ(6),
     "end_at" TIMESTAMPTZ(6),
-    "persist_on_dismiss" BOOLEAN NOT NULL DEFAULT false,
+    "persisted" BOOLEAN NOT NULL DEFAULT false,
     "canvas_id" INTEGER REFERENCES "canvas"("id") ON DELETE SET NULL ON UPDATE CASCADE,
     "created_at" TIMESTAMPTZ(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
