@@ -7,7 +7,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
@@ -59,6 +59,7 @@ export function useComplexPixelHistory(
   query: ComplexPixelHistoryQuery | null,
 ) {
   const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
+  const lastDurationRef = useRef<number | null>(null);
 
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
     if (!query) return null;
@@ -87,9 +88,13 @@ export function useComplexPixelHistory(
           withCredentials: true,
         },
       );
+      lastDurationRef.current = performance.now() - startedAt;
+
       return response.data;
-    } finally {
-      setLastDurationMs(performance.now() - startedAt);
+    } catch (error) {
+      lastDurationRef.current = performance.now() - startedAt;
+
+      throw error;
     }
   };
 
@@ -100,8 +105,22 @@ export function useComplexPixelHistory(
     refetchOnWindowFocus: false,
   });
 
+  useEffect(
+    function updateLastDurationAfterSettledQuery() {
+      if (queryResult.dataUpdatedAt === 0 && queryResult.errorUpdatedAt === 0) {
+        return;
+      }
+
+      if (lastDurationRef.current === null) return;
+
+      setLastDurationMs(lastDurationRef.current);
+    },
+    [queryResult.dataUpdatedAt, queryResult.errorUpdatedAt],
+  );
+
   return {
     ...queryResult,
+    data: queryResult.data ?? null,
     lastDurationMs,
   };
 }
