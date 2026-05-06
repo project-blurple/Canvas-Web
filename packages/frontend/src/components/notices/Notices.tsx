@@ -24,7 +24,6 @@ const Dialog = styled("dialog")`
   max-block-size: min(90vh, 60rem); /* fallback */
   max-block-size: min(90dvh, 60rem);
   overflow: auto;
-
   position-anchor: ${anchorName};
   position-area: block-end center;
   position: absolute;
@@ -34,8 +33,7 @@ const Dialog = styled("dialog")`
   transition-timing-function: linear, var(--ease-out-quart);
 
   > * {
-    padding-block: calc(var(--card-border-radius) - 0.75rem);
-    padding-inline: calc(var(--card-border-radius) - 0.75rem);
+    padding: calc(var(--card-border-radius) - 0.75rem);
   }
 
   opacity: 1;
