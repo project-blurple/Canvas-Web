@@ -66,16 +66,19 @@ export default function Notices() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const isOpen = searchParams.get("notices") === searchParamValue;
 
   const open: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
+    dialogRef.showModal?.();
     const next = new URLSearchParams(searchParams);
     next.set(searchParamKey, searchParamValue);
     router.push(`?${next}`);
   }, [searchParams, router.push]);
 
   const close: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
+    dialogRef.close?.();
     const next = new URLSearchParams(searchParams);
     next.delete(searchParamKey);
     router.push(`?${next}`);
@@ -89,18 +92,16 @@ export default function Notices() {
   return (
     <>
       <StyledIconButton
-        aria-expanded={isOpen}
-        aria-haspopup="true"
         id={buttonId}
         onClick={toggle}
-        popoverTarget="dialogId"
+        popoverTarget={dialogId}
         ref={buttonRef}
       >
         <Megaphone />
         <VisuallyHidden>Notices</VisuallyHidden>
       </StyledIconButton>
       {createPortal(
-        <Dialog id={dialogId} open={isOpen} popover="">
+        <Dialog closedby="any" id={dialogId} popover="" ref={dialogRef}>
           <Header>
             <Heading>Notices</Heading>
           </Header>
