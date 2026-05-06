@@ -209,7 +209,9 @@ describe("History route tests", () => {
       .delete("/api/v1/canvas/1/pixel/history")
       .set("X-TestUserId", "1")
       .send({
-        historyIds: [1, 2],
+        x0: 0,
+        y0: 0,
+        includeUserIds: ["1", "2"],
         shouldBlockAuthors: true,
       })
       .type("json")
@@ -217,7 +219,25 @@ describe("History route tests", () => {
 
     expect(response.body).toStrictEqual({});
     expect(deletePixelHistoryEntries).toHaveBeenCalledTimes(1);
-    expect(deletePixelHistoryEntries).toHaveBeenCalledWith(1, [1n, 2n], true);
+    expect(deletePixelHistoryEntries).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: [
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+        ],
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        },
+        userIdFilter: {
+          ids: [1n, 2n],
+          include: true,
+        },
+        colorFilter: undefined,
+      },
+      true,
+    );
   });
 
   it("returns 403 when deleting history without moderator permissions", async () => {

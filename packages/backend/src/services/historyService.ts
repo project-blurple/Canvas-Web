@@ -12,8 +12,6 @@ import {
   validatePixel,
 } from "./pixelService";
 
-const formatter = new Intl.ListFormat("en-US");
-
 interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
   points: Point | [Point, Point];
@@ -43,10 +41,6 @@ const pixelHistorySelect = {
 type PixelHistoryRow = Prisma.historyGetPayload<{
   select: typeof pixelHistorySelect;
 }>;
-
-const pixelHistoryIdSelect = {
-  id: true,
-} as const satisfies Prisma.historySelect;
 
 type PixelHistoryUserCountRow = {
   user_id: bigint;
@@ -153,16 +147,6 @@ async function getPixelHistoryRows({
     },
     where: buildPixelHistoryWhere(fetchData),
     select: pixelHistorySelect,
-  });
-}
-
-async function getPixelHistoryIds(fetchData: GetPixelHistoryParams) {
-  return prisma.history.findMany({
-    orderBy: {
-      timestamp: "desc",
-    },
-    where: buildPixelHistoryWhere(fetchData),
-    select: pixelHistoryIdSelect,
   });
 }
 
@@ -321,20 +305,13 @@ export async function getPixelHistorySummary(
     limit: 100,
   });
 
-  const historyIdsPromise =
-    includeSummary ? getPixelHistoryIds(fetchData) : null;
-
-  const totalEntriesPromise =
-    historyIdsPromise ?
-      historyIdsPromise.then((historyIds) => historyIds.length)
-    : prisma.history.count({
-        where: buildPixelHistoryWhere(fetchData),
-      });
+  const totalEntriesPromise = prisma.history.count({
+    where: buildPixelHistoryWhere(fetchData),
+  });
 
   const summaryPromise =
-    historyIdsPromise ?
+    includeSummary ?
       Promise.all([
-        historyIdsPromise,
         getPixelHistoryUserCounts(fetchData),
         getPixelHistoryUserColorCounts(fetchData),
       ] as const)
@@ -347,39 +324,48 @@ export async function getPixelHistorySummary(
   ]);
 
   const users =
-    summary ? buildPixelHistoryUsers(summary[1], summary[2]) : undefined;
-  const historyIds =
-    summary ? summary[0].map((history) => history.id.toString()) : undefined;
+    summary ? buildPixelHistoryUsers(summary[0], summary[1]) : undefined;
 
   return {
     pixelHistory: pixelHistory.map(mapPixelHistoryRow),
     totalEntries,
-    historyIds,
     users,
   };
 }
 
 /**
- * Deletes pixel history entries for the given canvas and history IDs
+ * Deletes pixel history entries matching the filter criteria
  *
- * @param canvasId - The ID of the canvas
- * @param historyIds - The IDs of the history entries to delete
+ * @param params - Filter parameters to match history entries for deletion
  * @param shouldBlockAuthors - Whether to add authors of the deleted entries to the blocklist
  */
 export async function deletePixelHistoryEntries(
-  canvasId: CanvasInfo["id"],
-  historyIds: bigint[],
+  params: GetPixelHistoryParams,
   shouldBlockAuthors: boolean = false,
 ): Promise<void> {
-  // First, check that all history entries exist and belong to the specified canvas
+  // Validate pixels
+  const normalizedPoints: [Point, Point] =
+    Array.isArray(params.points) ?
+      params.points
+    : [params.points, params.points];
+
+  if (
+    normalizedPoints[0].x === normalizedPoints[1].x &&
+    normalizedPoints[0].y === normalizedPoints[1].y
+  ) {
+    await validatePixel(params.canvasId, normalizedPoints[0], false);
+  } else {
+    await Promise.all([
+      validatePixel(params.canvasId, normalizedPoints[0], false),
+      validatePixel(params.canvasId, normalizedPoints[1], false),
+    ]);
+  }
+
+  const where = buildPixelHistoryWhere(params);
+
+  // Get entries for pixel restoration and author blocking
   const existingEntries = await prisma.history.findMany({
-    where: {
-      erased_at: null,
-      canvas_id: canvasId,
-      id: {
-        in: historyIds,
-      },
-    },
+    where,
     select: {
       id: true,
       user_id: true,
@@ -388,24 +374,14 @@ export async function deletePixelHistoryEntries(
     },
   });
 
-  const existingEntryIds = new Set(existingEntries.map((entry) => entry.id));
-
-  const invalidIds = new Set(historyIds).difference(existingEntryIds);
-  if (invalidIds.size > 0) {
-    throw new Error(
-      `The following history IDs do not exist for canvas ${canvasId}: ${formatter.format([...invalidIds].map((id) => id.toString()))}`,
-    );
+  if (existingEntries.length === 0) {
+    return;
   }
 
   const erasedAt = new Date();
 
   await prisma.history.updateMany({
-    where: {
-      canvas_id: canvasId,
-      id: {
-        in: historyIds,
-      },
-    },
+    where,
     data: {
       erased_at: erasedAt,
     },
@@ -420,7 +396,7 @@ export async function deletePixelHistoryEntries(
     ).values(),
   ];
 
-  await restorePixelsAfterHistoryDeletion(canvasId, coordinatesUpdated);
+  await restorePixelsAfterHistoryDeletion(params.canvasId, coordinatesUpdated);
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(existingEntries.map((entry) => entry.user_id));

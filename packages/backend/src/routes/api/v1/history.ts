@@ -120,17 +120,47 @@ historyRouter.delete<CanvasIdParam>("/", async (req, res) => {
     const bodyResult = await PixelHistoryDeleteBodyModel.safeParseAsync(
       req.body,
     );
-    assertZodSuccess(
-      bodyResult,
-      "Invalid request body. Expected an object with a historyIds property that is an array of non-negative integers",
-    );
+    assertZodSuccess(bodyResult);
 
-    const historyIds = bodyResult.data.historyIds.map(BigInt);
+    const {
+      x0,
+      y0,
+      x1,
+      y1,
+      fromDateTime,
+      toDateTime,
+      includeUserIds,
+      excludeUserIds,
+      includeColors,
+      excludeColors,
+      shouldBlockAuthors,
+    } = bodyResult.data;
+
+    const point0 = { x: x0, y: y0 };
+    const point1 = { x: x1 ?? x0, y: y1 ?? y0 };
+
+    const userIdFilter =
+      includeUserIds ? { ids: includeUserIds.map(BigInt), include: true }
+      : excludeUserIds ? { ids: excludeUserIds.map(BigInt), include: false }
+      : undefined;
+
+    const colorFilter =
+      includeColors ? { colors: includeColors, include: true }
+      : excludeColors ? { colors: excludeColors, include: false }
+      : undefined;
 
     await deletePixelHistoryEntries(
-      canvasId,
-      historyIds,
-      bodyResult.data.shouldBlockAuthors,
+      {
+        canvasId,
+        points: [point0, point1],
+        dateRange: {
+          from: fromDateTime,
+          to: toDateTime,
+        },
+        userIdFilter,
+        colorFilter,
+      },
+      shouldBlockAuthors,
     );
 
     res.status(204).send();
