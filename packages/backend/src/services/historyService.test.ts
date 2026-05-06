@@ -27,7 +27,6 @@ describe.skip("historyService", () => {
       });
 
       expect(history.totalEntries).toBe(4);
-      expect(history.historyIds).toEqual(["7", "3", "2", "1"]);
       expect(history.pixelHistory).toHaveLength(4);
       expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
         new Date(7),
@@ -80,7 +79,6 @@ describe.skip("historyService", () => {
       });
 
       expect(history.totalEntries).toBe(2);
-      expect(history.historyIds).toEqual(["9", "8"]);
       expect(history.pixelHistory).toHaveLength(2);
       expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
         new Date(9),
@@ -133,7 +131,16 @@ describe.skip("historyService", () => {
         },
       });
 
-      await deletePixelHistoryEntries(1, [entryOne.id, entryTwo.id], true);
+      await deletePixelHistoryEntries(
+        {
+          canvasId: 1,
+          points: [
+            { x: 1, y: 0 },
+            { x: 1, y: 1 },
+          ],
+        },
+        true,
+      );
 
       await expect(
         prisma.history.findMany({
@@ -165,19 +172,8 @@ describe.skip("historyService", () => {
     });
 
     it("rejects history IDs that do not belong to the canvas", async () => {
-      const entry = await prisma.history.create({
-        data: {
-          canvas_id: 1,
-          user_id: 1n,
-          x: 0,
-          y: 0,
-          color_id: 1,
-          timestamp: new Date(102),
-        },
-      });
-
       await expect(
-        deletePixelHistoryEntries(1, [entry.id, 999n]),
+        deletePixelHistoryEntries({ canvasId: 1, points: { x: 0, y: 0 } }),
       ).rejects.toThrow(
         `The following history IDs do not exist for canvas 1: 999`,
       );
