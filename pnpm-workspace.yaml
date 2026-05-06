@@ -4,3 +4,15 @@ packages:
   - "packages/backend"
   - "packages/frontend"
   - "packages/types"
+
+overrides:
+  protobufjs: ^7.5.5
+
+allowBuilds:
+  '@prisma/engines': false
+  cpu-features: false
+  esbuild: false
+  prisma: false
+  protobufjs: false
+  sharp: false
+  ssh2: false
