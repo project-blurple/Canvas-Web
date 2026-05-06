@@ -1,87 +1,63 @@
-import { styled } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
-import useLocalStorage from "@/app/settings/useLocalStorage";
-import { useCanvasContext } from "@/contexts";
-import { useNotices } from "@/hooks/queries/useNotice";
-import NoticeBanner from "./NoticeBanner";
+"use client";
 
-const NoticeWrapper = styled("div")`
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  left: 50%;
-  margin-top: 2.5rem;
-  pointer-events: auto;
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  width: 90%;
-  z-index: 2000;
-`;
+import { IconButton, Menu } from "@mui/material";
+import { Megaphone } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useId, useRef, useState } from "react";
+import VisuallyHidden from "../VisuallyHidden";
+import Noticeboard from "./Noticeboard";
+
+const searchParamKey = "notices";
+const searchParamValue = "1";
 
 export default function Notices() {
-  const { data: notices = [] } = useNotices();
-  const { canvas } = useCanvasContext();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
-  const [persistedDismissed = [], setPersistedDismissed] =
-    useLocalStorage("notices/dismissed");
+  const isOpen = searchParams.get("notices") === searchParamValue;
 
-  const [transientDismissed, setTransientDismissed] = useState<Set<string>>(
-    new Set(),
-  );
+  const open: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set(searchParamKey, searchParamValue);
+    router.push(`?${next.toString()}`);
+  }, [searchParams, router.push]);
 
-  const persistedSet = useMemo(
-    () => new Set<string>(persistedDismissed),
-    [persistedDismissed],
-  );
+  const close: React.MouseEventHandler<HTMLButtonElement> = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete(searchParamKey);
+    router.push(`?${next.toString()}`);
+  }, [searchParams, router.push]);
 
-  const dismiss = useCallback(
-    (id: string, persist: boolean = false) => {
-      setTransientDismissed((s) => {
-        const next = new Set(s);
-        next.add(id);
-        return next;
-      });
+  const toggle = isOpen ? close : open;
 
-      const n = notices.find((x) => x.id === id);
-      if (persist && n && n.persistOnDismiss === false) {
-        const nextArr = Array.from(
-          new Set([...(persistedDismissed ?? []), id]),
-        );
-        setPersistedDismissed(nextArr);
-      }
-    },
-    [notices, persistedDismissed, setPersistedDismissed],
-  );
-
-  const filteredNotices = notices
-    .filter(
-      (notice) =>
-        (notice.canvasId === null || notice.canvasId === canvas?.id) &&
-        !transientDismissed.has(notice.id) &&
-        !persistedSet.has(notice.id),
-    )
-    .sort((a, b) => {
-      if (a.priority !== b.priority) {
-        return a.priority - b.priority;
-      } else {
-        return (
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      }
-    });
+  const buttonId = useId();
+  const dialogId = useId();
 
   return (
-    <NoticeWrapper>
-      {filteredNotices.map((notice) => (
-        <NoticeBanner
-          key={notice.id}
-          notice={notice}
-          onDismiss={() => dismiss(notice.id, false)}
-          onDismissPermanently={() => dismiss(notice.id, true)}
-        />
-      ))}
-    </NoticeWrapper>
+    <>
+      <IconButton
+        aria-controls={dialogId}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        id={buttonId}
+        onClick={toggle}
+        ref={buttonRef}
+      >
+        <Megaphone />
+        <VisuallyHidden>Notices</VisuallyHidden>
+      </IconButton>
+      <Menu
+        id={dialogId}
+        anchorEl={buttonRef.current}
+        open={isOpen}
+        onClose={close}
+        slotProps={{
+          list: { "aria-labelledby": buttonId },
+        }}
+      >
+        <Noticeboard />
+      </Menu>
+    </>
   );
 }

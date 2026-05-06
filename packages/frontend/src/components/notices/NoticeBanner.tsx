@@ -3,76 +3,80 @@ import { styled } from "@mui/material/styles";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { resolveSpecialText } from "@/util/text";
+import { PrimitiveButton } from "../button";
 
-type BannerComponent = typeof StyledBanner;
+const icons = {
+  info: <Info />,
+  error: <TriangleAlert />,
+  warning: <CircleAlert />,
+} as const;
 
-const StyledBanner = styled("div")`
-  align-items: center;
-  background-color: var(--discord-legacy-dark-but-not-black);
-  border-radius: var(--card-border-radius);
-  border: 3px solid;
-  box-shadow: 0 0 10px rgba(0 0 0 / 50%);
-  cursor: default;
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  justify-content: center;
-  padding: 1rem;
-  width: fit-content;
+const BannerRoot = styled("article")`
+  --notice-tint: var(--discord-white;);
+  background-color: oklch(from var(--notice-tint) l c h / 6%);
+  border-radius: 0.75rem;
+  border: var(--card-border);
+  display: grid;
+  gap: inherit;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  padding: 0.75rem;
+  font-weight: 450;
+  letter-spacing: 0.01em;
 
-  & > svg {
-    flex: 0 0 auto;
-    width: 1.25rem;
-    height: 1.25rem;
+  @supports (color: color-mix(in oklab, black, black)) {
+    color: color-mix(in oklab, currentColor 90%, var(--notice-tint));
   }
-`;
 
-const StyledInfoBanner = styled(StyledBanner)`
-  border-color: oklch(from var(--discord-white) l c h / 50%);
-`;
+  &[data-severity="warning"] {
+    background-color: transparent;
+  }
+  &[data-severity="warning"] {
+    --notice-tint: var(--discord-blurple);
+  }
+  &[data-severity="error"] {
+    --notice-tint: var(--discord-red);
+  }
 
-const StyledWarningBanner = styled(StyledBanner)`
-  border-color: var(--discord-blurple);
-`;
-
-const StyledErrorBanner = styled(StyledBanner)`
-  border-color: var(--discord-red);
+  svg:first-of-type {
+    opacity: 94%;
+    color: var(--notice-tint);
+  }
 `;
 
 const BannerBody = styled("div")`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 0;
-`;
-
-const ContentSpan = styled("span")`
-  > div {
-    display: flex;
-    flex-direction: column;
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-size: inherit;
+    font-weight: bolder;
   }
 `;
 
-const DismissWrapper = styled("div")`
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-`;
+const ButtonBar = styled("div")``;
 
-const DismissButton = styled("button")`
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  flex: 0 0 auto;
-  opacity: 50%;
-  transition: opacity var(--transition-duration-fast) ease;
-
-  :hover {
-    opacity: 80%;
+const DismissButton = styled(PrimitiveButton)`
+  border-radius: 0.1875em;
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0.015em;
+  padding-block: 0.15em;
+  padding-inline: 0.75em;
+  color: oklch(1 0 0 / 60%);
+  text-box-trim: both;
+  &:active {
+    scale: 99%;
+  }
+  &:hover {
+    background-color: oklch(1 0 0 / 4%);
   }
 `;
 
 interface BannerProps {
+  icon: React.ReactNode;
   notice: Notice;
   onDismiss?: () => void;
   onDismissPermanently?: () => void;
@@ -80,44 +84,35 @@ interface BannerProps {
 
 function Banner({
   notice,
-  BannerRoot,
   icon,
   onDismiss,
   onDismissPermanently,
-}: {
-  BannerRoot: BannerComponent;
-  icon: React.ReactNode;
-} & BannerProps) {
+}: BannerProps) {
   const headerText =
     notice.header ? `### ${resolveSpecialText(notice.header)}` : "";
   const contentText = notice.content ? resolveSpecialText(notice.content) : "";
 
   return (
     <BannerRoot
-      onPointerDown={(e) => {
-        e.stopPropagation();
-      }}
+      data-severity={notice.type}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {icon}
       <BannerBody>
         {headerText && (
-          <ContentSpan>
+          <div style={{ marginBlockEnd: ".25em" }}>
             <Markdown>{headerText}</Markdown>
-          </ContentSpan>
+          </div>
         )}
-        {contentText && (
-          <ContentSpan>
-            <Markdown>{contentText}</Markdown>
-          </ContentSpan>
-        )}
-        <DismissWrapper>
+        {contentText && <Markdown>{contentText}</Markdown>}
+        <ButtonBar>
           <DismissButton onClick={onDismiss}>Dismiss</DismissButton>
           {!notice.persistOnDismiss && (
             <DismissButton onClick={onDismissPermanently}>
-              Don't show again
+              Don’t show again
             </DismissButton>
           )}
-        </DismissWrapper>
+        </ButtonBar>
       </BannerBody>
     </BannerRoot>
   );
@@ -132,38 +127,12 @@ export default function NoticeBanner({
   onDismiss?: () => void;
   onDismissPermanently?: () => void;
 }) {
-  switch (notice.type) {
-    case "info":
-      return (
-        <Banner
-          BannerRoot={StyledInfoBanner}
-          icon={<Info />}
-          notice={notice}
-          onDismiss={onDismiss}
-          onDismissPermanently={onDismissPermanently}
-        />
-      );
-    case "warning":
-      return (
-        <Banner
-          BannerRoot={StyledWarningBanner}
-          icon={<TriangleAlert />}
-          notice={notice}
-          onDismiss={onDismiss}
-          onDismissPermanently={onDismissPermanently}
-        />
-      );
-    case "error":
-      return (
-        <Banner
-          BannerRoot={StyledErrorBanner}
-          icon={<CircleAlert />}
-          notice={notice}
-          onDismiss={onDismiss}
-          onDismissPermanently={onDismissPermanently}
-        />
-      );
-    default:
-      return null;
-  }
+  return (
+    <Banner
+      icon={icons[notice.type]}
+      notice={notice}
+      onDismiss={onDismiss}
+      onDismissPermanently={onDismissPermanently}
+    />
+  );
 }
