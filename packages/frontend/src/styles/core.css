@@ -87,6 +87,10 @@
     text-decoration: none;
   }
 
+  dialog {
+    border: 0;
+  }
+
   hr {
     box-sizing: content-box;
     height: 0;

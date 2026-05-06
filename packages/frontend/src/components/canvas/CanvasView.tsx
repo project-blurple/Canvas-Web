@@ -35,7 +35,6 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
-import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
@@ -185,7 +184,6 @@ const FullscreenButton = styled(BaseFullscreenButton)`
 const FullscreenPanelButton = styled(BaseFullscreenButton)`
   border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   inset-block-start: 4rem;
-  z-index: 3;
 `;
 
 const FullscreenPanelOverlay = styled("div")`
@@ -197,7 +195,6 @@ const FullscreenPanelOverlay = styled("div")`
   pointer-events: auto;
   position: absolute;
   width: min(var(--action-panel-width), calc(100vw - 1rem));
-  z-index: 2;
 
   > * {
     width: 100%;
@@ -1131,7 +1128,6 @@ export default function CanvasView() {
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
-      <Notices />
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}

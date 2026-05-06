@@ -9,6 +9,7 @@ import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { useAuthContext } from "@/contexts";
+import Noticeboard from "../notices/Noticeboard";
 
 const Links = styled("ul")`
   display: none;
@@ -126,6 +127,7 @@ export default function Nav() {
         ))}
       </Menu>
       <Links>
+        <Noticeboard />
         {links.map(({ href, label }) => (
           <li key={href}>
             <NavLink href={href}>{label}</NavLink>

@@ -3,32 +3,29 @@ import { useCallback, useMemo, useState } from "react";
 import useLocalStorage from "@/app/settings/useLocalStorage";
 import { useCanvasContext } from "@/contexts";
 import { useNotices } from "@/hooks/queries/useNotice";
-import NoticeBanner from "./NoticeBanner";
+import NoticeListItem from "./NoticeListItem";
 
-const NoticeWrapper = styled("div")`
+const UnorderedList = styled("ul")`
+  align-content: flex-start;
   align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  left: 50%;
-  margin-top: 2.5rem;
-  pointer-events: auto;
-  position: absolute;
-  top: 0;
-  transform: translateX(-50%);
-  width: 90%;
-  z-index: 2000;
+  display: grid;
+  font-size: 1rem;
+  gap: 0.75em;
+  grid-template-columns: auto 1fr;
+  line-height: 1.55;
 `;
 
-export default function Notices() {
+export default function NoticeList(
+  props: React.ComponentPropsWithRef<typeof UnorderedList>,
+) {
   const { data: notices = [] } = useNotices();
   const { canvas } = useCanvasContext();
 
   const [persistedDismissed = [], setPersistedDismissed] =
     useLocalStorage("notices/dismissed");
 
-  const [transientDismissed, setTransientDismissed] = useState<Set<string>>(
-    new Set(),
+  const [transientDismissed, setTransientDismissed] = useState(
+    new Set<string>(),
   );
 
   const persistedSet = useMemo(
@@ -46,9 +43,7 @@ export default function Notices() {
 
       const n = notices.find((x) => x.id === id);
       if (persist && n && n.persistOnDismiss === false) {
-        const nextArr = Array.from(
-          new Set([...(persistedDismissed ?? []), id]),
-        );
+        const nextArr = Array.from(new Set([...persistedDismissed, id]));
         setPersistedDismissed(nextArr);
       }
     },
@@ -73,15 +68,15 @@ export default function Notices() {
     });
 
   return (
-    <NoticeWrapper>
+    <UnorderedList {...props} role="list">
       {filteredNotices.map((notice) => (
-        <NoticeBanner
+        <NoticeListItem
           key={notice.id}
           notice={notice}
           onDismiss={() => dismiss(notice.id, false)}
           onDismissPermanently={() => dismiss(notice.id, true)}
         />
       ))}
-    </NoticeWrapper>
+    </UnorderedList>
   );
 }
