@@ -5,6 +5,7 @@ import BadRequestError from "@/errors/BadRequestError";
 import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
+import fetchWithRetries from "@/utils/fetchWithRetries";
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
@@ -47,11 +48,14 @@ async function discordRequest<T>({
   endpoint,
   authorization,
 }: DiscordRequestOptions): Promise<T> {
-  const response = await fetch(`${DISCORD_API_BASE_URL}${endpoint}`, {
-    headers: {
-      Authorization: authorization,
+  const response = await fetchWithRetries(
+    `${DISCORD_API_BASE_URL}${endpoint}`,
+    {
+      headers: {
+        Authorization: authorization,
+      },
     },
-  });
+  );
 
   if (response.status === 401 || response.status === 403) {
     throw new UnauthorizedError(
