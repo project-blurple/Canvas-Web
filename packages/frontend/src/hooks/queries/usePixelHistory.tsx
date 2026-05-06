@@ -13,7 +13,6 @@ import config from "@/config/clientConfig";
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
   pixelHistory: [],
   totalEntries: 0,
-  historyIds: [],
   users: {},
 });
 

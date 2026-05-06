@@ -299,7 +299,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             <ComplexSearchEraseHistory
               entriesCount={entriesCount}
               usersLength={usersLength}
-              historyData={historyData}
+              query={searchQuery}
               resetResults={resetResults}
             />
           </EraseWrapper>

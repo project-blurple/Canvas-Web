@@ -1,6 +1,5 @@
 "use client";
 
-import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
 import {
   Checkbox,
   Dialog,
@@ -17,6 +16,7 @@ import { useState } from "react";
 import { DynamicButton } from "@/components/button";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
+import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
 
 const StyledDialog = styled(Dialog)(() => ({
   "& .MuiDialog-paper": {
@@ -28,14 +28,14 @@ const StyledDialog = styled(Dialog)(() => ({
 interface ComplexSearchEraseHistoryProps {
   entriesCount: number;
   usersLength: number;
-  historyData: PixelHistoryWrapper;
+  query: ComplexPixelHistoryQuery;
   resetResults: () => void;
 }
 
 export default function ComplexSearchEraseHistory({
   entriesCount,
   usersLength,
-  historyData,
+  query,
   resetResults,
 }: ComplexSearchEraseHistoryProps) {
   const { canvas } = useCanvasContext();
@@ -65,12 +65,19 @@ export default function ComplexSearchEraseHistory({
     mutationFn: async () => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel/history`;
 
-      if (historyData.historyIds === undefined) {
-        throw new Error("No history IDs to erase");
-      }
-
       const body = {
-        historyIds: historyData.historyIds,
+        x0: query.point0.x,
+        y0: query.point0.y,
+        ...(query.point1 !== undefined && {
+          x1: query.point1.x,
+          y1: query.point1.y,
+        }),
+        ...(query.fromDateTime && { fromDateTime: query.fromDateTime }),
+        ...(query.toDateTime && { toDateTime: query.toDateTime }),
+        ...(query.includeUserIds && { includeUserIds: query.includeUserIds }),
+        ...(query.excludeUserIds && { excludeUserIds: query.excludeUserIds }),
+        ...(query.includeColors && { includeColors: query.includeColors }),
+        ...(query.excludeColors && { excludeColors: query.excludeColors }),
         shouldBlockAuthors: blockWhileErase,
       };
 

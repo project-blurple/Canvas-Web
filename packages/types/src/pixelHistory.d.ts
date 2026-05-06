@@ -21,7 +21,6 @@ export interface PixelHistoryUserSummary {
 export interface PixelHistoryWrapper {
   pixelHistory: PixelHistoryRecord[];
   totalEntries: number;
-  historyIds?: string[];
   users?: Record<string, PixelHistoryUserSummary>;
 }
 
