@@ -1,22 +1,23 @@
 "use client";
 
-import type { DiscordUserProfile } from "@blurple-canvas-web/types";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
 import ModerationDashboard from "./ModerationDashboard";
 
-function verifyModerator(
-  user: DiscordUserProfile | null,
-  isAuthResolved: boolean,
-) {
-  if (!isAuthResolved) return;
-  if (!user?.isCanvasModerator) redirect("/");
-}
-
 export default function ModerationPage() {
   const { user, isAuthResolved } = useAuthContext();
-  verifyModerator(user, isAuthResolved);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthResolved) return;
+    if (!user?.isCanvasModerator) router.replace("/");
+  }, [isAuthResolved, router, user?.isCanvasModerator]);
+
+  if (isAuthResolved && !user?.isCanvasModerator) {
+    return null;
+  }
 
   return <LayoutWithHeader content={<ModerationDashboard />} />;
 }

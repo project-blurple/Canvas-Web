@@ -79,13 +79,13 @@ export default function ComplexSearchColorSelect({
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
-  palette.sort((a, b) =>
+  const sortedPalette = [...palette].sort((a, b) =>
     a.global === b.global ? 0
     : a.global ? -1
     : 1,
   ); // Ensure palette is sorted for consistent option order
   const paletteById = Object.fromEntries(
-    palette.map((color) => [color.id, color]),
+    sortedPalette.map((color) => [color.id, color]),
   );
 
   function handleColorChange(
@@ -122,7 +122,7 @@ export default function ComplexSearchColorSelect({
         getOptionLabel={(option) => `${option.name} (${option.code})`}
         multiple
         onChange={handleColorChange}
-        options={palette}
+        options={sortedPalette}
         size="small"
         value={selectedOptions}
         filterOptions={(options, { inputValue }) => {

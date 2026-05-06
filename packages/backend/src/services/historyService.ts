@@ -321,17 +321,20 @@ export async function getPixelHistorySummary(
     limit: 100,
   });
 
+  const historyIdsPromise =
+    includeSummary ? getPixelHistoryIds(fetchData) : null;
+
   const totalEntriesPromise =
-    includeSummary ?
-      getPixelHistoryIds(fetchData).then((historyIds) => historyIds.length)
+    historyIdsPromise ?
+      historyIdsPromise.then((historyIds) => historyIds.length)
     : prisma.history.count({
         where: buildPixelHistoryWhere(fetchData),
       });
 
   const summaryPromise =
-    includeSummary ?
+    historyIdsPromise ?
       Promise.all([
-        getPixelHistoryIds(fetchData),
+        historyIdsPromise,
         getPixelHistoryUserCounts(fetchData),
         getPixelHistoryUserColorCounts(fetchData),
       ] as const)
