@@ -3,7 +3,6 @@ import { styled } from "@mui/material/styles";
 import { CircleAlert, Info, TriangleAlert } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { resolveSpecialText } from "@/util/text";
-import { PrimitiveButton } from "../button";
 
 const icons = {
   info: <Info />,
@@ -53,25 +52,6 @@ const BannerBody = styled("div")`
   h6 {
     font-size: inherit;
     font-weight: bolder;
-  }
-`;
-
-const ButtonBar = styled("div")``;
-
-const DismissButton = styled(PrimitiveButton)`
-  border-radius: 0.1875em;
-  font-size: 0.875rem;
-  font-weight: 500;
-  letter-spacing: 0.015em;
-  padding-block: 0.15em;
-  padding-inline: 0.75em;
-  color: oklch(1 0 0 / 60%);
-  text-box-trim: both;
-  &:active {
-    scale: 99%;
-  }
-  &:hover {
-    background-color: oklch(1 0 0 / 4%);
   }
 `;
 
