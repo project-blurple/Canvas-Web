@@ -6,9 +6,6 @@ on:
       - opened
       - edited
       - synchronize
-  merge_group:
-    branches:
-      - main
 
 permissions:
   pull-requests: read
