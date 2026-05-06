@@ -11,7 +11,7 @@ const icons = {
   warning: <CircleAlert />,
 } as const;
 
-const BannerRoot = styled("article")`
+const BannerRoot = styled("li")`
   --notice-tint: var(--discord-white;);
   background-color: oklch(from var(--notice-tint) l c h / 6%);
   border-radius: 0.75rem;
