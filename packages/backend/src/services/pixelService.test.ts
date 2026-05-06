@@ -335,6 +335,32 @@ describe("Restore Pixels After History Deletion Tests", () => {
     await prisma.event.create({
       data: { id: 1, name: "Test Event" },
     });
+    // Create discord_guild_record and guild for history entries
+    await prisma.discord_guild_record.create({
+      data: { guild_id: BigInt(1), name: "Test Guild" },
+    });
+    await prisma.guild.create({
+      data: { id: BigInt(1), invite: "test-guild" },
+    });
+    // Create users for history entries
+    await prisma.user.createMany({
+      data: [{ id: BigInt(1) }, { id: BigInt(2) }],
+    });
+    // Create discord user profiles for history entries
+    await prisma.discord_user_profile.createMany({
+      data: [
+        {
+          user_id: BigInt(1),
+          username: "User1",
+          profile_picture_url: "https://example.com/1.png",
+        },
+        {
+          user_id: BigInt(2),
+          username: "User2",
+          profile_picture_url: "https://example.com/2.png",
+        },
+      ],
+    });
     await prisma.canvas.create({
       data: {
         id: 1,
