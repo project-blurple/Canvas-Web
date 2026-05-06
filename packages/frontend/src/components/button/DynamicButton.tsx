@@ -24,7 +24,6 @@ const StyledButton = styled(ButtonBase, {
           --dynamic-bg-color: ${backgroundColorStr};
         `}
       border-color: oklch(from var(--discord-white) l c h / 36%);
-      font-weight: 600;
     }
   }
 
