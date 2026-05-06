@@ -106,8 +106,5 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
 }
 
 export async function copyToClipboard(str: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(str);
-    return;
-  }
+  await navigator.clipboard.writeText(str);
 }
