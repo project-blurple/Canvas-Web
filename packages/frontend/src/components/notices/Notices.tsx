@@ -31,6 +31,7 @@ const Dialog = styled("dialog")`
   transition-duration: 100ms;
   transition-property: opacity, transform;
   transition-timing-function: linear, var(--ease-out-quart);
+  z-index: 1; /* Fighting with <CanvasView> here 😔 */
 
   > * {
     padding: calc(var(--card-border-radius) - 0.75rem);
