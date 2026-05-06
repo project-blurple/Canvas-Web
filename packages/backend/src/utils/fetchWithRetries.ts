@@ -37,22 +37,22 @@ export default async function fetchWithRetries(
   for (let i = 0; i < maxAttempts; i++) {
     response = await fetch(input, init);
 
-    if (response.ok) return response;
+    if (response.ok || !statusCodes.has(response.status)) return response;
 
-    if (statusCodes.has(response.status)) {
-      const retryAfter =
-        response.headers.get("retry-after") ||
-        response.headers.get("x-ratelimit-reset-after");
-      const waitSeconds =
-        retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
+    const retryAfter =
+      response.headers.get("retry-after") ||
+      response.headers.get("x-ratelimit-reset-after");
+    const waitSeconds = retryAfter ? Number.parseFloat(retryAfter) : Number.NaN;
 
-      if (!Number.isFinite(waitSeconds)) return response;
-
-      await sleep(waitSeconds * 1000);
-    }
-
-    await sleep(backoff ** i * 1000);
+    await sleep(
+      Number.isFinite(waitSeconds) ?
+        // Prefer stand-down period from response header…
+        waitSeconds * 1000
+        // …otherwise use exponential backoff
+      : backoff ** i * 1000,
+    );
   }
+
   // @ts-expect-error Definitely initialised
   return response;
 }
