@@ -36,40 +36,52 @@ export default function ComplexSearchBoundsSelect({
   setSelectedBounds,
   disabled,
 }: ComplexSearchBoundsSelectProps) {
+  const [startX, startY] = canvas.startCoordinates;
+
+  const displayBounds =
+    selectedBounds ?
+      {
+        left: selectedBounds.left + startX,
+        top: selectedBounds.top + startY,
+        right: selectedBounds.right + startX,
+        bottom: selectedBounds.bottom + startY,
+      }
+    : null;
+
   return (
     <CoordinateRangeWrapper>
       <CoordinateInputWrapper>
         <NumberField
           label="Left (x)"
-          value={selectedBounds?.left ?? 0}
-          min={0}
+          value={displayBounds?.left ?? startX}
+          min={startX}
           max={
-            selectedBounds?.right ?
-              selectedBounds.right - minWidth
-            : canvas.width - 1 - minWidth
+            selectedBounds?.right != null ?
+              selectedBounds.right + startX - minWidth
+            : canvas.width + startX - minWidth
           }
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, left: value });
+            setSelectedBounds({ ...selectedBounds, left: value - startX });
           }}
           disabled={disabled}
         />
         <NumberField
           label="Top (y)"
-          value={selectedBounds?.top ?? 0}
-          min={0}
+          value={displayBounds?.top ?? startY}
+          min={startY}
           max={
-            selectedBounds?.bottom ?
-              selectedBounds.bottom - minHeight
-            : canvas.height - 1 - minHeight
+            selectedBounds?.bottom != null ?
+              selectedBounds.bottom + startY - minHeight
+            : canvas.height + startY - minHeight
           }
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, top: value });
+            setSelectedBounds({ ...selectedBounds, top: value - startY });
           }}
           disabled={disabled}
         />
@@ -78,27 +90,35 @@ export default function ComplexSearchBoundsSelect({
       <CoordinateInputWrapper>
         <NumberField
           label="Right (x)"
-          value={selectedBounds?.right ?? 0}
-          min={selectedBounds?.left ? selectedBounds.left + minWidth : minWidth}
-          max={canvas.width - 1}
+          value={displayBounds?.right ?? startX}
+          min={
+            selectedBounds?.left != null ?
+              selectedBounds.left + startX + minWidth
+            : startX + minWidth
+          }
+          max={canvas.width + startX}
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, right: value });
+            setSelectedBounds({ ...selectedBounds, right: value - startX });
           }}
           disabled={disabled}
         />
         <NumberField
           label="Bottom (y)"
-          value={selectedBounds?.bottom ?? 0}
-          min={selectedBounds?.top ? selectedBounds.top + minHeight : minHeight}
-          max={canvas.height - 1}
+          value={displayBounds?.bottom ?? startY}
+          min={
+            selectedBounds?.top != null ?
+              selectedBounds.top + startY + minHeight
+            : startY + minHeight
+          }
+          max={canvas.height + startY}
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds) return;
             if (value === null) return;
-            setSelectedBounds({ ...selectedBounds, bottom: value });
+            setSelectedBounds({ ...selectedBounds, bottom: value - startY });
           }}
           disabled={disabled}
         />
