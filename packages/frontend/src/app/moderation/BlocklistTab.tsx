@@ -31,7 +31,7 @@ export default function BlocklistTab({ ...props }: BlocklistTabProps) {
               <p>The blocklist is currently empty.</p>
             : <ul>
                 {blocklist.map((entry) => (
-                  <li key={entry.id}>
+                  <li key={entry.userId}>
                     <p>
                       <strong>{entry.username || "Unknown User"}</strong>
                     </p>
