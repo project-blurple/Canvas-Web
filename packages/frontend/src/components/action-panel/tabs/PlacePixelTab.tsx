@@ -46,7 +46,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-function partitionPalette(palette: Palette): [Palette, Palette] {
+export function partitionPalette(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {

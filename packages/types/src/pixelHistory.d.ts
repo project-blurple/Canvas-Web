@@ -10,9 +10,18 @@ export interface PixelHistoryRecord {
   userProfile: DiscordUserProfile | null;
 }
 
+export interface PixelHistoryUserSummary {
+  count: number;
+  colors: Record<string, number>;
+  firstPlaced: Date;
+  lastPlaced: Date;
+  userProfile: DiscordUserProfile | null;
+}
+
 export interface PixelHistoryWrapper {
   pixelHistory: PixelHistoryRecord[];
   totalEntries: number;
+  users?: Record<string, PixelHistoryUserSummary>;
 }
 
 export type PixelHistory = PixelHistoryWrapper;

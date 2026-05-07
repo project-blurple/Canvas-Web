@@ -20,6 +20,7 @@ import { getCanvasPng } from "./canvasService";
 import {
   getCooldown,
   placePixel,
+  restorePixelsAfterHistoryDeletion,
   validateColor,
   validatePixel,
   validateUser,
@@ -326,4 +327,392 @@ describe("Place Pixel Tests", () => {
     });
     return { cooldown, pixel, history };
   }
+});
+
+describe("Restore Pixels After History Deletion Tests", () => {
+  async function setupMinimalCanvas() {
+    // Create minimal canvas (2x2) without full seeding
+    await prisma.event.create({
+      data: { id: 1, name: "Test Event" },
+    });
+    // Create discord_guild_record and guild for history entries
+    await prisma.discord_guild_record.create({
+      data: { guild_id: BigInt(1), name: "Test Guild" },
+    });
+    await prisma.guild.create({
+      data: { id: BigInt(1), invite: "test-guild" },
+    });
+    // Create users for history entries
+    await prisma.user.createMany({
+      data: [{ id: BigInt(1) }, { id: BigInt(2) }],
+    });
+    // Create discord user profiles for history entries
+    await prisma.discord_user_profile.createMany({
+      data: [
+        {
+          user_id: BigInt(1),
+          username: "User1",
+          profile_picture_url: "https://example.com/1.png",
+        },
+        {
+          user_id: BigInt(2),
+          username: "User2",
+          profile_picture_url: "https://example.com/2.png",
+        },
+      ],
+    });
+    await prisma.canvas.create({
+      data: {
+        id: 1,
+        event_id: 1,
+        name: "Test Canvas",
+        width: 2,
+        height: 2,
+        locked: false,
+        cooldown_length: 0,
+      },
+    });
+    // Create colors
+    await prisma.color.createMany({
+      data: [
+        {
+          id: 1,
+          code: "blank",
+          emoji_name: "pl_blank",
+          emoji_id: BigInt("540761786484391957"),
+          global: true,
+          name: "Blank",
+          rgba: [88, 101, 242, 127],
+        },
+        {
+          id: 2,
+          code: "red",
+          emoji_name: "pl_red",
+          emoji_id: BigInt("572564652559564810"),
+          global: true,
+          name: "Red",
+          rgba: [234, 35, 40, 255],
+        },
+        {
+          id: 3,
+          code: "blue",
+          emoji_name: "pl_blue",
+          emoji_id: BigInt("840064486374637608"),
+          global: true,
+          name: "Blue",
+          rgba: [0, 90, 166, 255],
+        },
+      ],
+    });
+  }
+
+  beforeEach(async () => {
+    await setupMinimalCanvas();
+  });
+
+  it("Restores single coordinate to its latest history color", async () => {
+    // Create pixel and history
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 2 },
+    });
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 2,
+        user_id: BigInt(1),
+        timestamp: new Date("2024-01-01"),
+        guild_id: BigInt(1),
+      },
+    });
+
+    // Update pixel to different color
+    await prisma.pixel.update({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+      data: { color_id: 3 },
+    });
+
+    // Restore
+    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+
+    const restored = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+
+    expect(restored?.color_id).toBe(2);
+  });
+
+  it("Restores coordinate with no history to blank color", async () => {
+    // Create pixel with blank color
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 1 },
+    });
+
+    // Update pixel to different color
+    await prisma.pixel.update({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+      data: { color_id: 2 },
+    });
+
+    // Restore without any history entries
+    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+
+    const restored = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+
+    expect(restored?.color_id).toBe(1); // BLANK_PIXEL_COLOR_ID
+  });
+
+  it("Restores multiple coordinates with different colors", async () => {
+    // Create pixels and history with different colors
+    const coords = [
+      { x: 0, y: 0, colorId: 2 },
+      { x: 0, y: 1, colorId: 3 },
+      { x: 1, y: 0, colorId: 2 },
+    ];
+
+    for (const { x, y, colorId } of coords) {
+      await prisma.pixel.create({
+        data: { canvas_id: 1, x, y, color_id: colorId },
+      });
+      await prisma.history.create({
+        data: {
+          canvas_id: 1,
+          x,
+          y,
+          color_id: colorId,
+          user_id: BigInt(1),
+          timestamp: new Date("2024-01-01"),
+          guild_id: BigInt(1),
+        },
+      });
+    }
+
+    // Change all pixels to color 1
+    for (const { x, y } of coords) {
+      await prisma.pixel.update({
+        where: { canvas_id_x_y: { canvas_id: 1, x, y } },
+        data: { color_id: 1 },
+      });
+    }
+
+    // Restore
+    await restorePixelsAfterHistoryDeletion(
+      1,
+      coords.map(({ x, y }) => ({ x, y })),
+    );
+
+    const restored = await prisma.pixel.findMany({
+      where: { canvas_id: 1 },
+      orderBy: [{ x: "asc" }, { y: "asc" }],
+    });
+
+    expect(restored).toHaveLength(3);
+    expect(restored[0]).toMatchObject({ x: 0, y: 0, color_id: 2 });
+    expect(restored[1]).toMatchObject({ x: 0, y: 1, color_id: 3 });
+    expect(restored[2]).toMatchObject({ x: 1, y: 0, color_id: 2 });
+  });
+
+  it("Handles empty coordinate list", async () => {
+    // Create a pixel
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 2 },
+    });
+
+    // Restore with empty list - should be a no-op
+    await expect(
+      restorePixelsAfterHistoryDeletion(1, []),
+    ).resolves.not.toThrow();
+
+    // Pixel should be unchanged
+    const pixel = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+    expect(pixel?.color_id).toBe(2);
+  });
+
+  it("Restores coordinates to latest history entry when multiple exist", async () => {
+    // Create pixel
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 1 },
+    });
+
+    // Create multiple history entries with different timestamps and colors
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 2,
+        user_id: BigInt(1),
+        timestamp: new Date("2024-01-01"),
+        guild_id: BigInt(1),
+      },
+    });
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 3,
+        user_id: BigInt(2),
+        timestamp: new Date("2024-01-02"), // Later timestamp
+        guild_id: BigInt(1),
+      },
+    });
+
+    // Change pixel to different color
+    await prisma.pixel.update({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+      data: { color_id: 1 },
+    });
+
+    // Restore
+    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+
+    const restored = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+
+    expect(restored?.color_id).toBe(3); // Should be color from latest history
+  });
+
+  it("Ignores erased_at history entries", async () => {
+    // Create pixel
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 1 },
+    });
+
+    // Create history entries
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 2,
+        user_id: BigInt(1),
+        timestamp: new Date("2024-01-02"),
+        guild_id: BigInt(1),
+      },
+    });
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 3,
+        user_id: BigInt(2),
+        timestamp: new Date("2024-01-01"),
+        erased_at: new Date("2024-01-03"), // Marked as erased
+        guild_id: BigInt(1),
+      },
+    });
+
+    // Change pixel
+    await prisma.pixel.update({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+      data: { color_id: 1 },
+    });
+
+    // Restore
+    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+
+    const restored = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+
+    expect(restored?.color_id).toBe(2); // Should be non-erased entry
+  });
+
+  it("Handles chunking correctly for large coordinate sets", async () => {
+    // Create 501 coordinates (more than default chunk size of 500)
+    const coords = [];
+    for (let i = 0; i < 501; i++) {
+      coords.push({
+        x: i % 2,
+        y: Math.floor(i / 2),
+      });
+    }
+
+    // Extend canvas to fit
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { height: 251 },
+    });
+
+    // Create pixels and history
+    for (const { x, y } of coords) {
+      await prisma.pixel.create({
+        data: { canvas_id: 1, x, y, color_id: 2 },
+      });
+      await prisma.history.create({
+        data: {
+          canvas_id: 1,
+          x,
+          y,
+          color_id: 2,
+          user_id: BigInt(1),
+          timestamp: new Date("2024-01-01"),
+          guild_id: BigInt(1),
+        },
+      });
+    }
+
+    // Change all to color 3
+    for (const { x, y } of coords) {
+      await prisma.pixel.update({
+        where: { canvas_id_x_y: { canvas_id: 1, x, y } },
+        data: { color_id: 3 },
+      });
+    }
+
+    // Restore all at once - should chunk internally
+    await restorePixelsAfterHistoryDeletion(1, coords);
+
+    // Verify all were restored
+    const restored = await prisma.pixel.findMany({
+      where: { canvas_id: 1, color_id: 2 },
+    });
+
+    expect(restored).toHaveLength(501);
+  });
+
+  it("Deduplicates duplicate coordinates in input", async () => {
+    // Create pixel and history
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 2 },
+    });
+    await prisma.history.create({
+      data: {
+        canvas_id: 1,
+        x: 0,
+        y: 0,
+        color_id: 2,
+        user_id: BigInt(1),
+        timestamp: new Date("2024-01-01"),
+        guild_id: BigInt(1),
+      },
+    });
+
+    // Change pixel
+    await prisma.pixel.update({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+      data: { color_id: 3 },
+    });
+
+    // Restore with duplicate coordinates
+    await restorePixelsAfterHistoryDeletion(1, [
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+    ]);
+
+    const restored = await prisma.pixel.findUnique({
+      where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
+    });
+
+    expect(restored?.color_id).toBe(2);
+  });
 });

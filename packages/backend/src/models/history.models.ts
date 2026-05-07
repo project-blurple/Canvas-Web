@@ -69,7 +69,17 @@ export const PixelHistoryComplexBodyModel = z
     },
   );
 
-export const PixelHistoryDeleteBodyModel = z.object({
-  historyIds: z.array(z.coerce.number().int().nonnegative()),
+export const PixelHistoryDeleteBodyModel = PixelHistoryComplexBodyModel.extend({
+  x0: z.coerce.number().int().nonnegative(),
+  y0: z.coerce.number().int().nonnegative(),
+  x1: z.coerce.number().int().nonnegative().optional(),
+  y1: z.coerce.number().int().nonnegative().optional(),
   shouldBlockAuthors: z.boolean().optional(),
+}).superRefine(({ x1, y1 }, ctx) => {
+  if ((x1 !== undefined) !== (y1 !== undefined)) {
+    ctx.addIssue({
+      code: "custom",
+      message: "x1 and y1 must be provided together",
+    });
+  }
 });

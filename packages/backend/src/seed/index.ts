@@ -85,7 +85,11 @@ async function main() {
       case "guild":
         return prisma.guild.count();
       case "history":
-        return prisma.history.count();
+        return prisma.history.count({
+          where: {
+            erased_at: null,
+          },
+        });
       case "info":
         return prisma.info.count();
       case "participation":

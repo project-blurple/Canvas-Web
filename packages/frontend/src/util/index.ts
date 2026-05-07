@@ -10,13 +10,16 @@ export { default as createPixelUrl } from "./searchParams";
 
 export const CANVAS_WRAPPER_CLASS_NAME = "canvas-wrapper";
 
-export interface ViewBounds {
+export interface BoundsDimensions {
+  width: number;
+  height: number;
+}
+
+export interface ViewBounds extends BoundsDimensions {
   left: number;
   top: number;
   right: number;
   bottom: number;
-  width: number;
-  height: number;
 }
 
 /**
@@ -101,6 +104,6 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
 
   const r = Number.parseInt(hex.slice(-6, -4), 16);
   const g = Number.parseInt(hex.slice(-4, -2), 16);
-  const b = Number.parseInt(hex.slice(-2, 0), 16);
+  const b = Number.parseInt(hex.slice(-2), 16);
   return [r, g, b, 255];
 }

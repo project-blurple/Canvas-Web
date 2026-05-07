@@ -14,7 +14,6 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ActionPanel } from "@/components/action-panel";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
@@ -101,7 +100,7 @@ const PreviewPixel = styled("div")`
   position: absolute;
 `;
 
-const InviteButton = styled(Button)`
+const sharedLabelStyles = css`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
@@ -117,6 +116,26 @@ const InviteButton = styled(Button)`
   position: absolute;
   text-decoration: none;
   z-index: 1;
+`;
+
+const CanvasViewLabel = styled("div")`
+  ${sharedLabelStyles}
+  border: oklch(from var(--discord-white) l c h / 12%) 3px solid;
+  padding-block: 0.4rem;
+
+  ${({ theme }) => theme.breakpoints.up("md")} {
+    border-radius: 0.5rem 0.5rem 1rem 0.5rem;
+    inset-block-end: 0.5rem;
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    inset-block-start: 0.5rem;
+    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+  }
+`;
+
+const InviteButton = styled(Button)`
+  ${sharedLabelStyles}
 
   @media (hover: hover) and (pointer: fine) {
     :hover {
@@ -453,15 +472,35 @@ function getViewForFrame({
   return { targetZoom, offset, targetPoint };
 }
 
-export default function CanvasView() {
+interface CanvasViewProps {
+  actionPanel?: React.ReactNode;
+  canvasLabel?: string;
+  showInvite?: boolean;
+  showNotices?: boolean;
+  showReticle?: boolean;
+}
+
+export default function CanvasView({
+  actionPanel,
+  canvasLabel,
+  showInvite = true,
+  showNotices = true,
+  showReticle = true,
+}: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
-  const { canEdit, minHeight, minWidth, selectedBounds, setSelectedBounds } =
-    useSelectedBoundsContext();
+  const {
+    canEdit,
+    minHeight,
+    minWidth,
+    selectedBounds,
+    showSelectedBounds,
+    setSelectedBounds,
+  } = useSelectedBoundsContext();
   const { canvas, setCanvas } = useCanvasContext();
   const {
     containerRef,
@@ -1112,7 +1151,7 @@ export default function CanvasView() {
 
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
-    if (!container) return;
+  if (!container) return;
 
     try {
       if (document.fullscreenElement) {
@@ -1131,7 +1170,7 @@ export default function CanvasView() {
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
-      <Notices />
+      {showNotices && <Notices />}
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}
@@ -1165,11 +1204,14 @@ export default function CanvasView() {
           : <PanelRightOpen />}
         </FullscreenPanelButton>
       )}
-      {config.discordServerInvite && !isFullscreen && (
-        <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-          <InviteButton>Project Blurple</InviteButton>
-        </a>
-      )}
+      {showInvite ?
+        config.discordServerInvite &&
+        !isFullscreen && (
+          <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
+            <InviteButton>Project Blurple</InviteButton>
+          </a>
+        )
+      : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
       <div
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
@@ -1186,7 +1228,7 @@ export default function CanvasView() {
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: isReticleVisible ? undefined : "none",
+            display: showReticle && isReticleVisible ? undefined : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),
@@ -1216,18 +1258,20 @@ export default function CanvasView() {
             }}
           />
         </ReticleContainer>
-        <SelectedBoundsOverlay
-          canvasWidth={canvas.width}
-          canvasHeight={canvas.height}
-          canEdit={canEdit}
-          minHeight={minHeight}
-          minWidth={minWidth}
-          selectedBounds={selectedBounds}
-          reticleScale={RETICLE_SCALE}
-          reticleSize={RETICLE_SIZE}
-          setSelectedBounds={setSelectedBounds}
-          zoom={zoom}
-        />
+        {showSelectedBounds && (
+          <SelectedBoundsOverlay
+            canvasWidth={canvas.width}
+            canvasHeight={canvas.height}
+            canEdit={canEdit}
+            minHeight={minHeight}
+            minWidth={minWidth}
+            selectedBounds={selectedBounds}
+            reticleScale={RETICLE_SCALE}
+            reticleSize={RETICLE_SIZE}
+            setSelectedBounds={setSelectedBounds}
+            zoom={zoom}
+          />
+        )}
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1252,8 +1296,9 @@ export default function CanvasView() {
           onPointerDown={(event) => event.stopPropagation()}
           onPointerMove={(event) => event.stopPropagation()}
           onPointerUp={(event) => event.stopPropagation()}
+          onWheelCapture={(event) => event.stopPropagation()}
         >
-          <ActionPanel />
+          {actionPanel}
         </FullscreenPanelOverlay>
       )}
       {isLoading && <CircularProgress style={{ position: "absolute" }} />}

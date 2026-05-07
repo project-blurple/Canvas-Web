@@ -37,11 +37,13 @@
     "clean": "rm -rf -- .next/ && pnpm purge"
   },
   "dependencies": {
+    "@base-ui/react": "^1.4.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^9.0.0",
     "@mui/material-nextjs": "^9.0.0",
+    "@mui/x-date-pickers": "^9.0.2",
     "@tanstack/react-query": "^5.99.2",
     "axios": "^1.15.2",
     "colorjs.io": "^0.6.1",

@@ -11,6 +11,8 @@ import { socketHandler } from "@/index";
 import { userIsBlocklisted } from "./blocklistService";
 import { updateCachedCanvasPixel } from "./canvasService";
 
+const BLANK_PIXEL_COLOR_ID = 1;
+
 /** Ensures that the given pixel coordinates are within the bounds of the canvas and the canvas exists
  *
  * @param canvasId - The ID of the canvas
@@ -236,4 +238,133 @@ export async function placePixel(
   // Only update the cache if the transaction is successful
   updateCachedCanvasPixel(canvasId, coordinates, color.rgba);
   return { futureCooldown };
+}
+
+const COORDINATE_CHUNK_SIZE = 500;
+
+/**
+ * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ *
+ * @param canvasId - The ID of the canvas
+ * @param coordinates - The coordinates that need to be refreshed
+ *
+ * @remarks
+ *
+ * Coordinates are processed in chunks to avoid hitting query size limits
+ * and ensure predictable performance for large erasures.
+ */
+export async function restorePixelsAfterHistoryDeletion(
+  canvasId: number,
+  coordinates: Point[],
+): Promise<void> {
+  const uniqueCoordinates = new Map<string, Point>();
+
+  for (const coordinate of coordinates) {
+    uniqueCoordinates.set(`${coordinate.x}:${coordinate.y}`, coordinate);
+  }
+
+  const blankColor = (await prisma.color.findUnique({
+    where: {
+      id: BLANK_PIXEL_COLOR_ID,
+    },
+    select: {
+      rgba: true,
+    },
+  })) as { rgba: PixelColor } | null;
+
+  if (!blankColor) {
+    throw new NotFoundError(
+      `There is no color with ID ${BLANK_PIXEL_COLOR_ID}`,
+    );
+  }
+
+  // Split coordinates into chunks to avoid unbounded OR clauses
+  const coordArray = Array.from(uniqueCoordinates.values());
+  const chunks: Point[][] = [];
+
+  for (let i = 0; i < coordArray.length; i += COORDINATE_CHUNK_SIZE) {
+    chunks.push(coordArray.slice(i, i + COORDINATE_CHUNK_SIZE));
+  }
+
+  const latestByCoord = new Map<
+    string,
+    { x: number; y: number; color_id: number; color: { rgba: PixelColor } }
+  >();
+
+  // Process each chunk
+  for (const chunk of chunks) {
+    // Fetch history for this chunk
+    const historyEntries = await prisma.history.findMany({
+      where: {
+        erased_at: null,
+        canvas_id: canvasId,
+        OR: chunk.map((c) => ({
+          x: c.x,
+          y: c.y,
+        })),
+      },
+      select: {
+        x: true,
+        y: true,
+        color_id: true,
+        timestamp: true,
+        id: true,
+        color: { select: { rgba: true } },
+      },
+      orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+    });
+
+    // Reduce in memory to latest per coordinate
+    for (const entry of historyEntries) {
+      const key = `${entry.x}:${entry.y}`;
+      if (!latestByCoord.has(key)) {
+        latestByCoord.set(key, {
+          ...entry,
+          color: { rgba: entry.color.rgba as PixelColor },
+        });
+      }
+    }
+
+    // Group coordinates by color_id for batch updates
+    const byColorId = new Map<number, Point[]>();
+    for (const coordinate of chunk) {
+      const key = `${coordinate.x}:${coordinate.y}`;
+      const latestEntry = latestByCoord.get(key);
+      const colorId = latestEntry?.color_id ?? BLANK_PIXEL_COLOR_ID;
+
+      const arr = byColorId.get(colorId);
+      if (arr) {
+        arr.push(coordinate);
+      } else {
+        byColorId.set(colorId, [coordinate]);
+      }
+    }
+
+    // Update all pixels grouped by color_id for this chunk
+    for (const [colorId, coords] of byColorId.entries()) {
+      await prisma.pixel.updateMany({
+        where: {
+          canvas_id: canvasId,
+          OR: coords.map((c) => ({ x: c.x, y: c.y })),
+        },
+        data: { color_id: colorId },
+      });
+    }
+  }
+
+  // Broadcast and cache per-pixel
+  for (const coordinate of uniqueCoordinates.values()) {
+    const key = `${coordinate.x}:${coordinate.y}`;
+    const latestEntry = latestByCoord.get(key);
+    const pixelColor =
+      (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
+
+    socketHandler.broadcastPixelPlacement(canvasId, {
+      x: coordinate.x,
+      y: coordinate.y,
+      rgba: pixelColor,
+    });
+
+    updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
+  }
 }

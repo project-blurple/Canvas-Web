@@ -13,7 +13,7 @@ import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
-const Wrapper = styled("div")`
+export const ActionPanelWrapper = styled("div")`
   --padding-width: 1rem;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
@@ -43,14 +43,14 @@ const Wrapper = styled("div")`
   }
 `;
 
-const TabBar = styled("div")`
+export const TabBar = styled("div")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
 `;
 
-const StyledTab = styled("button")`
+export const StyledTab = styled("button")`
   appearance: none;
   border: none;
   color: inherit;
@@ -119,7 +119,9 @@ export const Heading = styled("h2")`
 
 type TabKey = "look" | "place" | "frame";
 
-function Tab({
+const Tab = GenericTab<TabKey>;
+
+export function GenericTab<TabKey extends string>({
   tabKey,
   onSwitchTab,
   ...props
@@ -175,7 +177,7 @@ export default function ActionPanel() {
   const frameTabId = useId();
 
   return (
-    <Wrapper>
+    <ActionPanelWrapper>
       <TabBar role="tablist">
         <Tab
           aria-controls={placeTabId}
@@ -220,6 +222,6 @@ export default function ActionPanel() {
         id={frameTabId}
         setTabsLocked={setAreTabsLocked}
       />
-    </Wrapper>
+    </ActionPanelWrapper>
   );
 }

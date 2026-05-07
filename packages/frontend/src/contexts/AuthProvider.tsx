@@ -15,11 +15,13 @@ import { useUserData } from "@/hooks";
 
 interface AuthContextType {
   user: DiscordUserProfile | null;
+  isAuthResolved: boolean;
   signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
+  isAuthResolved: false,
   signOut: () => {},
 });
 
@@ -55,7 +57,9 @@ export function AuthProvider({ children, profile }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user: resolvedUser, signOut }}>
+    <AuthContext.Provider
+      value={{ user: resolvedUser, isAuthResolved: true, signOut }}
+    >
       {children}
     </AuthContext.Provider>
   );

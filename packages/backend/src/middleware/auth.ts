@@ -37,7 +37,7 @@ const discordStrategy = new DiscordStrategy(
           profile.avatar,
         ),
         isCanvasAdmin: userIsCanvasAdmin,
-        isCanvasModerator: userIsCanvasModerator,
+        isCanvasModerator: userIsCanvasAdmin || userIsCanvasModerator,
       };
 
       done(null, user, {

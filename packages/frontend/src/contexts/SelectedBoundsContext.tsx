@@ -10,6 +10,7 @@ import {
   useContext,
   useState,
 } from "react";
+import { SELECTED_BOUNDS_DEFAULT_MIN_SIZE } from "@/constants/selectedBounds";
 import type { ViewBounds } from "@/util";
 import { useCanvasContext } from "./CanvasContext";
 import { useCanvasViewContext } from "./CanvasViewContext";
@@ -19,23 +20,27 @@ interface SelectedBoundsContextType {
   minHeight: number;
   minWidth: number;
   selectedBounds: ViewBounds | null;
-  clearSelectedBounds: () => void;
+  showSelectedBounds: boolean;
+  resetSelectedBounds: () => void;
   setCanEdit: Dispatch<SetStateAction<boolean>>;
   setMinimumBounds: (width: number, height: number) => void;
   setSelectedBounds: Dispatch<SetStateAction<ViewBounds | null>>;
   setBoundsToCurrentView: (fillRatio: number) => void;
+  setShowSelectedBounds: Dispatch<SetStateAction<boolean>>;
 }
 
 const SelectedBoundsContext = createContext<SelectedBoundsContextType>({
   canEdit: false,
-  minHeight: 5,
-  minWidth: 5,
+  minHeight: SELECTED_BOUNDS_DEFAULT_MIN_SIZE.height,
+  minWidth: SELECTED_BOUNDS_DEFAULT_MIN_SIZE.width,
   selectedBounds: null,
-  clearSelectedBounds: () => {},
+  showSelectedBounds: false,
+  resetSelectedBounds: () => {},
   setCanEdit: () => {},
   setMinimumBounds: () => {},
   setSelectedBounds: () => {},
   setBoundsToCurrentView: () => {},
+  setShowSelectedBounds: () => {},
 });
 
 interface CurrentViewParams {
@@ -124,10 +129,14 @@ export const SelectedBoundsProvider = ({
     useState<SelectedBoundsContextType["selectedBounds"]>(null);
   const [canEdit, setCanEdit] =
     useState<SelectedBoundsContextType["canEdit"]>(false);
-  const [minHeight, setMinHeight] =
-    useState<SelectedBoundsContextType["minHeight"]>(5);
-  const [minWidth, setMinWidth] =
-    useState<SelectedBoundsContextType["minWidth"]>(5);
+  const [minHeight, setMinHeight] = useState<
+    SelectedBoundsContextType["minHeight"]
+  >(SELECTED_BOUNDS_DEFAULT_MIN_SIZE.height);
+  const [minWidth, setMinWidth] = useState<
+    SelectedBoundsContextType["minWidth"]
+  >(SELECTED_BOUNDS_DEFAULT_MIN_SIZE.width);
+  const [showSelectedBounds, setShowSelectedBounds] =
+    useState<SelectedBoundsContextType["showSelectedBounds"]>(false);
 
   const setMinimumBounds = useCallback((width: number, height: number) => {
     setMinWidth(width);
@@ -137,10 +146,15 @@ export const SelectedBoundsProvider = ({
   const { canvas } = useCanvasContext();
   const { containerRef, offset, zoom } = useCanvasViewContext();
 
-  const clearSelectedBounds = useCallback(() => {
+  const resetSelectedBounds = useCallback(() => {
     setSelectedBounds(null);
+    setMinimumBounds(
+      SELECTED_BOUNDS_DEFAULT_MIN_SIZE.width,
+      SELECTED_BOUNDS_DEFAULT_MIN_SIZE.height,
+    );
     setCanEdit(false);
-  }, []);
+    setShowSelectedBounds(false);
+  }, [setMinimumBounds]);
 
   const setBoundsToCurrentView = useCallback(
     (fillRatio: number) => {
@@ -167,11 +181,13 @@ export const SelectedBoundsProvider = ({
         minHeight,
         minWidth,
         selectedBounds,
-        clearSelectedBounds,
+        showSelectedBounds,
+        resetSelectedBounds,
         setSelectedBounds,
         setBoundsToCurrentView,
         setCanEdit,
         setMinimumBounds,
+        setShowSelectedBounds,
       }}
     >
       {children}
