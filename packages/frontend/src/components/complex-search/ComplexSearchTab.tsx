@@ -10,6 +10,7 @@ import {
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { DynamicButton } from "@/components/button";
+import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
@@ -108,7 +109,10 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       }
 
       setBoundsToCurrentView(0.75);
-      setMinimumBounds(1, 1);
+      setMinimumBounds(
+        COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width,
+        COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height,
+      );
       setCanEdit(true);
       setShowSelectedBounds(true);
     },

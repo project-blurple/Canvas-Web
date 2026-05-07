@@ -10,13 +10,16 @@ export { default as createPixelUrl } from "./searchParams";
 
 export const CANVAS_WRAPPER_CLASS_NAME = "canvas-wrapper";
 
-export interface ViewBounds {
+export interface BoundsDimensions {
+  width: number;
+  height: number;
+}
+
+export interface ViewBounds extends BoundsDimensions {
   left: number;
   top: number;
   right: number;
   bottom: number;
-  width: number;
-  height: number;
 }
 
 /**
