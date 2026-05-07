@@ -1,5 +1,11 @@
 import { styled } from "@mui/material";
-import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { Heading } from "lucide-react";
+import {
+  ActionPanelTabBody,
+  FullWidthScrollView,
+  TabPanel,
+} from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { useBlocklist } from "@/hooks/queries/useBlocklist";
 
 const BlocklistTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -10,5 +16,17 @@ interface BlocklistTabProps extends React.ComponentPropsWithoutRef<
 > {}
 
 export default function BlocklistTab({ ...props }: BlocklistTabProps) {
-  return <BlocklistTabBlock {...props}>Blocklist</BlocklistTabBlock>;
+  const { data: blocklist } = useBlocklist();
+
+  return (
+    <BlocklistTabBlock {...props}>
+      <FullWidthScrollView>
+        <ActionPanelTabBody>
+          <div>
+            <Heading>Blocklist</Heading>
+          </div>
+        </ActionPanelTabBody>
+      </FullWidthScrollView>
+    </BlocklistTabBlock>
+  );
 }
