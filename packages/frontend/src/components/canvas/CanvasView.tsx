@@ -46,6 +46,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
+import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -1256,7 +1257,15 @@ export default function CanvasView() {
           <ActionPanel />
         </FullscreenPanelOverlay>
       )}
-      {isLoading && <CircularProgress style={{ position: "absolute" }} />}
+      {isLoading && (
+        <CanvasAnimatedIcon
+          loop
+          pattern="mixed"
+          lightColor="oklch(from var(--discord-blurple) l c h / 80%)"
+          darkColor="oklch(from var(--discord-dark-blurple) l c h / 80%)"
+          style={{ position: "absolute" }}
+        />
+      )}
     </CanvasWrapper>
   );
 }
