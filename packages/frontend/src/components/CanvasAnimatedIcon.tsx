@@ -1,4 +1,5 @@
-import React, { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 type SquareColor = "light" | "dark";
 
@@ -81,7 +82,7 @@ export interface CanvasAnimatedIconProps {
   /** Pause (ms) after ripple-out finishes before next loop. Default: 400 */
   restPause?: number;
   className?: string;
-  style?: React.CSSProperties;
+  style?: CSSProperties;
 }
 
 export default function CanvasAnimatedIcon({
@@ -107,68 +108,80 @@ export default function CanvasAnimatedIcon({
   const radius = borderRadius ?? Math.round(squareSize * 0.18);
   const outDuration = Math.round(duration * 1);
 
-  function schedule(fn: () => void, ms: number) {
+  const schedule = useCallback((fn: () => void, ms: number) => {
     const t = setTimeout(fn, ms);
     timeoutsRef.current.push(t);
-  }
+  }, []);
 
-  function setSquare(
-    index: number,
-    visible: boolean,
-    dur: number,
-    easing: string,
-  ) {
-    const sq = squaresRef.current[index];
-    if (!sq) return;
-    sq.style.transition = `transform ${dur}ms ${easing}, opacity ${Math.round(dur * 0.4)}ms ease`;
-    sq.style.transform = visible ? "scale(1)" : "scale(0)";
-  }
+  const setSquare = useCallback(
+    (index: number, visible: boolean, dur: number, easing: string) => {
+      const sq = squaresRef.current[index];
+      if (!sq) return;
+      sq.style.transition = `transform ${dur}ms ${easing}`;
+      sq.style.transform = visible ? "scale(1)" : "scale(0)";
+    },
+    [],
+  );
 
-  function resetAll() {
+  const resetAll = useCallback(() => {
     squaresRef.current.forEach((sq) => {
       if (!sq) return;
       sq.style.transition = "none";
       sq.style.transform = "scale(0)";
     });
-  }
+  }, []);
 
-  function runCycle(onComplete?: () => void) {
-    const inOrder = getInOrder(pattern);
-    const outOrder = [...inOrder].reverse();
-    const inEnd = inOrder.length * stepDelay + duration;
+  const runCycle = useCallback(
+    (onComplete?: () => void) => {
+      const inOrder = getInOrder(pattern);
+      const outOrder = [...inOrder].reverse();
+      const inEnd = inOrder.length * stepDelay + duration;
 
-    // Ripple in
-    inOrder.forEach((idx, step) => {
+      // Ripple in
+      inOrder.forEach((idx, step) => {
+        schedule(() => {
+          setSquare(idx, true, duration, "cubic-bezier(0.34, 1.56, 0.64, 1)");
+        }, step * stepDelay);
+      });
+
+      if (!loop) return;
+
+      // Ripple out
+      const outStart = inEnd + holdPause;
+      outOrder.forEach((idx, step) => {
+        schedule(
+          () => {
+            setSquare(
+              idx,
+              false,
+              outDuration,
+              "cubic-bezier(0.36, 0, 0.66, -0.56)",
+            );
+          },
+          outStart + step * stepDelay,
+        );
+      });
+
+      // Schedule next cycle
+      const outEnd = outStart + outOrder.length * stepDelay + outDuration;
       schedule(() => {
-        setSquare(idx, true, duration, "cubic-bezier(0.34, 1.56, 0.64, 1)");
-      }, step * stepDelay);
-    });
-
-    if (!loop) return;
-
-    // Ripple out
-    const outStart = inEnd + holdPause;
-    outOrder.forEach((idx, step) => {
-      schedule(
-        () => {
-          setSquare(
-            idx,
-            false,
-            outDuration,
-            "cubic-bezier(0.36, 0, 0.66, -0.56)",
-          );
-        },
-        outStart + step * stepDelay,
-      );
-    });
-
-    // Schedule next cycle
-    const outEnd = outStart + outOrder.length * stepDelay + outDuration;
-    schedule(() => {
-      resetAll();
-      onComplete?.();
-    }, outEnd + restPause);
-  }
+        resetAll();
+        onComplete?.();
+      }, outEnd + restPause);
+    },
+    [
+      pattern,
+      stepDelay,
+      duration,
+      loop,
+      holdPause,
+      restPause,
+      outDuration,
+      schedule,
+      setSquare,
+      resetAll,
+    ],
+  );
 
   useEffect(() => {
     timeoutsRef.current.forEach(clearTimeout);
@@ -188,8 +201,7 @@ export default function CanvasAnimatedIcon({
       timeoutsRef.current.forEach(clearTimeout);
       timeoutsRef.current = [];
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pattern, stepDelay, duration, loop, holdPause, restPause]);
+  }, [loop, runCycle, resetAll, schedule]);
 
   return (
     <div
@@ -209,17 +221,18 @@ export default function CanvasAnimatedIcon({
         ...style,
       }}
     >
-      {SQUARE_COLORS.map((color, i) => (
+      {ALL_INDICES.map((index) => (
         <div
-          key={i}
+          key={`sq-${index}`}
           ref={(el) => {
-            squaresRef.current[i] = el;
+            squaresRef.current[index] = el;
           }}
           style={{
             width: squareSize,
             height: squareSize,
             borderRadius: radius,
-            backgroundColor: color === "light" ? lightColor : darkColor,
+            backgroundColor:
+              SQUARE_COLORS[index] === "light" ? lightColor : darkColor,
             transform: "scale(0)",
             willChange: "transform",
           }}

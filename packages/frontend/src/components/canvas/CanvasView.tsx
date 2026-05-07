@@ -6,7 +6,7 @@ import type {
   PlacePixelSocket,
   Point,
 } from "@blurple-canvas-web/types";
-import { CircularProgress, css, styled } from "@mui/material";
+import { css, styled } from "@mui/material";
 import {
   Maximize2,
   Minimize2,
@@ -35,6 +35,7 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
+import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
@@ -46,7 +47,6 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
-import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
 const CanvasWrapper = styled("div")`
   position: relative;
