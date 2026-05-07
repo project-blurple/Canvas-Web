@@ -146,7 +146,7 @@ export default function SearchUserEntries({
 }: SearchUserEntriesProps) {
   if (!users) return null;
 
-  const sortedUsers = Object.entries(users ?? {}).sort(
+  const sortedUsers = Object.entries(users).sort(
     (a, b) => b[1].count - a[1].count,
   );
 

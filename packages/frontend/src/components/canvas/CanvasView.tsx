@@ -473,17 +473,19 @@ function getViewForFrame({
 }
 
 interface CanvasViewProps {
-  showInvite?: boolean;
-  showReticle?: boolean;
-  canvasLabel?: string;
   actionPanel?: React.ReactNode;
+  canvasLabel?: string;
+  showInvite?: boolean;
+  showNotices?: boolean;
+  showReticle?: boolean;
 }
 
 export default function CanvasView({
-  showInvite = true,
-  showReticle = true,
-  canvasLabel,
   actionPanel,
+  canvasLabel,
+  showInvite = true,
+  showNotices = true,
+  showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
@@ -1149,7 +1151,7 @@ export default function CanvasView({
 
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
-    if (!container) return;
+  if (!container) return;
 
     try {
       if (document.fullscreenElement) {
@@ -1168,7 +1170,7 @@ export default function CanvasView({
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
-      <Notices />
+      {showNotices && <Notices />}
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}
