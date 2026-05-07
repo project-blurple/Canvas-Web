@@ -5,6 +5,7 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { useBlocklist } from "@/hooks/queries/useBlocklist";
 
 const BlocklistTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -15,6 +16,8 @@ interface BlocklistTabProps extends React.ComponentPropsWithoutRef<
 > {}
 
 export default function BlocklistTab({ ...props }: BlocklistTabProps) {
+  const { data: blocklist } = useBlocklist();
+
   return (
     <BlocklistTabBlock {...props}>
       <FullWidthScrollView>
