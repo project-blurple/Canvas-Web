@@ -30,10 +30,11 @@ export default function ModerationDashboard() {
   return (
     <DashboardWrapper>
       <CanvasView
-        showInvite={false}
-        showReticle={false}
-        canvasLabel="Moderation Dashboard"
         actionPanel={<ModerationDashboardActionPanel />}
+        canvasLabel="Moderation Dashboard"
+        showInvite={false}
+        showNotices={false}
+        showReticle={false}
       />
       <SlideableDrawer>
         <ModerationDashboardActionPanel />
