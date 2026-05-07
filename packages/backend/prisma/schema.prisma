@@ -12,9 +12,10 @@ datasource db {
 }
 
 model blacklist {
-  user_id    BigInt   @id
-  user       user     @relation(fields: [user_id], references: [id])
-  date_added DateTime @default(now()) @db.Timestamptz(6)
+  user_id              BigInt                @id
+  user                 user                  @relation(fields: [user_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id], map: "blacklist_discord_user_profile_user_id_fkey")
+  date_added           DateTime              @default(now()) @db.Timestamptz(6)
 }
 
 model canvas {
@@ -73,6 +74,7 @@ model discord_user_profile {
   history             history[]
   leaderboard_guild   leaderboard_guild[]
   leaderboard         leaderboard[]
+  blacklists          blacklist[]
 }
 
 model discord_guild_record {
