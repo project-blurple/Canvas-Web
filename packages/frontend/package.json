@@ -32,9 +32,9 @@
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
     "lint:fix": "biome check --formatter-enabled=false --write .",
-    "check": "pnpm format && pnpm lint",
-    "check:fix": "pnpm format:fix && pnpm lint:fix",
-    "clean": "rm -rf node_modules/ .next/"
+    "check": "pnpm run format && pnpm run lint",
+    "check:fix": "pnpm run format:fix && pnpm run lint:fix",
+    "clean": "rm -rf -- .next/ && pnpm purge"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
