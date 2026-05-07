@@ -5,7 +5,6 @@ import type {
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
-import { copyToClipboard } from "@/util";
 import ColorCodeChip from "../ColorCodeChip";
 import VisuallyHidden from "../VisuallyHidden";
 
@@ -123,7 +122,11 @@ function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
           );
         })}
       </ColorChipWrapper>
-      <UserId onClick={() => copyToClipboard(userId.toString())}>
+      <UserId
+        onClick={async () =>
+          await navigator.clipboard.writeText(userId.toString())
+        }
+      >
         <code aria-hidden>{userId}</code>
         <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
         <Copy size={12} />

@@ -2,7 +2,6 @@
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { copyToClipboard } from "@/util";
 import { PrimitiveButton } from "./button";
 import VisuallyHidden from "./VisuallyHidden";
 
@@ -74,9 +73,12 @@ interface ColorCodeChipProps extends Omit<
 export default function ColorCodeChip({ color, ...props }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
-  const clickHandler = () => copyToClipboard(colorCode);
-  const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") copyToClipboard(colorCode);
+  const clickHandler = async () =>
+    await navigator.clipboard.writeText(colorCode);
+  const keyUpHandler = async (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" || event.key === " ") {
+      await navigator.clipboard.writeText(colorCode);
+    }
   };
 
   return (

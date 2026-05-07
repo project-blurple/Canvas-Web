@@ -8,10 +8,10 @@ import DynamicButton from "@/components/button/DynamicButton";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const UserSelectBlock = styled("div")`
+  align-items: center;
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
-  align-items: center;
 `;
 
 const ToggleFilterModeButton = styled(DynamicButton)`
@@ -25,21 +25,21 @@ interface UserOption {
 }
 
 interface ComplexSearchUserSelectProps {
+  disabled: boolean;
+  filterMode: SearchFilterMode;
   historyData: PixelHistoryWrapper | null;
   value: bigint[];
-  filterMode: SearchFilterMode;
   onChange: (value: bigint[]) => void;
   onFilterModeChange: (mode: SearchFilterMode) => void;
-  disabled: boolean;
 }
 
 export default function ComplexSearchUserSelect({
+  disabled,
+  filterMode,
   historyData,
   value,
-  filterMode,
   onChange,
   onFilterModeChange,
-  disabled,
 }: ComplexSearchUserSelectProps) {
   // Build list of available users from search results
   const availableUsers = useMemo(() => {
@@ -51,7 +51,7 @@ export default function ComplexSearchUserSelect({
         return {
           id: BigInt(userId),
           username,
-          label: `${username} (${userId})`,
+          label: `@${username} (${userId})`,
         };
       })
       .sort((a, b) => a.username.localeCompare(b.username));
