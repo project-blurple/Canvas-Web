@@ -159,6 +159,7 @@
 @layer core {
   html {
     --discord-blurple: oklch(57.74% 0.209 273.85);
+    --discord-dark-blurple: oklch(0.4859 0.1736 274.11);
     --discord-green: oklch(85.48% 0.197 150.16);
     --discord-yellow: oklch(92.18% 0.157 99.87);
     --discord-fuchsia: oklch(65.34% 0.217 351.92);

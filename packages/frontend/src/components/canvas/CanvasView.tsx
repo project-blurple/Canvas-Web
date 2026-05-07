@@ -6,7 +6,7 @@ import type {
   PlacePixelSocket,
   Point,
 } from "@blurple-canvas-web/types";
-import { CircularProgress, css, styled } from "@mui/material";
+import { css, styled } from "@mui/material";
 import {
   Maximize2,
   Minimize2,
@@ -35,6 +35,7 @@ import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import { Button } from "../button";
+import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
@@ -1256,7 +1257,15 @@ export default function CanvasView() {
           <ActionPanel />
         </FullscreenPanelOverlay>
       )}
-      {isLoading && <CircularProgress style={{ position: "absolute" }} />}
+      {isLoading && (
+        <CanvasAnimatedIcon
+          loop
+          pattern="mixed"
+          lightColor="oklch(from var(--discord-blurple) l c h / 80%)"
+          darkColor="oklch(from var(--discord-dark-blurple) l c h / 80%)"
+          style={{ position: "absolute" }}
+        />
+      )}
     </CanvasWrapper>
   );
 }
