@@ -2,9 +2,7 @@ import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Scan } from "lucide-react";
 import NumberField from "@/components/NumberField";
-import {
-  COMPLEX_SEARCH_BOUNDS_MIN_SIZE,
-} from "@/constants/selectedBounds";
+import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import type { ViewBounds } from "@/util";
 
 const CoordinateRangeWrapper = styled("div")`
@@ -67,7 +65,9 @@ export default function ComplexSearchBoundsSelect({
           min={startX}
           max={
             selectedBounds?.right != null ?
-              selectedBounds.right + startX - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
+              selectedBounds.right +
+              startX -
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
             : canvas.width + startX - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
           size="small"
@@ -89,7 +89,9 @@ export default function ComplexSearchBoundsSelect({
           min={startY}
           max={
             selectedBounds?.bottom != null ?
-              selectedBounds.bottom + startY - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+              selectedBounds.bottom +
+              startY -
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
             : canvas.height + startY - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
           size="small"
@@ -113,7 +115,9 @@ export default function ComplexSearchBoundsSelect({
           value={displayBounds?.right ?? startX}
           min={
             selectedBounds?.left != null ?
-              selectedBounds.left + startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
+              selectedBounds.left +
+              startX +
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
             : startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
           max={canvas.width + startX}
@@ -135,7 +139,9 @@ export default function ComplexSearchBoundsSelect({
           value={displayBounds?.bottom ?? startY}
           min={
             selectedBounds?.top != null ?
-              selectedBounds.top + startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+              selectedBounds.top +
+              startY +
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
             : startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
           max={canvas.height + startY}
