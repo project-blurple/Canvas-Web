@@ -7,7 +7,9 @@ export function useBlocklist() {
   const getBlocklist = async (): Promise<BlocklistRequest.BlocklistResBody> => {
     const url = `${config.apiUrl}/api/v1/blocklist`;
 
-    const response = await axios.get<BlocklistRequest.BlocklistResBody>(url);
+    const response = await axios.get<BlocklistRequest.BlocklistResBody>(url, {
+      withCredentials: true,
+    });
     return response.data;
   };
 
