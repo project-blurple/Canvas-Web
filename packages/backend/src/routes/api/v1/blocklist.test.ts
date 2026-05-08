@@ -1,3 +1,4 @@
+import "@/utils";
 import express, { type RequestHandler } from "express";
 import request from "supertest";
 import {
