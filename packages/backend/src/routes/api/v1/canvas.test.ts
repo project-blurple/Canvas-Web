@@ -29,6 +29,7 @@ const createApp = () => {
     req.user = { isCanvasAdmin: true } as Express.User;
     req.session = {
       discordAccessToken: "test-access-token",
+      discordTokenExpiresAt: Date.now() + 3600000,
     } as typeof req.session;
     next();
   });

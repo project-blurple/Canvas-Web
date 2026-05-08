@@ -114,6 +114,7 @@ const createApp = (includeAccessToken: boolean) => {
     req.session = {} as typeof req.session;
     if (includeAccessToken) {
       req.session.discordAccessToken = "test-access-token";
+      req.session.discordTokenExpiresAt = Date.now() + 3600000;
     }
     next();
   });
@@ -352,6 +353,7 @@ const createPaletteApp = () => {
     req.user = { isCanvasAdmin: true } as Express.User;
     req.session = {
       discordAccessToken: "test-access-token",
+      discordTokenExpiresAt: Date.now() + 3600000,
     } as typeof req.session;
     next();
   });

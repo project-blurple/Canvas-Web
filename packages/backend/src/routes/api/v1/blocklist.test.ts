@@ -24,6 +24,7 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
     req.session = {} as typeof req.session;
     if (authenticated) {
       req.session.discordAccessToken = "test-access-token";
+      req.session.discordTokenExpiresAt = Date.now() + 3600000;
     }
     if (moderator && req.user) {
       req.user = {
