@@ -1151,7 +1151,7 @@ export default function CanvasView({
 
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
-  if (!container) return;
+    if (!container) return;
 
     try {
       if (document.fullscreenElement) {
