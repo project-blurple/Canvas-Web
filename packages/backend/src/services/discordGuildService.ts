@@ -4,6 +4,7 @@ import config from "@/config";
 import BadRequestError from "@/errors/BadRequestError";
 import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
+import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 import fetchWithRetries from "@/utils/fetchWithRetries";
 
@@ -44,6 +45,26 @@ interface CanvasModeratorUser extends DiscordUserProfile {
   isCanvasModerator: true;
 }
 
+type DiscordRateLimitHeader =
+  | "x-ratelimit-limit"
+  | "x-ratelimit-remaining"
+  | "x-ratelimit-reset"
+  | "x-ratelimit-reset-after"
+  | "x-ratelimit-bucket";
+
+/** @see https://docs.discord.com/developers/topics/rate-limits */
+const discordRateLimitHeaders = new Set<DiscordRateLimitHeader>([
+  "x-ratelimit-limit",
+  "x-ratelimit-remaining",
+  "x-ratelimit-reset",
+  "x-ratelimit-reset-after",
+  "x-ratelimit-bucket",
+]);
+
+function isDiscordRateLimitHeader(key: string): key is DiscordRateLimitHeader {
+  return (discordRateLimitHeaders as Set<string>).has(key);
+}
+
 async function discordRequest<T>({
   endpoint,
   authorization,
@@ -67,7 +88,27 @@ async function discordRequest<T>({
     throw new NotFoundError(`Discord resource not found: ${endpoint}`);
   }
 
+  if (response.status === 429) {
+    const rateLimitHeaders: Partial<Record<DiscordRateLimitHeader, string>> =
+      {};
+    for (const [k, v] of response.headers.entries()) {
+      if (isDiscordRateLimitHeader(k)) rateLimitHeaders[k] = v;
+    }
+
+    console.error("Headers", rateLimitHeaders);
+    console.error("Body", await response.json());
+
+    const retryAfter = response.headers.get("retry-after");
+    /** @privateRemarks TODO: Update to Intl.DurationFormat once we target es2025 */
+    const suffix =
+      retryAfter ? ` after ${Number.parseFloat(retryAfter)} s` : "";
+    throw new TooManyRequestsError(
+      `Rate limited by Discord API. Please try signing in again${suffix}.`,
+    );
+  }
+
   if (!response.ok) {
+    console.error(response);
     throw new BadRequestError(
       `Discord API request failed with status ${response.status}: ${endpoint}`,
     );
