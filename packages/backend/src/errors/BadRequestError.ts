@@ -1,11 +1,11 @@
 import type { Response } from "express";
-import type { ZodIssue } from "zod";
+import type { z } from "zod";
 import ApiError from "./ApiError";
 
 export default class BadRequestError extends ApiError {
   constructor(
     message: string,
-    protected errors: ZodIssue[] = [],
+    protected errors: z.core.$ZodIssue[] = [],
   ) {
     super(message, 400);
   }

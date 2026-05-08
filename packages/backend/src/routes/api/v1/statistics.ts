@@ -3,6 +3,7 @@ import { ApiError, BadRequestError } from "@/errors";
 import { parseCanvasId } from "@/models/canvas.models";
 import { LeaderboardQueryModel } from "@/models/pixel.models";
 import { getLeaderboard, getUserStats } from "@/services/statisticsService";
+import { assertZodSuccess } from "@/utils/models";
 
 export const statisticsRouter = Router();
 
@@ -24,12 +25,7 @@ statisticsRouter.get("/leaderboard/:canvasId", async (req, res) => {
       LeaderboardQueryModel.safeParseAsync(req.query),
     ]);
 
-    if (!queryParams.success) {
-      throw new BadRequestError(
-        "Malformed query parameters",
-        queryParams.error.issues,
-      );
-    }
+    assertZodSuccess(queryParams);
 
     const { page, size } = queryParams.data;
     const leaderboard = await getLeaderboard(canvasId, page, size);
