@@ -1,4 +1,4 @@
-import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import passport from "passport";
 
@@ -11,6 +11,10 @@ import {
   syncDiscordGuildRecords,
 } from "@/services/discordGuildService";
 import { saveDiscordProfile } from "@/services/discordProfileService";
+import {
+  type DiscordRequestSession,
+  getValidAccessToken,
+} from "@/services/discordTokenService";
 import { assertIsSnowflake } from "@/utils/discordRouteUtils";
 
 export const discordRouter = Router();
@@ -27,11 +31,7 @@ discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
     }
 
     assertIsSnowflake(guildId, "guildId");
-    const accessToken = req.session.discordAccessToken;
-    if (!accessToken) {
-      throw new UnauthorizedError("Discord access token is missing");
-    }
-
+    const accessToken = await getValidAccessToken(req);
     const permissions = await getGuildPermissionsForUser(guildId, accessToken);
 
     res.status(200).json(permissions);
@@ -48,10 +48,7 @@ discordRouter.get("/guilds/permissions-map", async (req, res) => {
       throw new UnauthorizedError("User is not authenticated");
     }
 
-    const accessToken = req.session.discordAccessToken;
-    if (!accessToken) {
-      throw new UnauthorizedError("Discord access token is missing");
-    }
+    const accessToken = await getValidAccessToken(req);
 
     const guildFlags =
       req.session.discordGuildFlags ??
@@ -87,15 +84,13 @@ discordRouter.get(
   }),
   async (req, res) => {
     const discordProfile = req.user as DiscordUserProfile;
-    const authInfo = req.authInfo as
-      | {
-          discordAccessToken?: string;
-          discordGuildFlags?: Record<string, GuildData>;
-        }
-      | undefined;
+    const authInfo = req.authInfo as DiscordRequestSession | undefined;
 
     if (authInfo?.discordAccessToken) {
       req.session.discordAccessToken = authInfo.discordAccessToken;
+      if (authInfo.discordRefreshToken) {
+        req.session.discordRefreshToken = authInfo.discordRefreshToken;
+      }
       req.session.discordGuildFlags = authInfo.discordGuildFlags;
     }
 

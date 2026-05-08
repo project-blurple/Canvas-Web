@@ -1,4 +1,5 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+
 declare global {
   namespace Express {
     interface User extends DiscordUserProfile {}
@@ -9,5 +10,7 @@ declare module "express-session" {
   interface SessionData {
     discordAccessToken?: string;
     discordGuildFlags?: Record<string, GuildData>;
+    discordRefreshToken?: string;
+    discordTokenExpiresAt?: number | null;
   }
 }

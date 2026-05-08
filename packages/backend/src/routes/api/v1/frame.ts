@@ -11,6 +11,7 @@ import {
   FrameOwnerParamModel,
   parseFrameId,
 } from "@/models/frame.models";
+import { getValidAccessToken } from "@/services/discordTokenService";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -97,9 +98,11 @@ frameRouter.put<FrameIdParam>(
 
       const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
+      const accessToken = await getValidAccessToken(req);
+
       const frame = await editFrame(
         req.user,
-        req.session.discordAccessToken,
+        accessToken,
         frameId,
         bodyQueryResult.data.name,
         x0,
@@ -124,7 +127,8 @@ frameRouter.delete<FrameIdParam>(
 
       const frameId = await parseFrameId(req.params);
 
-      await deleteFrame(req.user, req.session.discordAccessToken, frameId);
+      const accessToken = await getValidAccessToken(req);
+      await deleteFrame(req.user, accessToken, frameId);
       res.status(204).end();
     } catch (error) {
       ApiError.sendError(res, error);
@@ -156,9 +160,11 @@ frameRouter.post<FrameIdParam>(
 
       const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
 
+      const accessToken = await getValidAccessToken(req);
+
       const frame = await createFrame(
         req.user,
-        req.session.discordAccessToken,
+        accessToken,
         canvasId,
         bodyQueryResult.data.name,
         ownerQueryResult.data.ownerId,

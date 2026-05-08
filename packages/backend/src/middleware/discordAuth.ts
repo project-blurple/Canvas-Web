@@ -21,7 +21,7 @@ const discordStrategy = new DiscordStrategy(
     callbackURL: "/api/v1/discord/callback",
     scope: ["identify", "guilds", "guilds.members.read"],
   },
-  async (_req, accessToken, _refreshToken, profile, done) => {
+  async (_req, accessToken, refreshToken, profile, done) => {
     try {
       const userGuildFlags = await getCurrentUserGuildFlags(accessToken);
       const [userIsCanvasAdmin, userIsCanvasModerator] = await Promise.all([
@@ -42,7 +42,11 @@ const discordStrategy = new DiscordStrategy(
 
       done(null, user, {
         discordAccessToken: accessToken,
+        discordRefreshToken: refreshToken,
         discordGuildFlags: userGuildFlags,
+        // Unfortunately, we don't get the expires_in value from passport-discord, so we set a temporary 1h expiry
+        // for the access token before getting refreshed after (and getting the real expiry time from the refresh token response)
+        discordTokenExpiresAt: Date.now() + 60 * 60 * 1000,
       });
     } catch (error) {
       done(error as Error, undefined);
