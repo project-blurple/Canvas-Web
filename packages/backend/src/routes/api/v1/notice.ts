@@ -7,6 +7,7 @@ import {
   getNotices,
   updateNotice,
 } from "@/services/noticeService";
+import { assertZodSuccess } from "@/utils/models";
 
 export const noticeRouter = Router();
 
@@ -36,12 +37,7 @@ noticeRouter.post("/", async (req, res) => {
     const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
       req.body,
     );
-    if (!bodyQueryResult.success) {
-      throw new BadRequestError(
-        "Invalid request body",
-        bodyQueryResult.error.issues,
-      );
-    }
+    assertZodSuccess(bodyQueryResult);
 
     const notice = await createNotice(bodyQueryResult.data);
     res.status(201).json(notice);
@@ -59,12 +55,7 @@ noticeRouter.put("/:noticeId", async (req, res) => {
     const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
       req.body,
     );
-    if (!bodyQueryResult.success) {
-      throw new BadRequestError(
-        "Invalid request body",
-        bodyQueryResult.error.issues,
-      );
-    }
+    assertZodSuccess(bodyQueryResult);
 
     const notice = await updateNotice({
       noticeId,

@@ -145,13 +145,7 @@ frameRouter.post<FrameIdParam>("/", frameMutationLimiter, async (req, res) => {
       FrameOwnerParamModel.safeParseAsync(req.body),
     ]);
     assertZodSuccess(bodyQueryResult);
-
-    if (!ownerQueryResult.success) {
-      throw new BadRequestError(
-        "Invalid body parameters",
-        ownerQueryResult.error.issues,
-      );
-    }
+    assertZodSuccess(ownerQueryResult);
 
     await assertMaxOwnerFramesNotExceeded({
       canvasId,
