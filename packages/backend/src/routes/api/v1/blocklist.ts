@@ -1,21 +1,19 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
+import { requireCanvasModerator } from "@/middleware/canvasAuth";
 import { parseBlocklistParams } from "@/models/blocklist.models";
 import {
   addUsersToBlocklist,
   getBlocklist,
   removeUsersFromBlocklist,
 } from "@/services/blocklistService";
-import { assertIsCanvasModerator } from "@/services/discordGuildService";
-import { assertLoggedIn } from "@/utils";
 
 export const blocklistRouter = Router();
 
-blocklistRouter.get("/", async (req, res) => {
-  try {
-    assertLoggedIn(req);
-    assertIsCanvasModerator(req.user);
+blocklistRouter.use(requireCanvasModerator);
 
+blocklistRouter.get("/", async (_req, res) => {
+  try {
     const blocklist = await getBlocklist();
 
     res.status(200).json(blocklist);
@@ -26,8 +24,6 @@ blocklistRouter.get("/", async (req, res) => {
 
 blocklistRouter.put("/", async (req, res) => {
   try {
-    assertLoggedIn(req);
-    assertIsCanvasModerator(req.user);
     const userIds = await parseBlocklistParams(req.body);
 
     const addedUsers = await addUsersToBlocklist(userIds);
@@ -40,8 +36,6 @@ blocklistRouter.put("/", async (req, res) => {
 
 blocklistRouter.delete("/", async (req, res) => {
   try {
-    assertLoggedIn(req);
-    assertIsCanvasModerator(req.user);
     const userIds = await parseBlocklistParams(req.body);
 
     await removeUsersFromBlocklist(userIds);

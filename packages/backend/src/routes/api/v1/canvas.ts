@@ -1,5 +1,6 @@
 import { type Response, Router } from "express";
 import { ApiError } from "@/errors";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import {
   type CanvasIdParam,
   CreateCanvasBodyModel,
@@ -18,8 +19,6 @@ import {
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
-import { assertCanvasAdmin } from "@/services/discordGuildService";
-import { assertLoggedIn } from "@/utils";
 import { assertZodSuccess } from "@/utils/models";
 import { pixelRouter } from "./pixel";
 
@@ -76,11 +75,8 @@ canvasRouter.get("/:canvasId", async (req, res) => {
   }
 });
 
-canvasRouter.post("/", async (req, res) => {
+canvasRouter.post("/", requireCanvasAdmin, async (req, res) => {
   try {
-    assertLoggedIn(req);
-    assertCanvasAdmin(req.user);
-
     const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
     assertZodSuccess(canvasData);
 
@@ -98,30 +94,31 @@ canvasRouter.post("/", async (req, res) => {
   }
 });
 
-canvasRouter.put<CanvasIdParam>("/:canvasId", async (req, res) => {
-  try {
-    assertLoggedIn(req);
-    assertCanvasAdmin(req.user);
+canvasRouter.put<CanvasIdParam>(
+  "/:canvasId",
+  requireCanvasAdmin,
+  async (req, res) => {
+    try {
+      const [canvasId, canvasData] = await Promise.all([
+        parseCanvasId(req.params),
+        EditCanvasBodyModel.safeParseAsync(req.body),
+      ]);
 
-    const [canvasId, canvasData] = await Promise.all([
-      parseCanvasId(req.params),
-      EditCanvasBodyModel.safeParseAsync(req.body),
-    ]);
+      assertZodSuccess(canvasData);
 
-    assertZodSuccess(canvasData);
+      const canvas = await editCanvas({
+        canvasId,
+        name: canvasData.data.name,
+        cooldownLength: canvasData.data.cooldownLength,
+        isLocked: canvasData.data.isLocked,
+      });
 
-    const canvas = await editCanvas({
-      canvasId,
-      name: canvasData.data.name,
-      cooldownLength: canvasData.data.cooldownLength,
-      isLocked: canvasData.data.isLocked,
-    });
-
-    res.status(200).json(canvas);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+      res.status(200).json(canvas);
+    } catch (error) {
+      ApiError.sendError(res, error);
+    }
+  },
+);
 
 /**
  * Handles sending a cached canvas as a response.

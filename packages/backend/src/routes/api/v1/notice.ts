@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { ApiError, BadRequestError } from "@/errors";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { ModifyNoticeBodyModel, parseNoticeId } from "@/models/notice.models";
 import {
   createNotice,
@@ -20,9 +21,8 @@ noticeRouter.get("/", async (_req, res) => {
   }
 });
 
-noticeRouter.get("/all", async (_req, res) => {
+noticeRouter.get("/all", requireCanvasAdmin, async (_req, res) => {
   try {
-    // TODO: admin auth here
     const notices = await getNotices(false);
     res.status(200).json(notices);
   } catch (error) {
@@ -30,10 +30,8 @@ noticeRouter.get("/all", async (_req, res) => {
   }
 });
 
-noticeRouter.post("/", async (req, res) => {
+noticeRouter.post("/", requireCanvasAdmin, async (req, res) => {
   try {
-    // TODO: admin auth here
-
     const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
       req.body,
     );
@@ -46,10 +44,8 @@ noticeRouter.post("/", async (req, res) => {
   }
 });
 
-noticeRouter.put("/:noticeId", async (req, res) => {
+noticeRouter.put("/:noticeId", requireCanvasAdmin, async (req, res) => {
   try {
-    // TODO: admin auth here
-
     const noticeId = await parseNoticeId(req.body);
 
     const bodyQueryResult = await ModifyNoticeBodyModel.safeParseAsync(
@@ -67,10 +63,8 @@ noticeRouter.put("/:noticeId", async (req, res) => {
   }
 });
 
-noticeRouter.delete("/:noticeId", async (req, res) => {
+noticeRouter.delete("/:noticeId", requireCanvasAdmin, async (req, res) => {
   try {
-    // TODO: admin auth
-
     const noticeId = await parseNoticeId(req.body);
 
     await deleteNotice(noticeId);

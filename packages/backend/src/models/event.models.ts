@@ -8,6 +8,7 @@ const EventIdParamModel = z.object({
 
 export interface EventIdParam {
   eventId: string;
+  [key: string]: string;
 }
 
 export async function parseEventId(

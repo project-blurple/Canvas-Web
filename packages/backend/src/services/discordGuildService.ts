@@ -36,14 +36,6 @@ interface DiscordRequestOptions {
   authorization: string;
 }
 
-interface CanvasAdminUser extends DiscordUserProfile {
-  isCanvasAdmin: true;
-}
-
-interface CanvasModeratorUser extends DiscordUserProfile {
-  isCanvasModerator: true;
-}
-
 async function discordRequest<T>({
   endpoint,
   authorization,
@@ -189,26 +181,6 @@ function getPermissions(permissions: bigint): GuildPermissionsSummary {
     administrator,
     manage_guild: manageGuild,
   };
-}
-
-export function assertCanvasAdmin(
-  user: DiscordUserProfile,
-): asserts user is CanvasAdminUser {
-  if (!user.isCanvasAdmin) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
-    );
-  }
-}
-
-export function assertIsCanvasModerator(
-  user: DiscordUserProfile,
-): asserts user is CanvasModeratorUser | CanvasAdminUser {
-  if (!user.isCanvasModerator) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
-    );
-  }
 }
 
 export async function syncDiscordGuildRecords(
