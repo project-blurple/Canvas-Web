@@ -23,6 +23,9 @@
     }
   ],
   "cSpell.words": [
+    "autoincrement",
+    "blocklist",
+    "blocklisted",
     "Blurple",
     "COMPSCI",
     "COMPSYS",
@@ -38,6 +41,7 @@
     "pngjs",
     "SOFTENG",
     "Tāmaki",
+    "timestamptz",
     "WCAG",
     "wdth",
     "wght",

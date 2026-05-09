@@ -3,7 +3,7 @@
 import type { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 export function useLeaderboard(
   canvasId: CanvasInfo["id"],

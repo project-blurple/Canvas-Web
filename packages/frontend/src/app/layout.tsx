@@ -8,8 +8,9 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import {
+  ActionPanelProvider,
   AuthProvider,
   CanvasProvider,
   CanvasViewProvider,
@@ -20,7 +21,7 @@ import {
 } from "@/contexts";
 import { Theme } from "@/theme";
 import "../styles/core.css";
-import serverConfig from "@/config/serverSideConfig";
+import serverConfig from "@/config/serverConfig";
 
 export const metadata: Metadata = {
   metadataBase: new URL(serverConfig.baseUrl),
@@ -111,11 +112,13 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
           <SelectedColorProvider>
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <CanvasViewProvider>
-                  <SelectedBoundsProvider>
-                    <ThemeProvider theme={Theme}>{children}</ThemeProvider>
-                  </SelectedBoundsProvider>
-                </CanvasViewProvider>
+                <ActionPanelProvider>
+                  <CanvasViewProvider>
+                    <SelectedBoundsProvider>
+                      <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                    </SelectedBoundsProvider>
+                  </CanvasViewProvider>
+                </ActionPanelProvider>
               </CanvasProvider>
             </SelectedFrameProvider>
           </SelectedColorProvider>

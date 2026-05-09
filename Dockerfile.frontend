@@ -10,7 +10,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY packages/frontend ./packages/frontend
 COPY packages/types ./packages/types
 
-RUN pnpm install --frozen-lockfile --no-optional --ignore-scripts
+RUN pnpm ci --no-optional --ignore-scripts
 
 ENV NODE_ENV=production
 

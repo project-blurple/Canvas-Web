@@ -11,7 +11,7 @@ COPY packages/backend/package.json ./packages/backend/
 
 COPY packages/backend ./packages/backend
 COPY packages/types ./packages/types
-RUN pnpm install --frozen-lockfile --no-optional
+RUN pnpm ci --no-optional
 
 ENV NODE_ENV=production
 

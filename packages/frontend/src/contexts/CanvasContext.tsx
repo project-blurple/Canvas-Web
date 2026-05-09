@@ -4,7 +4,7 @@ import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useState } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";

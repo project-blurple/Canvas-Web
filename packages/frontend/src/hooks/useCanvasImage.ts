@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 export function useCanvasImage(canvasId: number): HTMLImageElement | null {
   const [sourceImage, setSourceImage] = useState<HTMLImageElement | null>(null);

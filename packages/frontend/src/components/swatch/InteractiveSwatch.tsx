@@ -1,16 +1,14 @@
 import { styled } from "@mui/material";
+import { PrimitiveButton } from "../button";
+import { StaticSwatch } from "./StaticSwatch";
 
-import type { StaticSwatchProps } from "./StaticSwatch";
-import { SwatchBase } from "./SwatchBase";
-
-const StyledSwatchBase = styled(SwatchBase)`
-  cursor: pointer;
+const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
   transition: var(--transition-duration-fast) ease;
   transition-property: opacity, outline-width, border-color;
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover:not(.disabled, .selected) {
+    &:hover:not(:disabled, [aria-selected="true"]) {
       opacity: 85%;
     }
   }
@@ -19,44 +17,21 @@ const StyledSwatchBase = styled(SwatchBase)`
     outline: var(--focus-outline);
   }
 
-  &.selected {
+  &[aria-selected="true"] {
     border: 0.25rem solid var(--discord-white);
     background-clip: content-box;
     padding: 0.25rem;
   }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
 `;
 
-type InteractiveSwatchProps = StaticSwatchProps & {
-  onAction: () => void;
-  selected?: boolean;
-  disabled?: boolean;
-};
+interface InteractiveSwatchProps extends React.ComponentPropsWithRef<
+  typeof StaticSwatch
+> {}
 
-export function InteractiveSwatch({
-  disabled = false,
-  onAction,
-  rgba,
-  selected = false,
-  ...props
-}: InteractiveSwatchProps) {
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 0xff;
-
-  const clickHandler = onAction;
-  const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") onAction();
-  };
-
-  return (
-    <StyledSwatchBase
-      aria-disabled={disabled}
-      className={selected ? "selected" : undefined}
-      colorString={`rgb(${rgb} / ${alphaFloat})`}
-      onClick={clickHandler}
-      onKeyUp={keyUpHandler}
-      tabIndex={0}
-      {...props}
-    />
-  );
+export function InteractiveSwatch(props: InteractiveSwatchProps) {
+  return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
 }

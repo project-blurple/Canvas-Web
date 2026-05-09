@@ -20,7 +20,7 @@ const config = {
    */
   environment: process.env.NODE_ENV || "production",
   api: {
-    port: Number(process.env.PORT || 8000),
+    port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000,
   },
   paths: {
     root: path.resolve(),
@@ -46,6 +46,16 @@ const config = {
   // Keep bot placing enabled by default unless explicitly disabled.
   botPlacingEnabled: process.env.BOT_PLACING_ENABLED !== "false",
   allColorsGlobal: process.env.ALL_COLORS_GLOBAL === "true",
+  frames: {
+    maxAllowedUser:
+      process.env.MAX_USER_FRAMES_ALLOWED ?
+        Number.parseInt(process.env.MAX_USER_FRAMES_ALLOWED, 10)
+      : 32,
+    maxAllowedGuild:
+      process.env.MAX_GUILD_FRAMES_ALLOWED ?
+        Number.parseInt(process.env.MAX_GUILD_FRAMES_ALLOWED, 10)
+      : 32,
+  },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
   databaseUrl: requiredEnv("DATABASE_URL"),

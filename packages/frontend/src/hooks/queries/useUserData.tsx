@@ -3,7 +3,7 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 interface UserDataResponse {
   guilds: DiscordUserProfile["guilds"];

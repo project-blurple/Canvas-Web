@@ -44,7 +44,7 @@ export default function PixelHistoryListItem({
   return (
     <Wrapper>
       {color ?
-        <StyledSwatch key={color.code} rgba={color.rgba} />
+        <StyledSwatch key={color.code} paletteColor={color} />
       : <SwatchSkeleton variant="rectangular" />}
       <div>
         <Username title={record?.userId}>
