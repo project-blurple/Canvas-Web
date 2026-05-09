@@ -1,10 +1,11 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
-import type { DiscordProfile } from "discord-strategy";
+import type { ConsumableAPI, DiscordProfile } from "discord-strategy";
 import { DiscordScope, Strategy as DiscordStrategy } from "discord-strategy";
 import type { Express } from "express";
 import session from "express-session";
 import passport from "passport";
+import refresh from "passport-oauth2-refresh";
 import { prisma } from "@/client";
 import config from "@/config";
 import {
@@ -29,17 +30,18 @@ const discordStrategy = new DiscordStrategy(
   },
   async (
     accessToken: string,
-    _refreshToken: string,
+    refreshToken: string,
     profile: DiscordProfile,
     done: (
       error: Error | null,
       user?: DiscordUserProfile,
       info?: {
         discordAccessToken: string;
+        discordRefreshToken: string;
         discordGuildFlags: Awaited<ReturnType<typeof getCurrentUserGuildFlags>>;
       },
     ) => void,
-    _consume: unknown,
+    _consume: ConsumableAPI,
   ) => {
     try {
       const userGuildFlags = await getCurrentUserGuildFlags(accessToken);
@@ -61,6 +63,7 @@ const discordStrategy = new DiscordStrategy(
 
       done(null, user, {
         discordAccessToken: accessToken,
+        discordRefreshToken: refreshToken,
         discordGuildFlags: userGuildFlags,
       });
     } catch (error) {
@@ -71,6 +74,7 @@ const discordStrategy = new DiscordStrategy(
 
 export function initializeAuth(app: Express) {
   passport.use(discordStrategy);
+  refresh.use(discordStrategy as never);
 
   passport.serializeUser((user, done) => {
     done(null, user);
