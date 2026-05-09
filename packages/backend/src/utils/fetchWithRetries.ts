@@ -72,6 +72,6 @@ export default async function fetchWithRetries(
     await sleep(delayMs);
   }
 
-  // @ts-expect-error Definitely initialised
+  // @ts-expect-error Definitely initialized
   return response;
 }

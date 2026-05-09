@@ -137,9 +137,9 @@ pnpm -F frontend dev
 
 ## 🤓 Contributors
 
-Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750) project at [Waipapa Taumata Rau](https://www.auckland.ac.nz). We are Team Golden Giraffes.[^teamname]
+Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750) project at [Waipapa Taumata Rau](https://www.auckland.ac.nz). We are Team Golden Giraffes.[^team-name]
 
-[^teamname]: Not sure we would’ve chosen this name for ourselves, though…
+[^team-name]: Not sure we would’ve chosen this name for ourselves, though…
 
 - Aaron Guo
 - Emily Zou

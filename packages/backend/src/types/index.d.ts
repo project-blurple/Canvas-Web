@@ -1,4 +1,5 @@
-import { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+
 declare global {
   namespace Express {
     interface User extends DiscordUserProfile {}

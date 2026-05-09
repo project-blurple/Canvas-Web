@@ -1,8 +1,7 @@
-import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { GuildData } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import config from "@/config";
 import BadRequestError from "@/errors/BadRequestError";
-import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 import fetchWithRetries from "@/utils/fetchWithRetries";

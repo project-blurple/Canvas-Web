@@ -1,4 +1,4 @@
-import { CanvasInfo, DiscordUserProfile, UserStats } from "..";
+import type { CanvasInfo, DiscordUserProfile, UserStats } from "..";
 
 export interface Params {
   userId: DiscordUserProfile["id"];

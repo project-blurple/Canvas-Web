@@ -22,7 +22,7 @@ describe("canvasAuth", () => {
 
   const mockUser: DiscordUserProfile = {
     id: "123456789",
-    username: "testuser",
+    username: "user",
     profilePictureUrl: "https://example.com/avatar.png",
   };
 
