@@ -5,10 +5,8 @@ const BlocklistTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
-interface BlocklistTabProps extends React.ComponentPropsWithoutRef<
-  typeof BlocklistTabBlock
-> {}
-
-export default function BlocklistTab({ ...props }: BlocklistTabProps) {
+export default function BlocklistTab({
+  ...props
+}: React.ComponentPropsWithoutRef<typeof BlocklistTabBlock>) {
   return <BlocklistTabBlock {...props}>Blocklist</BlocklistTabBlock>;
 }

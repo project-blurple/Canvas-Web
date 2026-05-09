@@ -116,11 +116,11 @@ describe("User Validation Tests", () => {
   });
 
   it("Rejects blacklisted user", async () => {
-    return expect(validateUser(BigInt(9))).rejects.toThrow(ForbiddenError);
+    return expect(validateUser(9n)).rejects.toThrow(ForbiddenError);
   });
 
   it("Resolves non-blacklisted user", async () => {
-    return expect(validateUser(BigInt(1))).resolves.not.toThrow();
+    return expect(validateUser(1n)).resolves.not.toThrow();
   });
 });
 
@@ -139,60 +139,52 @@ describe("Get Cooldown Tests", () => {
   it("Resolves canvas with no cooldown_time", async () => {
     // A user theoretically shouldn't have cooldown time if the canvas doesn't
     await prisma.cooldown.create({
-      data: { canvas_id: 9, user_id: BigInt(1), cooldown_time: new Date() },
+      data: { canvas_id: 9, user_id: 1n, cooldown_time: new Date() },
     });
-    return expect(getCooldown(9, BigInt(1), new Date())).resolves.toMatchObject(
-      {
-        currentCooldown: null,
-        futureCooldown: null,
-      },
-    );
+    return expect(getCooldown(9, 1n, new Date())).resolves.toMatchObject({
+      currentCooldown: null,
+      futureCooldown: null,
+    });
   });
 
   it("Resolves user with no entry in cooldown table", async () => {
-    return expect(getCooldown(1, BigInt(1), new Date())).resolves.toMatchObject(
-      {
-        currentCooldown: null,
-        futureCooldown: new Date(Date.now() + 30 * 1000),
-      },
-    );
+    return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
+      currentCooldown: null,
+      futureCooldown: new Date(Date.now() + 30 * 1000),
+    });
   });
 
   it("Resolves user with null cooldown", async () => {
     // Users with null cooldowns theoretically shouldn't exist
     await prisma.cooldown.create({
-      data: { canvas_id: 1, user_id: BigInt(1), cooldown_time: null },
+      data: { canvas_id: 1, user_id: 1n, cooldown_time: null },
     });
-    return expect(getCooldown(1, BigInt(1), new Date())).resolves.toMatchObject(
-      {
-        currentCooldown: null,
-        futureCooldown: new Date(Date.now() + 30 * 1000),
-      },
-    );
+    return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
+      currentCooldown: null,
+      futureCooldown: new Date(Date.now() + 30 * 1000),
+    });
   });
 
   it("Resolves user with cooldown greater than 30 seconds", async () => {
     await prisma.cooldown.create({
       data: {
         canvas_id: 1,
-        user_id: BigInt(1),
+        user_id: 1n,
         cooldown_time: new Date(),
       },
     });
     vi.advanceTimersByTime(30 * 1000);
-    return expect(getCooldown(1, BigInt(1), new Date())).resolves.toMatchObject(
-      {
-        currentCooldown: new Date(Date.now() - 30 * 1000),
-        futureCooldown: new Date(Date.now() + 30 * 1000),
-      },
-    );
+    return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
+      currentCooldown: new Date(Date.now() - 30 * 1000),
+      futureCooldown: new Date(Date.now() + 30 * 1000),
+    });
   });
 
   it("Rejects user with cooldown less than 30 seconds", async () => {
     await prisma.cooldown.create({
-      data: { canvas_id: 1, user_id: BigInt(1), cooldown_time: new Date() },
+      data: { canvas_id: 1, user_id: 1n, cooldown_time: new Date() },
     });
-    return expect(getCooldown(1, BigInt(1), new Date())).rejects.toThrow(
+    return expect(getCooldown(1, 1n, new Date())).rejects.toThrow(
       ForbiddenError,
     );
   });
@@ -210,7 +202,7 @@ describe("Place Pixel Tests", () => {
 
   it("Places the pixel", async () => {
     const canvasId = 1;
-    const userId = BigInt(1);
+    const userId = 1n;
 
     await placePixel(
       canvasId,
@@ -237,7 +229,7 @@ describe("Place Pixel Tests", () => {
 
   it("It only places once within 30 seconds", async () => {
     const canvasId = 1;
-    const userId = BigInt(1);
+    const userId = 1n;
     const before = await fetchCooldownPixelHistory(canvasId, userId, 1, 1);
     await placePixel(
       canvasId,
@@ -261,7 +253,7 @@ describe("Place Pixel Tests", () => {
 
   it("Resolves updating cached canvas pixel", async () => {
     const canvasId = 1;
-    const userId = BigInt(1);
+    const userId = 1n;
 
     // Causes canvas to get loaded into cache
     const canvas = await getCanvasPng(canvasId);
@@ -337,25 +329,25 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
     // Create discord_guild_record and guild for history entries
     await prisma.discord_guild_record.create({
-      data: { guild_id: BigInt(1), name: "Test Guild" },
+      data: { guild_id: 1n, name: "Test Guild" },
     });
     await prisma.guild.create({
-      data: { id: BigInt(1), invite: "test-guild" },
+      data: { id: 1n, invite: "test-guild" },
     });
     // Create users for history entries
     await prisma.user.createMany({
-      data: [{ id: BigInt(1) }, { id: BigInt(2) }],
+      data: [{ id: 1n }, { id: 2n }],
     });
     // Create discord user profiles for history entries
     await prisma.discord_user_profile.createMany({
       data: [
         {
-          user_id: BigInt(1),
+          user_id: 1n,
           username: "User1",
           profile_picture_url: "https://example.com/1.png",
         },
         {
-          user_id: BigInt(2),
+          user_id: 2n,
           username: "User2",
           profile_picture_url: "https://example.com/2.png",
         },
@@ -421,9 +413,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 2,
-        user_id: BigInt(1),
+        user_id: 1n,
         timestamp: new Date("2024-01-01"),
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
 
@@ -483,9 +475,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
           x,
           y,
           color_id: colorId,
-          user_id: BigInt(1),
+          user_id: 1n,
           timestamp: new Date("2024-01-01"),
-          guild_id: BigInt(1),
+          guild_id: 1n,
         },
       });
     }
@@ -546,9 +538,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 2,
-        user_id: BigInt(1),
+        user_id: 1n,
         timestamp: new Date("2024-01-01"),
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
     await prisma.history.create({
@@ -557,9 +549,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 3,
-        user_id: BigInt(2),
+        user_id: 2n,
         timestamp: new Date("2024-01-02"), // Later timestamp
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
 
@@ -592,9 +584,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 2,
-        user_id: BigInt(1),
+        user_id: 1n,
         timestamp: new Date("2024-01-02"),
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
     await prisma.history.create({
@@ -603,10 +595,10 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 3,
-        user_id: BigInt(2),
+        user_id: 2n,
         timestamp: new Date("2024-01-01"),
         erased_at: new Date("2024-01-03"), // Marked as erased
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
 
@@ -653,9 +645,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
           x,
           y,
           color_id: 2,
-          user_id: BigInt(1),
+          user_id: 1n,
           timestamp: new Date("2024-01-01"),
-          guild_id: BigInt(1),
+          guild_id: 1n,
         },
       });
     }
@@ -690,9 +682,9 @@ describe("Restore Pixels After History Deletion Tests", () => {
         x: 0,
         y: 0,
         color_id: 2,
-        user_id: BigInt(1),
+        user_id: 1n,
         timestamp: new Date("2024-01-01"),
-        guild_id: BigInt(1),
+        guild_id: 1n,
       },
     });
 

@@ -42,7 +42,7 @@ type PixelHistoryRow = Prisma.historyGetPayload<{
   select: typeof pixelHistorySelect;
 }>;
 
-type PixelHistoryUserCountRow = {
+interface PixelHistoryUserCountRow {
   user_id: bigint;
   discord_user_profile: {
     user_id: bigint;
@@ -58,9 +58,9 @@ type PixelHistoryUserCountRow = {
   _min: {
     timestamp: Date | null;
   };
-};
+}
 
-type PixelHistoryUserColorCountRow = {
+interface PixelHistoryUserColorCountRow {
   user_id: bigint;
   color_id: number;
   discord_user_profile: {
@@ -71,7 +71,7 @@ type PixelHistoryUserColorCountRow = {
   _count: {
     _all: number;
   };
-};
+}
 
 function buildPixelHistoryWhere({
   canvasId,
@@ -134,10 +134,10 @@ function mapPixelHistoryRow(history: PixelHistoryRow) {
 }
 
 async function getPixelHistoryRows({
-  fetchData,
+  fetchParams,
   limit,
 }: {
-  fetchData: GetPixelHistoryParams;
+  fetchParams: GetPixelHistoryParams;
   limit?: number;
 }) {
   return prisma.history.findMany({
@@ -145,15 +145,15 @@ async function getPixelHistoryRows({
     orderBy: {
       timestamp: "desc",
     },
-    where: buildPixelHistoryWhere(fetchData),
+    where: buildPixelHistoryWhere(fetchParams),
     select: pixelHistorySelect,
   });
 }
 
-async function getPixelHistoryUserCounts(fetchData: GetPixelHistoryParams) {
+async function getPixelHistoryUserCounts(fetchParams: GetPixelHistoryParams) {
   const groupedRows = await prisma.history.groupBy({
     by: ["user_id"],
-    where: buildPixelHistoryWhere(fetchData),
+    where: buildPixelHistoryWhere(fetchParams),
     _count: {
       _all: true,
     },
@@ -179,22 +179,22 @@ async function getPixelHistoryUserCounts(fetchData: GetPixelHistoryParams) {
     },
   });
 
-  const profileMap = new Map(
+  const profilesByUserId = new Map(
     userProfiles.map((profile) => [profile.user_id, profile]),
   );
 
   return groupedRows.map((row) => ({
     ...row,
-    discord_user_profile: profileMap.get(row.user_id) ?? null,
+    discord_user_profile: profilesByUserId.get(row.user_id) ?? null,
   })) as PixelHistoryUserCountRow[];
 }
 
 async function getPixelHistoryUserColorCounts(
-  fetchData: GetPixelHistoryParams,
+  fetchParams: GetPixelHistoryParams,
 ) {
   const groupedRows = await prisma.history.groupBy({
     by: ["user_id", "color_id"],
-    where: buildPixelHistoryWhere(fetchData),
+    where: buildPixelHistoryWhere(fetchParams),
     _count: {
       _all: true,
     },
@@ -250,11 +250,7 @@ function buildPixelHistoryUsers(
 
   for (const colorCount of userColorCounts) {
     const userSummary = users[colorCount.user_id.toString()];
-
-    if (!userSummary) {
-      continue;
-    }
-
+    if (!userSummary) continue;
     userSummary.colors[colorCount.color_id.toString()] = colorCount._count._all;
   }
 
@@ -292,7 +288,7 @@ export async function getPixelHistorySummary(
   const normalizedPoints: [Point, Point] =
     Array.isArray(points) ? points : [points, points];
 
-  const fetchData: GetPixelHistoryParams = {
+  const fetchParams: GetPixelHistoryParams = {
     canvasId,
     points: normalizedPoints,
     dateRange,
@@ -301,19 +297,19 @@ export async function getPixelHistorySummary(
   };
 
   const pixelHistoryPromise = getPixelHistoryRows({
-    fetchData,
+    fetchParams,
     limit: 100,
   });
 
   const totalEntriesPromise = prisma.history.count({
-    where: buildPixelHistoryWhere(fetchData),
+    where: buildPixelHistoryWhere(fetchParams),
   });
 
   const summaryPromise =
     includeSummary ?
       Promise.all([
-        getPixelHistoryUserCounts(fetchData),
-        getPixelHistoryUserColorCounts(fetchData),
+        getPixelHistoryUserCounts(fetchParams),
+        getPixelHistoryUserColorCounts(fetchParams),
       ] as const)
     : Promise.resolve(null);
 
@@ -323,8 +319,7 @@ export async function getPixelHistorySummary(
     summaryPromise,
   ]);
 
-  const users =
-    summary ? buildPixelHistoryUsers(summary[0], summary[1]) : undefined;
+  const users = summary ? buildPixelHistoryUsers(...summary) : undefined;
 
   return {
     pixelHistory: pixelHistory.map(mapPixelHistoryRow),
@@ -344,20 +339,17 @@ export async function deletePixelHistoryEntries(
   shouldBlockAuthors: boolean = false,
 ): Promise<void> {
   // Validate pixels
-  const normalizedPoints: [Point, Point] =
+  const [pointTL, pointBR]: [Point, Point] =
     Array.isArray(params.points) ?
       params.points
     : [params.points, params.points];
 
-  if (
-    normalizedPoints[0].x === normalizedPoints[1].x &&
-    normalizedPoints[0].y === normalizedPoints[1].y
-  ) {
-    await validatePixel(params.canvasId, normalizedPoints[0], false);
+  if (pointTL.x === pointBR.x && pointTL.y === pointBR.y) {
+    await validatePixel(params.canvasId, pointTL, false);
   } else {
     await Promise.all([
-      validatePixel(params.canvasId, normalizedPoints[0], false),
-      validatePixel(params.canvasId, normalizedPoints[1], false),
+      validatePixel(params.canvasId, pointTL, false),
+      validatePixel(params.canvasId, pointBR, false),
     ]);
   }
 
