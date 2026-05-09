@@ -1,6 +1,6 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
 import type { NextFunction, Request, Response } from "express";
-import { ApiError, ForbiddenError } from "@/errors";
+import { ApiError, ForbiddenError, UnauthorizedError } from "@/errors";
 import {
   isCanvasAdmin,
   isCanvasModerator,
@@ -17,7 +17,7 @@ export function assertLoggedIn(
   req: Request,
 ): asserts req is AuthenticatedRequest {
   if (!req.user || !req.session.discordAccessToken) {
-    throw new ApiError("Unauthorized", 401);
+    throw new UnauthorizedError("User is not authenticated");
   }
 }
 

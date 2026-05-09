@@ -42,11 +42,14 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
   }
 });
 
+/**
+ * @privateRemarks
+ * Could become a QUERY endpoint in the future once it becomes supported
+ */
 historyRouter.post<CanvasIdParam>(
   "/",
   requireCanvasModerator,
   async (req, res) => {
-    // Could become a QUERY endpoint in the future once it becomes supported
     try {
       assertLoggedIn(req);
 
