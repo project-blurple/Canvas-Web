@@ -1259,11 +1259,14 @@ export default function CanvasView() {
       )}
       {isLoading && (
         <CanvasAnimatedIcon
-          loop
-          pattern="mixed"
-          lightColor="oklch(from var(--discord-blurple) l c h / 80%)"
-          darkColor="oklch(from var(--discord-dark-blurple) l c h / 80%)"
-          style={{ position: "absolute" }}
+          style={{
+            position: "absolute",
+            "--canvas-icon-primary":
+              "oklch(from var(--discord-blurple) l c h / 0.55)",
+            "--canvas-icon-secondary":
+              "oklch(from var(--discord-blurple) l c h / 0.35)",
+            height: "100px",
+          }}
         />
       )}
     </CanvasWrapper>
