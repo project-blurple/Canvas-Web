@@ -1,7 +1,7 @@
 import express from "express";
 import request from "supertest";
-
 import { createCanvas, editCanvas } from "@/services/canvasService";
+import { isCanvasAdmin } from "@/services/discordGuildService";
 import { canvasRouter } from "./canvas";
 
 vi.mock("@/index", () => ({
@@ -20,6 +20,11 @@ vi.mock("@/services/canvasService", () => ({
   getCurrentCanvas: vi.fn(),
   getCurrentCanvasInfo: vi.fn(),
   unlockedCanvasToPng: vi.fn(),
+}));
+
+vi.mock("@/services/discordGuildService", () => ({
+  isCanvasAdmin: vi.fn(),
+  isCanvasModerator: vi.fn(),
 }));
 
 const createApp = () => {
@@ -42,6 +47,7 @@ describe("Canvas admin route tests", () => {
   });
 
   it("creates a canvas", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
     const app = createApp();
     vi.mocked(createCanvas).mockResolvedValueOnce({
       id: 9,
@@ -86,6 +92,7 @@ describe("Canvas admin route tests", () => {
   });
 
   it("edits a canvas", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
     const app = createApp();
     vi.mocked(editCanvas).mockResolvedValueOnce({
       id: 7,

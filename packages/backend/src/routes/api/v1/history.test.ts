@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import { isCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
@@ -10,6 +11,11 @@ import { historyRouter } from "./history";
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
   getPixelHistorySummary: vi.fn(),
+}));
+
+vi.mock("@/services/discordGuildService", () => ({
+  isCanvasModerator: vi.fn(),
+  isCanvasAdmin: vi.fn(),
 }));
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
@@ -99,6 +105,7 @@ describe("History route tests", () => {
       responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
@@ -149,6 +156,7 @@ describe("History route tests", () => {
       responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
@@ -183,6 +191,7 @@ describe("History route tests", () => {
   });
 
   it("returns 400 when both includeColors and excludeColors are provided", async () => {
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true, moderator: true });
 
     const response = await request(app)
@@ -202,6 +211,7 @@ describe("History route tests", () => {
   });
 
   it("deletes history entries for a moderator", async () => {
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true, moderator: true });
     vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
 
@@ -243,7 +253,7 @@ describe("History route tests", () => {
   it("returns 403 when deleting history without moderator permissions", async () => {
     const app = createApp({ authenticated: true, moderator: false });
     vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
-
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
       .set("X-TestUserId", "1")
