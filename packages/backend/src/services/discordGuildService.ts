@@ -130,7 +130,7 @@ export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRolesInGuild({ guildId, roleIds: [roleId], accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds: [roleId], accessToken });
 }
 
 export async function isCanvasModerator(accessToken: string): Promise<boolean> {
@@ -144,7 +144,7 @@ export async function isCanvasModerator(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRolesInGuild({ guildId, roleIds, accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds, accessToken });
 }
 
 export async function getCurrentUserGuildFlags(
