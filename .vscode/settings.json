@@ -1,19 +1,19 @@
 {
   "cSpell.caseSensitive": false,
-  "cSpell.enabledLanguageIds": [
-    "css",
-    "html",
-    "javascript",
-    "javascriptreact",
-    "markdown",
-    "plaintext",
-    "shellscript",
-    "sql",
-    "text",
-    "typescript",
-    "typescriptreact",
-    "yaml"
-  ],
+  "cSpell.enabledFileTypes": {
+    "css": true,
+    "html": true,
+    "javascript": true,
+    "javascriptreact": true,
+    "markdown": true,
+    "plaintext": true,
+    "shellscript": true,
+    "sql": true,
+    "text": true,
+    "typescript": true,
+    "typescriptreact": true,
+    "yaml": true
+  },
   "cSpell.language": "en-US",
   "cSpell.overrides": [
     {
