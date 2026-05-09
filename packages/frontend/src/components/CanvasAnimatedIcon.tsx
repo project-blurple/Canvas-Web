@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
 import { styled } from "@mui/material";
+import type { CSSProperties } from "react";
 
 interface CanvasAnimatedIconStyle extends CSSProperties {
   "--canvas-icon-primary"?: string;
@@ -101,7 +101,7 @@ export interface CanvasAnimatedIconProps {
 export default function CanvasAnimatedIcon({ style }: CanvasAnimatedIconProps) {
   return (
     <StyledWrapper style={style}>
-      <StyledSvg aria-label="Loading" role="progress" viewBox="0 0 96 96">
+      <StyledSvg aria-label="Loading" role="progressbar" viewBox="0 0 96 96">
         {SQUARES.map(({ index, x, y, tone, delayMs }) => (
           <StyledSquare
             key={index}
