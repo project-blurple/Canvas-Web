@@ -19,6 +19,7 @@ const CoordinateInputWrapper = styled("div")`
   flex-direction: row;
   gap: 0.5rem;
   width: 100%;
+  justify-content: center;
 `;
 
 interface ComplexSearchBoundsSelectProps {
@@ -114,7 +115,8 @@ export default function ComplexSearchBoundsSelect({
           disabled={disabled}
         />
       </CoordinateInputWrapper>
-      <Scan />
+      <Scan size={24} />
+      {/* ^^ Potentially might make this a dropdown to select Frames in the future*/}
       <CoordinateInputWrapper>
         <NumberField
           label={

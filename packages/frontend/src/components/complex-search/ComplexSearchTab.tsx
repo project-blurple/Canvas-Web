@@ -19,6 +19,7 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
+import type { ViewBounds } from "@/util";
 import { durationFormat } from "@/util";
 import {
   ComplexSearchBoundsSelect,
@@ -64,6 +65,18 @@ const EraseWrapper = styled("div")`
   flex-direction: column;
   gap: 0.5rem;
 `;
+
+function areBoundsValid(bounds: ViewBounds | null): boolean {
+  if (!bounds) return false;
+
+  const width = bounds.right - bounds.left;
+  const height = bounds.bottom - bounds.top;
+
+  return (
+    width >= COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width &&
+    height >= COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+  );
+}
 
 export type SearchFilterMode = "include" | "exclude";
 
@@ -173,7 +186,8 @@ export default function ComplexSearchTab({
       (selectedBounds.bottom - selectedBounds.top)
     : 0;
 
-  const disabled = !selectedBounds || historyQuery.isLoading;
+  const boundsValid = areBoundsValid(selectedBounds);
+  const isLoading = historyQuery.isLoading;
 
   const entriesCount = historyData?.totalEntries ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
@@ -257,7 +271,7 @@ export default function ComplexSearchTab({
                 canvas={canvas}
                 selectedBounds={selectedBounds}
                 setSelectedBounds={setSelectedBounds}
-                disabled={disabled}
+                disabled={isLoading}
               />
               <ComplexSearchColorSelect
                 palette={palette}
@@ -265,7 +279,7 @@ export default function ComplexSearchTab({
                 filterMode={colorFilterMode}
                 onChange={setSelectedColorIds}
                 onFilterModeChange={setColorFilterMode}
-                disabled={disabled}
+                disabled={isLoading}
               />
               <ComplexSearchUserSelect
                 historyData={historyData}
@@ -273,19 +287,16 @@ export default function ComplexSearchTab({
                 filterMode={userFilterMode}
                 onChange={setSelectedUserIds}
                 onFilterModeChange={setUserFilterMode}
-                disabled={disabled}
+                disabled={isLoading}
               />
               <ComplexSearchDateSelect
                 fromTime={fromTime}
                 toTime={toTime}
                 setFromTime={setFromTime}
                 setToTime={setToTime}
-                disabled={disabled}
+                disabled={isLoading}
               />
-              <DynamicButton
-                type="submit"
-                disabled={!selectedBounds || historyQuery.isLoading}
-              >
+              <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
                 {!historyQuery.isLoading ?
                   `Search (${pixelsInBounds.toLocaleString()} pixels)`
                 : "Searching..."}
