@@ -49,7 +49,7 @@ const Tab = GenericTab<TabKey>;
 
 function ModerationDashboardActionPanel() {
   const [currentTab, setCurrentTab] = useState("search");
-  const [areTabsLocked, _setAreTabsLocked] = useState(false);
+  const [areTabsLocked] = useState(false);
 
   const { resetSelectedBounds, setShowSelectedBounds } =
     useSelectedBoundsContext();

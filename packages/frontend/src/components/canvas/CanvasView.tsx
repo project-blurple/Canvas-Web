@@ -332,6 +332,10 @@ function clampZoom(zoom: number, initialZoom: number) {
   return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
 }
 
+function stopEventPropagation(event: React.SyntheticEvent) {
+  event.stopPropagation();
+}
+
 interface CanvasTargetView {
   targetZoom: number;
   offset: Point;
@@ -491,6 +495,7 @@ export default function CanvasView({
   showNotices = true,
   showReticle = true,
 }: CanvasViewProps) {
+
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
@@ -1297,10 +1302,10 @@ export default function CanvasView({
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay
-          onPointerDown={(event) => event.stopPropagation()}
-          onPointerMove={(event) => event.stopPropagation()}
-          onPointerUp={(event) => event.stopPropagation()}
-          onWheelCapture={(event) => event.stopPropagation()}
+          onPointerDown={stopEventPropagation}
+          onPointerMove={stopEventPropagation}
+          onPointerUp={stopEventPropagation}
+          onWheelCapture={stopEventPropagation}
         >
           {actionPanel}
         </FullscreenPanelOverlay>

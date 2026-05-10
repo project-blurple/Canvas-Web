@@ -37,6 +37,10 @@ const Form = styled("form")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  > :first-child {
+    margin-top: 0;
+  }
 `;
 
 const SummaryGrid = styled("div")`

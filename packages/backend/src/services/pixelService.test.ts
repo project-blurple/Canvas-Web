@@ -9,8 +9,8 @@ import seedAll, {
   seedEvents,
   seedUsers,
 } from "@/test";
-
 import { getCanvasPng } from "./canvasService";
+import { createDefaultAvatarUrl } from "./discordProfileService";
 import {
   getCooldown,
   placePixel,
@@ -346,12 +346,12 @@ describe("Restore Pixels After History Deletion Tests", () => {
         {
           user_id: 1n,
           username: "User1",
-          profile_picture_url: "https://example.com/1.png",
+          profile_picture_url: createDefaultAvatarUrl(1n),
         },
         {
           user_id: 2n,
           username: "User2",
-          profile_picture_url: "https://example.com/2.png",
+          profile_picture_url: createDefaultAvatarUrl(2n),
         },
       ],
     });
@@ -373,7 +373,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
           id: 1,
           code: "blank",
           emoji_name: "pl_blank",
-          emoji_id: BigInt("540761786484391957"),
+          emoji_id: 540761786484391957n,
           global: true,
           name: "Blank",
           rgba: [88, 101, 242, 127],
@@ -382,7 +382,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
           id: 2,
           code: "red",
           emoji_name: "pl_red",
-          emoji_id: BigInt("572564652559564810"),
+          emoji_id: 572564652559564810n,
           global: true,
           name: "Red",
           rgba: [234, 35, 40, 255],
@@ -391,7 +391,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
           id: 3,
           code: "blue",
           emoji_name: "pl_blue",
-          emoji_id: BigInt("840064486374637608"),
+          emoji_id: 840064486374637608n,
           global: true,
           name: "Blue",
           rgba: [0, 90, 166, 255],
@@ -434,6 +434,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
 
+    expect(restored).not.toBeNull();
     expect(restored?.color_id).toBe(2);
   });
 
@@ -456,6 +457,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
 
+    expect(restored).not.toBeNull();
     expect(restored?.color_id).toBe(1); // BLANK_PIXEL_COLOR_ID
   });
 
@@ -504,8 +506,11 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     expect(restored).toHaveLength(3);
+    expect(restored[0]).not.toBeNull();
     expect(restored[0]).toMatchObject({ x: 0, y: 0, color_id: 2 });
+    expect(restored[1]).not.toBeNull();
     expect(restored[1]).toMatchObject({ x: 0, y: 1, color_id: 3 });
+    expect(restored[2]).not.toBeNull();
     expect(restored[2]).toMatchObject({ x: 1, y: 0, color_id: 2 });
   });
 
@@ -524,6 +529,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     const pixel = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
+    expect(pixel).not.toBeNull();
     expect(pixel?.color_id).toBe(2);
   });
 
@@ -570,6 +576,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
 
+    expect(restored).not.toBeNull();
     expect(restored?.color_id).toBe(3); // Should be color from latest history
   });
 
@@ -617,10 +624,117 @@ describe("Restore Pixels After History Deletion Tests", () => {
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
 
+    expect(restored).not.toBeNull();
     expect(restored?.color_id).toBe(2); // Should be non-erased entry
   });
 
-  it("Handles chunking correctly for large coordinate sets", async () => {
+  it("Handles chunking correctly for exactly chunk size (500)", async () => {
+    // Create exactly 500 coordinates (at default chunk size boundary)
+    const coords = [];
+    for (let i = 0; i < 500; i++) {
+      coords.push({
+        x: i % 2,
+        y: Math.floor(i / 2),
+      });
+    }
+
+    // Extend canvas to fit
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { height: 250 },
+    });
+
+    // Create pixels and history
+    for (const { x, y } of coords) {
+      await prisma.pixel.create({
+        data: { canvas_id: 1, x, y, color_id: 2 },
+      });
+      await prisma.history.create({
+        data: {
+          canvas_id: 1,
+          x,
+          y,
+          color_id: 2,
+          user_id: 1n,
+          timestamp: new Date("2024-01-01"),
+          guild_id: 1n,
+        },
+      });
+    }
+
+    // Change all to color 3
+    for (const { x, y } of coords) {
+      await prisma.pixel.update({
+        where: { canvas_id_x_y: { canvas_id: 1, x, y } },
+        data: { color_id: 3 },
+      });
+    }
+
+    // Restore all at once - should handle single chunk correctly
+    await restorePixelsAfterHistoryDeletion(1, coords);
+
+    // Verify all were restored
+    const restored = await prisma.pixel.findMany({
+      where: { canvas_id: 1, color_id: 2 },
+    });
+
+    expect(restored).toHaveLength(500);
+  });
+
+  it("Handles chunking correctly for just below chunk size (499)", async () => {
+    // Create 499 coordinates (just below default chunk size of 500)
+    const coords = [];
+    for (let i = 0; i < 499; i++) {
+      coords.push({
+        x: i % 2,
+        y: Math.floor(i / 2),
+      });
+    }
+
+    // Extend canvas to fit
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { height: 250 },
+    });
+
+    // Create pixels and history
+    for (const { x, y } of coords) {
+      await prisma.pixel.create({
+        data: { canvas_id: 1, x, y, color_id: 2 },
+      });
+      await prisma.history.create({
+        data: {
+          canvas_id: 1,
+          x,
+          y,
+          color_id: 2,
+          user_id: 1n,
+          timestamp: new Date("2024-01-01"),
+          guild_id: 1n,
+        },
+      });
+    }
+
+    // Change all to color 3
+    for (const { x, y } of coords) {
+      await prisma.pixel.update({
+        where: { canvas_id_x_y: { canvas_id: 1, x, y } },
+        data: { color_id: 3 },
+      });
+    }
+
+    // Restore all at once - should handle single chunk correctly
+    await restorePixelsAfterHistoryDeletion(1, coords);
+
+    // Verify all were restored
+    const restored = await prisma.pixel.findMany({
+      where: { canvas_id: 1, color_id: 2 },
+    });
+
+    expect(restored).toHaveLength(499);
+  });
+
+  it("Handles chunking correctly for above chunk size (501)", async () => {
     // Create 501 coordinates (more than default chunk size of 500)
     const coords = [];
     for (let i = 0; i < 501; i++) {
@@ -707,6 +821,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
     });
 
+    expect(restored).not.toBeNull();
     expect(restored?.color_id).toBe(2);
   });
 });
