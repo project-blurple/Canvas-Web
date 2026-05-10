@@ -1,4 +1,4 @@
-import type { Palette, PaletteColor } from "@/palette";
+import type { Palette, PaletteColor } from "../palette";
 
 export interface Params {
   eventId: PaletteColor["id"];

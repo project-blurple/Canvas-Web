@@ -1,4 +1,4 @@
-import type { PixelHistory } from "@/pixelHistory";
+import type { PixelHistory } from "../pixelHistory";
 
 export interface Params {
   canvasId: number;

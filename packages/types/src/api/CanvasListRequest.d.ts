@@ -1,4 +1,4 @@
-import type { CanvasSummary } from "@/canvasInfo";
+import type { CanvasSummary } from "../canvasInfo";
 
 export type Params = Record<string, never>;
 export type ResBody = CanvasSummary[];
