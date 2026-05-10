@@ -1,5 +1,6 @@
+import type { CanvasInfo } from "@/canvasInfo";
 import type { Cooldown } from "@/cooldown";
-import type { CanvasInfo, PixelInfo } from "..";
+import type { PixelInfo } from "@/pixelInfo";
 
 export interface Params {
   canvasId: CanvasInfo["id"];

@@ -1,4 +1,6 @@
-import type { CanvasSummary, LeaderboardEntry, Paginated } from "..";
+import type { CanvasSummary } from "@/canvasInfo";
+import type { Paginated } from "@/pagination";
+import type { LeaderboardEntry } from "@/statistics";
 
 export interface Params {
   canvasId: CanvasSummary["id"];
