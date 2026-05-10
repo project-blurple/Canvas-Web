@@ -1,4 +1,4 @@
-import { CanvasInfo } from "..";
+import type { CanvasInfo } from "../canvasInfo";
 
 export interface Params {
   canvasId: CanvasInfo["id"];

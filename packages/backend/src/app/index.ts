@@ -6,7 +6,7 @@ import { apiRouter } from "@/routes";
 import "@/utils";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { initializeAuth } from "@/middleware/auth";
+import { initializeAuth } from "@/middleware/discordAuth";
 import { initializeCache } from "@/services/canvasService";
 import { SocketHandler } from "./SocketHandler";
 

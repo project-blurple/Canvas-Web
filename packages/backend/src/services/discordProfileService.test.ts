@@ -92,7 +92,7 @@ describe("discordProfileService", () => {
   describe("saveDiscordProfile", () => {
     it("should save the discord profile for a given user ID, username, and profile picture URL", async () => {
       const id = "228441721246056449";
-      const username = "jasperlai";
+      const username = "rocked03";
       const profilePictureUrl =
         "https://cdn.discordapp.com/avatars/228441721246056449/67384b584aa7b9145ebb4028ff697931.png";
 
@@ -104,7 +104,7 @@ describe("discordProfileService", () => {
 
       expect(savedProfile).toEqual({
         user_id: 228441721246056449n,
-        username: "jasperlai",
+        username: "rocked03",
         profile_picture_url:
           "https://cdn.discordapp.com/avatars/228441721246056449/67384b584aa7b9145ebb4028ff697931.png",
       });

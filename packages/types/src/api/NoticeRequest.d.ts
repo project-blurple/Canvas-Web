@@ -1,3 +1,3 @@
-import type { Notice } from "@/notice";
+import type { Notice } from "../notice";
 
 export type NoticeResBody = Notice[];

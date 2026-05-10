@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ApiError, BadRequestError } from "@/errors";
+import { ApiError } from "@/errors";
 import { parseCanvasId } from "@/models/canvas.models";
 import { LeaderboardQueryModel } from "@/models/pixel.models";
 import { getLeaderboard, getUserStats } from "@/services/statisticsService";

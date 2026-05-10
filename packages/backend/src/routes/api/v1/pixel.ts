@@ -1,12 +1,7 @@
 import type { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
-import {
-  ApiError,
-  BadRequestError,
-  ForbiddenError,
-  UnauthorizedError,
-} from "@/errors";
+import { ApiError, ForbiddenError, UnauthorizedError } from "@/errors";
 import { socketHandler } from "@/index";
 import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import { type CanvasIdParam, parseCanvasId } from "@/models/canvas.models";
