@@ -18,12 +18,12 @@ import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
 
-const StyledDialog = styled(Dialog)(() => ({
-  "& .MuiDialog-paper": {
-    boxShadow: "none",
-    backgroundImage: "none",
-  },
-}));
+const StyledDialog = styled(Dialog)`
+  & .MuiDialog-paper {
+    box-shadow: none;
+    background-image: none;
+  }
+`;
 
 interface ComplexSearchEraseHistoryProps {
   entriesCount: number;
@@ -45,13 +45,8 @@ export default function ComplexSearchEraseHistory({
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
 
   async function performErase() {
-    try {
-      await eraseHistoryMutation.mutateAsync();
-      resetResults();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to erase history");
-    }
+    await eraseHistoryMutation.mutateAsync();
+    resetResults();
   }
 
   const invalidateHistoryQueries = async () => {
@@ -63,7 +58,7 @@ export default function ComplexSearchEraseHistory({
 
   const eraseHistoryMutation = useMutation({
     mutationFn: async () => {
-      const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel/history`;
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel/history`;
 
       const body = {
         x0: query.point0.x,
@@ -129,10 +124,9 @@ export default function ComplexSearchEraseHistory({
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="erase-history-dialog-description">
-            This will <em>permanently</em> delete{" "}
-            {entriesCount.toLocaleString()} history{" "}
-            {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you want to
-            continue?
+            Delete
+            {entriesCount.toLocaleString()} history&nbsp;
+            {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
           </DialogContentText>
           <FormControlLabel
             control={
@@ -142,7 +136,7 @@ export default function ComplexSearchEraseHistory({
                 onChange={() => setBlockWhileErase(!blockWhileErase)}
               />
             }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
+            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
             disabled={entriesCount === 0}
           />
         </DialogContent>

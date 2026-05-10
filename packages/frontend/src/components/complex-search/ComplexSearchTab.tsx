@@ -19,6 +19,7 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
+import { durationFormat } from "@/util";
 import {
   ComplexSearchBoundsSelect,
   ComplexSearchColorSelect,
@@ -62,11 +63,9 @@ const EraseWrapper = styled("div")`
 
 export type SearchFilterMode = "include" | "exclude";
 
-interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
-  typeof ComplexSearchTabBlock
-> {}
-
-export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
+export default function ComplexSearchTab({
+  ...props
+}: React.ComponentPropsWithoutRef<typeof ComplexSearchTabBlock>) {
   const {
     setCanEdit,
     selectedBounds,
@@ -79,7 +78,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
-  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
+  const [selectedColorIds, setSelectedColorIds] = useState<number[]>([]);
   const [colorFilterMode, setColorFilterMode] =
     useState<SearchFilterMode>("include");
 
@@ -195,11 +194,11 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         const errorText: Record<string, [string, string]> = {
           401: [
             "Unauthorized",
-            "You don't have permission to perform this search. How'd you get here?",
+            "You don’t have permission to perform this search. How’d you get here?",
           ],
           500: [
             "Server error",
-            "Something went wrong on our end while processing this search.",
+            "Something went wrong on our end while processing this search",
           ],
         };
 
@@ -226,7 +225,11 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               </SummaryCard>
               <SummaryCard>
                 <strong>Query duration</strong>
-                <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
+                <span>
+                  {durationFormat?.format({
+                    milliseconds: historyQuery.lastDurationMs ?? 0,
+                  })}
+                </span>
               </SummaryCard>
               <SummaryCard>
                 <strong>Users</strong>

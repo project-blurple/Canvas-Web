@@ -64,9 +64,9 @@ const ToggleFilterModeButton = styled(DynamicButton)`
 
 interface ComplexSearchColorSelectProps {
   palette: Palette;
-  value: string[];
+  value: number[];
   filterMode: SearchFilterMode;
-  onChange: (value: string[]) => void;
+  onChange: (value: number[]) => void;
   onFilterModeChange: (mode: SearchFilterMode) => void;
   disabled: boolean;
 }
@@ -79,7 +79,7 @@ export default function ComplexSearchColorSelect({
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
-  const sortedPalette = [...palette].sort((a, b) =>
+  const sortedPalette = palette.toSorted((a, b) =>
     a.global === b.global ? 0
     : a.global ? -1
     : 1,
@@ -92,13 +92,13 @@ export default function ComplexSearchColorSelect({
     _event: React.SyntheticEvent,
     newValues: Palette[number][],
   ) {
-    onChange(newValues.map((c) => String(c.id)));
+    onChange(newValues.map((c) => c.id));
   }
 
   // map selected ids to palette objects (may be undefined for stale ids)
   const selectedOptions = value
-    .map((id) => paletteById[Number(id)])
-    .filter((c): c is Palette[number] => !!c);
+    .map((id) => paletteById[id])
+    .filter((c): c is Palette[number] => c !== undefined);
 
   const label = `Colors to ${filterMode}`;
 

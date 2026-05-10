@@ -33,6 +33,7 @@ import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
+import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
@@ -473,7 +474,10 @@ function getViewForFrame({
 }
 
 interface CanvasViewProps {
-  actionPanel?: React.ReactNode;
+  actionPanel?: React.ReactElement<
+    React.ComponentProps<typeof ActionPanel>,
+    typeof ActionPanel
+  >;
   canvasLabel?: string;
   showInvite?: boolean;
   showNotices?: boolean;

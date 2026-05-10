@@ -46,7 +46,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-export function partitionPalette(palette: Palette): [Palette, Palette] {
+export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
@@ -75,7 +75,7 @@ export default function PlacePixelTab({
 }: PlacePixelTabProps) {
   const { data: palette } = usePalette(eventId ?? undefined);
   const [mainColors, partnerColors] = useMemo(
-    () => (palette !== undefined ? partitionPalette(palette) : []),
+    () => (palette !== undefined ? partitionPaletteByOwner(palette) : []),
     [palette],
   );
   // Boolean to hide certain elements when the tab is too small

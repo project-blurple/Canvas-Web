@@ -60,7 +60,11 @@ export default function ComplexSearchBoundsSelect({
     <CoordinateRangeWrapper>
       <CoordinateInputWrapper>
         <NumberField
-          label="Left (x)"
+          label={
+            <>
+              Left (<var>x</var>)
+            </>
+          }
           value={displayBounds?.left ?? startX}
           min={startX}
           max={
@@ -72,8 +76,7 @@ export default function ComplexSearchBoundsSelect({
           }
           size="small"
           onValueChange={(value: number | null) => {
-            if (!selectedBounds) return;
-            if (value === null) return;
+            if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
@@ -84,7 +87,11 @@ export default function ComplexSearchBoundsSelect({
           disabled={disabled}
         />
         <NumberField
-          label="Top (y)"
+          label={
+            <>
+              Top (<var>y</var>)
+            </>
+          }
           value={displayBounds?.top ?? startY}
           min={startY}
           max={
@@ -96,8 +103,7 @@ export default function ComplexSearchBoundsSelect({
           }
           size="small"
           onValueChange={(value: number | null) => {
-            if (!selectedBounds) return;
-            if (value === null) return;
+            if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
@@ -111,7 +117,11 @@ export default function ComplexSearchBoundsSelect({
       <Scan />
       <CoordinateInputWrapper>
         <NumberField
-          label="Right (x)"
+          label={
+            <>
+              Right (<var>x</var>)
+            </>
+          }
           value={displayBounds?.right ?? startX}
           min={
             selectedBounds?.left != null ?
@@ -123,8 +133,7 @@ export default function ComplexSearchBoundsSelect({
           max={canvas.width + startX}
           size="small"
           onValueChange={(value: number | null) => {
-            if (!selectedBounds) return;
-            if (value === null) return;
+            if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
@@ -135,7 +144,11 @@ export default function ComplexSearchBoundsSelect({
           disabled={disabled}
         />
         <NumberField
-          label="Bottom (y)"
+          label={
+            <>
+              Bottom (<var>y</var>)
+            </>
+          }
           value={displayBounds?.bottom ?? startY}
           min={
             selectedBounds?.top != null ?
@@ -147,8 +160,7 @@ export default function ComplexSearchBoundsSelect({
           max={canvas.height + startY}
           size="small"
           onValueChange={(value: number | null) => {
-            if (!selectedBounds) return;
-            if (value === null) return;
+            if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,

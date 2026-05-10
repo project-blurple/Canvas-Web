@@ -14,6 +14,7 @@ import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { Button } from "./Button";
 import ButtonSupplement from "./ButtonSupplement";
 import DynamicButton from "./DynamicButton";
+import { durationFormat } from "@/util";
 
 const Time = styled("time")`
   font-variant-numeric: tabular-nums;
@@ -22,11 +23,6 @@ const Time = styled("time")`
 interface PlacePixelButtonProps {
   isVerbose: boolean;
 }
-
-const durationFormat =
-  "DurationFormat" in Intl ?
-    new Intl.DurationFormat("en-US", { style: "narrow" })
-  : undefined;
 
 export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
   const { canvas } = useCanvasContext();

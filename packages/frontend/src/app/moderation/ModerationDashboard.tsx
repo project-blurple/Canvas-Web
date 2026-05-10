@@ -66,11 +66,7 @@ function ModerationDashboardActionPanel() {
   const onSwitchTab = (newTab: TabKey) => {
     if (areTabsLocked) return;
 
-    if (currentTab === "search" && newTab !== "search") {
-      setShowSelectedBounds(false);
-    } else {
-      setShowSelectedBounds(true);
-    }
+    setShowSelectedBounds(!(currentTab === "search" && newTab !== "search"));
 
     setCurrentTab(newTab);
   };

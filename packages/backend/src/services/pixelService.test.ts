@@ -10,12 +10,6 @@ import seedAll, {
   seedUsers,
 } from "@/test";
 
-vi.mock("@/index", () => ({
-  socketHandler: {
-    broadcastPixelPlacement: vi.fn(),
-  },
-}));
-
 import { getCanvasPng } from "./canvasService";
 import {
   getCooldown,
@@ -25,6 +19,14 @@ import {
   validatePixel,
   validateUser,
 } from "./pixelService";
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
+
+const thirtySeconds = 30 * 1000;
 
 describe("Pixel Validation Tests", () => {
   beforeEach(async () => {
@@ -150,7 +152,7 @@ describe("Get Cooldown Tests", () => {
   it("Resolves user with no entry in cooldown table", async () => {
     return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
       currentCooldown: null,
-      futureCooldown: new Date(Date.now() + 30 * 1000),
+      futureCooldown: new Date(Date.now() + thirtySeconds),
     });
   });
 
@@ -161,7 +163,7 @@ describe("Get Cooldown Tests", () => {
     });
     return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
       currentCooldown: null,
-      futureCooldown: new Date(Date.now() + 30 * 1000),
+      futureCooldown: new Date(Date.now() + thirtySeconds),
     });
   });
 
@@ -173,10 +175,10 @@ describe("Get Cooldown Tests", () => {
         cooldown_time: new Date(),
       },
     });
-    vi.advanceTimersByTime(30 * 1000);
+    vi.advanceTimersByTime(thirtySeconds);
     return expect(getCooldown(1, 1n, new Date())).resolves.toMatchObject({
-      currentCooldown: new Date(Date.now() - 30 * 1000),
-      futureCooldown: new Date(Date.now() + 30 * 1000),
+      currentCooldown: new Date(Date.now() - thirtySeconds),
+      futureCooldown: new Date(Date.now() + thirtySeconds),
     });
   });
 
@@ -212,7 +214,7 @@ describe("Place Pixel Tests", () => {
     );
     const before = await fetchCooldownPixelHistory(canvasId, userId, 1, 1);
     // Current implementation will reject if currentCooldown and futureCooldown are equal
-    vi.advanceTimersByTime(30 * 1000 + 1);
+    vi.advanceTimersByTime(thirtySeconds + 1);
     await placePixel(
       canvasId,
       userId,
