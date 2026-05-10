@@ -1,7 +1,7 @@
 "use client";
 
 import type { Palette } from "@blurple-canvas-web/types";
-import { Autocomplete, Chip, styled, TextField } from "@mui/material";
+import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type * as React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
@@ -16,13 +16,18 @@ const SelectedColorChips = styled("div")`
 export const ColorSelectChip = styled(Chip, {
   shouldForwardProp: (prop) => prop !== "backgroundColorStr",
 })<{ backgroundColorStr?: string }>`
-  background-color: ${({ backgroundColorStr }) =>
-    backgroundColorStr ?? "var(--discord-blurple)"};
+  --color-select-chip-color: var(--discord-blurple);
+  ${({ backgroundColorStr }) =>
+    backgroundColorStr &&
+    css`
+      --color-select-chip-color: ${backgroundColorStr};
+    `}
+
+  background-color: var(--color-select-chip-color);
   font-weight: 600;
 
   & .MuiChip-label {
-    color: ${({ backgroundColorStr }) =>
-      backgroundColorStr ?? "var(--discord-blurple)"};
+    color: var(--color-select-chip-color);
     transition:
       color var(--transition-duration-fast) ease,
       filter var(--transition-duration-fast) ease;
@@ -32,13 +37,8 @@ export const ColorSelectChip = styled(Chip, {
     & .MuiChip-label {
       color: color-mix(
         in oklab,
-        contrast-color(
-            ${({ backgroundColorStr }) =>
-              backgroundColorStr ?? "var(--discord-blurple)"}
-          )
-          94%,
-        ${({ backgroundColorStr }) =>
-          backgroundColorStr ?? "var(--discord-blurple)"}
+        contrast-color(var(--color-select-chip-color)) 94%,
+        var(--color-select-chip-color)
       );
     }
   }

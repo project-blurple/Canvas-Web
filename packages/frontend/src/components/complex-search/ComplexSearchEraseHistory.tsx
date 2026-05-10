@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DynamicButton } from "@/components/button";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
@@ -41,23 +41,11 @@ export default function ComplexSearchEraseHistory({
   const { canvas } = useCanvasContext();
   const queryClient = useQueryClient();
 
-  const [blockWhileErase, setBlockWhileErase] = useState(false);
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
-
-  async function performErase() {
-    await eraseHistoryMutation.mutateAsync();
-    resetResults();
-  }
-
-  const invalidateHistoryQueries = async () => {
-    queryClient.invalidateQueries({
-      queryKey: ["complexPixelHistory", canvas.id],
-      // Erasing all complex searches for the canvas - we don't know what previous queries are also invalidated, so we just invalidate them all to be safe
-    });
-  };
+  const blockWhileEraseRef = useRef<HTMLInputElement>(null);
 
   const eraseHistoryMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (shouldBlockAuthors: boolean) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel/history`;
 
       const body = {
@@ -73,7 +61,7 @@ export default function ComplexSearchEraseHistory({
         ...(query.excludeUserIds && { excludeUserIds: query.excludeUserIds }),
         ...(query.includeColors && { includeColors: query.includeColors }),
         ...(query.excludeColors && { excludeColors: query.excludeColors }),
-        shouldBlockAuthors: blockWhileErase,
+        shouldBlockAuthors,
       };
 
       await axios.delete(requestUrl, {
@@ -84,15 +72,30 @@ export default function ComplexSearchEraseHistory({
     onSuccess: invalidateHistoryQueries,
   });
 
+  const { mutateAsync: eraseHistory } = eraseHistoryMutation;
+
+  async function performErase(shouldBlockAuthors: boolean) {
+    await eraseHistory(shouldBlockAuthors);
+    resetResults();
+  }
+
+  async function invalidateHistoryQueries() {
+    queryClient.invalidateQueries({
+      queryKey: ["complexPixelHistory", canvas.id],
+      // Erasing all complex searches for the canvas - we don't know what previous queries are also invalidated, so we just invalidate them all to be safe
+    });
+  }
+
   function handleEraseHistory() {
     setIsEraseConfirmOpen(true);
   }
 
   async function handleConfirmErase() {
     setIsEraseConfirmOpen(false);
+    const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
     try {
-      await performErase();
+      await performErase(shouldBlockAuthors);
     } catch (error) {
       console.error(error);
       alert("Failed to erase history");
@@ -132,8 +135,12 @@ export default function ComplexSearchEraseHistory({
             control={
               <Checkbox
                 size="small"
-                checked={blockWhileErase}
-                onChange={() => setBlockWhileErase(!blockWhileErase)}
+                defaultChecked={false}
+                slotProps={{
+                  input: {
+                    ref: blockWhileEraseRef,
+                  },
+                }}
               />
             }
             label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
