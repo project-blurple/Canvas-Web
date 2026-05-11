@@ -92,6 +92,24 @@ interface PixelHistoryUserColorCountRawResult {
   profile_picture_url: string | null;
 }
 
+interface PixelHistoryRowRawResultWithCount {
+  id: bigint;
+  color_id: number;
+  timestamp: Date;
+  guild_id: bigint | null;
+  user_id: bigint;
+  color_code: string;
+  color_name: string;
+  color_rgba: number[];
+  color_emoji_name: string | null;
+  color_emoji_id: bigint | null;
+  color_global: boolean;
+  profile_user_id: bigint | null;
+  username: string | null;
+  profile_picture_url: string;
+  total_count: bigint;
+}
+
 function buildPixelHistoryWhere({
   canvasId,
   points,
@@ -152,21 +170,85 @@ function mapPixelHistoryRow(history: PixelHistoryRow) {
   };
 }
 
-async function getPixelHistoryRows({
+/**
+ * Gets paginated pixel history rows with total count using a window function.
+ * Uses a single SQL query instead of separate findMany() + count() calls.
+ */
+async function getPixelHistoryRowsWithCount({
   fetchParams,
   limit,
 }: {
   fetchParams: GetPixelHistoryParams;
   limit?: number;
-}) {
-  return prisma.history.findMany({
-    take: limit,
-    orderBy: {
-      timestamp: "desc",
+}): Promise<{ rows: PixelHistoryRow[]; totalCount: number }> {
+  const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
+
+  // Combine fragments with AND
+  let whereSQL: Prisma.Sql;
+  if (whereFragments.length === 0) {
+    whereSQL = Prisma.sql`TRUE`;
+  } else {
+    const [first, ...rest] = whereFragments;
+    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
+  }
+
+  const results = await prisma.$queryRaw<PixelHistoryRowRawResultWithCount[]>`
+    SELECT
+      h.id,
+      h.color_id,
+      h.timestamp,
+      h.guild_id,
+      h.user_id,
+      c.code as color_code,
+      c.name as color_name,
+      c.rgba as color_rgba,
+      c.emoji_name as color_emoji_name,
+      c.emoji_id as color_emoji_id,
+      c.global as color_global,
+      p.user_id as profile_user_id,
+      p.username,
+      p.profile_picture_url,
+      COUNT(*) OVER() as total_count
+    FROM history h
+    INNER JOIN color c ON c.id = h.color_id
+    LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
+    WHERE ${whereSQL}
+    ORDER BY h.timestamp DESC
+    LIMIT ${limit ?? 100}
+  `;
+
+  let totalCount = 0;
+  if (results.length > 0) {
+    const [first] = results;
+    totalCount = Number(first.total_count);
+  }
+
+  // Map raw results to PixelHistoryRow shape with profile object
+  const rows: PixelHistoryRow[] = results.map((row) => ({
+    id: row.id,
+    color: {
+      id: row.color_id,
+      code: row.color_code,
+      name: row.color_name,
+      rgba: row.color_rgba,
+      emoji_name: row.color_emoji_name,
+      emoji_id: row.color_emoji_id,
+      global: row.color_global,
     },
-    where: buildPixelHistoryWhere(fetchParams),
-    select: pixelHistorySelect,
-  });
+    timestamp: row.timestamp,
+    guild_id: row.guild_id,
+    user_id: row.user_id,
+    discord_user_profile:
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
+  }));
+
+  return { rows, totalCount };
 }
 
 /**
@@ -176,8 +258,9 @@ async function getPixelHistoryRows({
 function buildPixelHistoryWhereSQL(
   params: GetPixelHistoryParams,
 ): Prisma.Sql[] {
-  const points = Array.isArray(params.points)
-    ? params.points
+  const points =
+    Array.isArray(params.points) ?
+      params.points
     : [params.points, params.points];
 
   const fragments: Prisma.Sql[] = [
@@ -214,7 +297,9 @@ function buildPixelHistoryWhereSQL(
   // Color ID filter
   if (params.colorFilter) {
     if (params.colorFilter.include) {
-      fragments.push(Prisma.sql`h.color_id = ANY(${params.colorFilter.colors})`);
+      fragments.push(
+        Prisma.sql`h.color_id = ANY(${params.colorFilter.colors})`,
+      );
     } else {
       fragments.push(
         Prisma.sql`NOT (h.color_id = ANY(${params.colorFilter.colors}))`,
@@ -242,9 +327,7 @@ async function getPixelHistoryUserCounts(
     whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
   }
 
-  const results = await prisma.$queryRaw<
-    PixelHistoryUserCountRawResult[]
-  >`
+  const results = await prisma.$queryRaw<PixelHistoryUserCountRawResult[]>`
     SELECT
       h.user_id,
       COUNT(*) as count_all,
@@ -271,13 +354,13 @@ async function getPixelHistoryUserCounts(
       timestamp: row.min_timestamp,
     },
     discord_user_profile:
-      row.profile_user_id !== null && row.username !== null
-        ? {
-            user_id: row.profile_user_id,
-            username: row.username,
-            profile_picture_url: row.profile_picture_url,
-          }
-        : null,
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
   }));
 }
 
@@ -299,9 +382,7 @@ async function getPixelHistoryUserColorCounts(
     whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
   }
 
-  const results = await prisma.$queryRaw<
-    PixelHistoryUserColorCountRawResult[]
-  >`
+  const results = await prisma.$queryRaw<PixelHistoryUserColorCountRawResult[]>`
     SELECT
       h.user_id,
       h.color_id,
@@ -322,13 +403,13 @@ async function getPixelHistoryUserColorCounts(
       _all: Number(row.count_all),
     },
     discord_user_profile:
-      row.profile_user_id !== null && row.username !== null
-        ? {
-            user_id: row.profile_user_id,
-            username: row.username,
-            profile_picture_url: row.profile_picture_url,
-          }
-        : null,
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
   }));
 }
 
@@ -404,13 +485,9 @@ export async function getPixelHistorySummary(
     colorFilter,
   };
 
-  const pixelHistoryPromise = getPixelHistoryRows({
+  const pixelHistoryAndCountPromise = getPixelHistoryRowsWithCount({
     fetchParams,
     limit: 100,
-  });
-
-  const totalEntriesPromise = prisma.history.count({
-    where: buildPixelHistoryWhere(fetchParams),
   });
 
   const summaryPromise =
@@ -421,17 +498,16 @@ export async function getPixelHistorySummary(
       ] as const)
     : Promise.resolve(null);
 
-  const [pixelHistory, totalEntries, summary] = await Promise.all([
-    pixelHistoryPromise,
-    totalEntriesPromise,
+  const [{ rows: pixelHistoryRows, totalCount }, summary] = await Promise.all([
+    pixelHistoryAndCountPromise,
     summaryPromise,
   ]);
 
   const users = summary ? buildPixelHistoryUsers(...summary) : undefined;
 
   return {
-    pixelHistory: pixelHistory.map(mapPixelHistoryRow),
-    totalEntries,
+    pixelHistory: pixelHistoryRows.map(mapPixelHistoryRow),
+    totalEntries: totalCount,
     users,
   };
 }
