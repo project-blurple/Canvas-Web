@@ -67,7 +67,7 @@ interface Square {
   tone: Tone;
 }
 
-const Squares = [
+const squares = [
   { x: 8, y: 8, tone: "primary" },
   { x: 36, y: 8, tone: "primary" },
   { x: 8, y: 36, tone: "primary" },
@@ -89,13 +89,11 @@ interface CanvasAnimatedIconProps extends React.ComponentPropsWithRef<
   style?: CanvasAnimatedIconStyle;
 }
 
-export default function CanvasAnimatedIcon({
-  ...props
-}: CanvasAnimatedIconProps) {
+export default function CanvasAnimatedIcon(props: CanvasAnimatedIconProps) {
   return (
     <StyledSvg role="progressbar" viewBox="0 0 96 96" {...props}>
       <title>Loading</title>
-      {Squares.map(({ x, y, tone }, index) => (
+      {squares.map(({ x, y, tone }, index) => (
         <StyledSquare
           key={`${x}-${y}`}
           x={x}

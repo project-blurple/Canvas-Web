@@ -1260,12 +1260,10 @@ export default function CanvasView() {
       {isLoading && (
         <CanvasAnimatedIcon
           style={{
-            position: "absolute",
-            "--canvas-icon-primary":
-              "oklch(from var(--discord-blurple) l c h / 0.55)",
-            "--canvas-icon-secondary":
-              "oklch(from var(--discord-blurple) l c h / 0.35)",
+            color: "var(--discord-blurple)",
             height: "100px",
+            opacity: 0.8,
+            position: "absolute",
           }}
         />
       )}
