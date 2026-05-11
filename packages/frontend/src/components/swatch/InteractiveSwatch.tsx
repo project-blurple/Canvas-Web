@@ -5,7 +5,8 @@ import { StaticSwatch } from "./StaticSwatch";
 const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
   transition: var(--transition-duration-fast) ease;
-  transition-property: opacity, outline-width, border-color;
+  transition-property: outline-width, border-color;
+  will-change: opacity; // Chromium fumbles hover style without this 🤷
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled, [aria-selected="true"]) {
