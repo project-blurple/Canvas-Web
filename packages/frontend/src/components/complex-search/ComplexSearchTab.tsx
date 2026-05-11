@@ -26,7 +26,7 @@ import {
   ComplexSearchColorSelect,
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
-} from ".";
+} from "../complex-search";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
 import SearchUserEntries from "./SearchUserEntry";
 

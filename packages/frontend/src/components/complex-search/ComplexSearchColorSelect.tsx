@@ -109,6 +109,7 @@ export default function ComplexSearchColorSelect({
           onFilterModeChange(filterMode === "include" ? "exclude" : "include");
         }}
         disabled={disabled}
+        role="spinbutton"
       >
         {filterMode === "include" ?
           <SquarePlus />

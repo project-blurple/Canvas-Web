@@ -13,15 +13,24 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRef, useState } from "react";
-import { DynamicButton } from "@/components/button";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
+import { StyledButton } from "../button/DynamicButton";
 
 const StyledDialog = styled(Dialog)`
   & .MuiDialog-paper {
     box-shadow: none;
     background-image: none;
+  }
+`;
+
+const RedStyledButton = styled(StyledButton)`
+  color: white;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgb(255, 0, 0);
   }
 `;
 
@@ -108,14 +117,13 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <DynamicButton
+      <RedStyledButton
         disabled={entriesCount === 0}
-        backgroundColorStr="rgb(255,0,0)"
         onClick={handleEraseHistory}
       >
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </DynamicButton>
+      </RedStyledButton>
       <StyledDialog
         open={isEraseConfirmOpen}
         onClose={handleCancelErase}
@@ -148,13 +156,8 @@ export default function ComplexSearchEraseHistory({
           />
         </DialogContent>
         <DialogActions>
-          <DynamicButton onClick={handleCancelErase}>Cancel</DynamicButton>
-          <DynamicButton
-            backgroundColorStr="rgb(255,0,0)"
-            onClick={handleConfirmErase}
-          >
-            Erase
-          </DynamicButton>
+          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
+          <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
         </DialogActions>
       </StyledDialog>
     </>
