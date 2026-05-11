@@ -22,7 +22,10 @@ function shouldRefreshDiscordToken(session: DiscordTokenSession): boolean {
     return true;
   }
 
-  if (typeof session.discordTokenExpiresAt !== "number" || !Number.isFinite(session.discordTokenExpiresAt)) {
+  if (
+    !session.discordTokenExpiresAt ||
+    !Number.isFinite(session.discordTokenExpiresAt)
+  ) {
     return false;
   }
 
@@ -83,7 +86,7 @@ export async function refreshDiscordAccessToken(
   if (typeof session.discordTokenLifetimeMs === "number") {
     session.discordTokenExpiresAt = Date.now() + session.discordTokenLifetimeMs;
   } else {
-    delete session.discordTokenExpiresAt;
+    session.discordTokenExpiresAt = undefined;
   }
 
   return refreshedToken.accessToken;

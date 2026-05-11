@@ -47,6 +47,7 @@ describe("discordTokenService", () => {
       const session = {
         discordAccessToken: "old-access-token",
         discordRefreshToken: "old-refresh-token",
+        discordTokenExpiresAt: undefined,
       };
 
       const accessToken = await refreshDiscordAccessToken(session);
@@ -115,12 +116,9 @@ describe("discordTokenService", () => {
       );
 
       const action = vi
-        .fn<
-          Parameters<typeof withDiscordAccessToken>[1],
-          ReturnType<typeof withDiscordAccessToken>
-        >()
-        .mockRejectedValueOnce(new UnauthorizedError("stale token"))
-        .mockResolvedValueOnce("success");
+        .fn<(accessToken: string) => Promise<string>>()
+        .mockRejectedValueOnce(new UnauthorizedError("unauthorized"))
+        .mockResolvedValueOnce("retried-success");
 
       const result = await withDiscordAccessToken(
         {
@@ -130,7 +128,7 @@ describe("discordTokenService", () => {
         action,
       );
 
-      expect(result).toBe("success");
+      expect(result).toBe("retried-success");
       expect(action).toHaveBeenCalledTimes(2);
       expect(action).toHaveBeenNthCalledWith(1, "cached-token");
       expect(action).toHaveBeenNthCalledWith(2, "refreshed-token");
