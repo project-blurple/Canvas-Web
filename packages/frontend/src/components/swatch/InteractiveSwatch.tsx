@@ -35,10 +35,8 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   }
 `;
 
-interface InteractiveSwatchProps extends React.ComponentPropsWithRef<
-  typeof StaticSwatch
-> {}
-
-export function InteractiveSwatch(props: InteractiveSwatchProps) {
+export function InteractiveSwatch(
+  props: React.ComponentPropsWithRef<typeof StaticSwatch>,
+) {
   return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
 }
