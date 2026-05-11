@@ -52,8 +52,8 @@ export default function ComplexSearchBoundsSelect({
       {
         left: selectedBounds.left + startX,
         top: selectedBounds.top + startY,
-        right: selectedBounds.right + startX,
-        bottom: selectedBounds.bottom + startY,
+        right: selectedBounds.right + startX - 1,
+        bottom: selectedBounds.bottom + startY - 1,
       }
     : null;
 

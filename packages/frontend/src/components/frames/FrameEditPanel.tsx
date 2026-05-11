@@ -547,7 +547,7 @@ export default function FrameEditPanel({
                 />
                 <CoordinatesCard
                   coordinates={addPoints(
-                    { x: frameBounds.right, y: frameBounds.bottom },
+                    { x: frameBounds.right - 1, y: frameBounds.bottom - 1 },
                     tupleToPoint(canvas.startCoordinates),
                   )}
                 />
