@@ -6,7 +6,7 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   border-color: oklch(from var(--discord-white) l c h / 15%);
   border-style: solid;
   border-width: 3px;
-  transition-property: outline-width, border-color;
+  transition-property: border-color, outline-width;
   transition: var(--transition-duration-fast) ease;
   will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
