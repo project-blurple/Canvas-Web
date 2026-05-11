@@ -110,48 +110,6 @@ interface PixelHistoryRowRawResultWithCount {
   total_count: bigint;
 }
 
-function buildPixelHistoryWhere({
-  canvasId,
-  points,
-  dateRange,
-  userIdFilter,
-  colorFilter,
-}: GetPixelHistoryParams) {
-  points = Array.isArray(points) ? points : [points, points];
-
-  return {
-    erased_at: null,
-    canvas_id: canvasId,
-    x: {
-      gte: points[0].x,
-      lte: points[1].x,
-    },
-    y: {
-      gte: points[0].y,
-      lte: points[1].y,
-    },
-    timestamp: {
-      gte: dateRange?.from,
-      lte: dateRange?.to,
-    },
-    user_id: (() => {
-      if (!userIdFilter) return undefined;
-      const op = userIdFilter.include ? "in" : "notIn";
-      return { [op]: userIdFilter.ids };
-    })(),
-    color_id: (() => {
-      if (!colorFilter) {
-        return undefined;
-      }
-      if (colorFilter.include) {
-        return { in: colorFilter.colors };
-      } else {
-        return { notIn: colorFilter.colors };
-      }
-    })(),
-  };
-}
-
 function mapPixelHistoryRow(history: PixelHistoryRow) {
   return {
     id: history.id.toString(),
@@ -188,8 +146,10 @@ async function getPixelHistoryRowsWithCount({
   if (whereFragments.length === 0) {
     whereSQL = Prisma.sql`TRUE`;
   } else {
-    const [first, ...rest] = whereFragments;
-    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
+    whereSQL =
+      whereFragments.length === 1 ?
+        whereFragments[0]
+      : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
   }
 
   const results = await prisma.$queryRaw<PixelHistoryRowRawResultWithCount[]>`
@@ -270,21 +230,22 @@ function buildPixelHistoryWhereSQL(
     Prisma.sql`h.y >= ${points[0].y} AND h.y <= ${points[1].y}`,
   ];
 
-  // Timestamp filter (both are optional)
-  if (params.dateRange?.from || params.dateRange?.to) {
-    if (params.dateRange?.from && params.dateRange?.to) {
-      fragments.push(
-        Prisma.sql`h.timestamp >= ${params.dateRange.from} AND h.timestamp <= ${params.dateRange.to}`,
-      );
-    } else if (params.dateRange?.from) {
-      fragments.push(Prisma.sql`h.timestamp >= ${params.dateRange.from}`);
-    } else if (params.dateRange?.to) {
-      fragments.push(Prisma.sql`h.timestamp <= ${params.dateRange.to}`);
-    }
+  // Timestamp filter
+  if (
+    params.dateRange?.from !== undefined &&
+    params.dateRange?.to !== undefined
+  ) {
+    fragments.push(
+      Prisma.sql`h.timestamp >= ${params.dateRange.from} AND h.timestamp <= ${params.dateRange.to}`,
+    );
+  } else if (params.dateRange?.from !== undefined) {
+    fragments.push(Prisma.sql`h.timestamp >= ${params.dateRange.from}`);
+  } else if (params.dateRange?.to !== undefined) {
+    fragments.push(Prisma.sql`h.timestamp <= ${params.dateRange.to}`);
   }
 
   // User ID filter
-  if (params.userIdFilter) {
+  if (params.userIdFilter && params.userIdFilter.ids.length > 0) {
     if (params.userIdFilter.include) {
       fragments.push(Prisma.sql`h.user_id = ANY(${params.userIdFilter.ids})`);
     } else {
@@ -295,7 +256,7 @@ function buildPixelHistoryWhereSQL(
   }
 
   // Color ID filter
-  if (params.colorFilter) {
+  if (params.colorFilter && params.colorFilter.colors.length > 0) {
     if (params.colorFilter.include) {
       fragments.push(
         Prisma.sql`h.color_id = ANY(${params.colorFilter.colors})`,
@@ -319,13 +280,10 @@ async function getPixelHistoryUserCounts(
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
-  let whereSQL: Prisma.Sql;
-  if (whereFragments.length === 0) {
-    whereSQL = Prisma.sql`TRUE`;
-  } else {
-    const [first, ...rest] = whereFragments;
-    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
-  }
+  const whereSQL =
+    whereFragments.length === 1 ?
+      whereFragments[0]
+    : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
 
   const results = await prisma.$queryRaw<PixelHistoryUserCountRawResult[]>`
     SELECT
@@ -374,13 +332,10 @@ async function getPixelHistoryUserColorCounts(
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
-  let whereSQL: Prisma.Sql;
-  if (whereFragments.length === 0) {
-    whereSQL = Prisma.sql`TRUE`;
-  } else {
-    const [first, ...rest] = whereFragments;
-    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
-  }
+  const whereSQL =
+    whereFragments.length === 1 ?
+      whereFragments[0]
+    : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
 
   const results = await prisma.$queryRaw<PixelHistoryUserColorCountRawResult[]>`
     SELECT
@@ -544,8 +499,10 @@ export async function deletePixelHistoryEntries(
   if (whereFragments.length === 0) {
     whereSQL = Prisma.sql`TRUE`;
   } else {
-    const [first, ...rest] = whereFragments;
-    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
+    whereSQL =
+      whereFragments.length === 1 ?
+        whereFragments[0]
+      : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
   }
 
   const erasedAt = new Date();
