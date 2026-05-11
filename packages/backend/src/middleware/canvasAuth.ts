@@ -22,7 +22,7 @@ export function assertLoggedIn(
 ): asserts req is AuthenticatedRequest {
   if (
     !req.user ||
-    (!req.session.discordAccessToken && !req.session.discordRefreshToken)
+    !(req.session.discordAccessToken || req.session.discordRefreshToken)
   ) {
     throw new UnauthorizedError("User is not authenticated");
   }
@@ -51,7 +51,7 @@ export async function requireCanvasModerator(
 
     const userIsCanvasModerator = await withDiscordAccessToken(
       req.session,
-      (accessToken) => isCanvasModerator(accessToken),
+      isCanvasModerator,
     );
 
     if (!userIsCanvasModerator) {
@@ -76,7 +76,7 @@ export async function requireCanvasAdmin(
 
     const userIsCanvasAdmin = await withDiscordAccessToken(
       req.session,
-      (accessToken) => isCanvasAdmin(accessToken),
+      isCanvasAdmin,
     );
 
     if (!userIsCanvasAdmin) {

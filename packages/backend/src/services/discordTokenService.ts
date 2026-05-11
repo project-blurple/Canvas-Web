@@ -22,7 +22,7 @@ function shouldRefreshDiscordToken(session: DiscordTokenSession): boolean {
     return true;
   }
 
-  if (typeof session.discordTokenExpiresAt !== "number") {
+  if (typeof session.discordTokenExpiresAt !== "number" || !Number.isFinite(session.discordTokenExpiresAt)) {
     return false;
   }
 
