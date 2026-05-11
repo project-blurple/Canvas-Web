@@ -3,10 +3,12 @@ import { PrimitiveButton } from "../button";
 import { StaticSwatch } from "./StaticSwatch";
 
 const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
-  border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
+  border-width: 3px;
+  border-style: solid;
+  border-color: oklch(from var(--discord-white) l c h / 15%);
   transition: var(--transition-duration-fast) ease;
   transition-property: outline-width, border-color;
-  will-change: opacity; // Chromium fumbles hover style without this 🤷
+  will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled, [aria-selected="true"]) {
@@ -19,9 +21,13 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   }
 
   &[aria-selected="true"] {
-    border: 0.25rem solid var(--discord-white);
+    border-color: var(--discord-white);
     background-clip: content-box;
     padding: 0.25rem;
+  }
+
+  &:active {
+    scale: 97%;
   }
 
   &:disabled {
