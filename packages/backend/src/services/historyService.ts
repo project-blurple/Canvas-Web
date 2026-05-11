@@ -537,35 +537,41 @@ export async function deletePixelHistoryEntries(
     ]);
   }
 
-  const where = buildPixelHistoryWhere(params);
+  const whereFragments = buildPixelHistoryWhereSQL(params);
 
-  // Get entries for pixel restoration and author blocking
-  const existingEntries = await prisma.history.findMany({
-    where,
-    select: {
-      id: true,
-      user_id: true,
-      x: true,
-      y: true,
-    },
-  });
-
-  if (existingEntries.length === 0) {
-    return;
+  // Combine fragments with AND
+  let whereSQL: Prisma.Sql;
+  if (whereFragments.length === 0) {
+    whereSQL = Prisma.sql`TRUE`;
+  } else {
+    const [first, ...rest] = whereFragments;
+    whereSQL = Prisma.sql`${first}${rest.map((f) => Prisma.sql` AND ${f}`)}`;
   }
 
   const erasedAt = new Date();
 
-  await prisma.history.updateMany({
-    where,
-    data: {
-      erased_at: erasedAt,
-    },
-  });
+  // Update entries and get their data in a single query
+  interface DeletedEntry {
+    id: bigint;
+    user_id: bigint;
+    x: number;
+    y: number;
+  }
+
+  const deletedEntries = await prisma.$queryRaw<DeletedEntry[]>`
+    UPDATE history h
+    SET erased_at = ${erasedAt}
+    WHERE ${whereSQL}
+    RETURNING id, user_id, x, y
+  `;
+
+  if (deletedEntries.length === 0) {
+    return;
+  }
 
   const coordinatesUpdated = [
     ...new Map(
-      existingEntries.map((entry) => [
+      deletedEntries.map((entry) => [
         `${entry.x}:${entry.y}`,
         { x: entry.x, y: entry.y },
       ]),
@@ -575,7 +581,7 @@ export async function deletePixelHistoryEntries(
   await restorePixelsAfterHistoryDeletion(params.canvasId, coordinatesUpdated);
 
   if (shouldBlockAuthors) {
-    const authorIds = new Set(existingEntries.map((entry) => entry.user_id));
+    const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
     await addUsersToBlocklist(authorIds);
   }
 }
