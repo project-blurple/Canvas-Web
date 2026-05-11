@@ -129,17 +129,18 @@ export default function ComplexSearchBoundsSelect({
             selectedBounds?.left != null ?
               selectedBounds.left +
               startX +
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width -
+              1
             : startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
-          max={canvas.width + startX}
+          max={canvas.width + startX - 1}
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
-                right: value - startX,
+                right: value - startX + 1,
               }),
             );
           }}
@@ -156,17 +157,18 @@ export default function ComplexSearchBoundsSelect({
             selectedBounds?.top != null ?
               selectedBounds.top +
               startY +
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height -
+              1
             : startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
-          max={canvas.height + startY}
+          max={canvas.height + startY - 1}
           size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
-                bottom: value - startY,
+                bottom: value - startY + 1,
               }),
             );
           }}
