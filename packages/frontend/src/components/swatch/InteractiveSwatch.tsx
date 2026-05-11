@@ -3,11 +3,11 @@ import { PrimitiveButton } from "../button";
 import { StaticSwatch } from "./StaticSwatch";
 
 const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
-  border-width: 3px;
-  border-style: solid;
   border-color: oklch(from var(--discord-white) l c h / 15%);
-  transition: var(--transition-duration-fast) ease;
+  border-style: solid;
+  border-width: 3px;
   transition-property: outline-width, border-color;
+  transition: var(--transition-duration-fast) ease;
   will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
