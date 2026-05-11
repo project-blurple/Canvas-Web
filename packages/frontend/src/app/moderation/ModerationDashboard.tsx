@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 import { useEffect, useId, useState } from "react";
 import {
+  ActionPanelTabBar,
   ActionPanelWrapper,
   GenericTab,
-  TabBar,
-} from "@/components/action-panel/ActionPanel";
+} from "@/components/action-panel/primitives";
 import { CanvasView } from "@/components/canvas";
 import { ComplexSearchTab } from "@/components/complex-search";
 import { SlideableDrawer } from "@/components/slideable-drawer";
@@ -22,7 +22,7 @@ const DashboardWrapper = styled(CanvasWrapper)`
   }
 `;
 
-const ModTabBar = styled(TabBar)`
+const ModTabBar = styled(ActionPanelTabBar)`
   grid-template-columns: repeat(2, 1fr);
 `;
 

@@ -11,10 +11,10 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
+import { durationFormat } from "@/util";
 import { Button } from "./Button";
 import ButtonSupplement from "./ButtonSupplement";
 import DynamicButton from "./DynamicButton";
-import { durationFormat } from "@/util";
 
 const Time = styled("time")`
   font-variant-numeric: tabular-nums;

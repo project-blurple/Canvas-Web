@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { Heading } from "@/components/action-panel/ActionPanel";
+import { PanelSectionHeading } from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -212,7 +212,7 @@ export default function ComplexSearchTab({
         return (
           <ActionPanelTabBody>
             <div>
-              <Heading>{errorText[status][0]}</Heading>
+              <PanelSectionHeading>{errorText[status][0]}</PanelSectionHeading>
               <p>{errorText[status][1]}</p>
             </div>
           </ActionPanelTabBody>
@@ -224,7 +224,7 @@ export default function ComplexSearchTab({
       return (
         <ActionPanelTabBody>
           <div>
-            <Heading>Search results</Heading>
+            <PanelSectionHeading>Search results</PanelSectionHeading>
             <SummaryGrid>
               <SummaryCard>
                 <strong>Total entries</strong>
@@ -248,7 +248,7 @@ export default function ComplexSearchTab({
             </SummaryGrid>
             {usersLength > 0 && (
               <>
-                <Heading>User summary</Heading>
+                <PanelSectionHeading>User summary</PanelSectionHeading>
                 <SearchUserEntries
                   users={historyData.users}
                   palette={palette}
@@ -269,7 +269,7 @@ export default function ComplexSearchTab({
         <ActionPanelTabBody>
           <search>
             <Form onSubmit={handleSearchSubmit}>
-              <Heading>History Search</Heading>
+              <PanelSectionHeading>History Search</PanelSectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}

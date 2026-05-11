@@ -495,7 +495,6 @@ export default function CanvasView({
   showNotices = true,
   showReticle = true,
 }: CanvasViewProps) {
-
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);

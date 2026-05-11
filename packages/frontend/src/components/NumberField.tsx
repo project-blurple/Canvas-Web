@@ -113,7 +113,7 @@ export default function NumberField({
   onValueChange,
 }: NumberFieldProps) {
   const inputId = React.useId();
-  
+
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const nextValue =
       event.target.value === "" ?
