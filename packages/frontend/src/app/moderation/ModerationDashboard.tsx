@@ -58,9 +58,7 @@ function ModerationDashboardActionPanel() {
   const blocklistTabId = useId();
 
   useEffect(() => {
-    return () => {
-      resetSelectedBounds();
-    };
+    return () => void resetSelectedBounds();
   }, [resetSelectedBounds]);
 
   const onSwitchTab = (newTab: TabKey) => {
