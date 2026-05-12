@@ -126,6 +126,8 @@ export default function BlocklistTab(
   const [selectedUsers, setSelectedUsers] = useState<Set<bigint>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
+  const [userIdsToBlock, setUserIdsToBlock] = useState<string>("");
+
   function setUserSelected(
     event: React.ChangeEvent<HTMLInputElement>,
     userId: bigint,
@@ -166,6 +168,8 @@ export default function BlocklistTab(
     return [...selected, ...unselected];
   }, [blocklist, searchQuery]);
 
+  const isSelectDisabled = userIdsToBlock.trim() !== "";
+
   return (
     <BlocklistTabBlock {...props}>
       <FullWidthScrollView>
@@ -204,6 +208,7 @@ export default function BlocklistTab(
                     user={user}
                     checked={selectedUsers.has(user.userId)}
                     onChange={(event) => setUserSelected(event, user.userId)}
+                    aria-busy={isSelectDisabled}
                   />
                 ))}
               </BlocklistEntryTable>
@@ -215,10 +220,15 @@ export default function BlocklistTab(
         <BlocklistFooter>
           {selectedUsers.size === 0 ?
             <BlocklistAddWrapper>
-              <StyledInput type="text" placeholder="User IDs to block" />
+              <StyledInput
+                onChange={(e) => setUserIdsToBlock(e.target.value)}
+                placeholder="User IDs to block"
+                type="text"
+                value={userIdsToBlock}
+              />
               <Button>Block</Button>
             </BlocklistAddWrapper>
-          : <Button>
+          : <Button disabled={selectedUsers.size === 0}>
               Remove {selectedUsers.size} user
               {selectedUsers.size !== 1 ? "s" : ""} from blocklist
             </Button>
