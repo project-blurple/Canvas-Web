@@ -1,6 +1,7 @@
 import type { GuildData } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import config from "@/config";
+import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
@@ -62,6 +63,11 @@ async function discordRequest<T>({
     throw new BadRequestError(
       `Discord API request failed with status ${response.status}: ${endpoint}`,
     );
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (!contentType?.startsWith("application/json")) {
+    throw new ApiError(`Expected application/json but got ${contentType}`, 500);
   }
 
   return (await response.json()) as T;
