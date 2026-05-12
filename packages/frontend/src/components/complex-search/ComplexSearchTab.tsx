@@ -146,7 +146,8 @@ export default function ComplexSearchTab({
     ],
   );
 
-  function handleSearchClick() {
+  function handleSearchSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!selectedBounds) return;
 
     setCanEdit(false);
@@ -169,11 +170,6 @@ export default function ComplexSearchTab({
       fromDateTime: fromTime?.toISO() ?? undefined,
       toDateTime: toTime?.toISO() ?? undefined,
     });
-  }
-
-  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    handleSearchClick();
   }
 
   function resetResults() {
