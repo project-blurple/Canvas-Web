@@ -269,7 +269,7 @@ export default function ComplexSearchTab({
         <ActionPanelTabBody>
           <search>
             <Form onSubmit={handleSearchSubmit}>
-              <PanelSectionHeading>History Search</PanelSectionHeading>
+              <PanelSectionHeading>History search</PanelSectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}
