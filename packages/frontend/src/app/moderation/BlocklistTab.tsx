@@ -1,7 +1,7 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { PanelSectionHeading } from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -27,6 +27,10 @@ const BlocklistEntryTable = styled("table")`
 const StyledCheckboxSetting = styled(CheckboxSetting)`
   padding-block: 0.5rem;
   padding-inline: 0.25rem;
+`;
+
+const StyledUsername = styled("td")`
+  overflow-x: ellipsis;
 `;
 
 interface BlocklistUserEntryProps extends Pick<
@@ -55,7 +59,7 @@ function BlocklistUserEntry({
           label={null}
         />
       </td>
-      <td>{username}</td>
+      <StyledUsername title={username}>{username}</StyledUsername>
       <td>
         <UserId
           onClick={async () =>
@@ -88,6 +92,7 @@ export default function BlocklistTab(
   const { data: blocklist = [], isLoading } = useBlocklist();
 
   const [selectedUsers, setSelectedUsers] = useState<Set<bigint>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   function setUserSelected(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -104,6 +109,31 @@ export default function BlocklistTab(
     });
   }
 
+  // Compute filtered and pinned display list
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedUsers is not included as we don't want the list to re-order when selection changes
+  const displayList = useMemo(() => {
+    if (!searchQuery) {
+      // No filter: selected first, then unselected (by original order)
+      const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
+      const unselected = blocklist.filter((u) => !selectedUsers.has(u.userId));
+      return [...selected, ...unselected];
+    }
+
+    // Filter by search query
+    const lowerQuery = searchQuery.toLowerCase();
+    const filtered = blocklist.filter((entry) => {
+      const matchesUsername =
+        entry.username?.toLowerCase().includes(lowerQuery) ?? false;
+      const matchesId = entry.userId.toString() === searchQuery;
+      return matchesUsername || matchesId;
+    });
+
+    // Partition: selected first (from filtered), then unselected (from filtered)
+    const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
+    const unselected = filtered.filter((u) => !selectedUsers.has(u.userId));
+    return [...selected, ...unselected];
+  }, [blocklist, searchQuery]);
+
   return (
     <BlocklistTabBlock {...props}>
       <FullWidthScrollView>
@@ -111,10 +141,19 @@ export default function BlocklistTab(
           <div>
             <PanelSectionHeading>Blocklist</PanelSectionHeading>
 
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+
             {isLoading ?
               <p>Loading...</p>
             : blocklist.length === 0 ?
               <p>The blocklist is currently empty.</p>
+            : displayList.length === 0 ?
+              <p>No users match your search.</p>
             : <BlocklistEntryTable>
                 <thead>
                   <tr>
@@ -124,7 +163,7 @@ export default function BlocklistTab(
                     <th>Date Added</th>
                   </tr>
                 </thead>
-                {blocklist.map((user) => (
+                {displayList.map((user) => (
                   <BlocklistUserEntry
                     key={user.userId}
                     user={user}
