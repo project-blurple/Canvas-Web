@@ -47,9 +47,22 @@ const BlocklistFooter = styled("div")`
   gap: 0.5rem;
 `;
 
+const BlocklistAddWrapper = styled("div")`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  width: 100%;
+`;
+
+const StyledInput = styled(Input)`
+  flex: 1;
+  min-width: 0;
+`;
+
 const Button = styled(StyledButton)`
   color: white;
-  width: 100%;
+  flex-shrink: 0;
+  width: auto;
 `;
 
 interface BlocklistUserEntryProps extends Pick<
@@ -160,7 +173,7 @@ export default function BlocklistTab(
           <BlocklistBodyWrapper>
             <PanelSectionHeading>Blocklist</PanelSectionHeading>
 
-            <Input
+            <StyledInput
               type="text"
               placeholder="Search users..."
               value={searchQuery}
@@ -200,11 +213,16 @@ export default function BlocklistTab(
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <BlocklistFooter>
-          <Button>Add to blocklist</Button>
-          <Button>
-            Remove {selectedUsers.size} user
-            {selectedUsers.size !== 1 ? "s" : ""} from blocklist
-          </Button>
+          {selectedUsers.size === 0 ?
+            <BlocklistAddWrapper>
+              <StyledInput type="text" placeholder="User IDs to block" />
+              <Button>Block</Button>
+            </BlocklistAddWrapper>
+          : <Button>
+              Remove {selectedUsers.size} user
+              {selectedUsers.size !== 1 ? "s" : ""} from blocklist
+            </Button>
+          }
         </BlocklistFooter>
       </ActionPanelTabBody>
     </BlocklistTabBlock>
