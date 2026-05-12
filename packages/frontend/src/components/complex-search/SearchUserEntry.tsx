@@ -49,7 +49,7 @@ const ColorChipWrapper = styled("div")`
   overflow-x: auto;
 `;
 
-const UserId = styled("button")`
+export const UserId = styled("button")`
   appearance: none;
   border: none;
   background: none;
