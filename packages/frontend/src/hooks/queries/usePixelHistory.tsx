@@ -56,6 +56,9 @@ export interface ComplexPixelHistoryQuery {
 export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
+  options?: {
+    onSettled?: () => void;
+  },
 ) {
   const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
   const lastDurationRef = useRef<number | null>(null);
@@ -94,6 +97,8 @@ export function useComplexPixelHistory(
       lastDurationRef.current = performance.now() - startedAt;
 
       throw error;
+    } finally {
+      options?.onSettled?.();
     }
   };
 

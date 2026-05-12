@@ -1,7 +1,7 @@
 "use client";
 
 import type { Palette } from "@blurple-canvas-web/types";
-import { Autocomplete, Chip, styled, TextField } from "@mui/material";
+import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type * as React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
@@ -16,13 +16,18 @@ const SelectedColorChips = styled("div")`
 export const ColorSelectChip = styled(Chip, {
   shouldForwardProp: (prop) => prop !== "backgroundColorStr",
 })<{ backgroundColorStr?: string }>`
-  background-color: ${({ backgroundColorStr }) =>
-    backgroundColorStr ?? "var(--discord-blurple)"};
+  --color-select-chip-color: var(--discord-blurple);
+  ${({ backgroundColorStr }) =>
+    backgroundColorStr &&
+    css`
+      --color-select-chip-color: ${backgroundColorStr};
+    `}
+
+  background-color: var(--color-select-chip-color);
   font-weight: 600;
 
   & .MuiChip-label {
-    color: ${({ backgroundColorStr }) =>
-      backgroundColorStr ?? "var(--discord-blurple)"};
+    color: var(--color-select-chip-color);
     transition:
       color var(--transition-duration-fast) ease,
       filter var(--transition-duration-fast) ease;
@@ -32,13 +37,8 @@ export const ColorSelectChip = styled(Chip, {
     & .MuiChip-label {
       color: color-mix(
         in oklab,
-        contrast-color(
-            ${({ backgroundColorStr }) =>
-              backgroundColorStr ?? "var(--discord-blurple)"}
-          )
-          94%,
-        ${({ backgroundColorStr }) =>
-          backgroundColorStr ?? "var(--discord-blurple)"}
+        contrast-color(var(--color-select-chip-color)) 94%,
+        var(--color-select-chip-color)
       );
     }
   }
@@ -64,9 +64,9 @@ const ToggleFilterModeButton = styled(DynamicButton)`
 
 interface ComplexSearchColorSelectProps {
   palette: Palette;
-  value: string[];
+  value: number[];
   filterMode: SearchFilterMode;
-  onChange: (value: string[]) => void;
+  onChange: (value: number[]) => void;
   onFilterModeChange: (mode: SearchFilterMode) => void;
   disabled: boolean;
 }
@@ -79,7 +79,7 @@ export default function ComplexSearchColorSelect({
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
-  const sortedPalette = [...palette].sort((a, b) =>
+  const sortedPalette = palette.toSorted((a, b) =>
     a.global === b.global ? 0
     : a.global ? -1
     : 1,
@@ -92,13 +92,13 @@ export default function ComplexSearchColorSelect({
     _event: React.SyntheticEvent,
     newValues: Palette[number][],
   ) {
-    onChange(newValues.map((c) => String(c.id)));
+    onChange(newValues.map((c) => c.id));
   }
 
   // map selected ids to palette objects (may be undefined for stale ids)
   const selectedOptions = value
-    .map((id) => paletteById[Number(id)])
-    .filter((c): c is Palette[number] => !!c);
+    .map((id) => paletteById[id])
+    .filter((c): c is Palette[number] => c !== undefined);
 
   const label = `Colors to ${filterMode}`;
 
@@ -109,6 +109,7 @@ export default function ComplexSearchColorSelect({
           onFilterModeChange(filterMode === "include" ? "exclude" : "include");
         }}
         disabled={disabled}
+        role="spinbutton"
       >
         {filterMode === "include" ?
           <SquarePlus />

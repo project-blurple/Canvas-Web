@@ -212,7 +212,7 @@ function renderOverlayShades({
       >
         <path
           d={overlayCutoutPath}
-          fill="#333333"
+          fill="oklch(32% 0 0deg)"
           fillRule="evenodd"
           fillOpacity={0.5}
         />

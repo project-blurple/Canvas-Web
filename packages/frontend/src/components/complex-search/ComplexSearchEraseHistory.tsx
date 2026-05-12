@@ -12,18 +12,27 @@ import {
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useState } from "react";
-import { DynamicButton } from "@/components/button";
+import { useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
+import { StyledButton } from "../button/DynamicButton";
 
-const StyledDialog = styled(Dialog)(() => ({
-  "& .MuiDialog-paper": {
-    boxShadow: "none",
-    backgroundImage: "none",
-  },
-}));
+const StyledDialog = styled(Dialog)`
+  & .MuiDialog-paper {
+    box-shadow: none;
+    background-image: none;
+  }
+`;
+
+const RedStyledButton = styled(StyledButton)`
+  color: white;
+
+  &:hover,
+  &:focus-visible {
+    background-color: rgb(255, 0, 0);
+  }
+`;
 
 interface ComplexSearchEraseHistoryProps {
   entriesCount: number;
@@ -41,29 +50,12 @@ export default function ComplexSearchEraseHistory({
   const { canvas } = useCanvasContext();
   const queryClient = useQueryClient();
 
-  const [blockWhileErase, setBlockWhileErase] = useState(false);
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
-
-  async function performErase() {
-    try {
-      await eraseHistoryMutation.mutateAsync();
-      resetResults();
-    } catch (error) {
-      console.error(error);
-      alert("Failed to erase history");
-    }
-  }
-
-  const invalidateHistoryQueries = async () => {
-    queryClient.invalidateQueries({
-      queryKey: ["complexPixelHistory", canvas.id],
-      // Erasing all complex searches for the canvas - we don't know what previous queries are also invalidated, so we just invalidate them all to be safe
-    });
-  };
+  const blockWhileEraseRef = useRef<HTMLInputElement>(null);
 
   const eraseHistoryMutation = useMutation({
-    mutationFn: async () => {
-      const requestUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}/pixel/history`;
+    mutationFn: async (shouldBlockAuthors: boolean) => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel/history`;
 
       const body = {
         x0: query.point0.x,
@@ -78,7 +70,7 @@ export default function ComplexSearchEraseHistory({
         ...(query.excludeUserIds && { excludeUserIds: query.excludeUserIds }),
         ...(query.includeColors && { includeColors: query.includeColors }),
         ...(query.excludeColors && { excludeColors: query.excludeColors }),
-        shouldBlockAuthors: blockWhileErase,
+        shouldBlockAuthors,
       };
 
       await axios.delete(requestUrl, {
@@ -89,15 +81,30 @@ export default function ComplexSearchEraseHistory({
     onSuccess: invalidateHistoryQueries,
   });
 
+  const { mutateAsync: eraseHistory } = eraseHistoryMutation;
+
+  async function performErase(shouldBlockAuthors: boolean) {
+    await eraseHistory(shouldBlockAuthors);
+    resetResults();
+  }
+
+  async function invalidateHistoryQueries() {
+    queryClient.invalidateQueries({
+      queryKey: ["complexPixelHistory", canvas.id],
+      // Erasing all complex searches for the canvas - we don't know what previous queries are also invalidated, so we just invalidate them all to be safe
+    });
+  }
+
   function handleEraseHistory() {
     setIsEraseConfirmOpen(true);
   }
 
   async function handleConfirmErase() {
     setIsEraseConfirmOpen(false);
+    const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
     try {
-      await performErase();
+      await performErase(shouldBlockAuthors);
     } catch (error) {
       console.error(error);
       alert("Failed to erase history");
@@ -110,14 +117,13 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <DynamicButton
+      <RedStyledButton
         disabled={entriesCount === 0}
-        backgroundColorStr="rgb(255,0,0)"
         onClick={handleEraseHistory}
       >
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </DynamicButton>
+      </RedStyledButton>
       <StyledDialog
         open={isEraseConfirmOpen}
         onClose={handleCancelErase}
@@ -129,31 +135,29 @@ export default function ComplexSearchEraseHistory({
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="erase-history-dialog-description">
-            This will <em>permanently</em> delete{" "}
-            {entriesCount.toLocaleString()} history{" "}
-            {entriesCount !== 1 ? "entries" : "entry"}. Are you sure you want to
-            continue?
+            Delete
+            {entriesCount.toLocaleString()} history&nbsp;
+            {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
           </DialogContentText>
           <FormControlLabel
             control={
               <Checkbox
                 size="small"
-                checked={blockWhileErase}
-                onChange={() => setBlockWhileErase(!blockWhileErase)}
+                defaultChecked={false}
+                slotProps={{
+                  input: {
+                    ref: blockWhileEraseRef,
+                  },
+                }}
               />
             }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to the blocklist`}
+            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
             disabled={entriesCount === 0}
           />
         </DialogContent>
         <DialogActions>
-          <DynamicButton onClick={handleCancelErase}>Cancel</DynamicButton>
-          <DynamicButton
-            backgroundColorStr="rgb(255,0,0)"
-            onClick={handleConfirmErase}
-          >
-            Erase
-          </DynamicButton>
+          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
+          <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
         </DialogActions>
       </StyledDialog>
     </>

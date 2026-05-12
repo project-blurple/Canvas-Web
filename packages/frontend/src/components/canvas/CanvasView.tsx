@@ -33,6 +33,7 @@ import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
+import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
@@ -331,6 +332,10 @@ function clampZoom(zoom: number, initialZoom: number) {
   return clamp(zoom, MIN_ZOOM_FACTOR * initialZoom, MAX_ZOOM);
 }
 
+function stopEventPropagation(event: React.SyntheticEvent) {
+  event.stopPropagation();
+}
+
 interface CanvasTargetView {
   targetZoom: number;
   offset: Point;
@@ -473,7 +478,10 @@ function getViewForFrame({
 }
 
 interface CanvasViewProps {
-  actionPanel?: React.ReactNode;
+  actionPanel?: React.ReactElement<
+    React.ComponentProps<typeof ActionPanel>,
+    typeof ActionPanel
+  >;
   canvasLabel?: string;
   showInvite?: boolean;
   showNotices?: boolean;
@@ -1293,10 +1301,10 @@ export default function CanvasView({
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay
-          onPointerDown={(event) => event.stopPropagation()}
-          onPointerMove={(event) => event.stopPropagation()}
-          onPointerUp={(event) => event.stopPropagation()}
-          onWheelCapture={(event) => event.stopPropagation()}
+          onPointerDown={stopEventPropagation}
+          onPointerMove={stopEventPropagation}
+          onPointerUp={stopEventPropagation}
+          onWheelCapture={stopEventPropagation}
         >
           {actionPanel}
         </FullscreenPanelOverlay>

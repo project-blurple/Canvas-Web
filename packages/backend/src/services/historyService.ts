@@ -4,7 +4,7 @@ import type {
   PixelHistoryWrapper,
   Point,
 } from "@blurple-canvas-web/types";
-import { type Prisma, prisma } from "@/client";
+import { Prisma, prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {
@@ -42,7 +42,7 @@ type PixelHistoryRow = Prisma.historyGetPayload<{
   select: typeof pixelHistorySelect;
 }>;
 
-type PixelHistoryUserCountRow = {
+interface PixelHistoryUserCountRow {
   user_id: bigint;
   discord_user_profile: {
     user_id: bigint;
@@ -58,9 +58,9 @@ type PixelHistoryUserCountRow = {
   _min: {
     timestamp: Date | null;
   };
-};
+}
 
-type PixelHistoryUserColorCountRow = {
+interface PixelHistoryUserColorCountRow {
   user_id: bigint;
   color_id: number;
   discord_user_profile: {
@@ -71,48 +71,43 @@ type PixelHistoryUserColorCountRow = {
   _count: {
     _all: number;
   };
-};
+}
 
-function buildPixelHistoryWhere({
-  canvasId,
-  points,
-  dateRange,
-  userIdFilter,
-  colorFilter,
-}: GetPixelHistoryParams) {
-  points = Array.isArray(points) ? points : [points, points];
+interface PixelHistoryUserCountRawResult {
+  user_id: bigint;
+  count_all: bigint;
+  max_timestamp: Date | null;
+  min_timestamp: Date | null;
+  profile_user_id: bigint | null;
+  username: string | null;
+  profile_picture_url: string | null;
+}
 
-  return {
-    erased_at: null,
-    canvas_id: canvasId,
-    x: {
-      gte: points[0].x,
-      lte: points[1].x,
-    },
-    y: {
-      gte: points[0].y,
-      lte: points[1].y,
-    },
-    timestamp: {
-      gte: dateRange?.from,
-      lte: dateRange?.to,
-    },
-    user_id: (() => {
-      if (!userIdFilter) return undefined;
-      const op = userIdFilter.include ? "in" : "notIn";
-      return { [op]: userIdFilter.ids };
-    })(),
-    color_id: (() => {
-      if (!colorFilter) {
-        return undefined;
-      }
-      if (colorFilter.include) {
-        return { in: colorFilter.colors };
-      } else {
-        return { notIn: colorFilter.colors };
-      }
-    })(),
-  };
+interface PixelHistoryUserColorCountRawResult {
+  user_id: bigint;
+  color_id: number;
+  count_all: bigint;
+  profile_user_id: bigint | null;
+  username: string | null;
+  profile_picture_url: string | null;
+}
+
+interface PixelHistoryRowRawResultWithCount {
+  id: bigint;
+  color_id: number;
+  timestamp: Date;
+  guild_id: bigint | null;
+  user_id: bigint;
+  color_code: string;
+  color_name: string;
+  color_rgba: number[];
+  color_emoji_name: string | null;
+  color_emoji_id: bigint | null;
+  color_global: boolean;
+  profile_user_id: bigint | null;
+  username: string | null;
+  profile_picture_url: string;
+  total_count: bigint;
 }
 
 function mapPixelHistoryRow(history: PixelHistoryRow) {
@@ -133,95 +128,244 @@ function mapPixelHistoryRow(history: PixelHistoryRow) {
   };
 }
 
-async function getPixelHistoryRows({
-  fetchData,
+/**
+ * Gets paginated pixel history rows with total count using a window function.
+ * Uses a single SQL query instead of separate findMany() + count() calls.
+ */
+async function getPixelHistoryRowsWithCount({
+  fetchParams,
   limit,
 }: {
-  fetchData: GetPixelHistoryParams;
+  fetchParams: GetPixelHistoryParams;
   limit?: number;
-}) {
-  return prisma.history.findMany({
-    take: limit,
-    orderBy: {
-      timestamp: "desc",
+}): Promise<{ rows: PixelHistoryRow[]; totalCount: number }> {
+  const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
+
+  // Combine fragments with AND
+  let whereSQL: Prisma.Sql;
+  if (whereFragments.length === 0) {
+    whereSQL = Prisma.sql`TRUE`;
+  } else {
+    whereSQL =
+      whereFragments.length === 1 ?
+        whereFragments[0]
+      : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
+  }
+
+  const results = await prisma.$queryRaw<PixelHistoryRowRawResultWithCount[]>`
+    SELECT
+      h.id,
+      h.color_id,
+      h.timestamp,
+      h.guild_id,
+      h.user_id,
+      c.code as color_code,
+      c.name as color_name,
+      c.rgba as color_rgba,
+      c.emoji_name as color_emoji_name,
+      c.emoji_id as color_emoji_id,
+      c.global as color_global,
+      p.user_id as profile_user_id,
+      p.username,
+      p.profile_picture_url,
+      COUNT(*) OVER() as total_count
+    FROM history h
+    INNER JOIN color c ON c.id = h.color_id
+    LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
+    WHERE ${whereSQL}
+    ORDER BY h.timestamp DESC
+    LIMIT ${limit ?? 100}
+  `;
+
+  let totalCount = 0;
+  if (results.length > 0) {
+    const [first] = results;
+    totalCount = Number(first.total_count);
+  }
+
+  // Map raw results to PixelHistoryRow shape with profile object
+  const rows: PixelHistoryRow[] = results.map((row) => ({
+    id: row.id,
+    color: {
+      id: row.color_id,
+      code: row.color_code,
+      name: row.color_name,
+      rgba: row.color_rgba,
+      emoji_name: row.color_emoji_name,
+      emoji_id: row.color_emoji_id,
+      global: row.color_global,
     },
-    where: buildPixelHistoryWhere(fetchData),
-    select: pixelHistorySelect,
-  });
+    timestamp: row.timestamp,
+    guild_id: row.guild_id,
+    user_id: row.user_id,
+    discord_user_profile:
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
+  }));
+
+  return { rows, totalCount };
 }
 
-async function getPixelHistoryUserCounts(fetchData: GetPixelHistoryParams) {
-  const groupedRows = await prisma.history.groupBy({
-    by: ["user_id"],
-    where: buildPixelHistoryWhere(fetchData),
+/**
+ * Builds parameterized SQL WHERE clause fragments from filter parameters.
+ * Uses Prisma.sql for safe parameter binding.
+ */
+function buildPixelHistoryWhereSQL(
+  params: GetPixelHistoryParams,
+): Prisma.Sql[] {
+  const points =
+    Array.isArray(params.points) ?
+      params.points
+    : [params.points, params.points];
+
+  const fragments: Prisma.Sql[] = [
+    Prisma.sql`h.erased_at IS NULL`,
+    Prisma.sql`h.canvas_id = ${params.canvasId}`,
+    Prisma.sql`h.x >= ${points[0].x} AND h.x <= ${points[1].x}`,
+    Prisma.sql`h.y >= ${points[0].y} AND h.y <= ${points[1].y}`,
+  ];
+
+  // Timestamp filter
+  if (
+    params.dateRange?.from !== undefined &&
+    params.dateRange?.to !== undefined
+  ) {
+    fragments.push(
+      Prisma.sql`h.timestamp >= ${params.dateRange.from} AND h.timestamp <= ${params.dateRange.to}`,
+    );
+  } else if (params.dateRange?.from !== undefined) {
+    fragments.push(Prisma.sql`h.timestamp >= ${params.dateRange.from}`);
+  } else if (params.dateRange?.to !== undefined) {
+    fragments.push(Prisma.sql`h.timestamp <= ${params.dateRange.to}`);
+  }
+
+  // User ID filter
+  if (params.userIdFilter && params.userIdFilter.ids.length > 0) {
+    if (params.userIdFilter.include) {
+      fragments.push(Prisma.sql`h.user_id = ANY(${params.userIdFilter.ids})`);
+    } else {
+      fragments.push(
+        Prisma.sql`NOT (h.user_id = ANY(${params.userIdFilter.ids}))`,
+      );
+    }
+  }
+
+  // Color ID filter
+  if (params.colorFilter && params.colorFilter.colors.length > 0) {
+    if (params.colorFilter.include) {
+      fragments.push(
+        Prisma.sql`h.color_id = ANY(${params.colorFilter.colors})`,
+      );
+    } else {
+      fragments.push(
+        Prisma.sql`NOT (h.color_id = ANY(${params.colorFilter.colors}))`,
+      );
+    }
+  }
+
+  return fragments;
+}
+
+/**
+ * Gets aggregated pixel history counts per user with profile information.
+ */
+async function getPixelHistoryUserCounts(
+  fetchParams: GetPixelHistoryParams,
+): Promise<PixelHistoryUserCountRow[]> {
+  const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
+
+  // Combine fragments with AND
+  const whereSQL =
+    whereFragments.length === 1 ?
+      whereFragments[0]
+    : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
+
+  const results = await prisma.$queryRaw<PixelHistoryUserCountRawResult[]>`
+    SELECT
+      h.user_id,
+      COUNT(*) as count_all,
+      MAX(h.timestamp) as max_timestamp,
+      MIN(h.timestamp) as min_timestamp,
+      p.user_id as profile_user_id,
+      p.username,
+      p.profile_picture_url
+    FROM history h
+    LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
+    WHERE ${whereSQL}
+    GROUP BY h.user_id, p.user_id, p.username, p.profile_picture_url
+  `;
+
+  return results.map((row) => ({
+    user_id: row.user_id,
     _count: {
-      _all: true,
+      _all: Number(row.count_all),
     },
     _max: {
-      timestamp: true,
+      timestamp: row.max_timestamp,
     },
     _min: {
-      timestamp: true,
+      timestamp: row.min_timestamp,
     },
-  });
-
-  const userIds = groupedRows.map((row) => row.user_id);
-  const userProfiles = await prisma.discord_user_profile.findMany({
-    where: {
-      user_id: {
-        in: userIds,
-      },
-    },
-    select: {
-      user_id: true,
-      username: true,
-      profile_picture_url: true,
-    },
-  });
-
-  const profileMap = new Map(
-    userProfiles.map((profile) => [profile.user_id, profile]),
-  );
-
-  return groupedRows.map((row) => ({
-    ...row,
-    discord_user_profile: profileMap.get(row.user_id) ?? null,
-  })) as PixelHistoryUserCountRow[];
+    discord_user_profile:
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
+  }));
 }
 
+/**
+ * Gets aggregated pixel history counts per user and color with profile information.
+ * Uses a single SQL query with LEFT JOIN instead of separate groupBy + findMany calls.
+ */
 async function getPixelHistoryUserColorCounts(
-  fetchData: GetPixelHistoryParams,
-) {
-  const groupedRows = await prisma.history.groupBy({
-    by: ["user_id", "color_id"],
-    where: buildPixelHistoryWhere(fetchData),
+  fetchParams: GetPixelHistoryParams,
+): Promise<PixelHistoryUserColorCountRow[]> {
+  const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
+
+  // Combine fragments with AND
+  const whereSQL =
+    whereFragments.length === 1 ?
+      whereFragments[0]
+    : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
+
+  const results = await prisma.$queryRaw<PixelHistoryUserColorCountRawResult[]>`
+    SELECT
+      h.user_id,
+      h.color_id,
+      COUNT(*) as count_all,
+      p.user_id as profile_user_id,
+      p.username,
+      p.profile_picture_url
+    FROM history h
+    LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
+    WHERE ${whereSQL}
+    GROUP BY h.user_id, h.color_id, p.user_id, p.username, p.profile_picture_url
+  `;
+
+  return results.map((row) => ({
+    user_id: row.user_id,
+    color_id: row.color_id,
     _count: {
-      _all: true,
+      _all: Number(row.count_all),
     },
-  });
-
-  const userIds = [...new Set(groupedRows.map((row) => row.user_id))];
-  const userProfiles = await prisma.discord_user_profile.findMany({
-    where: {
-      user_id: {
-        in: userIds,
-      },
-    },
-    select: {
-      user_id: true,
-      username: true,
-      profile_picture_url: true,
-    },
-  });
-
-  const profileMap = new Map(
-    userProfiles.map((profile) => [profile.user_id, profile]),
-  );
-
-  return groupedRows.map((row) => ({
-    ...row,
-    discord_user_profile: profileMap.get(row.user_id) ?? null,
-  })) as PixelHistoryUserColorCountRow[];
+    discord_user_profile:
+      row.profile_user_id !== null && row.username !== null ?
+        {
+          user_id: row.profile_user_id,
+          username: row.username,
+          profile_picture_url: row.profile_picture_url,
+        }
+      : null,
+  }));
 }
 
 function buildPixelHistoryUsers(
@@ -250,11 +394,7 @@ function buildPixelHistoryUsers(
 
   for (const colorCount of userColorCounts) {
     const userSummary = users[colorCount.user_id.toString()];
-
-    if (!userSummary) {
-      continue;
-    }
-
+    if (!userSummary) continue;
     userSummary.colors[colorCount.color_id.toString()] = colorCount._count._all;
   }
 
@@ -292,7 +432,7 @@ export async function getPixelHistorySummary(
   const normalizedPoints: [Point, Point] =
     Array.isArray(points) ? points : [points, points];
 
-  const fetchData: GetPixelHistoryParams = {
+  const fetchParams: GetPixelHistoryParams = {
     canvasId,
     points: normalizedPoints,
     dateRange,
@@ -300,35 +440,29 @@ export async function getPixelHistorySummary(
     colorFilter,
   };
 
-  const pixelHistoryPromise = getPixelHistoryRows({
-    fetchData,
+  const pixelHistoryAndCountPromise = getPixelHistoryRowsWithCount({
+    fetchParams,
     limit: 100,
-  });
-
-  const totalEntriesPromise = prisma.history.count({
-    where: buildPixelHistoryWhere(fetchData),
   });
 
   const summaryPromise =
     includeSummary ?
       Promise.all([
-        getPixelHistoryUserCounts(fetchData),
-        getPixelHistoryUserColorCounts(fetchData),
+        getPixelHistoryUserCounts(fetchParams),
+        getPixelHistoryUserColorCounts(fetchParams),
       ] as const)
     : Promise.resolve(null);
 
-  const [pixelHistory, totalEntries, summary] = await Promise.all([
-    pixelHistoryPromise,
-    totalEntriesPromise,
+  const [{ rows: pixelHistoryRows, totalCount }, summary] = await Promise.all([
+    pixelHistoryAndCountPromise,
     summaryPromise,
   ]);
 
-  const users =
-    summary ? buildPixelHistoryUsers(summary[0], summary[1]) : undefined;
+  const users = summary ? buildPixelHistoryUsers(...summary) : undefined;
 
   return {
-    pixelHistory: pixelHistory.map(mapPixelHistoryRow),
-    totalEntries,
+    pixelHistory: pixelHistoryRows.map(mapPixelHistoryRow),
+    totalEntries: totalCount,
     users,
   };
 }
@@ -344,52 +478,57 @@ export async function deletePixelHistoryEntries(
   shouldBlockAuthors: boolean = false,
 ): Promise<void> {
   // Validate pixels
-  const normalizedPoints: [Point, Point] =
+  const [pointTL, pointBR]: [Point, Point] =
     Array.isArray(params.points) ?
       params.points
     : [params.points, params.points];
 
-  if (
-    normalizedPoints[0].x === normalizedPoints[1].x &&
-    normalizedPoints[0].y === normalizedPoints[1].y
-  ) {
-    await validatePixel(params.canvasId, normalizedPoints[0], false);
+  if (pointTL.x === pointBR.x && pointTL.y === pointBR.y) {
+    await validatePixel(params.canvasId, pointTL, false);
   } else {
     await Promise.all([
-      validatePixel(params.canvasId, normalizedPoints[0], false),
-      validatePixel(params.canvasId, normalizedPoints[1], false),
+      validatePixel(params.canvasId, pointTL, false),
+      validatePixel(params.canvasId, pointBR, false),
     ]);
   }
 
-  const where = buildPixelHistoryWhere(params);
+  const whereFragments = buildPixelHistoryWhereSQL(params);
 
-  // Get entries for pixel restoration and author blocking
-  const existingEntries = await prisma.history.findMany({
-    where,
-    select: {
-      id: true,
-      user_id: true,
-      x: true,
-      y: true,
-    },
-  });
-
-  if (existingEntries.length === 0) {
-    return;
+  // Combine fragments with AND
+  let whereSQL: Prisma.Sql;
+  if (whereFragments.length === 0) {
+    whereSQL = Prisma.sql`TRUE`;
+  } else {
+    whereSQL =
+      whereFragments.length === 1 ?
+        whereFragments[0]
+      : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
   }
 
   const erasedAt = new Date();
 
-  await prisma.history.updateMany({
-    where,
-    data: {
-      erased_at: erasedAt,
-    },
-  });
+  // Update entries and get their data in a single query
+  interface DeletedEntry {
+    id: bigint;
+    user_id: bigint;
+    x: number;
+    y: number;
+  }
+
+  const deletedEntries = await prisma.$queryRaw<DeletedEntry[]>`
+    UPDATE history h
+    SET erased_at = ${erasedAt}
+    WHERE ${whereSQL}
+    RETURNING id, user_id, x, y
+  `;
+
+  if (deletedEntries.length === 0) {
+    return;
+  }
 
   const coordinatesUpdated = [
     ...new Map(
-      existingEntries.map((entry) => [
+      deletedEntries.map((entry) => [
         `${entry.x}:${entry.y}`,
         { x: entry.x, y: entry.y },
       ]),
@@ -399,7 +538,7 @@ export async function deletePixelHistoryEntries(
   await restorePixelsAfterHistoryDeletion(params.canvasId, coordinatesUpdated);
 
   if (shouldBlockAuthors) {
-    const authorIds = new Set(existingEntries.map((entry) => entry.user_id));
+    const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
     await addUsersToBlocklist(authorIds);
   }
 }

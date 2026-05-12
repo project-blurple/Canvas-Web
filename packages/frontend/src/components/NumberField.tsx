@@ -1,111 +1,185 @@
-// Copied from https://mui.com/material-ui/react-number-field/
-// Slight modification to use Lucide icons instead of MUI
+// Custom number field built with a native <input type="number">.
 
-import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
-import FormControl from "@mui/material/FormControl";
-import IconButton from "@mui/material/IconButton";
-import InputAdornment from "@mui/material/InputAdornment";
-import InputLabel from "@mui/material/InputLabel";
-import OutlinedInput from "@mui/material/OutlinedInput";
+import { styled } from "@mui/material/styles";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import * as React from "react";
+import React from "react";
+import { clamp } from "@/util";
 
-/**
- * This component is a placeholder for FormControl to correctly set the shrink label state on SSR.
- */
-function SSRInitialFilled(_: BaseNumberField.Root.Props) {
-  return null;
-}
-SSRInitialFilled.muiName = "Input";
+type NumberFieldValue = number | null;
 
-export default function NumberField({
-  id: idProp,
-  label,
-  error,
-  size = "medium",
-  ...other
-}: BaseNumberField.Root.Props & {
+type NumberFieldProps = {
   label?: React.ReactNode;
   size?: "small" | "medium";
-  error?: boolean;
-}) {
-  let id = React.useId();
-  if (idProp) {
-    id = idProp;
-  }
-  return (
-    <BaseNumberField.Root
-      {...other}
-      render={(props, state) => (
-        <FormControl
-          size={size}
-          ref={props.ref}
-          disabled={state.disabled}
-          required={state.required}
-          error={error}
-          variant="outlined"
-        >
-          {props.children}
-        </FormControl>
-      )}
-    >
-      <SSRInitialFilled {...other} />
-      <InputLabel htmlFor={id}>{label}</InputLabel>
-      <BaseNumberField.Input
-        id={id}
-        render={(props, state) => (
-          <OutlinedInput
-            label={label}
-            inputRef={props.ref}
-            value={state.inputValue}
-            onBlur={props.onBlur}
-            onChange={props.onChange}
-            onKeyUp={props.onKeyUp}
-            onKeyDown={props.onKeyDown}
-            onFocus={props.onFocus}
-            slotProps={{
-              input: props,
-            }}
-            endAdornment={
-              <InputAdornment
-                position="end"
-                sx={{
-                  flexDirection: "column",
-                  maxHeight: "unset",
-                  alignSelf: "stretch",
-                  borderLeft: "1px solid",
-                  borderColor: "divider",
-                  ml: 0,
-                  "& button": {
-                    py: 0,
-                    flex: 1,
-                    borderRadius: 0.5,
-                  },
-                }}
-              >
-                <BaseNumberField.Increment
-                  render={<IconButton size={size} aria-label="Increase" />}
-                >
-                  <ChevronUp
-                    fontSize={size}
-                    style={{ transform: "translateY(2px)" }}
-                  />
-                </BaseNumberField.Increment>
+  value?: NumberFieldValue;
+  min?: number;
+  max?: number;
+  disabled?: boolean;
+  onValueChange?: (value: NumberFieldValue) => void;
+};
 
-                <BaseNumberField.Decrement
-                  render={<IconButton size={size} aria-label="Decrease" />}
-                >
-                  <ChevronDown
-                    fontSize={size}
-                    style={{ transform: "translateY(-2px)" }}
-                  />
-                </BaseNumberField.Decrement>
-              </InputAdornment>
-            }
-            sx={{ pr: 0 }}
-          />
-        )}
-      />
-    </BaseNumberField.Root>
+const Root = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+`;
+
+const Label = styled("label")`
+  color: ${({ theme }) => theme.palette.text.secondary};
+  font-size: 0.875rem;
+  line-height: 1.4375;
+`;
+
+const FieldRow = styled("div")<{ $size: "small" | "medium" }>(
+  ({ $size, theme }) => `
+    align-items: stretch;
+    background: ${theme.palette.background.paper};
+    border: 1px solid ${theme.palette.divider};
+    border-radius: 0.5rem;
+    display: flex;
+    gap: 0;
+    min-height: ${$size === "small" ? "2.25rem" : "3.5rem"};
+    overflow: hidden;
+    transition: ${theme.transitions.create(["border-color", "box-shadow"], {
+      duration: theme.transitions.duration.shorter,
+    })};
+
+    &:focus-within {
+      border-color: ${theme.palette.primary.main};
+      box-shadow: 0 0 0 1px ${theme.palette.primary.main};
+    }
+  `,
+);
+
+const NativeInput = styled("input", {
+  shouldForwardProp: (prop) => prop !== "$size",
+})<{ $size: "small" | "medium" }>`
+  appearance: textfield;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  flex: 1;
+  font: inherit;
+  min-width: 0;
+  outline: 0;
+  padding: ${({ $size }) =>
+    $size === "small" ? "0.375rem 0.75rem" : "0.875rem 1rem"};
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    appearance: none;
+    margin: 0;
+  }
+`;
+
+const StepperColumn = styled("div")`
+  background: ${({ theme }) => theme.palette.action.hover};
+  border-left: 1px solid ${({ theme }) => theme.palette.divider};
+  display: flex;
+  flex-direction: column;
+`;
+
+const StepperButton = styled("button")`
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  flex: 1;
+  min-width: 2rem;
+  place-items: center;
+
+  &:hover:not(:disabled) {
+    background: ${({ theme }) => theme.palette.action.selected};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+export default function NumberField({
+  label,
+  size = "medium",
+  value,
+  min,
+  max,
+  disabled,
+  onValueChange,
+}: NumberFieldProps) {
+  const inputId = React.useId();
+
+  function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const nextValue =
+      event.target.value === "" ?
+        null
+      : Number.parseInt(event.target.value, 10);
+
+    onValueChange?.(Number.isNaN(nextValue) ? null : nextValue);
+  }
+
+  function changeByStep(direction: 1 | -1) {
+    const baseValue = value ?? 0;
+    const nextValue =
+      min != null || max != null ?
+        clamp(baseValue + direction, min ?? -Infinity, max ?? Infinity)
+      : baseValue + direction;
+
+    onValueChange?.(nextValue);
+  }
+
+  function handleBlur() {
+    if (value === null || value === undefined) return;
+    const clampedValue =
+      min != null || max != null ?
+        clamp(value, min ?? -Infinity, max ?? Infinity)
+      : value;
+
+    if (clampedValue !== value) {
+      onValueChange?.(clampedValue);
+    }
+  }
+
+  return (
+    <Root>
+      {label && <Label htmlFor={inputId}>{label}</Label>}
+      <FieldRow $size={size}>
+        <NativeInput
+          id={inputId}
+          type="number"
+          $size={size}
+          value={value ?? ""}
+          onChange={handleInputChange}
+          onBlur={handleBlur}
+          disabled={disabled}
+          min={min}
+          max={max}
+          step={1}
+        />
+        <StepperColumn>
+          <StepperButton
+            type="button"
+            aria-label="Increase"
+            onClick={() => changeByStep(1)}
+            disabled={disabled}
+          >
+            <ChevronUp size={size === "small" ? 14 : 16} />
+          </StepperButton>
+          <StepperButton
+            type="button"
+            aria-label="Decrease"
+            onClick={() => changeByStep(-1)}
+            disabled={disabled}
+          >
+            <ChevronDown size={size === "small" ? 14 : 16} />
+          </StepperButton>
+        </StepperColumn>
+      </FieldRow>
+    </Root>
   );
 }

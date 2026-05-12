@@ -65,7 +65,7 @@ describe("History route tests", () => {
             "1": 1,
           },
           firstPlaced: new Date(0).toISOString(),
-          lastPlaced: new Date(0).toISOString(),
+          lastPlaced: new Date().toISOString(),
         },
       },
     };

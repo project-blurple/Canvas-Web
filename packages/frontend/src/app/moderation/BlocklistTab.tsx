@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import { Heading } from "@/components/action-panel/ActionPanel";
+import { PanelSectionHeading } from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -11,11 +11,9 @@ const BlocklistTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
-interface BlocklistTabProps extends React.ComponentPropsWithoutRef<
-  typeof BlocklistTabBlock
-> {}
-
-export default function BlocklistTab({ ...props }: BlocklistTabProps) {
+export default function BlocklistTab(
+  props: React.ComponentPropsWithoutRef<typeof BlocklistTabBlock>,
+) {
   const { data: blocklist = [], isLoading } = useBlocklist();
 
   return (
@@ -23,7 +21,7 @@ export default function BlocklistTab({ ...props }: BlocklistTabProps) {
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <div>
-            <Heading>Blocklist</Heading>
+            <PanelSectionHeading>Blocklist</PanelSectionHeading>
 
             {isLoading ?
               <p>Loading...</p>

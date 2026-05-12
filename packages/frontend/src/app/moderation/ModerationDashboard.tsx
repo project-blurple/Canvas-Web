@@ -1,10 +1,10 @@
 import styled from "@emotion/styled";
 import { useEffect, useId, useState } from "react";
 import {
+  ActionPanelTabBar,
   ActionPanelWrapper,
   GenericTab,
-  TabBar,
-} from "@/components/action-panel/ActionPanel";
+} from "@/components/action-panel/primitives";
 import { CanvasView } from "@/components/canvas";
 import { ComplexSearchTab } from "@/components/complex-search";
 import { SlideableDrawer } from "@/components/slideable-drawer";
@@ -22,7 +22,7 @@ const DashboardWrapper = styled(CanvasWrapper)`
   }
 `;
 
-const ModTabBar = styled(TabBar)`
+const ModTabBar = styled(ActionPanelTabBar)`
   grid-template-columns: repeat(2, 1fr);
 `;
 
@@ -49,7 +49,7 @@ const Tab = GenericTab<TabKey>;
 
 function ModerationDashboardActionPanel() {
   const [currentTab, setCurrentTab] = useState("search");
-  const [areTabsLocked, _setAreTabsLocked] = useState(false);
+  const [areTabsLocked] = useState(false);
 
   const { resetSelectedBounds, setShowSelectedBounds } =
     useSelectedBoundsContext();
@@ -66,11 +66,7 @@ function ModerationDashboardActionPanel() {
   const onSwitchTab = (newTab: TabKey) => {
     if (areTabsLocked) return;
 
-    if (currentTab === "search" && newTab !== "search") {
-      setShowSelectedBounds(false);
-    } else {
-      setShowSelectedBounds(true);
-    }
+    setShowSelectedBounds(!(currentTab === "search" && newTab !== "search"));
 
     setCurrentTab(newTab);
   };

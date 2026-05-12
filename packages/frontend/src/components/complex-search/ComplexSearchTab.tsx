@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { Heading } from "@/components/action-panel/ActionPanel";
+import { PanelSectionHeading } from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -19,12 +19,14 @@ import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
+import type { ViewBounds } from "@/util";
+import { durationFormat } from "@/util";
 import {
   ComplexSearchBoundsSelect,
   ComplexSearchColorSelect,
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
-} from ".";
+} from "../complex-search";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
 import SearchUserEntries from "./SearchUserEntry";
 
@@ -32,10 +34,14 @@ const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
 
-const SearchWrapper = styled("div")`
+const Form = styled("form")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
+  > :first-child {
+    margin-top: 0;
+  }
 `;
 
 const SummaryGrid = styled("div")`
@@ -60,13 +66,23 @@ const EraseWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
+function areBoundsValid(bounds: ViewBounds | null): boolean {
+  if (!bounds) return false;
+
+  const width = bounds.right - bounds.left;
+  const height = bounds.bottom - bounds.top;
+
+  return (
+    width >= COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width &&
+    height >= COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+  );
+}
+
 export type SearchFilterMode = "include" | "exclude";
 
-interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
-  typeof ComplexSearchTabBlock
-> {}
-
-export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
+export default function ComplexSearchTab({
+  ...props
+}: React.ComponentPropsWithoutRef<typeof ComplexSearchTabBlock>) {
   const {
     setCanEdit,
     selectedBounds,
@@ -79,7 +95,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
-  const [selectedColorIds, setSelectedColorIds] = useState<string[]>([]);
+  const [selectedColorIds, setSelectedColorIds] = useState<number[]>([]);
   const [colorFilterMode, setColorFilterMode] =
     useState<SearchFilterMode>("include");
 
@@ -92,10 +108,13 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
-  const [historyData, setHistoryData] = useState<PixelHistoryWrapper | null>(
-    null,
-  );
-  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
+  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery, {
+    onSettled: () => {
+      setCanEdit(true);
+    },
+  });
+  const historyData: PixelHistoryWrapper | null =
+    searchQuery === null ? null : historyQuery.data;
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -127,24 +146,6 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     ],
   );
 
-  useEffect(
-    function updateHistoryFromQuery() {
-      if (!historyQuery.data) return;
-
-      setHistoryData(historyQuery.data);
-    },
-    [historyQuery.data],
-  );
-
-  useEffect(
-    function reenableEditOnQueryCompletion() {
-      if (!historyQuery.isLoading) {
-        setCanEdit(true);
-      }
-    },
-    [historyQuery.isLoading, setCanEdit],
-  );
-
   function handleSearchClick() {
     if (!selectedBounds) return;
 
@@ -170,9 +171,13 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     });
   }
 
+  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    handleSearchClick();
+  }
+
   function resetResults() {
     setSearchQuery(null);
-    setHistoryData(null);
   }
 
   const pixelsInBounds =
@@ -181,12 +186,13 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       (selectedBounds.bottom - selectedBounds.top)
     : 0;
 
-  const disabled = !selectedBounds || historyQuery.isLoading;
+  const boundsValid = areBoundsValid(selectedBounds);
+  const isLoading = historyQuery.isLoading;
 
   const entriesCount = historyData?.totalEntries ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
-  const results = (() => {
+  const Results: React.FC = () => {
     if (historyQuery.status === "error") {
       const { status } = historyQuery.error as AxiosError;
       const allowed = [401, 500];
@@ -195,18 +201,18 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
         const errorText: Record<string, [string, string]> = {
           401: [
             "Unauthorized",
-            "You don't have permission to perform this search. How'd you get here?",
+            "You don’t have permission to perform this search. How’d you get here?",
           ],
           500: [
             "Server error",
-            "Something went wrong on our end while processing this search.",
+            "Something went wrong on our end while processing this search",
           ],
         };
 
         return (
           <ActionPanelTabBody>
             <div>
-              <Heading>{errorText[status][0]}</Heading>
+              <PanelSectionHeading>{errorText[status][0]}</PanelSectionHeading>
               <p>{errorText[status][1]}</p>
             </div>
           </ActionPanelTabBody>
@@ -218,7 +224,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
       return (
         <ActionPanelTabBody>
           <div>
-            <Heading>Search results</Heading>
+            <PanelSectionHeading>Search results</PanelSectionHeading>
             <SummaryGrid>
               <SummaryCard>
                 <strong>Total entries</strong>
@@ -226,7 +232,14 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
               </SummaryCard>
               <SummaryCard>
                 <strong>Query duration</strong>
-                <span>{historyQuery.lastDurationMs?.toFixed(2) ?? 0} ms</span>
+                <span>
+                  {durationFormat?.format({
+                    milliseconds: Math.max(
+                      0,
+                      Math.floor(historyQuery.lastDurationMs ?? 0),
+                    ),
+                  })}
+                </span>
               </SummaryCard>
               <SummaryCard>
                 <strong>Users</strong>
@@ -235,7 +248,7 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
             </SummaryGrid>
             {usersLength > 0 && (
               <>
-                <Heading>User summary</Heading>
+                <PanelSectionHeading>User summary</PanelSectionHeading>
                 <SearchUserEntries
                   users={historyData.users}
                   palette={palette}
@@ -248,54 +261,53 @@ export default function ComplexSearchTab({ ...props }: ComplexSearchTabProps) {
     }
 
     return null;
-  })();
+  };
 
   return (
     <ComplexSearchTabBlock {...props}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <SearchWrapper>
-            <Heading>History Search</Heading>
-            <ComplexSearchBoundsSelect
-              canvas={canvas}
-              selectedBounds={selectedBounds}
-              setSelectedBounds={setSelectedBounds}
-              disabled={disabled}
-            />
-            <ComplexSearchColorSelect
-              palette={palette}
-              value={selectedColorIds}
-              filterMode={colorFilterMode}
-              onChange={setSelectedColorIds}
-              onFilterModeChange={setColorFilterMode}
-              disabled={disabled}
-            />
-            <ComplexSearchUserSelect
-              historyData={historyData}
-              value={selectedUserIds}
-              filterMode={userFilterMode}
-              onChange={setSelectedUserIds}
-              onFilterModeChange={setUserFilterMode}
-              disabled={disabled}
-            />
-            <ComplexSearchDateSelect
-              fromTime={fromTime}
-              toTime={toTime}
-              setFromTime={setFromTime}
-              setToTime={setToTime}
-              disabled={disabled}
-            />
-            <DynamicButton
-              onClick={handleSearchClick}
-              disabled={!selectedBounds || historyQuery.isLoading}
-            >
-              {!historyQuery.isLoading ?
-                `Search (${pixelsInBounds.toLocaleString()} pixels)`
-              : "Searching..."}
-            </DynamicButton>
-          </SearchWrapper>
+          <search>
+            <Form onSubmit={handleSearchSubmit}>
+              <PanelSectionHeading>History Search</PanelSectionHeading>
+              <ComplexSearchBoundsSelect
+                canvas={canvas}
+                selectedBounds={selectedBounds}
+                setSelectedBounds={setSelectedBounds}
+                disabled={isLoading}
+              />
+              <ComplexSearchColorSelect
+                palette={palette}
+                value={selectedColorIds}
+                filterMode={colorFilterMode}
+                onChange={setSelectedColorIds}
+                onFilterModeChange={setColorFilterMode}
+                disabled={isLoading}
+              />
+              <ComplexSearchUserSelect
+                historyData={historyData}
+                value={selectedUserIds}
+                filterMode={userFilterMode}
+                onChange={setSelectedUserIds}
+                onFilterModeChange={setUserFilterMode}
+                disabled={isLoading}
+              />
+              <ComplexSearchDateSelect
+                fromTime={fromTime}
+                toTime={toTime}
+                setFromTime={setFromTime}
+                setToTime={setToTime}
+                disabled={isLoading}
+              />
+              <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
+                {!historyQuery.isLoading ?
+                  `Search (${pixelsInBounds.toLocaleString()} pixel${pixelsInBounds !== 1 ? "s" : ""})`
+                : "Searching..."}
+              </DynamicButton>
+            </Form>
+          </search>
         </ActionPanelTabBody>
-        {results}
+        <Results />
       </FullWidthScrollView>
       {historyData && searchQuery && (
         <ActionPanelTabBody>

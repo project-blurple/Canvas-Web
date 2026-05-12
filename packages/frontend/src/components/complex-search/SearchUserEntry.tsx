@@ -105,7 +105,9 @@ function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
   return (
     <UserCard>
       <CardHeader>
-        <strong>{summary.userProfile?.username ?? userId}</strong>
+        <strong title={summary.userProfile?.username ?? userId.toString()}>
+          {summary.userProfile?.username ?? userId}
+        </strong>
         <span>
           {summary.count.toLocaleString()} pixel{summary.count !== 1 && "s"}
         </span>

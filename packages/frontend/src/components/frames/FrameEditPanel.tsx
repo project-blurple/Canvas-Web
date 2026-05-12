@@ -40,7 +40,7 @@ import {
   normalizeFrameBounds,
   type ViewBounds,
 } from "@/util";
-import { Heading } from "../action-panel/ActionPanel";
+import { PanelSectionHeading } from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -493,7 +493,9 @@ export default function FrameEditPanel({
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <EditContainer>
-            <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
+            <PanelSectionHeading>
+              {isCreateMode ? "Create frame" : "Edit frame"}
+            </PanelSectionHeading>
             <TextField
               label="Name"
               onChange={(e) => setFrameName(e.target.value)}
@@ -545,7 +547,7 @@ export default function FrameEditPanel({
                 />
                 <CoordinatesCard
                   coordinates={addPoints(
-                    { x: frameBounds.right, y: frameBounds.bottom },
+                    { x: frameBounds.right - 1, y: frameBounds.bottom - 1 },
                     tupleToPoint(canvas.startCoordinates),
                   )}
                 />
@@ -553,7 +555,7 @@ export default function FrameEditPanel({
             )}
           </EditContainer>
           <PreviewContainer>
-            <Heading>Preview</Heading>
+            <PanelSectionHeading>Preview</PanelSectionHeading>
             {frameBounds ?
               <EditPreviewCanvas
                 ref={previewCanvasRef}

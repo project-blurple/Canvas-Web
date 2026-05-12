@@ -138,6 +138,7 @@ export default function ComplexSearchUserSelect({
           onFilterModeChange(filterMode === "include" ? "exclude" : "include");
         }}
         disabled={disabled}
+        role="spinbutton"
       >
         {filterMode === "include" ?
           <SquarePlus />
