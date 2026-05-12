@@ -8,15 +8,23 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { StyledButton } from "@/components/button/DynamicButton";
 import { UserId } from "@/components/complex-search/SearchUserEntry";
+import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import { useBlocklist } from "@/hooks/queries/useBlocklist";
 import CheckboxSetting from "../settings/CheckboxSetting";
 
+const BlocklistBodyWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
 const BlocklistEntryTable = styled("table")`
-  width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  width: 100%;
 
   * > th {
     text-align: left;
@@ -31,6 +39,17 @@ const StyledCheckboxSetting = styled(CheckboxSetting)`
 
 const StyledUsername = styled("td")`
   overflow-x: ellipsis;
+`;
+
+const BlocklistFooter = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Button = styled(StyledButton)`
+  color: white;
+  width: 100%;
 `;
 
 interface BlocklistUserEntryProps extends Pick<
@@ -138,14 +157,17 @@ export default function BlocklistTab(
     <BlocklistTabBlock {...props}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <div>
+          <BlocklistBodyWrapper>
             <PanelSectionHeading>Blocklist</PanelSectionHeading>
 
-            <input
+            <Input
               type="text"
               placeholder="Search users..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+              }}
             />
 
             {isLoading ?
@@ -173,9 +195,18 @@ export default function BlocklistTab(
                 ))}
               </BlocklistEntryTable>
             }
-          </div>
+          </BlocklistBodyWrapper>
         </ActionPanelTabBody>
       </FullWidthScrollView>
+      <ActionPanelTabBody>
+        <BlocklistFooter>
+          <Button>Add to blocklist</Button>
+          <Button>
+            Remove {selectedUsers.size} user
+            {selectedUsers.size !== 1 ? "s" : ""} from blocklist
+          </Button>
+        </BlocklistFooter>
+      </ActionPanelTabBody>
     </BlocklistTabBlock>
   );
 }
