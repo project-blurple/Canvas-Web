@@ -7,7 +7,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
@@ -56,12 +56,33 @@ export interface ComplexPixelHistoryQuery {
 export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
-  options?: {
-    onSettled?: () => void;
-  },
 ) {
   const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
   const lastDurationRef = useRef<number | null>(null);
+  const previousSearchRef = useRef<{
+    canvasId: CanvasInfo["id"];
+    query: ComplexPixelHistoryQuery | null;
+  }>({
+    canvasId,
+    query,
+  });
+
+  useEffect(
+    function resetLastDurationWhenQueryChanges() {
+      const previousSearch = previousSearchRef.current;
+      if (
+        previousSearch.canvasId === canvasId &&
+        previousSearch.query === query
+      ) {
+        return;
+      }
+
+      previousSearchRef.current = { canvasId, query };
+      setLastDurationMs(null);
+      lastDurationRef.current = null;
+    },
+    [canvasId, query],
+  );
 
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
     if (!query) return null;
@@ -90,15 +111,10 @@ export function useComplexPixelHistory(
           withCredentials: true,
         },
       );
-      lastDurationRef.current = performance.now() - startedAt;
 
       return response.data;
-    } catch (error) {
-      lastDurationRef.current = performance.now() - startedAt;
-
-      throw error;
     } finally {
-      options?.onSettled?.();
+      lastDurationRef.current = performance.now() - startedAt;
     }
   };
 
@@ -108,6 +124,14 @@ export function useComplexPixelHistory(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
+
+  const result = useMemo(
+    () => ({
+      ...queryResult,
+      lastDurationMs,
+    }),
+    [queryResult, lastDurationMs],
+  );
 
   useEffect(
     function updateLastDurationAfterSettledQuery() {
@@ -122,9 +146,5 @@ export function useComplexPixelHistory(
     [queryResult.dataUpdatedAt, queryResult.errorUpdatedAt],
   );
 
-  return {
-    ...queryResult,
-    data: queryResult.data ?? null,
-    lastDurationMs,
-  };
+  return result;
 }
