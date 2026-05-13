@@ -1,10 +1,6 @@
-import type {
-  DiscordGuildRecord,
-  DiscordUserProfile,
-  Frame,
-  GuildOwnedFrame,
-  UserOwnedFrame,
-} from "..";
+import type { DiscordGuildRecord } from "../discordGuildRecord";
+import type { DiscordUserProfile } from "../discordUserProfile";
+import type { Frame, GuildOwnedFrame, UserOwnedFrame } from "../frame";
 
 export interface Params {
   frameId?: Frame["id"];

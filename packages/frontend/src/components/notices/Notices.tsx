@@ -44,7 +44,7 @@ export default function Notices() {
         return next;
       });
 
-      const n = notices.find((x) => x.id === id);
+      const n = notices.find((x) => x.id === Number.parseInt(id, 10));
       if (persist && n && n.persisted === false) {
         const nextArr = Array.from(
           new Set([...(persistedDismissed ?? []), id]),
@@ -59,8 +59,8 @@ export default function Notices() {
     .filter(
       (notice) =>
         (notice.canvasId === null || notice.canvasId === canvas?.id) &&
-        !transientDismissed.has(notice.id) &&
-        !persistedSet.has(notice.id),
+        !transientDismissed.has(notice.id.toString()) &&
+        !persistedSet.has(notice.id.toString()),
     )
     .sort((a, b) => {
       if (a.priority !== b.priority) {
@@ -78,8 +78,8 @@ export default function Notices() {
         <NoticeBanner
           key={notice.id}
           notice={notice}
-          onDismiss={() => dismiss(notice.id, false)}
-          onDismissPermanently={() => dismiss(notice.id, true)}
+          onDismiss={() => dismiss(notice.id.toString(), false)}
+          onDismissPermanently={() => dismiss(notice.id.toString(), true)}
         />
       ))}
     </NoticeWrapper>

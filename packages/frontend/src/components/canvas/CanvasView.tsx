@@ -6,7 +6,7 @@ import type {
   PlacePixelSocket,
   Point,
 } from "@blurple-canvas-web/types";
-import { CircularProgress, css, styled } from "@mui/material";
+import { css, styled } from "@mui/material";
 import {
   Maximize2,
   Minimize2,
@@ -35,6 +35,7 @@ import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
+import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
@@ -258,7 +259,7 @@ const CanvasImageWrapper = styled("div", {
 `;
 
 /**
- * Calculate the default scale to use for the canvas. This tries to maximise the size of the canvas
+ * Calculate the default scale to use for the canvas. This tries to maximize the size of the canvas
  * without it overflowing the screen.
  */
 function getDefaultZoom(
@@ -418,7 +419,7 @@ function getInitialViewFromSearchParams({
 const SCALE_FACTOR = 0.002;
 // MAX ZOOM is the absolute maximum scaling that can be applied to the image element
 const MAX_ZOOM = 100;
-// MIN ZOOM_FACTOR is relative to the initalZoom. i.e. MIN_ZOOM_FACTOR = 0.9 -> minimumCssScale = 0.9 * initialZoom
+// MIN ZOOM_FACTOR is relative to the initialZoom. i.e. MIN_ZOOM_FACTOR = 0.9 -> minimumCssScale = 0.9 * initialZoom
 const MIN_ZOOM_FACTOR = 0.9;
 const FRAME_FIT_FILL_RATIO = 0.75;
 
@@ -775,7 +776,7 @@ export default function CanvasView({
       // This method prevents the need to convert an N×M canvas to a png on every update
       // while also preventing an inordinate amount of overlaid pixels from causing lag
       if (overlayCountRef.current >= pixelOverlayThreshold) {
-        // flush the overlayed pixels and update canvas image
+        // flush the overlaid pixels and update canvas image
         clearOverlay();
         offscreenCanvasRef.current?.convertToBlob().then((blob) => {
           if (!imageRef.current) return;
@@ -826,7 +827,7 @@ export default function CanvasView({
   }, [canvas]);
 
   /**
-   * Clears all overlayed pixels from the canvas image wrapper
+   * Clears all overlaid pixels from the canvas image wrapper
    */
   const clearOverlay = () => {
     // canvasImageWrapper.children only gets populated per DOM update.
@@ -834,7 +835,7 @@ export default function CanvasView({
     // Keep this in mind when testing for performance.
     const canvasImageWrapper = canvasImageWrapperRef.current;
     if (!canvasImageWrapper) return;
-    // Clears all overlayed pixels and retains the original image
+    // Clears all overlaid pixels and retains the original image
     while (canvasImageWrapper.children.length > 1) {
       const lastChild = canvasImageWrapper.lastChild;
       if (lastChild && lastChild instanceof HTMLImageElement) {
@@ -906,7 +907,7 @@ export default function CanvasView({
       event.preventDefault();
       // Ensures that the handler can be added to a parent element but only operates on the canvas image wrapper.
       // Applying the handler to lower elements for some isn't consistently picked up in certain browsers (Firefox and Chrome).
-      // Ideally, the scrolling should work outside of canvas-image-wrapper, but I can't seem to get the behaviour correct.
+      // Ideally, the scrolling should work outside of canvas-image-wrapper, but I can't seem to get the behavior correct.
       const elem = event.currentTarget;
       if (!(elem instanceof HTMLElement)) return;
       if (!(elem instanceof HTMLElement) || event.deltaY === 0) return;
@@ -1309,7 +1310,16 @@ export default function CanvasView({
           {actionPanel}
         </FullscreenPanelOverlay>
       )}
-      {isLoading && <CircularProgress style={{ position: "absolute" }} />}
+      {isLoading && (
+        <CanvasAnimatedIcon
+          style={{
+            color: "var(--discord-blurple)",
+            height: "100px",
+            opacity: 0.8,
+            position: "absolute",
+          }}
+        />
+      )}
     </CanvasWrapper>
   );
 }
