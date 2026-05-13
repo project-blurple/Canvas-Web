@@ -142,17 +142,15 @@ export default function BlocklistTab(
     });
   }
 
-  // Compute filtered and pinned display list
   // biome-ignore lint/correctness/useExhaustiveDependencies: selectedUsers is not included as we don't want the list to re-order when selection changes
   const displayList = useMemo(() => {
     if (!searchQuery) {
-      // No filter: selected first, then unselected (by original order)
+      // No filter: selected are raised to the top
       const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
       const unselected = blocklist.filter((u) => !selectedUsers.has(u.userId));
       return [...selected, ...unselected];
     }
 
-    // Filter by search query
     const lowerQuery = searchQuery.toLowerCase();
     const filtered = blocklist.filter((entry) => {
       const matchesUsername =
@@ -161,7 +159,7 @@ export default function BlocklistTab(
       return matchesUsername || matchesId;
     });
 
-    // Partition: selected first (from filtered), then unselected (from filtered)
+    // Selected are raised to the top, shows all selected even if they don't match the filter
     const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
     const unselected = filtered.filter((u) => !selectedUsers.has(u.userId));
     return [...selected, ...unselected];
