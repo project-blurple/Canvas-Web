@@ -51,7 +51,10 @@ const StyledUserRow = styled("td")`
 `;
 
 const StyledUsername = styled("span")`
-  overflow-x: ellipsis;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const StyledInput = styled(Input)`
@@ -194,7 +197,7 @@ export default function BlocklistTab(
             : <BlocklistEntryTable>
                 <thead>
                   <tr>
-                    <th></th>
+                    <th /> {/* Checkbox column */}
                     <th>User</th>
                     <th>Date Added</th>
                   </tr>
