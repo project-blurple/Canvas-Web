@@ -22,6 +22,7 @@ export interface PixelHistoryWrapper {
   pixelHistory: PixelHistoryRecord[];
   totalEntries: number;
   users?: Record<string, PixelHistoryUserSummary>;
+  executionDurationMs?: number;
 }
 
 export type PixelHistory = PixelHistoryWrapper;

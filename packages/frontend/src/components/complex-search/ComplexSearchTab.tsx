@@ -108,13 +108,9 @@ export default function ComplexSearchTab({
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
-  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery, {
-    onSettled: () => {
-      setCanEdit(true);
-    },
-  });
+  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
   const historyData: PixelHistoryWrapper | null =
-    searchQuery === null ? null : historyQuery.data;
+    searchQuery === null ? null : (historyQuery.data ?? null);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -232,7 +228,7 @@ export default function ComplexSearchTab({
                   {durationFormat?.format({
                     milliseconds: Math.max(
                       0,
-                      Math.floor(historyQuery.lastDurationMs ?? 0),
+                      Math.floor(historyQuery.data?.executionDurationMs ?? 0),
                     ),
                   })}
                 </span>
