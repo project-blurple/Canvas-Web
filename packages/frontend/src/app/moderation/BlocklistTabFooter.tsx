@@ -76,6 +76,7 @@ interface BlocklistAddSectionProps {
 
 interface BlocklistRemoveSectionProps {
   selectedUsersCount: number;
+  userIdsToBlock: bigint[];
 }
 
 function parseUserIds(value: string): bigint[] {
@@ -88,6 +89,11 @@ function parseUserIds(value: string): bigint[] {
 
 function normalizeUserIds(values: readonly bigint[]): bigint[] {
   return [...new Set(values)];
+}
+
+function blockUsers(userIds: bigint[]) {
+  // TODO: Implement blocklisting users by their IDs
+  console.log("Blocking users with IDs:", userIds);
 }
 
 function BlocklistAddSection({
@@ -198,6 +204,7 @@ function BlocklistAddSection({
         </BlocklistAutocompleteWrapper>
         <Button
           disabled={userIdsToBlock.length === 0 || inputtedUsersAlreadyBlocked}
+          onClick={() => blockUsers(userIdsToBlock)}
         >
           Block
         </Button>
@@ -208,9 +215,13 @@ function BlocklistAddSection({
 
 function BlocklistRemoveSection({
   selectedUsersCount,
+  userIdsToBlock,
 }: BlocklistRemoveSectionProps) {
   return (
-    <Button disabled={selectedUsersCount === 0}>
+    <Button
+      disabled={selectedUsersCount === 0}
+      onClick={() => blockUsers(userIdsToBlock)}
+    >
       Remove {selectedUsersCount} user
       {selectedUsersCount !== 1 ? "s" : ""} from blocklist
     </Button>
@@ -231,7 +242,11 @@ export function BlocklistFooterSection({
           onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
         />
-      : <BlocklistRemoveSection selectedUsersCount={selectedUsersCount} />}
+      : <BlocklistRemoveSection
+          selectedUsersCount={selectedUsersCount}
+          userIdsToBlock={userIdsToBlock}
+        />
+      }
     </BlocklistFooter>
   );
 }
