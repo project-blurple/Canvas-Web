@@ -1,5 +1,4 @@
 import z from "zod";
-import { BadRequestError } from "@/errors";
 import { assertZodSuccess } from "@/utils/models";
 
 const FrameIdParamModel = z.object({

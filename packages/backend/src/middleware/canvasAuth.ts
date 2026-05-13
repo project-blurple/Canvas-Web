@@ -5,18 +5,25 @@ import {
   isCanvasAdmin,
   isCanvasModerator,
 } from "@/services/discordGuildService";
+import { withDiscordAccessToken } from "@/services/discordTokenService";
 
 interface AuthenticatedRequest extends Request {
   user: DiscordUserProfile;
   session: Request["session"] & {
     discordAccessToken: string;
+    discordRefreshToken?: string;
+    discordTokenExpiresAt?: number;
+    discordTokenLifetimeMs?: number;
   };
 }
 
 export function assertLoggedIn(
   req: Request,
 ): asserts req is AuthenticatedRequest {
-  if (!req.user || !req.session.discordAccessToken) {
+  if (
+    !req.user ||
+    !(req.session.discordAccessToken || req.session.discordRefreshToken)
+  ) {
     throw new UnauthorizedError("User is not authenticated");
   }
 }
@@ -42,8 +49,10 @@ export async function requireCanvasModerator(
   try {
     assertLoggedIn(req);
 
-    const accessToken = req.session.discordAccessToken;
-    const userIsCanvasModerator = await isCanvasModerator(accessToken);
+    const userIsCanvasModerator = await withDiscordAccessToken(
+      req.session,
+      isCanvasModerator,
+    );
 
     if (!userIsCanvasModerator) {
       throw new ForbiddenError(
@@ -65,8 +74,9 @@ export async function requireCanvasAdmin(
   try {
     assertLoggedIn(req);
 
-    const userIsCanvasAdmin = await isCanvasAdmin(
-      req.session.discordAccessToken,
+    const userIsCanvasAdmin = await withDiscordAccessToken(
+      req.session,
+      isCanvasAdmin,
     );
 
     if (!userIsCanvasAdmin) {

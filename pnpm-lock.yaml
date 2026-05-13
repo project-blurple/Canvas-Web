@@ -48,6 +48,9 @@ importers:
       cors:
         specifier: ^2.8.6
         version: 2.8.6
+      discord-strategy:
+        specifier: ^2.5.0
+        version: 2.5.0
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -60,9 +63,9 @@ importers:
       passport:
         specifier: ^0.7.0
         version: 0.7.0
-      passport-discord:
-        specifier: ^0.1.4
-        version: 0.1.4
+      passport-oauth2-refresh:
+        specifier: ^2.2.0
+        version: 2.2.0
       pngjs:
         specifier: ^7.0.0
         version: 7.0.0
@@ -97,9 +100,6 @@ importers:
       '@types/passport':
         specifier: ^1.0.17
         version: 1.0.17
-      '@types/passport-discord':
-        specifier: ^0.1.15
-        version: 0.1.15
       '@types/pngjs':
         specifier: ^6.0.5
         version: 6.0.5
@@ -1828,6 +1828,9 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
+  discord-strategy@2.5.0:
+    resolution: {integrity: sha512-bPXOpR2rzClMx6HttfWnTY4ucaKM/uSzcFThg2MVpEUt9euWyfrBbNmoUGLO5h1UOgRqa/dE+iaJxo0oUC0HhQ==}
+
   docker-compose@1.4.2:
     resolution: {integrity: sha512-rPHigTKGaEHpkUmfd69QgaOp+Os5vGJwG/Ry8lcr8W/382AmI+z/D7qoa9BybKIkqNppaIbs8RYeHSevdQjWww==}
     engines: {node: '>= 6.0.0'}
@@ -2642,9 +2645,9 @@ packages:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
 
-  passport-discord@0.1.4:
-    resolution: {integrity: sha512-VJWPYqSOmh7SaCLw/C+k1ZqCzJnn2frrmQRx1YrcPJ3MQ+Oa31XclbbmqFICSvl8xv3Fqd6YWQ4H4p1MpIN9rA==}
-    deprecated: 'This package is no longer maintained. Please consider migrating to a maintained alternative, (following packages are author unvetted) such as: discord-strategy, passport-discord-auth, ...'
+  passport-oauth2-refresh@2.2.0:
+    resolution: {integrity: sha512-yXwXHL7ZZH0s2oknnjugfvwzCB5mpJ5ZNpzkb+b/sTsHeZFbx2BXfzvwsoD4aq6gq/aWuCxBV89ef+L/cjjrjg==}
+    engines: {node: '>=10'}
 
   passport-oauth2@1.8.0:
     resolution: {integrity: sha512-cjsQbOrXIDE4P8nNb3FQRCCmJJ/utnFKEz2NX209f7KOHPoX18gF7gBzBbLLsj2/je4KrgiwLLGjf0lm9rtTBA==}
@@ -5011,6 +5014,10 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
+  discord-strategy@2.5.0:
+    dependencies:
+      passport-oauth2: 1.8.0
+
   docker-compose@1.4.2:
     dependencies:
       yaml: 2.8.3
@@ -5783,9 +5790,7 @@ snapshots:
 
   parseurl@1.3.3: {}
 
-  passport-discord@0.1.4:
-    dependencies:
-      passport-oauth2: 1.8.0
+  passport-oauth2-refresh@2.2.0: {}
 
   passport-oauth2@1.8.0:
     dependencies:
