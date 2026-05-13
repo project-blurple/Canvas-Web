@@ -20,6 +20,7 @@ import {
   SelectedFrameProvider,
 } from "@/contexts";
 import { Theme } from "@/theme";
+import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import serverConfig from "@/config/serverConfig";
 
@@ -66,7 +67,11 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
     );
     return response.data;
   } catch (error) {
-    console.error(error);
+    if (isDatabaseUnavailableError(error)) {
+      console.error("Error: Database is unavailable");
+    } else {
+      console.error(error);
+    }
 
     // Fallback in case something goes wrong
     return defaultCanvasInfo;

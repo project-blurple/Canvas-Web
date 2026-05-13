@@ -1,4 +1,5 @@
 import type { Response } from "express";
+import { Prisma } from "@/client";
 
 export default class ApiError extends Error {
   constructor(
@@ -21,9 +22,37 @@ export default class ApiError extends Error {
   public static sendError(res: Response, error: unknown): void {
     if (error instanceof ApiError) {
       error.applyToResponse(res);
+    } else if (ApiError.isDatabaseUnavailableError(error)) {
+      res.status(503).json({
+        message: "Database is unavailable",
+      });
     } else {
       console.error(error);
       res.status(500).json({ message: "An unexpected error occurred" });
     }
+  }
+
+  private static isDatabaseUnavailableError(error: unknown): boolean {
+    if (
+      error instanceof Prisma.PrismaClientInitializationError ||
+      error instanceof Prisma.PrismaClientRustPanicError
+    ) {
+      return true;
+    }
+
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "ECONNREFUSED"
+    ) {
+      return true;
+    }
+
+    if (!(error instanceof Error)) {
+      return false;
+    }
+
+    return /can't reach database server|database server is not reachable|ECONNREFUSED/i.test(
+      error.message,
+    );
   }
 }
