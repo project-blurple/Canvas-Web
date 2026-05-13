@@ -22,13 +22,13 @@ const BlocklistBodyWrapper = styled("div")`
 `;
 
 const BlocklistEntryTable = styled("table")`
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0 0.5rem;
   margin-top: 1rem;
   width: 100%;
 
   * > th {
     text-align: left;
-    padding-bottom: 0.75rem;
   }
 `;
 
@@ -37,7 +37,20 @@ const StyledCheckboxSetting = styled(CheckboxSetting)`
   padding-inline: 0.25rem;
 `;
 
-const StyledUsername = styled("td")`
+const StyledEntryRow = styled("tr")`
+  :hover {
+    background-color: oklch(from var(--discord-white) l c h / 10%);
+  }
+`;
+
+const StyledUserRow = styled("td")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-block: 0.25rem;
+`;
+
+const StyledUsername = styled("span")`
   overflow-x: ellipsis;
 `;
 
@@ -82,7 +95,7 @@ function BlocklistUserEntry({
   const userId = user.userId;
 
   return (
-    <tr>
+    <StyledEntryRow>
       <td>
         <StyledCheckboxSetting
           aria-busy={ariaBusy}
@@ -91,8 +104,8 @@ function BlocklistUserEntry({
           label={null}
         />
       </td>
-      <StyledUsername title={username}>{username}</StyledUsername>
-      <td>
+      <StyledUserRow title={username}>
+        <StyledUsername>{username}</StyledUsername>
         <UserId
           onClick={async () =>
             await navigator.clipboard.writeText(userId.toString())
@@ -102,7 +115,7 @@ function BlocklistUserEntry({
           <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
           <Copy size={12} />
         </UserId>
-      </td>
+      </StyledUserRow>
       <td>
         {new Date(user.dateAdded).toLocaleDateString("en-GB", {
           day: "numeric",
@@ -110,7 +123,7 @@ function BlocklistUserEntry({
           year: "numeric",
         })}
       </td>
-    </tr>
+    </StyledEntryRow>
   );
 }
 
@@ -197,20 +210,21 @@ export default function BlocklistTab(
                 <thead>
                   <tr>
                     <th></th>
-                    <th>Username</th>
-                    <th>ID</th>
+                    <th>User</th>
                     <th>Date Added</th>
                   </tr>
                 </thead>
-                {displayList.map((user) => (
-                  <BlocklistUserEntry
-                    key={user.userId}
-                    user={user}
-                    checked={selectedUsers.has(user.userId)}
-                    onChange={(event) => setUserSelected(event, user.userId)}
-                    aria-busy={isSelectDisabled}
-                  />
-                ))}
+                <tbody>
+                  {displayList.map((user) => (
+                    <BlocklistUserEntry
+                      key={user.userId}
+                      user={user}
+                      checked={selectedUsers.has(user.userId)}
+                      onChange={(event) => setUserSelected(event, user.userId)}
+                      aria-busy={isSelectDisabled}
+                    />
+                  ))}
+                </tbody>
               </BlocklistEntryTable>
             }
           </BlocklistBodyWrapper>
