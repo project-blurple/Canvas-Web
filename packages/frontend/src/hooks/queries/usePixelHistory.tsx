@@ -7,7 +7,6 @@ import type {
 } from "@blurple-canvas-web/types";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
 import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
@@ -56,50 +55,33 @@ export interface ComplexPixelHistoryQuery {
 export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
   query: ComplexPixelHistoryQuery | null,
-  options?: {
-    onSettled?: () => void;
-  },
 ) {
-  const [lastDurationMs, setLastDurationMs] = useState<number | null>(null);
-  const lastDurationRef = useRef<number | null>(null);
-
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
     if (!query) return null;
 
-    const startedAt = performance.now();
-
-    try {
-      const response = await axios.post<HistoryRequest.ResBody>(
-        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
-        {
-          fromDateTime: query.fromDateTime,
-          toDateTime: query.toDateTime,
-          includeUserIds: query.includeUserIds,
-          excludeUserIds: query.excludeUserIds,
-          includeColors: query.includeColors,
-          excludeColors: query.excludeColors,
+    const response = await axios.post<HistoryRequest.ResBody>(
+      `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
+      {
+        fromDateTime: query.fromDateTime,
+        toDateTime: query.toDateTime,
+        includeUserIds: query.includeUserIds,
+        excludeUserIds: query.excludeUserIds,
+        includeColors: query.includeColors,
+        excludeColors: query.excludeColors,
+      },
+      {
+        params: {
+          x0: query.point0.x,
+          y0: query.point0.y,
+          x1: query.point1?.x,
+          y1: query.point1?.y,
         },
-        {
-          params: {
-            x0: query.point0.x,
-            y0: query.point0.y,
-            x1: query.point1?.x,
-            y1: query.point1?.y,
-          },
-          signal,
-          withCredentials: true,
-        },
-      );
-      lastDurationRef.current = performance.now() - startedAt;
+        signal,
+        withCredentials: true,
+      },
+    );
 
-      return response.data;
-    } catch (error) {
-      lastDurationRef.current = performance.now() - startedAt;
-
-      throw error;
-    } finally {
-      options?.onSettled?.();
-    }
+    return response.data;
   };
 
   const queryResult = useQuery({
@@ -109,22 +91,5 @@ export function useComplexPixelHistory(
     refetchOnWindowFocus: false,
   });
 
-  useEffect(
-    function updateLastDurationAfterSettledQuery() {
-      if (queryResult.dataUpdatedAt === 0 && queryResult.errorUpdatedAt === 0) {
-        return;
-      }
-
-      if (lastDurationRef.current === null) return;
-
-      setLastDurationMs(lastDurationRef.current);
-    },
-    [queryResult.dataUpdatedAt, queryResult.errorUpdatedAt],
-  );
-
-  return {
-    ...queryResult,
-    data: queryResult.data ?? null,
-    lastDurationMs,
-  };
+  return queryResult;
 }

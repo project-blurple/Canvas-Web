@@ -31,6 +31,7 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     );
 
     const coordinates = queryResult.data;
+    const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
       {
         canvasId,
@@ -39,7 +40,10 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
       false,
     );
 
-    res.status(200).json(pixelHistory);
+    res.status(200).json({
+      ...pixelHistory,
+      executionDurationMs: performance.now() - startedAt,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -100,6 +104,7 @@ historyRouter.post<CanvasIdParam>(
           { colors: bodyResult.data.excludeColors, include: false }
         : undefined;
 
+      const startedAt = Date.now();
       const pixelHistory = await getPixelHistorySummary(
         {
           canvasId,
@@ -111,7 +116,10 @@ historyRouter.post<CanvasIdParam>(
         true,
       );
 
-      res.status(200).json(pixelHistory);
+      res.status(200).json({
+        ...pixelHistory,
+        executionDurationMs: Date.now() - startedAt,
+      });
     } catch (error) {
       ApiError.sendError(res, error);
     }

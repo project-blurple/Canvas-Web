@@ -108,13 +108,9 @@ export default function ComplexSearchTab({
 
   const [searchQuery, setSearchQuery] =
     useState<ComplexPixelHistoryQuery | null>(null);
-  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery, {
-    onSettled: () => {
-      setCanEdit(true);
-    },
-  });
+  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
   const historyData: PixelHistoryWrapper | null =
-    searchQuery === null ? null : historyQuery.data;
+    searchQuery === null ? null : (historyQuery.data ?? null);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -146,7 +142,8 @@ export default function ComplexSearchTab({
     ],
   );
 
-  function handleSearchClick() {
+  function handleSearchSubmit(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
     if (!selectedBounds) return;
 
     setCanEdit(false);
@@ -169,11 +166,6 @@ export default function ComplexSearchTab({
       fromDateTime: fromTime?.toISO() ?? undefined,
       toDateTime: toTime?.toISO() ?? undefined,
     });
-  }
-
-  function handleSearchSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    handleSearchClick();
   }
 
   function resetResults() {
@@ -236,7 +228,7 @@ export default function ComplexSearchTab({
                   {durationFormat?.format({
                     milliseconds: Math.max(
                       0,
-                      Math.floor(historyQuery.lastDurationMs ?? 0),
+                      Math.floor(historyQuery.data?.executionDurationMs ?? 0),
                     ),
                   })}
                 </span>
@@ -269,7 +261,7 @@ export default function ComplexSearchTab({
         <ActionPanelTabBody>
           <search>
             <Form onSubmit={handleSearchSubmit}>
-              <PanelSectionHeading>History Search</PanelSectionHeading>
+              <PanelSectionHeading>History search</PanelSectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}

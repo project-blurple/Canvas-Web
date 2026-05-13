@@ -31,7 +31,7 @@ export default function ModerationDashboard() {
     <DashboardWrapper>
       <CanvasView
         actionPanel={<ModerationDashboardActionPanel />}
-        canvasLabel="Moderation Dashboard"
+        canvasLabel="Moderation dashboard"
         showInvite={false}
         showNotices={false}
         showReticle={false}
@@ -58,9 +58,7 @@ function ModerationDashboardActionPanel() {
   const blocklistTabId = useId();
 
   useEffect(() => {
-    return () => {
-      resetSelectedBounds();
-    };
+    return () => void resetSelectedBounds();
   }, [resetSelectedBounds]);
 
   const onSwitchTab = (newTab: TabKey) => {

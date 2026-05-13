@@ -80,7 +80,7 @@ describe("History route tests", () => {
       .get("/api/v1/canvas/1/pixel/history?x=2&y=3")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
+    expect(response.body).toMatchObject(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
     expect(getPixelHistorySummary).toHaveBeenCalledWith(
       {
@@ -119,7 +119,7 @@ describe("History route tests", () => {
       .type("json")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
+    expect(response.body).toMatchObject(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
     expect(getPixelHistorySummary).toHaveBeenCalledWith(
       {
@@ -167,7 +167,7 @@ describe("History route tests", () => {
       .type("json")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
+    expect(response.body).toMatchObject(responseBody);
     expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
     expect(getPixelHistorySummary).toHaveBeenCalledWith(
       {
