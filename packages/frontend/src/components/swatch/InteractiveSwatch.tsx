@@ -6,8 +6,8 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   border-color: oklch(from var(--discord-white) l c h / 15%);
   border-style: solid;
   border-width: 3px;
-  transition-property: border-color, outline-width;
   transition: var(--transition-duration-fast) ease;
+  transition-property: border-color, outline-width, padding, scale;
   will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
@@ -23,7 +23,7 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   &[aria-selected="true"] {
     border-color: var(--discord-white);
     background-clip: content-box;
-    padding: 0.25rem;
+    padding: 3px;
   }
 
   &:active {
