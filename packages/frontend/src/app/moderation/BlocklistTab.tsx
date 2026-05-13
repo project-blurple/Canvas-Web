@@ -177,10 +177,11 @@ export default function BlocklistTab(
             <PanelSectionHeading>Blocklist</PanelSectionHeading>
 
             <StyledInput
-              type="text"
-              placeholder="Search users..."
-              value={searchQuery}
+              disabled={isLoading || blocklist.length === 0}
               onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search users..."
+              type="text"
+              value={searchQuery}
               style={{
                 width: "100%",
               }}
