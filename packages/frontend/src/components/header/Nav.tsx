@@ -14,6 +14,7 @@ import { Noticeboard } from "../notices";
 const Links = styled("ul")`
   display: none;
   ${({ theme }) => theme.breakpoints.up("md")} {
+    align-items: baseline;
     display: flex;
   }
   li {
@@ -24,12 +25,11 @@ const Links = styled("ul")`
 export const NavLink = styled(Link)`
   border-radius: 0.5rem;
   color: var(--discord-white);
-  padding: 0.5rem 1rem;
+  padding-inline: 0.66666667em;
+  padding-block: 0.25em;
   text-decoration: none;
-  transition:
-    background-color var(--transition-duration-fast) ease,
-    opacity var(--transition-duration-fast) ease,
-    outline-width var(--transition-duration-fast) ease;
+  transition: var(--transition-duration-fast) ease;
+  transition-property: background-color, outline-width;
 
   :hover {
     opacity: 55%;
