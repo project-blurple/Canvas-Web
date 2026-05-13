@@ -52,4 +52,4 @@ export const AutocompleteInput = styled(MuiAutocomplete)`
   & .MuiInputBase-root:active {
     border-color: oklch(from var(--discord-white) l c h / 72%);
   }
-`;
+` as typeof MuiAutocomplete;
