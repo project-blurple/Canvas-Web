@@ -1,5 +1,5 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { styled, TextField } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { PanelSectionHeading } from "@/components/action-panel/primitives";
@@ -10,7 +10,7 @@ import {
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { StyledButton } from "@/components/button/DynamicButton";
 import { UserId } from "@/components/complex-search/SearchUserEntry";
-import { Input } from "@/components/input/Input";
+import { AutocompleteInput, Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import { useBlocklist } from "@/hooks/queries/useBlocklist";
 import CheckboxSetting from "../settings/CheckboxSetting";
@@ -72,6 +72,11 @@ const StyledInput = styled(Input)`
   min-width: 0;
 `;
 
+const BlocklistAutocompleteWrapper = styled("div")`
+  flex: 1;
+  min-width: 0;
+`;
+
 const Button = styled(StyledButton)`
   color: white;
   flex-shrink: 0;
@@ -83,6 +88,24 @@ interface BlocklistUserEntryProps extends Pick<
   "aria-busy" | "checked" | "onChange"
 > {
   user: BlocklistEntry;
+}
+
+interface BlocklistFooterSectionProps {
+  selectedUsersCount: number;
+  userIdsToBlock: bigint[];
+  onUserIdsToBlockChange: (value: bigint[]) => void;
+}
+
+function parseUserIds(value: string): bigint[] {
+  return value
+    .split(/[\s,]+/)
+    .map((id) => id.trim())
+    .filter((id) => /^\d+$/.test(id))
+    .map((id) => BigInt(id));
+}
+
+function normalizeUserIds(values: readonly bigint[]): bigint[] {
+  return [...new Set(values)];
 }
 
 function BlocklistUserEntry({
@@ -127,6 +150,89 @@ function BlocklistUserEntry({
   );
 }
 
+function BlocklistFooterSection({
+  selectedUsersCount,
+  userIdsToBlock,
+  onUserIdsToBlockChange,
+}: BlocklistFooterSectionProps) {
+  const [userIdsToBlockInputValue, setUserIdsToBlockInputValue] = useState("");
+
+  function handleUserIdsToBlockInputChange(
+    _event: unknown,
+    newInputValue: string,
+    reason: string,
+  ) {
+    if (reason === "clear" || reason === "reset") {
+      setUserIdsToBlockInputValue("");
+      return;
+    }
+
+    if (/[\s,]/.test(newInputValue)) {
+      const parsedIds = parseUserIds(newInputValue);
+      if (parsedIds.length > 0) {
+        onUserIdsToBlockChange(
+          normalizeUserIds([...userIdsToBlock, ...parsedIds]),
+        );
+      }
+      setUserIdsToBlockInputValue("");
+      return;
+    }
+
+    setUserIdsToBlockInputValue(newInputValue);
+  }
+
+  return (
+    <BlocklistFooter>
+      {selectedUsersCount === 0 ?
+        <BlocklistAddWrapper>
+          <BlocklistAutocompleteWrapper>
+            <AutocompleteInput
+              freeSolo
+              fullWidth
+              multiple
+              options={[]} // Don't want a dropdown, this should all be user input only
+              value={userIdsToBlock}
+              inputValue={userIdsToBlockInputValue}
+              filterSelectedOptions
+              getOptionLabel={(option) => String(option)}
+              onChange={(_event, newValues) => {
+                if (!Array.isArray(newValues)) {
+                  onUserIdsToBlockChange([]);
+                  return;
+                }
+
+                const normalizedIds = normalizeUserIds(
+                  newValues.flatMap((value) => {
+                    if (typeof value === "bigint") {
+                      return [value];
+                    }
+                    return parseUserIds(String(value));
+                  }),
+                );
+
+                onUserIdsToBlockChange(normalizedIds);
+              }}
+              onInputChange={handleUserIdsToBlockInputChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="User IDs to block"
+                  variant="standard"
+                />
+              )}
+            />
+          </BlocklistAutocompleteWrapper>
+          <Button>Block</Button>
+        </BlocklistAddWrapper>
+      : <Button disabled={selectedUsersCount === 0}>
+          Remove {selectedUsersCount} user
+          {selectedUsersCount !== 1 ? "s" : ""} from blocklist
+        </Button>
+      }
+    </BlocklistFooter>
+  );
+}
+
 const BlocklistTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
 `;
@@ -139,7 +245,7 @@ export default function BlocklistTab(
   const [selectedUsers, setSelectedUsers] = useState<Set<bigint>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [userIdsToBlock, setUserIdsToBlock] = useState<string>("");
+  const [userIdsToBlock, setUserIdsToBlock] = useState<bigint[]>([]);
 
   function setUserSelected(
     event: React.ChangeEvent<HTMLInputElement>,
@@ -181,7 +287,7 @@ export default function BlocklistTab(
     return [...selected, ...unselected];
   }, [blocklist, searchQuery]);
 
-  const isSelectDisabled = userIdsToBlock.trim() !== "";
+  const isSelectDisabled = userIdsToBlock.length > 0;
 
   return (
     <BlocklistTabBlock {...props}>
@@ -231,23 +337,11 @@ export default function BlocklistTab(
         </ActionPanelTabBody>
       </FullWidthScrollView>
       <ActionPanelTabBody>
-        <BlocklistFooter>
-          {selectedUsers.size === 0 ?
-            <BlocklistAddWrapper>
-              <StyledInput
-                onChange={(e) => setUserIdsToBlock(e.target.value)}
-                placeholder="User IDs to block"
-                type="text"
-                value={userIdsToBlock}
-              />
-              <Button>Block</Button>
-            </BlocklistAddWrapper>
-          : <Button disabled={selectedUsers.size === 0}>
-              Remove {selectedUsers.size} user
-              {selectedUsers.size !== 1 ? "s" : ""} from blocklist
-            </Button>
-          }
-        </BlocklistFooter>
+        <BlocklistFooterSection
+          selectedUsersCount={selectedUsers.size}
+          userIdsToBlock={userIdsToBlock}
+          onUserIdsToBlockChange={setUserIdsToBlock}
+        />
       </ActionPanelTabBody>
     </BlocklistTabBlock>
   );
