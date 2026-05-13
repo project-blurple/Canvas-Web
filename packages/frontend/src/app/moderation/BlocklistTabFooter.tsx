@@ -1,9 +1,12 @@
 import styled from "@emotion/styled";
 import { Chip, css, TextField } from "@mui/material";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { StyledButton } from "@/components/button/DynamicButton";
 import { AutocompleteInput } from "@/components/input/Input";
+import config from "@/config/clientConfig";
 
 const BlocklistFooter = styled("div")`
   display: flex;
@@ -62,7 +65,7 @@ const Button = styled(StyledButton)`
 `;
 
 interface BlocklistFooterSectionProps {
-  selectedUsersCount: number;
+  selectedUsers: Set<bigint>;
   userIdsToBlock: bigint[];
   onUserIdsToBlockChange: (value: bigint[]) => void;
   existingBlocklistIdStrings: Set<string>;
@@ -72,11 +75,15 @@ interface BlocklistAddSectionProps {
   userIdsToBlock: bigint[];
   onUserIdsToBlockChange: (value: bigint[]) => void;
   existingBlocklistIdStrings: Set<string>;
+  onBlock?: (userIds: bigint[]) => void;
+  isBlocking?: boolean;
 }
 
 interface BlocklistRemoveSectionProps {
-  selectedUsersCount: number;
+  selectedUsers: Set<bigint>;
   userIdsToBlock: bigint[];
+  onRemove?: (userIds: bigint[]) => void;
+  isRemoving?: boolean;
 }
 
 function parseUserIds(value: string): bigint[] {
@@ -91,15 +98,12 @@ function normalizeUserIds(values: readonly bigint[]): bigint[] {
   return [...new Set(values)];
 }
 
-function blockUsers(userIds: bigint[]) {
-  // TODO: Implement blocklisting users by their IDs
-  console.log("Blocking users with IDs:", userIds);
-}
-
 function BlocklistAddSection({
   userIdsToBlock,
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
+  onBlock,
+  isBlocking,
 }: BlocklistAddSectionProps) {
   const [userIdsToBlockInputValue, setUserIdsToBlockInputValue] = useState("");
 
@@ -150,6 +154,7 @@ function BlocklistAddSection({
             inputValue={userIdsToBlockInputValue}
             filterSelectedOptions
             getOptionLabel={(option) => String(option)}
+            disabled={isBlocking}
             onChange={(_event, newValues) => {
               if (!Array.isArray(newValues)) {
                 onUserIdsToBlockChange([]);
@@ -203,8 +208,12 @@ function BlocklistAddSection({
           />
         </BlocklistAutocompleteWrapper>
         <Button
-          disabled={userIdsToBlock.length === 0 || inputtedUsersAlreadyBlocked}
-          onClick={() => blockUsers(userIdsToBlock)}
+          disabled={
+            userIdsToBlock.length === 0 ||
+            inputtedUsersAlreadyBlocked ||
+            Boolean(isBlocking)
+          }
+          onClick={() => onBlock?.(userIdsToBlock)}
         >
           Block
         </Button>
@@ -214,37 +223,96 @@ function BlocklistAddSection({
 }
 
 function BlocklistRemoveSection({
-  selectedUsersCount,
-  userIdsToBlock,
+  selectedUsers,
+  onRemove,
+  isRemoving,
 }: BlocklistRemoveSectionProps) {
   return (
     <Button
-      disabled={selectedUsersCount === 0}
-      onClick={() => blockUsers(userIdsToBlock)}
+      disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
+      onClick={() => onRemove?.([...selectedUsers])}
     >
-      Remove {selectedUsersCount} user
-      {selectedUsersCount !== 1 ? "s" : ""} from blocklist
+      Remove {selectedUsers.size} user
+      {selectedUsers.size !== 1 ? "s" : ""} from blocklist
     </Button>
   );
 }
 
 export function BlocklistFooterSection({
-  selectedUsersCount,
+  selectedUsers,
   userIdsToBlock,
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
 }: BlocklistFooterSectionProps) {
+  const queryClient = useQueryClient();
+
+  const addToBlocklistMutation = useMutation({
+    mutationFn: async (ids: bigint[]) => {
+      const url = `${config.apiUrl}/api/v1/blocklist`;
+      await axios.put(
+        url,
+        { userId: ids.map((id) => id.toString()) },
+        { withCredentials: true },
+      );
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
+  });
+
+  const removeFromBlocklistMutation = useMutation({
+    mutationFn: async (ids: bigint[]) => {
+      const url = `${config.apiUrl}/api/v1/blocklist`;
+      await axios.delete(url, {
+        data: { userId: ids.map((id) => id.toString()) },
+        withCredentials: true,
+      });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
+  });
+
+  async function handleAdd(ids: bigint[]) {
+    try {
+      await addToBlocklistMutation.mutateAsync(ids);
+      onUserIdsToBlockChange([]);
+    } catch (e) {
+      console.error(e);
+      if ((e as { response?: { status?: number } }).response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      alert("Failed to add users to blocklist");
+    }
+  }
+
+  async function handleRemove(ids: bigint[]) {
+    try {
+      await removeFromBlocklistMutation.mutateAsync(ids);
+    } catch (e) {
+      console.error(e);
+      if ((e as { response?: { status?: number } }).response?.status === 401) {
+        alert("Your session has expired. Please log in again.");
+        return;
+      }
+
+      alert("Failed to remove users from blocklist");
+    }
+  }
+
   return (
     <BlocklistFooter>
-      {selectedUsersCount === 0 ?
+      {selectedUsers.size === 0 ?
         <BlocklistAddSection
           userIdsToBlock={userIdsToBlock}
           onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
+          onBlock={handleAdd}
+          isBlocking={addToBlocklistMutation.status === "pending"}
         />
       : <BlocklistRemoveSection
-          selectedUsersCount={selectedUsersCount}
+          selectedUsers={selectedUsers}
           userIdsToBlock={userIdsToBlock}
+          onRemove={handleRemove}
+          isRemoving={removeFromBlocklistMutation.status === "pending"}
         />
       }
     </BlocklistFooter>

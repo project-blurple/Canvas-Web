@@ -219,7 +219,7 @@ export default function BlocklistTab(
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <BlocklistFooterSection
-          selectedUsersCount={selectedUsers.size}
+          selectedUsers={selectedUsers}
           userIdsToBlock={userIdsToBlock}
           onUserIdsToBlockChange={setUserIdsToBlock}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
