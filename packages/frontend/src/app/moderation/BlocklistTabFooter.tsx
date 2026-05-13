@@ -68,6 +68,16 @@ interface BlocklistFooterSectionProps {
   existingBlocklistIdStrings: Set<string>;
 }
 
+interface BlocklistAddSectionProps {
+  userIdsToBlock: bigint[];
+  onUserIdsToBlockChange: (value: bigint[]) => void;
+  existingBlocklistIdStrings: Set<string>;
+}
+
+interface BlocklistRemoveSectionProps {
+  selectedUsersCount: number;
+}
+
 function parseUserIds(value: string): bigint[] {
   return value
     .split(/[\s,]+/)
@@ -80,12 +90,11 @@ function normalizeUserIds(values: readonly bigint[]): bigint[] {
   return [...new Set(values)];
 }
 
-export function BlocklistFooterSection({
-  selectedUsersCount,
+function BlocklistAddSection({
   userIdsToBlock,
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
-}: BlocklistFooterSectionProps) {
+}: BlocklistAddSectionProps) {
   const [userIdsToBlockInputValue, setUserIdsToBlockInputValue] = useState("");
 
   function handleUserIdsToBlockInputChange(
@@ -98,7 +107,7 @@ export function BlocklistFooterSection({
       return;
     }
 
-    if (/[\s,]/.test(newInputValue)) {
+    if (/\s|,/.test(newInputValue)) {
       const parsedIds = parseUserIds(newInputValue);
       if (parsedIds.length > 0) {
         onUserIdsToBlockChange(
@@ -117,92 +126,112 @@ export function BlocklistFooterSection({
   );
 
   return (
-    <BlocklistFooter>
-      {selectedUsersCount === 0 ?
-        <BlocklistAddWrapper>
-          {inputtedUsersAlreadyBlocked && (
-            <BlocklistWarning>
-              <TriangleAlert size={14} /> You have listed users that are already
-              blocked.
-            </BlocklistWarning>
-          )}
-          <BlocklistAddBody>
-            <BlocklistAutocompleteWrapper>
-              <AutocompleteInput
-                freeSolo
-                fullWidth
-                multiple
-                options={[]} // Don't want a dropdown, this should all be user input only
-                value={userIdsToBlock}
-                inputValue={userIdsToBlockInputValue}
-                filterSelectedOptions
-                getOptionLabel={(option) => String(option)}
-                onChange={(_event, newValues) => {
-                  if (!Array.isArray(newValues)) {
-                    onUserIdsToBlockChange([]);
-                    return;
-                  }
+    <BlocklistAddWrapper>
+      {inputtedUsersAlreadyBlocked && (
+        <BlocklistWarning>
+          <TriangleAlert size={14} /> You have listed users that are already
+          blocked.
+        </BlocklistWarning>
+      )}
+      <BlocklistAddBody>
+        <BlocklistAutocompleteWrapper>
+          <AutocompleteInput
+            freeSolo
+            fullWidth
+            multiple
+            options={[]}
+            value={userIdsToBlock}
+            inputValue={userIdsToBlockInputValue}
+            filterSelectedOptions
+            getOptionLabel={(option) => String(option)}
+            onChange={(_event, newValues) => {
+              if (!Array.isArray(newValues)) {
+                onUserIdsToBlockChange([]);
+                return;
+              }
 
-                  const normalizedIds = normalizeUserIds(
-                    newValues.flatMap((value) => {
-                      if (typeof value === "bigint") {
-                        return [value];
-                      }
-                      return parseUserIds(String(value));
-                    }),
+              const normalizedIds = normalizeUserIds(
+                newValues.flatMap((value) => {
+                  if (typeof value === "bigint") {
+                    return [value];
+                  }
+                  return parseUserIds(String(value));
+                }),
+              );
+
+              onUserIdsToBlockChange(normalizedIds);
+            }}
+            onInputChange={handleUserIdsToBlockInputChange}
+            renderValue={(values, getItemProps) => (
+              <>
+                {(values as bigint[]).map((value, index) => {
+                  const itemProps = getItemProps({ index });
+                  const { key: _key, ...restProps } = itemProps;
+                  const isExisting = existingBlocklistIdStrings.has(
+                    value.toString(),
                   );
 
-                  onUserIdsToBlockChange(normalizedIds);
-                }}
-                onInputChange={handleUserIdsToBlockInputChange}
-                renderValue={(values, getItemProps) => (
-                  <>
-                    {(values as bigint[]).map((value, index) => {
-                      const itemProps = getItemProps({ index });
-                      const { key: _key, ...restProps } = itemProps;
-                      const isExisting = existingBlocklistIdStrings.has(
-                        value.toString(),
-                      );
-
-                      return (
-                        <BlocklistIdChip
-                          key={value.toString()}
-                          {...restProps}
-                          color={isExisting ? "error" : "default"}
-                          icon={
-                            isExisting ? <TriangleAlert size={14} /> : undefined
-                          }
-                          isExisting={isExisting}
-                          label={value.toString()}
-                          size="small"
-                        />
-                      );
-                    })}
-                  </>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder="User IDs to block"
-                    variant="standard"
-                  />
-                )}
+                  return (
+                    <BlocklistIdChip
+                      key={value.toString()}
+                      {...restProps}
+                      color={isExisting ? "error" : "default"}
+                      icon={
+                        isExisting ? <TriangleAlert size={14} /> : undefined
+                      }
+                      isExisting={isExisting}
+                      label={value.toString()}
+                      size="small"
+                    />
+                  );
+                })}
+              </>
+            )}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                placeholder="User IDs to block"
+                variant="standard"
               />
-            </BlocklistAutocompleteWrapper>
-            <Button
-              disabled={
-                userIdsToBlock.length === 0 || inputtedUsersAlreadyBlocked
-              }
-            >
-              Block
-            </Button>
-          </BlocklistAddBody>
-        </BlocklistAddWrapper>
-      : <Button disabled={selectedUsersCount === 0}>
-          Remove {selectedUsersCount} user
-          {selectedUsersCount !== 1 ? "s" : ""} from blocklist
+            )}
+          />
+        </BlocklistAutocompleteWrapper>
+        <Button
+          disabled={userIdsToBlock.length === 0 || inputtedUsersAlreadyBlocked}
+        >
+          Block
         </Button>
-      }
+      </BlocklistAddBody>
+    </BlocklistAddWrapper>
+  );
+}
+
+function BlocklistRemoveSection({
+  selectedUsersCount,
+}: BlocklistRemoveSectionProps) {
+  return (
+    <Button disabled={selectedUsersCount === 0}>
+      Remove {selectedUsersCount} user
+      {selectedUsersCount !== 1 ? "s" : ""} from blocklist
+    </Button>
+  );
+}
+
+export function BlocklistFooterSection({
+  selectedUsersCount,
+  userIdsToBlock,
+  onUserIdsToBlockChange,
+  existingBlocklistIdStrings,
+}: BlocklistFooterSectionProps) {
+  return (
+    <BlocklistFooter>
+      {selectedUsersCount === 0 ?
+        <BlocklistAddSection
+          userIdsToBlock={userIdsToBlock}
+          onUserIdsToBlockChange={onUserIdsToBlockChange}
+          existingBlocklistIdStrings={existingBlocklistIdStrings}
+        />
+      : <BlocklistRemoveSection selectedUsersCount={selectedUsersCount} />}
     </BlocklistFooter>
   );
 }
