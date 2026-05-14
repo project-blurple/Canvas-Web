@@ -99,13 +99,6 @@ export default function AdminColorTab({
   const [participatingColors, nonParticipatingColors] =
     partitionPaletteByParticipation(partnerColors);
 
-  // If there are partner colors, sort them so that the ones with guilds are at the top
-  partnerColors.sort((a, b) =>
-    a.guildId !== null && b.guildId !== null ? 0
-    : a.guildId !== null ? -1
-    : 1,
-  );
-
   return (
     <AdminColorTabBlock active={active} {...props}>
       {palette.length === 0 ?
