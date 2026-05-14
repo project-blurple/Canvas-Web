@@ -2,7 +2,9 @@ import { styled } from "@mui/material";
 import { PrimitiveButton } from "../button";
 import { StaticSwatch } from "./StaticSwatch";
 
-export const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
+export const StyledSwatch = styled(StaticSwatch, {
+  shouldForwardProp: () => true,
+})`
   border-color: oklch(from var(--discord-white) l c h / 15%);
   border-style: solid;
   border-width: 3px;
@@ -34,14 +36,6 @@ export const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true
     cursor: not-allowed;
   }
 `;
-
-export const rgbaToCssString = (
-  rgba: [number, number, number, number],
-): `rgb(${string} ${string} ${string} / ${string})` => {
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const alphaFloat = rgba[3] / 0xff;
-  return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
-};
 
 export function InteractiveSwatch(
   props: React.ComponentPropsWithRef<typeof StaticSwatch>,

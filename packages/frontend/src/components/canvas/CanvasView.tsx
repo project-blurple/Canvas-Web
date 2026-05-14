@@ -454,15 +454,7 @@ function getViewForFrame({
   return { targetZoom, offset, targetPoint };
 }
 
-interface CanvasViewProps {
-  showInvite?: boolean;
-  showReticle?: boolean;
-}
-
-export default function CanvasView({
-  showInvite = true,
-  showReticle = true,
-}: CanvasViewProps) {
+export default function CanvasView() {
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
@@ -1195,7 +1187,7 @@ export default function CanvasView({
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: showReticle && isReticleVisible ? undefined : "none",
+            display: isReticleVisible ? undefined : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),

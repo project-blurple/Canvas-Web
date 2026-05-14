@@ -152,7 +152,7 @@ export default function AdminCanvasPage() {
         : <>
             <CanvasWrapper>
               {/* Maybe just have cards with image previews instead? idk */}
-              <CanvasView showInvite={false} showReticle={false} />
+              <CanvasView />
               <SlideableDrawer>
                 <CanvasSelectorPanelWrapper>
                   <CanvasOptionsWrapper>

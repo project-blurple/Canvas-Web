@@ -6,11 +6,8 @@ import {
   type ColorIdParam,
   parseColorId,
 } from "@/models/color.models";
-import {
-  type EventIdParam,
-  PaletteQueryModel,
-  parseEventId,
-} from "@/models/event.models";
+import { type EventIdParam, parseEventId } from "@/models/event.models";
+import { PaletteQueryModel } from "@/models/frame.models";
 import { type GuildIdParam, parseGuildId } from "@/models/guild.models";
 import {
   assignColorToEvent,
@@ -28,12 +25,7 @@ export const paletteRouter = Router();
 paletteRouter.get("/current", async (req, res) => {
   try {
     const queryResult = await PaletteQueryModel.safeParseAsync(req.query);
-    if (!queryResult.success) {
-      throw new BadRequestError(
-        `${req.query.allColors} is not a valid allColors value`,
-        queryResult.error.issues,
-      );
-    }
+    assertZodSuccess(queryResult);
 
     const { allColors } = queryResult.data;
     const palette = await getCurrentEventPalette(allColors);
@@ -46,23 +38,11 @@ paletteRouter.get("/current", async (req, res) => {
 
 paletteRouter.get("/:eventId", async (req, res) => {
   try {
-    const paramResult = await EventIdParamModel.safeParseAsync(req.params);
-    if (!paramResult.success) {
-      throw new BadRequestError(
-        `${req.params.eventId} is not a valid event ID`,
-        paramResult.error.issues,
-      );
-    }
+    const eventId = await parseEventId(req.params);
 
     const queryResult = await PaletteQueryModel.safeParseAsync(req.query);
-    if (!queryResult.success) {
-      throw new BadRequestError(
-        `${req.query.allColors} is not a valid allColors value`,
-        queryResult.error.issues,
-      );
-    }
+    assertZodSuccess(queryResult);
 
-    const { eventId } = paramResult.data;
     const { allColors } = queryResult.data;
     const palette = await getEventPalette(eventId, allColors);
 

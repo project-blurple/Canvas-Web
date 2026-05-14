@@ -2,10 +2,7 @@
 
 import { styled } from "@mui/material";
 import { partitionPalette } from "@/components/action-panel/tabs/PlacePixelTab";
-import {
-  rgbaToCssString,
-  StyledSwatchBase,
-} from "@/components/swatch/InteractiveSwatch";
+import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { usePalette } from "@/hooks";
 import Admin from "../Admin";
 
@@ -45,7 +42,7 @@ export default function AdminColorPage() {
             {mainColors.length > 0 &&
               mainColors.map((color) => (
                 <ColorWrapper key={color.id}>
-                  <StyledSwatchBase colorString={rgbaToCssString(color.rgba)} />
+                  <StyledSwatch key={color.code} paletteColor={color} />
                   {color.name}
                 </ColorWrapper>
               ))}
@@ -56,7 +53,7 @@ export default function AdminColorPage() {
             {partnerColors.length > 0 &&
               partnerColors.map((color) => (
                 <ColorWrapper key={color.id}>
-                  <StyledSwatchBase colorString={rgbaToCssString(color.rgba)} />
+                  <StyledSwatch key={color.code} paletteColor={color} />
                   {color.name}
                   {color.guildId && ` (Guild ID: ${color.guildId})`}
                 </ColorWrapper>

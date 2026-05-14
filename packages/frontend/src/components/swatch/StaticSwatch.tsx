@@ -13,6 +13,14 @@ export interface StaticSwatchProps extends React.ComponentPropsWithRef<
   paletteColor: Pick<PaletteColor, "name" | "rgba">;
 }
 
+function rgbaToCssString(
+  rgba: [number, number, number, number],
+): `rgb(${string} ${string} ${string} / ${string})` {
+  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
+  const alphaFloat = rgba[3] / 0xff;
+  return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
+}
+
 export function StaticSwatch({
   paletteColor,
   style,
@@ -20,13 +28,9 @@ export function StaticSwatch({
 }: StaticSwatchProps) {
   const { name, rgba } = paletteColor;
 
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 255;
-
   return (
     <SwatchBase
-      style={{ ...style, backgroundColor: `rgb(${rgb} / ${alphaFloat})` }}
+      style={{ ...style, backgroundColor: rgbaToCssString(rgba) }}
       {...props}
     >
       <VisuallyHidden>{name}</VisuallyHidden>
