@@ -3,7 +3,6 @@ import type {
   CanvasInfoRequest,
   DiscordUserProfile,
 } from "@blurple-canvas-web/types";
-import { ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
 import type { Metadata, Viewport } from "next";
@@ -19,9 +18,9 @@ import {
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
-import { Theme } from "@/theme";
 import "../styles/core.css";
 import serverConfig from "@/config/serverConfig";
+import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
   metadataBase: new URL(serverConfig.baseUrl),
@@ -115,7 +114,7 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                 <ActionPanelProvider>
                   <CanvasViewProvider>
                     <SelectedBoundsProvider>
-                      <ThemeProvider theme={Theme}>{children}</ThemeProvider>
+                      <AppProviders>{children}</AppProviders>
                     </SelectedBoundsProvider>
                   </CanvasViewProvider>
                 </ActionPanelProvider>

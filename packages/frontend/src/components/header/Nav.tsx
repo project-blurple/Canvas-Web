@@ -82,9 +82,12 @@ export default function Nav() {
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const isOpen = anchorElement !== null;
 
+  const isModerator = user?.isCanvasModerator;
+
   const links: LinkInfo[] = [
     ...(user?.isCanvasAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     { href: "/leaderboard", label: "Leaderboard" },
+    ...(isModerator ? [{ href: "/moderation", label: "Moderation" }] : []),
     { href: "/settings", label: "Settings" },
     user ?
       { href: "/me", label: user.username }

@@ -25,6 +25,9 @@ export const ActionPanelTabBody = styled("div")`
 `;
 
 const ScrollView = styled("div")`
+  display: flex;
+  flex-direction: column;
+
   overflow-y: auto; // Fallback property, should appear before overflow-block
   overflow-block: auto;
   > * {
@@ -49,4 +52,5 @@ export function TabPanel(
 export const FullWidthScrollView = styled(ScrollView)`
   align-self: stretch;
   grid-column: 1 / -1;
+  gap: 0.5rem;
 `;
