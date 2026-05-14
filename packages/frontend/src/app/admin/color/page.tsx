@@ -1,7 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
-import { partitionPalette } from "@/components/action-panel/tabs/PlacePixelTab";
+import { partitionPaletteByOwner } from "@/components/action-panel/tabs/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { usePalette } from "@/hooks";
 import Admin from "../Admin";
@@ -23,7 +23,7 @@ const ColorWrapper = styled("div")`
 
 export default function AdminColorPage() {
   const { data: palette = [] } = usePalette(undefined, true);
-  const [mainColors, partnerColors] = partitionPalette(palette);
+  const [mainColors, partnerColors] = partitionPaletteByOwner(palette);
 
   // If there are partner colors, sort them so that the ones with guilds are at the top
   partnerColors.sort((a, b) =>
