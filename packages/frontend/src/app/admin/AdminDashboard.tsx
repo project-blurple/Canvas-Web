@@ -1,14 +1,12 @@
 "use client";
 
 import { styled } from "@mui/material";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useId } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useId, useState } from "react";
 import {
   ActionPanelTabBar,
   GenericTab,
 } from "@/components/action-panel/primitives";
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
-import { useAuthContext } from "@/contexts";
 import AdminCanvasTab from "./AdminCanvasTab";
 import AdminColorTab from "./AdminColorTab";
 import AdminEventTab from "./AdminEventTab";
@@ -39,16 +37,21 @@ const pathToTabKey: Record<string, TabKey> = {
 };
 
 export default function AdminDashboard() {
-  const router = useRouter();
   const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState<TabKey>("event");
   const eventTabId = useId();
   const canvasTabId = useId();
   const colorTabId = useId();
 
-  const activeTab = pathToTabKey[pathname ?? ""] ?? "event";
+  useEffect(() => {
+    const tabFromPath = pathToTabKey[pathname ?? ""] ?? "event";
+    setActiveTab(tabFromPath);
+  }, [pathname]);
 
   const handleTabChange = (tabKey: TabKey) => {
-    router.push(`/admin/${tabKeyToPath[tabKey]}`);
+    setActiveTab(tabKey);
+    const newPath = `/admin/${tabKeyToPath[tabKey]}`;
+    window.history.replaceState(null, "", newPath);
   };
 
   return (
