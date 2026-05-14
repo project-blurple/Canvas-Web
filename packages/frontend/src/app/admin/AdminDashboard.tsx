@@ -3,69 +3,13 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { redirect, usePathname, useRouter } from "next/navigation";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
+import {
+  ActionPanelTabBar,
+  GenericTab,
+} from "@/components/action-panel/primitives";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
-
-const TabBar = styled("div")`
-  border-radius: 0.5rem;
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: repeat(3, 1fr);
-  background-color: var(--discord-legacy-not-quite-black);
-  padding: 0.5rem;
-`;
-
-const StyledTab = styled("button")`
-  appearance: none;
-  border: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: inherit;
-  font-style: inherit;
-  line-height: inherit;
-
-  background-color: var(--discord-legacy-not-quite-black);
-  border-radius: inherit;
-  cursor: pointer;
-  font-weight: 500;
-  letter-spacing: 0.005rem;
-  padding: 0.5rem 1rem;
-  place-items: center;
-  text-align: center;
-  touch-action: manipulation;
-  transition-duration: var(--transition-duration-fast);
-  transition-property: background, color, outline;
-  transition-timing-function: ease;
-  user-select: none;
-
-  /*
-  * Workaround for accessibility issue with VoiceOver.
-  * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
-  */
-  &::before {
-    content: "\\200B"; /* zero-width space */
-  }
-
-  &[aria-selected="true"] {
-    background-color: var(--discord-legacy-dark-but-not-black);
-  }
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      background-color: var(--discord-legacy-dark-but-not-black);
-    }
-  }
-
-  &:focus-visible {
-    background-color: var(--discord-legacy-dark-but-not-black);
-    outline: var(--focus-outline);
-  }
-
-  &:active {
-    background-color: var(--discord-legacy-greyple);
-  }
-`;
 
 const Wrapper = styled("div")`
   display: flex;
@@ -76,47 +20,61 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
-function verifyAdmin(user: DiscordUserProfile | null, isAuthResolved: boolean) {
-  if (!isAuthResolved) return;
-  if (!user?.isCanvasAdmin) redirect("/");
-}
+type TabKey = "event" | "canvas" | "color";
+
+const Tab = GenericTab<TabKey>;
+
+const tabKeyToPath: Record<TabKey, string> = {
+  event: "event",
+  canvas: "canvas",
+  color: "color",
+};
 
 export default function Admin({ children }: { children?: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
   const { user, isAuthResolved } = useAuthContext();
-  verifyAdmin(user, isAuthResolved);
+  useEffect(() => {
+    if (!isAuthResolved) return;
+    if (!user?.isCanvasAdmin) router.replace("/");
+  }, [isAuthResolved, router, user?.isCanvasAdmin]);
+
+  if (isAuthResolved && !user?.isCanvasAdmin) {
+    return null;
+  }
+
+  const handleTabChange = (tabKey: TabKey) => {
+    router.push(`/admin/${tabKeyToPath[tabKey]}`);
+  };
 
   return (
     <LayoutWithHeader>
-      {/* TODO: actual styling here */}
       <Wrapper>
         <h1>Admin</h1>
-        <TabBar>
-          {/* stolen from the action panel temporarily */}
-          <StyledTab
-            type="button"
-            aria-selected={pathname === "/admin/event"}
-            onClick={() => router.push("/admin/event")}
+        <ActionPanelTabBar role="tablist">
+          <Tab
+            aria-selected={pathname === `/admin/${tabKeyToPath.event}`}
+            tabKey="event"
+            onSwitchTab={handleTabChange}
           >
             Event
-          </StyledTab>
-          <StyledTab
-            type="button"
-            aria-selected={pathname === "/admin/canvas"}
-            onClick={() => router.push("/admin/canvas")}
+          </Tab>
+          <Tab
+            aria-selected={pathname === `/admin/${tabKeyToPath.canvas}`}
+            tabKey="canvas"
+            onSwitchTab={handleTabChange}
           >
             Canvas
-          </StyledTab>
-          <StyledTab
-            type="button"
-            aria-selected={pathname === "/admin/color"}
-            onClick={() => router.push("/admin/color")}
+          </Tab>
+          <Tab
+            aria-selected={pathname === `/admin/${tabKeyToPath.color}`}
+            tabKey="color"
+            onSwitchTab={handleTabChange}
           >
             Color
-          </StyledTab>
-        </TabBar>
+          </Tab>
+        </ActionPanelTabBar>
         {children}
       </Wrapper>
     </LayoutWithHeader>
