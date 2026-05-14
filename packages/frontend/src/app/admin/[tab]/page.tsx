@@ -1,23 +1,28 @@
 "use client";
 
 import { notFound, useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
 import AdminDashboard from "../AdminDashboard";
 
 const validTabs = new Set(["event", "canvas", "color"]);
 
-export default function AdminTabPage({ params }: { params: { tab: string } }) {
+export default function AdminTabPage({
+  params,
+}: {
+  params: Promise<{ tab: string }>;
+}) {
   const { user, isAuthResolved } = useAuthContext();
   const router = useRouter();
+  const resolvedParams = use(params);
 
   useEffect(() => {
     if (!isAuthResolved) return;
     if (!user?.isCanvasAdmin) router.replace("/");
   }, [isAuthResolved, router, user?.isCanvasAdmin]);
 
-  if (!validTabs.has(params.tab)) {
+  if (!validTabs.has(resolvedParams.tab)) {
     notFound();
   }
 
