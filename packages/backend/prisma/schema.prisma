@@ -73,6 +73,7 @@ model discord_user_profile {
   history             history[]
   leaderboard_guild   leaderboard_guild[]
   leaderboard         leaderboard[]
+  user                user                @relation(fields: [user_id], references: [id])
 }
 
 model discord_guild_record {
@@ -172,16 +173,17 @@ model pixel {
 }
 
 model user {
-  id                BigInt              @id
-  current_canvas_id Int?
-  skip_confirm      Boolean             @default(false)
-  cooldown_remind   Boolean             @default(false)
-  blacklist         blacklist?
-  cooldowns         cooldown[]
-  history           history[]
-  user_stats        user_stats[]
-  leaderboard       leaderboard[]
-  leaderboard_guild leaderboard_guild[]
+  id                   BigInt                @id
+  current_canvas_id    Int?
+  skip_confirm         Boolean               @default(false)
+  cooldown_remind      Boolean               @default(false)
+  blacklist            blacklist?
+  cooldowns            cooldown[]
+  history              history[]
+  user_stats           user_stats[]
+  leaderboard          leaderboard[]
+  leaderboard_guild    leaderboard_guild[]
+  discord_user_profile discord_user_profile?
 }
 
 model session {

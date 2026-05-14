@@ -1,5 +1,5 @@
 import { prisma } from "@/client";
-import { seedDiscordProfiles } from "@/test";
+import { seedDiscordProfiles, seedUsers } from "@/test";
 import {
   createCustomAvatarUrl,
   createDefaultAvatarUrl,
@@ -10,6 +10,7 @@ import {
 
 describe("discordProfileService", () => {
   beforeEach(async () => {
+    await seedUsers();
     await seedDiscordProfiles();
   });
 
