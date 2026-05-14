@@ -2,13 +2,16 @@
 
 import { styled } from "@mui/material";
 import { usePathname, useRouter } from "next/navigation";
-import { type ReactNode, useEffect } from "react";
+import { useEffect, useId } from "react";
 import {
   ActionPanelTabBar,
   GenericTab,
 } from "@/components/action-panel/primitives";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
+import AdminCanvasTab from "./AdminCanvasTab";
+import AdminColorTab from "./AdminColorTab";
+import AdminEventTab from "./AdminEventTab";
 
 const Wrapper = styled("div")`
   display: flex;
@@ -29,9 +32,18 @@ const tabKeyToPath: Record<TabKey, string> = {
   color: "color",
 };
 
-export default function AdminDashboard({ children }: { children?: ReactNode }) {
+const pathToTabKey: Record<string, TabKey> = {
+  "/admin/event": "event",
+  "/admin/canvas": "canvas",
+  "/admin/color": "color",
+};
+
+export default function AdminDashboard() {
   const router = useRouter();
   const pathname = usePathname();
+  const eventTabId = useId();
+  const canvasTabId = useId();
+  const colorTabId = useId();
 
   const { user, isAuthResolved } = useAuthContext();
   useEffect(() => {
@@ -43,6 +55,8 @@ export default function AdminDashboard({ children }: { children?: ReactNode }) {
     return null;
   }
 
+  const activeTab = pathToTabKey[pathname ?? ""] ?? "event";
+
   const handleTabChange = (tabKey: TabKey) => {
     router.push(`/admin/${tabKeyToPath[tabKey]}`);
   };
@@ -53,28 +67,33 @@ export default function AdminDashboard({ children }: { children?: ReactNode }) {
         <h1>Admin</h1>
         <ActionPanelTabBar role="tablist">
           <Tab
-            aria-selected={pathname === `/admin/${tabKeyToPath.event}`}
+            aria-controls={eventTabId}
+            aria-selected={activeTab === "event"}
             tabKey="event"
             onSwitchTab={handleTabChange}
           >
             Event
           </Tab>
           <Tab
-            aria-selected={pathname === `/admin/${tabKeyToPath.canvas}`}
+            aria-controls={canvasTabId}
+            aria-selected={activeTab === "canvas"}
             tabKey="canvas"
             onSwitchTab={handleTabChange}
           >
             Canvas
           </Tab>
           <Tab
-            aria-selected={pathname === `/admin/${tabKeyToPath.color}`}
+            aria-controls={colorTabId}
+            aria-selected={activeTab === "color"}
             tabKey="color"
             onSwitchTab={handleTabChange}
           >
             Color
           </Tab>
         </ActionPanelTabBar>
-        {children}
+        <AdminEventTab active={activeTab === "event"} id={eventTabId} />
+        <AdminCanvasTab active={activeTab === "canvas"} id={canvasTabId} />
+        <AdminColorTab active={activeTab === "color"} id={colorTabId} />
       </Wrapper>
     </LayoutWithHeader>
   );

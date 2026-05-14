@@ -1,8 +1,12 @@
 "use client";
 
 import { styled } from "@mui/material";
+import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { useCanvasList, useEventInfo } from "@/hooks";
-import AdminDashboard from "../AdminDashboard";
+
+const AdminEventTabBlock = styled(TabPanel)`
+  grid-template-rows: auto 1fr;
+`;
 
 const EventInfoWrapper = styled("div")`
   display: flex;
@@ -10,7 +14,16 @@ const EventInfoWrapper = styled("div")`
   gap: 1rem;
 `;
 
-export default function AdminEventPage() {
+interface AdminEventTabProps extends React.ComponentPropsWithRef<
+  typeof AdminEventTabBlock
+> {
+  active: boolean;
+}
+
+export default function AdminEventTab({
+  active,
+  ...props
+}: AdminEventTabProps) {
   const { data: currentEvent, isLoading: currentEventIsLoading } =
     useEventInfo();
   const { data: canvases = [], isLoading: canvasListIsLoading } =
@@ -23,7 +36,7 @@ export default function AdminEventPage() {
   );
 
   return (
-    <AdminDashboard>
+    <AdminEventTabBlock active={active} {...props}>
       <EventInfoWrapper>
         {isLoading ?
           "Loading..."
@@ -42,6 +55,6 @@ export default function AdminEventPage() {
           </>
         }
       </EventInfoWrapper>
-    </AdminDashboard>
+    </AdminEventTabBlock>
   );
 }

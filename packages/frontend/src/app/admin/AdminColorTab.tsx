@@ -1,10 +1,14 @@
 "use client";
 
 import { styled } from "@mui/material";
+import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { partitionPaletteByOwner } from "@/components/action-panel/tabs/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { usePalette } from "@/hooks";
-import AdminDashboard from "../AdminDashboard";
+
+const AdminColorTabBlock = styled(TabPanel)`
+  grid-template-rows: auto 1fr;
+`;
 
 const ColorList = styled("div")`
   display: flex;
@@ -21,7 +25,16 @@ const ColorWrapper = styled("div")`
   height: var(--min-swatch-width);
 `;
 
-export default function AdminColorPage() {
+interface AdminColorTabProps extends React.ComponentPropsWithRef<
+  typeof AdminColorTabBlock
+> {
+  active: boolean;
+}
+
+export default function AdminColorTab({
+  active,
+  ...props
+}: AdminColorTabProps) {
   const { data: palette = [] } = usePalette(undefined, true);
   const [mainColors, partnerColors] = partitionPaletteByOwner(palette);
 
@@ -33,7 +46,7 @@ export default function AdminColorPage() {
   );
 
   return (
-    <AdminDashboard>
+    <AdminColorTabBlock active={active} {...props}>
       {palette.length === 0 ?
         "No colors found."
       : <>
@@ -61,6 +74,6 @@ export default function AdminColorPage() {
           </ColorList>
         </>
       }
-    </AdminDashboard>
+    </AdminColorTabBlock>
   );
 }
