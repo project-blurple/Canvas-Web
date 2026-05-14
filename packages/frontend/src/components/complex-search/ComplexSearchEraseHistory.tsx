@@ -25,9 +25,11 @@ const StyledDialog = styled(Dialog)`
   }
 `;
 
-const RedStyledButton = styled(StyledButton)`
+const Button = styled(StyledButton)`
   color: white;
+`;
 
+const RedButton = styled(Button)`
   &:hover,
   &:focus-visible {
     background-color: rgb(255, 0, 0);
@@ -117,13 +119,10 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <RedStyledButton
-        disabled={entriesCount === 0}
-        onClick={handleEraseHistory}
-      >
+      <RedButton disabled={entriesCount === 0} onClick={handleEraseHistory}>
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </RedStyledButton>
+      </RedButton>
       <StyledDialog
         open={isEraseConfirmOpen}
         onClose={handleCancelErase}
@@ -156,8 +155,8 @@ export default function ComplexSearchEraseHistory({
           />
         </DialogContent>
         <DialogActions>
-          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
-          <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
+          <Button onClick={handleCancelErase}>Cancel</Button>
+          <RedButton onClick={handleConfirmErase}>Erase</RedButton>
         </DialogActions>
       </StyledDialog>
     </>

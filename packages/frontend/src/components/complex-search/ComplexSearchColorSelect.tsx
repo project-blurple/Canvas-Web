@@ -139,11 +139,15 @@ export default function ComplexSearchColorSelect({
           option.global ? "Global colors" : "Partner colors"
         }
         renderInput={(params) => <TextField {...params} label={label} />}
-        renderOption={(props, option) => (
-          <li {...props} key={option.id}>
-            {option.name} ({option.code})
-          </li>
-        )}
+        renderOption={(props, option) => {
+          const { key, ...liProps } = props;
+
+          return (
+            <li key={key ?? option.id} {...liProps}>
+              {option.name} ({option.code})
+            </li>
+          );
+        }}
         isOptionEqualToValue={(option, value) =>
           option.id === (value as Palette[number]).id
         }
