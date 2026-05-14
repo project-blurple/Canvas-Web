@@ -34,7 +34,8 @@
     "lint:fix": "biome check --formatter-enabled=false --write .",
     "check": "pnpm run format && pnpm run lint",
     "check:fix": "pnpm run format:fix && pnpm run lint:fix",
-    "clean": "rm -rf -- .next/ && pnpm purge"
+    "clean": "rm -rf -- .next/ && pnpm purge",
+    "test": "vitest"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -57,13 +58,16 @@
   },
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",
+    "@testing-library/react": "^16.3.2",
     "@types/js-cookie": "^3.0.6",
     "@types/luxon": "^3.7.1",
     "@types/node": "^24.1.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "jsdom": "^29.1.1",
     "prettier": "^3.8.3",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
   }
 }
