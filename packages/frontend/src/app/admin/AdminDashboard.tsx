@@ -1,8 +1,7 @@
 "use client";
 
-import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { redirect, usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import {
   ActionPanelTabBar,
