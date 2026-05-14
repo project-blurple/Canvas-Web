@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import { useCanvasList, useEventInfo } from "@/hooks";
-import Admin from "../Admin";
+import Admin from "../AdminDashboard";
 
 const EventInfoWrapper = styled("div")`
   display: flex;

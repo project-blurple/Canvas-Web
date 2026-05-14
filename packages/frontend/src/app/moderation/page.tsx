@@ -19,5 +19,9 @@ export default function ModerationPage() {
     return null;
   }
 
-  return <LayoutWithHeader content={<ModerationDashboard />} />;
+  return (
+    <LayoutWithHeader>
+      <ModerationDashboard />
+    </LayoutWithHeader>
+  );
 }

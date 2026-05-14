@@ -7,7 +7,7 @@ import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList } from "@/hooks";
-import Admin from "../Admin";
+import Admin from "../AdminDashboard";
 
 const CanvasInfoWrapper = styled("div")`
   display: flex;

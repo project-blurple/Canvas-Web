@@ -4,7 +4,7 @@ import { styled } from "@mui/material";
 import { partitionPaletteByOwner } from "@/components/action-panel/tabs/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { usePalette } from "@/hooks";
-import Admin from "../Admin";
+import Admin from "../AdminDashboard";
 
 const ColorList = styled("div")`
   display: flex;
