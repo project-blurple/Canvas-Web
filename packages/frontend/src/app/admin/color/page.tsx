@@ -4,7 +4,7 @@ import { styled } from "@mui/material";
 import { partitionPaletteByOwner } from "@/components/action-panel/tabs/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { usePalette } from "@/hooks";
-import Admin from "../AdminDashboard";
+import AdminDashboard from "../AdminDashboard";
 
 const ColorList = styled("div")`
   display: flex;
@@ -33,7 +33,7 @@ export default function AdminColorPage() {
   );
 
   return (
-    <Admin>
+    <AdminDashboard>
       {palette.length === 0 ?
         "No colors found."
       : <>
@@ -61,6 +61,6 @@ export default function AdminColorPage() {
           </ColorList>
         </>
       }
-    </Admin>
+    </AdminDashboard>
   );
 }

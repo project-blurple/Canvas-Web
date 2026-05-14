@@ -29,7 +29,7 @@ const tabKeyToPath: Record<TabKey, string> = {
   color: "color",
 };
 
-export default function Admin({ children }: { children?: ReactNode }) {
+export default function AdminDashboard({ children }: { children?: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 

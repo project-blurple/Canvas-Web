@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import { useCanvasList, useEventInfo } from "@/hooks";
-import Admin from "../AdminDashboard";
+import AdminDashboard from "../AdminDashboard";
 
 const EventInfoWrapper = styled("div")`
   display: flex;
@@ -23,7 +23,7 @@ export default function AdminEventPage() {
   );
 
   return (
-    <Admin>
+    <AdminDashboard>
       <EventInfoWrapper>
         {isLoading ?
           "Loading..."
@@ -42,6 +42,6 @@ export default function AdminEventPage() {
           </>
         }
       </EventInfoWrapper>
-    </Admin>
+    </AdminDashboard>
   );
 }
