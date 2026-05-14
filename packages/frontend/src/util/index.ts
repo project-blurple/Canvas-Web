@@ -8,6 +8,8 @@ import { DateTime } from "luxon";
 
 export { default as createPixelUrl } from "./searchParams";
 
+export const CANVAS_WRAPPER_CLASS_NAME = "canvas-wrapper";
+
 export interface ViewBounds {
   left: number;
   top: number;

@@ -3,14 +3,14 @@
 import type { CanvasInfo, LeaderboardRequest } from "@blurple-canvas-web/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 export function useLeaderboard(
   canvasId: CanvasInfo["id"],
   page = 1,
   size = 10,
 ) {
-  const getLeaderboard = async () => {
+  const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const response = await axios.get<LeaderboardRequest.ResBody>(
       `${config.apiUrl}/api/v1/statistics/leaderboard/${encodeURIComponent(canvasId)}`,
       { params: { page, size } },
@@ -18,7 +18,7 @@ export function useLeaderboard(
     return response.data;
   };
 
-  return useQuery({
+  return useQuery<LeaderboardRequest.ResBody>({
     queryKey: ["leaderboard", canvasId, { page, size }],
     queryFn: getLeaderboard,
     placeholderData: keepPreviousData,

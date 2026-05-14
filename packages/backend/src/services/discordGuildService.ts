@@ -1,9 +1,11 @@
-import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { GuildData } from "@blurple-canvas-web/types";
+import { prisma } from "@/client";
 import config from "@/config";
+import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
-import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
+import fetchWithRetries from "@/utils/fetchWithRetries";
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
@@ -34,23 +36,18 @@ interface DiscordRequestOptions {
   authorization: string;
 }
 
-interface CanvasAdminUser extends DiscordUserProfile {
-  isCanvasAdmin: true;
-}
-
-interface CanvasModeratorUser extends DiscordUserProfile {
-  isCanvasModerator: true;
-}
-
 async function discordRequest<T>({
   endpoint,
   authorization,
 }: DiscordRequestOptions): Promise<T> {
-  const response = await fetch(`${DISCORD_API_BASE_URL}${endpoint}`, {
-    headers: {
-      Authorization: authorization,
+  const response = await fetchWithRetries(
+    `${DISCORD_API_BASE_URL}${endpoint}`,
+    {
+      headers: {
+        Authorization: authorization,
+      },
     },
-  });
+  );
 
   if (response.status === 401 || response.status === 403) {
     throw new UnauthorizedError(
@@ -66,6 +63,11 @@ async function discordRequest<T>({
     throw new BadRequestError(
       `Discord API request failed with status ${response.status}: ${endpoint}`,
     );
+  }
+
+  const contentType = response.headers.get("content-type");
+  if (!contentType?.startsWith("application/json")) {
+    throw new ApiError(`Expected application/json but got ${contentType}`, 500);
   }
 
   return (await response.json()) as T;
@@ -98,13 +100,13 @@ export async function getGuildPermissionsForUser(
 
 interface userHasRoleInGuildProps {
   guildId: string;
-  roleId: string;
+  roleIds: string[];
   accessToken: string;
 }
 
-async function userHasRoleInGuild({
+async function userHasRolesInGuild({
   guildId,
-  roleId,
+  roleIds: roleId,
   accessToken,
 }: userHasRoleInGuildProps): Promise<boolean> {
   let member: DiscordGuildMember;
@@ -122,7 +124,7 @@ async function userHasRoleInGuild({
     throw error;
   }
 
-  return member.roles.includes(roleId);
+  return member.roles.some((role) => roleId.includes(role));
 }
 
 export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
@@ -133,18 +135,21 @@ export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRoleInGuild({ guildId, roleId, accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds: [roleId], accessToken });
 }
 
 export async function isCanvasModerator(accessToken: string): Promise<boolean> {
   const guildId = config.discord.discordManagementGuild;
-  const roleId = config.discord.discordModeratorRole;
+  const roleIds = [
+    config.discord.discordModeratorRole,
+    config.discord.discordAdminRole,
+  ].filter((roleId): roleId is string => Boolean(roleId));
 
-  if (!guildId || !roleId || !accessToken) {
+  if (!guildId || !accessToken || roleIds.length === 0) {
     return false;
   }
 
-  return userHasRoleInGuild({ guildId, roleId, accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds, accessToken });
 }
 
 export async function getCurrentUserGuildFlags(
@@ -186,22 +191,53 @@ function getPermissions(permissions: bigint): GuildPermissionsSummary {
   };
 }
 
-export function assertCanvasAdmin(
-  user: DiscordUserProfile,
-): asserts user is CanvasAdminUser {
-  if (!user.isCanvasAdmin) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
-    );
-  }
-}
+export async function syncDiscordGuildRecords(
+  guildFlags?: Record<string, GuildData>,
+): Promise<void> {
+  if (!guildFlags || Object.keys(guildFlags).length === 0) return;
 
-export function assertCanvasModerator(
-  user: DiscordUserProfile,
-): asserts user is CanvasModeratorUser {
-  if (!user.isCanvasModerator) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
+  // not an upsert because upserts are expensive, especially when most existing rows probably won't need updates
+
+  const entries = Object.entries(guildFlags);
+  const ids = entries.map(([id]) => BigInt(id));
+
+  // 1) fetch existing records once
+  const existing = await prisma.discord_guild_record.findMany({
+    where: { guild_id: { in: ids } },
+  });
+  const existingMap = new Map(existing.map((r) => [r.guild_id.toString(), r]));
+
+  // 2) compute create + update sets
+  const toCreate = entries
+    .filter(([id]) => !existingMap.has(id))
+    .map(([id, data]) => ({ guild_id: BigInt(id), name: data.name }));
+
+  const toUpdateEntries = entries.filter(([id, data]) => {
+    const ex = existingMap.get(id);
+    return !!ex && ex.name !== data.name;
+  });
+
+  if (toCreate.length === 0 && toUpdateEntries.length === 0) return;
+
+  // 3) Create missing rows
+  if (toCreate.length > 0) {
+    await prisma.discord_guild_record.createMany({
+      data: toCreate,
+      skipDuplicates: true,
+    });
+  }
+
+  // 4) Update changed names in bounded parallel chunks
+  const UPDATE_CHUNK = 50;
+  for (let i = 0; i < toUpdateEntries.length; i += UPDATE_CHUNK) {
+    const chunk = toUpdateEntries.slice(i, i + UPDATE_CHUNK);
+    await Promise.all(
+      chunk.map(([id, data]) =>
+        prisma.discord_guild_record.update({
+          where: { guild_id: BigInt(id) },
+          data: { name: data.name },
+        }),
+      ),
     );
   }
 }

@@ -1,7 +1,8 @@
 import { PrismaPg } from "@prisma/adapter-pg";
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
-import { type Prisma, PrismaClient } from "@/client/generated/client";
+import { Prisma, PrismaClient } from "@/client/generated/client";
 
+// biome-ignore lint/style/noNonNullAssertion: Database URL is required for tests to run
 const adapter = new PrismaPg(process.env.DATABASE_URL!);
 const prismaClient = new PrismaClient({ adapter });
 
@@ -47,6 +48,7 @@ const prismaProxy = new Proxy({} as InstanceType<typeof PrismaClient>, {
 
 vi.mock("@/client", () => ({
   prisma: prismaProxy,
+  Prisma,
 }));
 
 beforeEach(async () => {

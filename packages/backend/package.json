@@ -21,9 +21,10 @@
     "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=24",
+    "node": ">=25",
     "pnpm": ">=10.33.0"
   },
+  "main": "build/index.js",
   "scripts": {
     "build": "tsc --project tsconfig.build.json && tsc-alias -p tsconfig.json",
     "dev": "nodemon src/index.ts --devmode",
@@ -34,11 +35,12 @@
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
     "lint:fix": "biome check --formatter-enabled=false --write .",
-    "check": "pnpm format && pnpm lint",
-    "check:fix": "pnpm format:fix && pnpm lint:fix",
-    "clean": "rm -rf node_modules/ build/",
+    "check": "pnpm run format && pnpm run lint",
+    "check:fix": "pnpm run format:fix && pnpm run lint:fix",
+    "clean": "rm -rf -- build/ && pnpm purge",
     "prisma:push": "prisma db push && node --experimental-strip-types prisma/apply-views.ts",
-    "prisma:seed": "prisma db seed --"
+    "prisma:seed": "prisma db seed --",
+    "prisma:migrate": "prisma migrate deploy && node --experimental-strip-types prisma/apply-views.ts"
   },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.61.0",
@@ -46,11 +48,12 @@
     "@prisma/client": "^7.7.0",
     "@quixo3/prisma-session-store": "^3.1.19",
     "cors": "^2.8.6",
+    "discord-strategy": "^2.5.0",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
     "express-session": "^1.19.0",
     "passport": "^0.7.0",
-    "passport-discord": "^0.1.4",
+    "passport-oauth2-refresh": "^2.2.0",
     "pngjs": "^7.0.0",
     "socket.io": "^4.8.3",
     "zod": "^4.3.6"
@@ -63,14 +66,12 @@
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
     "@types/node": "^24.1.0",
-    "@types/passport-discord": "^0.1.15",
     "@types/passport": "^1.0.17",
     "@types/pngjs": "^6.0.5",
     "@types/supertest": "^7.2.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "prisma": "^7.7.0",
-    "prismock": "^1.35.4",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.16",

@@ -42,7 +42,10 @@ function sortByOwnerGuildName(
 function selectSortedGuildFrameEntries(
   data: GuildFrames,
 ): SortedGuildFrameEntries {
-  const groupedByOwnerId = Object.groupBy(data, (f) => f.owner.guild.guild_id);
+  const groupedByOwnerId = Object.groupBy(
+    data.data,
+    (f) => f.owner.guild.guild_id,
+  );
 
   return Object.entries(groupedByOwnerId)
     .filter(
@@ -58,10 +61,11 @@ export default function FrameList() {
 
   const sourceImage = useCanvasImage(canvas.id);
 
-  const { data: userFrames = [] } = useUserFrames({
+  const { data: userFramesResponse } = useUserFrames({
     canvasId: canvas.id,
     userId: user?.id,
   });
+  const userFrames = userFramesResponse?.data ?? [];
 
   const guildIds = Object.keys(user?.guilds ?? {});
   const { data: sortedGuildFrameMap = [] } = useGuildFrames(

@@ -10,7 +10,7 @@ import {
   useContext,
   useState,
 } from "react";
-import config from "@/config";
+import config from "@/config/clientConfig";
 import { useUserData } from "@/hooks";
 
 interface AuthContextType {

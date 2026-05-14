@@ -1,16 +1,17 @@
 import { styled } from "@mui/material";
+import { PrimitiveButton } from "../button";
+import { StaticSwatch } from "./StaticSwatch";
 
-import type { StaticSwatchProps } from "./StaticSwatch";
-import { SwatchBase } from "./SwatchBase";
-
-export const StyledSwatchBase = styled(SwatchBase)`
-  cursor: pointer;
-  border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
+export const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
+  border-color: oklch(from var(--discord-white) l c h / 15%);
+  border-style: solid;
+  border-width: 3px;
   transition: var(--transition-duration-fast) ease;
-  transition-property: opacity, outline-width, border-color;
+  transition-property: border-color, outline-width, padding, scale;
+  will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover:not(.disabled, .selected) {
+    &:hover:not(:disabled, [aria-selected="true"]) {
       opacity: 85%;
     }
   }
@@ -19,10 +20,18 @@ export const StyledSwatchBase = styled(SwatchBase)`
     outline: var(--focus-outline);
   }
 
-  &.selected {
-    border: 0.25rem solid var(--discord-white);
+  &[aria-selected="true"] {
+    border-color: var(--discord-white);
     background-clip: content-box;
-    padding: 0.25rem;
+    padding: 3px;
+  }
+
+  &:active {
+    scale: 97%;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
   }
 `;
 
@@ -34,33 +43,8 @@ export const rgbaToCssString = (
   return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
 };
 
-type InteractiveSwatchProps = StaticSwatchProps & {
-  onAction: () => void;
-  selected?: boolean;
-  disabled?: boolean;
-};
-
-export function InteractiveSwatch({
-  disabled = false,
-  onAction,
-  rgba,
-  selected = false,
-  ...props
-}: InteractiveSwatchProps) {
-  const clickHandler = onAction;
-  const keyUpHandler = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") onAction();
-  };
-
-  return (
-    <StyledSwatchBase
-      aria-disabled={disabled}
-      className={selected ? "selected" : undefined}
-      colorString={rgbaToCssString(rgba)}
-      onClick={clickHandler}
-      onKeyUp={keyUpHandler}
-      tabIndex={0}
-      {...props}
-    />
-  );
+export function InteractiveSwatch(
+  props: React.ComponentPropsWithRef<typeof StaticSwatch>,
+) {
+  return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
 }

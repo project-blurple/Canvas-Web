@@ -1,3 +1,7 @@
+export {
+  ActionPanelProvider,
+  useActionPanelContext,
+} from "./ActionPanelContext";
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { CanvasViewProvider, useCanvasViewContext } from "./CanvasViewContext";

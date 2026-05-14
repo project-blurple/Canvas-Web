@@ -5,7 +5,13 @@ import type {
   UserOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
-import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
+import config from "@/config";
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+  UnprocessableError,
+} from "@/errors";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
@@ -399,5 +405,47 @@ export async function createFrame(
       }
       throw error;
     }
+  }
+}
+
+interface GetFrameCountForOwnerParams {
+  canvasId: number;
+  ownerId: string;
+  isGuildOwned: boolean;
+}
+
+async function getFrameCountForOwner({
+  canvasId,
+  ownerId,
+  isGuildOwned,
+}: GetFrameCountForOwnerParams) {
+  return prisma.frame.count({
+    where: {
+      canvas_id: canvasId,
+      owner_id: BigInt(ownerId),
+      is_guild_owned: isGuildOwned,
+    },
+  });
+}
+
+export async function assertMaxOwnerFramesNotExceeded({
+  canvasId,
+  ownerId,
+  isGuildOwned,
+}: GetFrameCountForOwnerParams) {
+  const frameCount = await getFrameCountForOwner({
+    canvasId,
+    ownerId,
+    isGuildOwned,
+  });
+  const limit =
+    isGuildOwned ? config.frames.maxAllowedGuild : config.frames.maxAllowedUser;
+
+  if (frameCount >= limit) {
+    throw new UnprocessableError(
+      `Frame limit of ${limit} exceeded for this ${
+        isGuildOwned ? "guild" : "user"
+      } on this canvas`,
+    );
   }
 }

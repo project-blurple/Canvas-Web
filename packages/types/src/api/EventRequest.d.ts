@@ -1,4 +1,4 @@
-import { BlurpleEvent } from "..";
+import type { BlurpleEvent } from "../event";
 
 export interface Params {
   canvasId: BlurpleEvent["id"];

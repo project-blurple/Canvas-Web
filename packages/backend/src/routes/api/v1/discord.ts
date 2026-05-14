@@ -8,8 +8,10 @@ import ApiError from "@/errors/ApiError";
 import {
   getCurrentUserGuildFlags,
   getGuildPermissionsForUser,
+  syncDiscordGuildRecords,
 } from "@/services/discordGuildService";
 import { saveDiscordProfile } from "@/services/discordProfileService";
+import { withDiscordAccessToken } from "@/services/discordTokenService";
 import { assertIsSnowflake } from "@/utils/discordRouteUtils";
 
 export const discordRouter = Router();
@@ -26,12 +28,10 @@ discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
     }
 
     assertIsSnowflake(guildId, "guildId");
-    const accessToken = req.session.discordAccessToken;
-    if (!accessToken) {
-      throw new UnauthorizedError("Discord access token is missing");
-    }
-
-    const permissions = await getGuildPermissionsForUser(guildId, accessToken);
+    const permissions = await withDiscordAccessToken(
+      req.session,
+      (accessToken) => getGuildPermissionsForUser(guildId, accessToken),
+    );
 
     res.status(200).json(permissions);
   } catch (error) {
@@ -47,14 +47,11 @@ discordRouter.get("/guilds/permissions-map", async (req, res) => {
       throw new UnauthorizedError("User is not authenticated");
     }
 
-    const accessToken = req.session.discordAccessToken;
-    if (!accessToken) {
-      throw new UnauthorizedError("Discord access token is missing");
-    }
-
     const guildFlags =
       req.session.discordGuildFlags ??
-      (await getCurrentUserGuildFlags(accessToken));
+      (await withDiscordAccessToken(req.session, (accessToken) =>
+        getCurrentUserGuildFlags(accessToken),
+      ));
 
     req.session.discordGuildFlags = guildFlags;
 
@@ -84,17 +81,23 @@ discordRouter.get(
   passport.authenticate("discord", {
     failureRedirect: `${config.frontendUrl}/signin`,
   }),
-  (req, res) => {
+  async (req, res) => {
     const discordProfile = req.user as DiscordUserProfile;
     const authInfo = req.authInfo as
       | {
           discordAccessToken?: string;
+          discordRefreshToken?: string;
+          discordTokenExpiresAt?: number;
+          discordTokenLifetimeMs?: number;
           discordGuildFlags?: Record<string, GuildData>;
         }
       | undefined;
 
     if (authInfo?.discordAccessToken) {
       req.session.discordAccessToken = authInfo.discordAccessToken;
+      req.session.discordRefreshToken = authInfo.discordRefreshToken;
+      req.session.discordTokenExpiresAt = authInfo.discordTokenExpiresAt;
+      req.session.discordTokenLifetimeMs = authInfo.discordTokenLifetimeMs;
       req.session.discordGuildFlags = authInfo.discordGuildFlags;
     }
 
@@ -103,7 +106,10 @@ discordRouter.get(
       secure: config.environment !== "development",
     });
 
-    saveDiscordProfile(discordProfile);
+    await saveDiscordProfile(discordProfile);
+
     res.redirect(config.frontendUrl);
+
+    await syncDiscordGuildRecords(authInfo?.discordGuildFlags);
   },
 );

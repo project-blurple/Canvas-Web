@@ -1,10 +1,6 @@
-import {
-  DiscordGuildRecord,
-  DiscordUserProfile,
-  Frame,
-  GuildOwnedFrame,
-  UserOwnedFrame,
-} from "..";
+import type { DiscordGuildRecord } from "../discordGuildRecord";
+import type { DiscordUserProfile } from "../discordUserProfile";
+import type { Frame, GuildOwnedFrame, UserOwnedFrame } from "../frame";
 
 export interface Params {
   frameId?: Frame["id"];
@@ -14,8 +10,17 @@ export interface Params {
 }
 
 export type ResBody = Frame[];
-export type FrameByIdResBody = Frame;
-export type UserFramesResBody = UserOwnedFrame[];
-export type GuildFramesResBody = GuildOwnedFrame[];
 export type ReqBody = Record<string, never>;
 export type ReqQuery = Record<string, never>;
+export type FrameByIdResBody = Frame;
+
+export interface UserFramesResBody {
+  data: UserOwnedFrame[];
+  hasReachedMaxFrames: boolean;
+}
+export interface GuildFramesResBody {
+  data: GuildOwnedFrame[];
+  hasReachedMaxFrames: {
+    [guildId: string]: boolean;
+  };
+}

@@ -8,7 +8,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import config from "@/config";
+import config from "@/config/clientConfig";
 
 interface UseUserFramesParams {
   canvasId: Frame["canvasId"];
@@ -47,7 +47,7 @@ export function useFrameById({ frameId }: UseFrameByIdParams) {
 
 export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
   const getFrames = async (): Promise<FrameRequest.UserFramesResBody> => {
-    if (!userId) return [];
+    if (!userId) return {} as FrameRequest.UserFramesResBody;
 
     const response = await axios.get<FrameRequest.UserFramesResBody>(
       `${config.apiUrl}/api/v1/frame/user/${encodeURIComponent(userId)}/${encodeURIComponent(canvasId)}`,
@@ -61,7 +61,7 @@ export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
     enabled: Boolean(userId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    placeholderData: [],
+    placeholderData: {} as FrameRequest.UserFramesResBody,
   });
 }
 
@@ -73,7 +73,8 @@ export function useGuildFrames<TData = FrameRequest.GuildFramesResBody>(
   >,
 ) {
   const getFrames = async (): Promise<FrameRequest.GuildFramesResBody> => {
-    if (!guildIds || guildIds.length === 0) return [];
+    if (!guildIds || guildIds.length === 0)
+      return {} as FrameRequest.GuildFramesResBody;
 
     const response = await axios.get<FrameRequest.GuildFramesResBody>(
       `${config.apiUrl}/api/v1/frame/guilds/${encodeURIComponent(canvasId)}`,
@@ -98,6 +99,6 @@ export function useGuildFrames<TData = FrameRequest.GuildFramesResBody>(
     enabled: Boolean(guildIds?.length) && (options?.enabled ?? true),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    placeholderData: [],
+    placeholderData: {} as FrameRequest.GuildFramesResBody,
   });
 }

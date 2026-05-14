@@ -79,7 +79,6 @@ export default function Leaderboard() {
         <h2>{canvas.name}</h2>
       </TitleBlock>
 
-      {/** biome-ignore lint/a11y/noRedundantRoles: <explanation> */}
       <List
         aria-busy={isLeaderboardFetching}
         id={listId}

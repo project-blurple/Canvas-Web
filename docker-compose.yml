@@ -3,24 +3,49 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+      args:
+        PORT: 8000
+    volumes:
+      - ./packages/backend/static:/app/static
+    env_file:
+      - ./packages/backend/.env
+    environment:
+      # Overwrite the port set in the .env file to ensure it matches the exposed port.
+      - PORT=8000
     ports:
-      - "8000:8000"
+      - 8000:8000
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    depends_on:
+      - backend
+    env_file:
+      - ./packages/frontend/.env
+    environment:
+      # 'backend' here is referencing the backend service. Docker compose automatically interprets
+      # this and forwards traffic to the appropriate container.
+      - NEXT_PUBLIC_API_URL=http://backend:8000
     ports:
-      - "3000:3000"
+      - 3000:3000
 
   caddy:
     image: caddy:2.7-alpine
 
     restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443
+    depends_on:
+      - backend
+      - frontend
     volumes:
       # copy local ./Caddyfile to /etc/caddy/Caddyfile on docker
       - ./Caddyfile:/etc/caddy/Caddyfile
-    network_mode: host
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

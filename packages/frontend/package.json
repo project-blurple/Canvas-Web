@@ -21,7 +21,7 @@
     "url": "https://github.com/project-blurple/Canvas-Web/issues"
   },
   "engines": {
-    "node": ">=24",
+    "node": ">=25",
     "pnpm": ">=10.33.0"
   },
   "scripts": {
@@ -32,9 +32,9 @@
     "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
     "lint": "biome check --formatter-enabled=false .",
     "lint:fix": "biome check --formatter-enabled=false --write .",
-    "check": "pnpm format && pnpm lint",
-    "check:fix": "pnpm format:fix && pnpm lint:fix",
-    "clean": "rm -rf node_modules/ .next/"
+    "check": "pnpm run format && pnpm run lint",
+    "check:fix": "pnpm run format:fix && pnpm run lint:fix",
+    "clean": "rm -rf -- .next/ && pnpm purge"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",
@@ -43,11 +43,12 @@
     "@mui/material": "^9.0.0",
     "@mui/material-nextjs": "^9.0.0",
     "@tanstack/react-query": "^5.99.2",
-    "axios": "^1.15.0",
+    "axios": "^1.15.2",
     "colorjs.io": "^0.6.1",
     "js-cookie": "^3.0.5",
     "lucide-react": "^1.8.0",
     "luxon": "^3.7.2",
+    "markdown-to-jsx": "^9.7.16",
     "next": "^16.2.4",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
