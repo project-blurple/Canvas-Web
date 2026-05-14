@@ -100,10 +100,16 @@ jobs:
       - name: Build
         run: pnpm --filter ${{ matrix.package }} build
 
-  backend_tests:
-    name: Backend tests
+  test:
+    name: Test
     timeout-minutes: 10
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - backend
+          - frontend
     steps:
       - uses: actions/checkout@v6
 
@@ -119,5 +125,5 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run backend tests
-        run: pnpm --filter @blurple-canvas-web/backend test -- --run
+      - name: Run ${{ matrix.package }} tests
+        run: pnpm --filter @blurple-canvas-web/${{ matrix.package }} test -- --run
