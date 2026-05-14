@@ -1,5 +1,27 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useRouter } from "next/router";
+import { useEffect } from "react";
+import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import { useAuthContext } from "@/contexts";
+import AdminDashboard from "./AdminDashboard";
 
 export default function AdminPage() {
-  redirect("/admin/event");
+  const { user, isAuthResolved } = useAuthContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthResolved) return;
+    if (!user?.isCanvasAdmin) router.replace("/");
+  }, [isAuthResolved, router, user?.isCanvasAdmin]);
+
+  if (isAuthResolved && !user?.isCanvasAdmin) {
+    return null;
+  }
+
+  return (
+    <LayoutWithHeader>
+      <AdminDashboard />
+    </LayoutWithHeader>
+  );
 }
