@@ -8,6 +8,7 @@ const ColorIdParamModel = z.object({
 
 export interface ColorIdParam {
   colorId: string;
+  [key: string]: string;
 }
 
 export async function parseColorId(

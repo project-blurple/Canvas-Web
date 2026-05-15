@@ -1,3 +1,4 @@
+import "@/utils";
 import express, { type RequestHandler } from "express";
 import request from "supertest";
 import {
@@ -5,6 +6,7 @@ import {
   getBlocklist,
   removeUsersFromBlocklist,
 } from "@/services/blocklistService";
+import { isCanvasModerator } from "@/services/discordGuildService";
 import { mockAuth } from "@/test/mockAuth";
 import { blocklistRouter } from "./blocklist";
 
@@ -12,6 +14,10 @@ vi.mock("@/services/blocklistService", () => ({
   addUsersToBlocklist: vi.fn(),
   getBlocklist: vi.fn(),
   removeUsersFromBlocklist: vi.fn(),
+}));
+
+vi.mock("@/services/discordGuildService", () => ({
+  isCanvasModerator: vi.fn(),
 }));
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
@@ -54,6 +60,7 @@ describe("Blocklist route tests", () => {
     vi.mocked(getBlocklist).mockResolvedValueOnce(blocklist as never);
 
     const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const response = await request(app)
       .get("/api/v1/blocklist")
       .set("X-TestUserId", "1")
@@ -70,6 +77,7 @@ describe("Blocklist route tests", () => {
 
   it("adds users to the blocklist for a moderator", async () => {
     const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const dateAdded = new Date();
     vi.mocked(addUsersToBlocklist).mockResolvedValueOnce([
       {
@@ -107,6 +115,7 @@ describe("Blocklist route tests", () => {
 
   it("removes users from the blocklist for a moderator", async () => {
     const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     vi.mocked(removeUsersFromBlocklist).mockResolvedValueOnce(undefined);
 
     const response = await request(app)
@@ -128,12 +137,15 @@ describe("Blocklist route tests", () => {
     const response = await request(app).get("/api/v1/blocklist");
 
     expect(response.status).toBe(401);
-    expect(response.body).toStrictEqual({ message: "Unauthorized" });
+    expect(response.body).toStrictEqual({
+      message: "User is not authenticated",
+    });
     expect(getBlocklist).not.toHaveBeenCalled();
   });
 
   it("returns 403 when blocklist mutation permissions are missing", async () => {
     const app = createApp({ authenticated: true, moderator: false });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
 
     const response = await request(app)
       .put("/api/v1/blocklist")

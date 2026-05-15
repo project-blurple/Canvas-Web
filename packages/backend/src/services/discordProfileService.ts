@@ -25,8 +25,24 @@ export async function createOrUpdateDiscordProfile(
     where: {
       user_id: profile.user_id,
     },
-    update: profile,
-    create: profile,
+    update: {
+      username: profile.username,
+      profile_picture_url: profile.profile_picture_url,
+    },
+    create: {
+      username: profile.username,
+      profile_picture_url: profile.profile_picture_url,
+      user: {
+        connectOrCreate: {
+          where: {
+            id: profile.user_id,
+          },
+          create: {
+            id: profile.user_id,
+          },
+        },
+      },
+    },
   });
 }
 

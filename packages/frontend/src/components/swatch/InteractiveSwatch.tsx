@@ -3,9 +3,12 @@ import { PrimitiveButton } from "../button";
 import { StaticSwatch } from "./StaticSwatch";
 
 const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
-  border: 0.25rem solid oklch(from var(--discord-white) l c h / 15%);
+  border-color: oklch(from var(--discord-white) l c h / 15%);
+  border-style: solid;
+  border-width: 3px;
   transition: var(--transition-duration-fast) ease;
-  transition-property: opacity, outline-width, border-color;
+  transition-property: border-color, outline-width, padding, scale;
+  will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
     &:hover:not(:disabled, [aria-selected="true"]) {
@@ -18,9 +21,13 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   }
 
   &[aria-selected="true"] {
-    border: 0.25rem solid var(--discord-white);
+    border-color: var(--discord-white);
     background-clip: content-box;
-    padding: 0.25rem;
+    padding: 3px;
+  }
+
+  &:active {
+    scale: 97%;
   }
 
   &:disabled {
@@ -28,10 +35,8 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   }
 `;
 
-interface InteractiveSwatchProps extends React.ComponentPropsWithRef<
-  typeof StaticSwatch
-> {}
-
-export function InteractiveSwatch(props: InteractiveSwatchProps) {
+export function InteractiveSwatch(
+  props: React.ComponentPropsWithRef<typeof StaticSwatch>,
+) {
   return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
 }

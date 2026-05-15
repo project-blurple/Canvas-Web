@@ -1,9 +1,11 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
+import type { ConsumableAPI, DiscordProfile } from "discord-strategy";
+import { DiscordScope, Strategy as DiscordStrategy } from "discord-strategy";
 import type { Express } from "express";
 import session from "express-session";
 import passport from "passport";
-import { Strategy as DiscordStrategy } from "passport-discord";
+import refresh from "passport-oauth2-refresh";
 import { prisma } from "@/client";
 import config from "@/config";
 import {
@@ -15,13 +17,32 @@ import { getProfilePictureUrlFromHash } from "@/services/discordProfileService";
 
 const discordStrategy = new DiscordStrategy(
   {
-    passReqToCallback: true,
     clientID: config.discord.clientId,
     clientSecret: config.discord.clientSecret,
+    authorizationURL: "https://discord.com/api/oauth2/authorize",
     callbackURL: "/api/v1/discord/callback",
-    scope: ["identify", "guilds", "guilds.members.read"],
+    tokenURL: "https://discord.com/api/oauth2/token",
+    scope: [
+      DiscordScope.Identify,
+      DiscordScope.Guilds,
+      DiscordScope.GuildsMembersRead,
+    ],
   },
-  async (_req, accessToken, _refreshToken, profile, done) => {
+  async (
+    accessToken: string,
+    refreshToken: string,
+    profile: DiscordProfile,
+    done: (
+      error: Error | null,
+      user?: DiscordUserProfile,
+      info?: {
+        discordAccessToken: string;
+        discordRefreshToken: string;
+        discordGuildFlags: Awaited<ReturnType<typeof getCurrentUserGuildFlags>>;
+      },
+    ) => void,
+    _consume: ConsumableAPI,
+  ) => {
     try {
       const userGuildFlags = await getCurrentUserGuildFlags(accessToken);
       const [userIsCanvasAdmin, userIsCanvasModerator] = await Promise.all([
@@ -34,7 +55,7 @@ const discordStrategy = new DiscordStrategy(
         username: profile.username,
         profilePictureUrl: getProfilePictureUrlFromHash(
           BigInt(profile.id),
-          profile.avatar,
+          profile.avatar ?? null,
         ),
         isCanvasAdmin: userIsCanvasAdmin,
         isCanvasModerator: userIsCanvasModerator,
@@ -42,6 +63,7 @@ const discordStrategy = new DiscordStrategy(
 
       done(null, user, {
         discordAccessToken: accessToken,
+        discordRefreshToken: refreshToken,
         discordGuildFlags: userGuildFlags,
       });
     } catch (error) {
@@ -52,6 +74,7 @@ const discordStrategy = new DiscordStrategy(
 
 export function initializeAuth(app: Express) {
   passport.use(discordStrategy);
+  refresh.use(discordStrategy as never);
 
   passport.serializeUser((user, done) => {
     done(null, user);

@@ -16,7 +16,7 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
   const hueA = new Color("srgb", rgbA).to("oklch").coords[2];
   const hueB = new Color("srgb", rgbB).to("oklch").coords[2];
   if (hueA && hueB) return hueA - hueB;
-  // Everything below should be unreachable in pratice
+  // Everything below should be unreachable in practice
   if (hueA === null) return 1;
   if (hueB == null) return -1;
   return 0;
@@ -37,11 +37,12 @@ export function usePalette(
   };
 
   return useQuery<PaletteRequest.ResBody>({
+    ...useQueryOptions,
     queryKey: ["palette", eventId],
     queryFn: getPalette,
+    enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: [] as PaletteRequest.ResBody,
-    ...useQueryOptions,
   });
 }

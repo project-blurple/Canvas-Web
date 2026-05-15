@@ -37,6 +37,7 @@ model canvas {
   guild_stats       guild_stats[]
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
+  notices           notice[]
 }
 
 model color {
@@ -72,6 +73,7 @@ model discord_user_profile {
   history             history[]
   leaderboard_guild   leaderboard_guild[]
   leaderboard         leaderboard[]
+  user                user                @relation(fields: [user_id], references: [id])
 }
 
 model discord_guild_record {
@@ -167,21 +169,21 @@ model pixel {
   color     color  @relation(fields: [color_id], references: [id])
 
   @@id([canvas_id, x, y])
-  // Necessary to get update and upsert working with prismock
   @@unique([canvas_id, x, y])
 }
 
 model user {
-  id                BigInt              @id
-  current_canvas_id Int?
-  skip_confirm      Boolean             @default(false)
-  cooldown_remind   Boolean             @default(false)
-  blacklist         blacklist?
-  cooldowns         cooldown[]
-  history           history[]
-  user_stats        user_stats[]
-  leaderboard       leaderboard[]
-  leaderboard_guild leaderboard_guild[]
+  id                   BigInt                @id
+  current_canvas_id    Int?
+  skip_confirm         Boolean               @default(false)
+  cooldown_remind      Boolean               @default(false)
+  blacklist            blacklist?
+  cooldowns            cooldown[]
+  history              history[]
+  user_stats           user_stats[]
+  leaderboard          leaderboard[]
+  leaderboard_guild    leaderboard_guild[]
+  discord_user_profile discord_user_profile?
 }
 
 model session {
@@ -189,6 +191,20 @@ model session {
   sid       String   @unique
   data      String
   expiresAt DateTime @db.Timestamptz(6)
+}
+
+model notice {
+  id         Int       @id @default(autoincrement())
+  type       String    @default("info") // info | warning | error
+  header     String?
+  content    String?
+  priority   Int       @default(0)
+  start_at   DateTime? @db.Timestamptz(6)
+  end_at     DateTime? @db.Timestamptz(6)
+  persisted  Boolean   @default(false)
+  canvas_id  Int?
+  canvas     canvas?   @relation(fields: [canvas_id], references: [id])
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
 }
 
 view user_stats {
