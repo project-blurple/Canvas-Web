@@ -3,6 +3,8 @@
 import { styled } from "@mui/material";
 import { CalendarRange, Radio } from "lucide-react";
 import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
+import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasList, useEventInfo } from "@/hooks";
 
@@ -33,6 +35,15 @@ const EventLiveIndicator = styled("div")`
   opacity: 0.75;
 `;
 
+const EventCanvasList = styled("ul")`
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, 10rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+`;
+
 interface AdminEventTabProps extends React.ComponentPropsWithRef<
   typeof AdminEventTabBlock
 > {
@@ -59,7 +70,13 @@ export default function AdminEventTab({
     <AdminEventTabBlock active={active} {...props}>
       <EventInfoWrapper>
         {isLoading ?
-          "Loading..."
+          <CanvasAnimatedIcon
+            style={{
+              color: "var(--discord-blurple)",
+              height: "64px",
+              opacity: 0.5,
+            }}
+          />
         : !selectedEvent ?
           <h2>Event not found</h2>
         : <>
@@ -73,14 +90,11 @@ export default function AdminEventTab({
                 This event is currently live!
               </EventLiveIndicator>
             )}
-            <ul>
-              {/* This would be cool as previews/thumbnails */}
+            <EventCanvasList>
               {eventCanvases.map((canvas) => (
-                <li key={canvas.id}>
-                  {canvas.name} (#{canvas.id})
-                </li>
+                <CanvasPreviewCard key={canvas.id} canvas={canvas} />
               ))}
-            </ul>
+            </EventCanvasList>
           </>
         }
       </EventInfoWrapper>
