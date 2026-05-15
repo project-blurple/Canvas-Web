@@ -35,13 +35,10 @@ const EventLiveIndicator = styled("div")`
   opacity: 0.75;
 `;
 
-const EventCanvasList = styled("ul")`
+const EventCanvasList = styled("div")`
   display: grid;
   gap: 0.75rem;
   grid-template-columns: repeat(auto-fill, 10rem);
-  list-style: none;
-  margin: 0;
-  padding: 0;
 `;
 
 interface AdminEventTabProps extends React.ComponentPropsWithRef<
@@ -54,7 +51,7 @@ export default function AdminEventTab({
   active,
   ...props
 }: AdminEventTabProps) {
-  const { canvas } = useCanvasContext();
+  const { canvas, setCanvas } = useCanvasContext();
   const { data: selectedEvent, isLoading: currentEventIsLoading } =
     useEventInfo(canvas.eventId ?? undefined);
   const { data: canvases = [], isLoading: canvasListIsLoading } =
@@ -92,7 +89,11 @@ export default function AdminEventTab({
             )}
             <EventCanvasList>
               {eventCanvases.map((canvas) => (
-                <CanvasPreviewCard key={canvas.id} canvas={canvas} />
+                <CanvasPreviewCard
+                  key={canvas.id}
+                  canvas={canvas}
+                  onClick={() => setCanvas(canvas.id, true)}
+                />
               ))}
             </EventCanvasList>
           </>

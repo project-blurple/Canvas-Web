@@ -3,15 +3,23 @@ import { css, styled } from "@mui/material";
 import { useCanvasImage } from "@/hooks";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
-const EventCanvasCard = styled("li")`
-  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+const EventCanvasCard = styled("button")`
+  align-items: flex-start;
+  background: transparent;
   border-radius: 0.75rem;
+  border: oklch(from var(--discord-white) l c h / 12%) 1px solid;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   overflow: hidden;
   padding: 0.5rem;
   position: relative;
+  transition: border-color var(--transition-duration-fast) ease;
+
+  &:hover {
+    border-color: oklch(from var(--discord-white) l c h / 20%);
+  }
 `;
 
 const eventCanvasPreviewCss = css`
@@ -34,10 +42,12 @@ const EventCanvasPreviewPlaceholder = styled("div")`
 `;
 
 const EventCanvasMeta = styled("div")`
+  align-items: flex-start;
   display: flex;
   flex-direction: column;
   gap: 0.125rem;
   min-width: 0;
+  padding-inline: 0.125rem;
 `;
 
 const EventCanvasName = styled("h3")`
@@ -51,11 +61,20 @@ const EventCanvasId = styled("code")`
   opacity: 0.7;
 `;
 
-export function CanvasPreviewCard({ canvas }: { canvas: CanvasSummary }) {
+interface CanvasPreviewCardProps extends React.ComponentPropsWithRef<
+  typeof EventCanvasCard
+> {
+  canvas: CanvasSummary;
+}
+
+export function CanvasPreviewCard({
+  canvas,
+  ...props
+}: CanvasPreviewCardProps) {
   const sourceImage = useCanvasImage(canvas.id);
 
   return (
-    <EventCanvasCard>
+    <EventCanvasCard type="button" {...props}>
       {sourceImage ?
         <EventCanvasPreview alt={canvas.name} src={sourceImage.src} />
       : <EventCanvasPreviewPlaceholder>
