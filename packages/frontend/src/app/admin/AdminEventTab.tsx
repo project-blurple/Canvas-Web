@@ -6,7 +6,7 @@ import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import { useCanvasList, useEventInfo } from "@/hooks";
+import { useCanvasList, useEventInfo, usePalette } from "@/hooks";
 
 const AdminEventTabBlock = styled(TabPanel)`
   grid-template-rows: auto 1fr;
@@ -35,6 +35,11 @@ const EventLiveIndicator = styled("div")`
   opacity: 0.75;
 `;
 
+const EventStat = styled("div")`
+  font-size: 0.875rem;
+  opacity: 0.9;
+`;
+
 const EventCanvasList = styled("div")`
   display: grid;
   gap: 0.75rem;
@@ -54,10 +59,22 @@ export default function AdminEventTab({
   const { canvas, setCanvas } = useCanvasContext();
   const { data: selectedEvent, isLoading: currentEventIsLoading } =
     useEventInfo(canvas.eventId ?? undefined);
+  const { data: palette = [], isLoading: paletteIsLoading } = usePalette(
+    selectedEvent?.id,
+    true,
+    {
+      enabled: active,
+    },
+  );
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
 
-  const isLoading = currentEventIsLoading || canvasListIsLoading;
+  const isLoading =
+    currentEventIsLoading || canvasListIsLoading || paletteIsLoading;
+
+  const participatingGuildCount = palette.filter(
+    (color) => !color.global && color.guildId,
+  ).length;
 
   const eventCanvases = canvases.filter(
     (canvas) => canvas.eventId === selectedEvent?.id,
@@ -87,6 +104,9 @@ export default function AdminEventTab({
                 This event is currently live!
               </EventLiveIndicator>
             )}
+            <EventStat>
+              Participating guilds: {participatingGuildCount}
+            </EventStat>
             <EventCanvasList>
               {eventCanvases.map((canvas) => (
                 <CanvasPreviewCard
