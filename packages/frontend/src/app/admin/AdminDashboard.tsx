@@ -10,6 +10,13 @@ import {
 import AdminCanvasTab from "./AdminCanvasTab";
 import AdminColorTab from "./AdminColorTab";
 import AdminEventTab from "./AdminEventTab";
+import AdminNoticeTab from "./AdminNoticeTab";
+import AdminPasteTab from "./AdminPasteTab";
+import { pathToTabKey, type TabKey, tabKeyToPath } from "./tabs";
+
+const AdminTabBar = styled(ActionPanelTabBar)`
+  grid-template-columns: repeat(5, 1fr);
+`;
 
 const Wrapper = styled("div")`
   display: flex;
@@ -20,28 +27,21 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
-type TabKey = "event" | "canvas" | "color";
-
-const Tab = GenericTab<TabKey>;
-
-const tabKeyToPath: Record<TabKey, string> = {
-  event: "event",
-  canvas: "canvas",
-  color: "color",
-};
-
-const pathToTabKey: Record<string, TabKey> = {
-  "/admin/event": "event",
-  "/admin/canvas": "canvas",
-  "/admin/color": "color",
-};
+const Tab = styled(GenericTab<TabKey>)`
+  &[aria-selected="true"] {
+    background-color: oklch(from var(--discord-legacy-greyple) l c h / 30%);
+  }
+`;
 
 export default function AdminDashboard() {
   const pathname = usePathname();
   const [activeTab, setActiveTab] = useState<TabKey>("event");
-  const eventTabId = useId();
+
   const canvasTabId = useId();
   const colorTabId = useId();
+  const eventTabId = useId();
+  const noticeTabId = useId();
+  const pasteTabId = useId();
 
   useEffect(() => {
     const tabFromPath = pathToTabKey[pathname ?? ""] ?? "event";
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
   return (
     <Wrapper>
       <h1>Admin</h1>
-      <ActionPanelTabBar role="tablist">
+      <AdminTabBar role="tablist">
         <Tab
           aria-controls={eventTabId}
           aria-selected={activeTab === "event"}
@@ -65,6 +65,14 @@ export default function AdminDashboard() {
           onSwitchTab={handleTabChange}
         >
           Event
+        </Tab>
+        <Tab
+          aria-controls={noticeTabId}
+          aria-selected={activeTab === "notice"}
+          tabKey="notice"
+          onSwitchTab={handleTabChange}
+        >
+          Notice
         </Tab>
         <Tab
           aria-controls={canvasTabId}
@@ -82,10 +90,20 @@ export default function AdminDashboard() {
         >
           Color
         </Tab>
-      </ActionPanelTabBar>
+        <Tab
+          aria-controls={pasteTabId}
+          aria-selected={activeTab === "paste"}
+          tabKey="paste"
+          onSwitchTab={handleTabChange}
+        >
+          Paste
+        </Tab>
+      </AdminTabBar>
       <AdminEventTab active={activeTab === "event"} id={eventTabId} />
       <AdminCanvasTab active={activeTab === "canvas"} id={canvasTabId} />
       <AdminColorTab active={activeTab === "color"} id={colorTabId} />
+      <AdminNoticeTab active={activeTab === "notice"} id={noticeTabId} />
+      <AdminPasteTab active={activeTab === "paste"} id={pasteTabId} />
     </Wrapper>
   );
 }

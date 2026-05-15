@@ -8,11 +8,11 @@ const AdminCanvasTabBlock = styled(TabPanel)`
 `;
 
 const CanvasInfoWrapper = styled("div")`
+  align-items: center;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  align-items: center;
 `;
 
 interface AdminCanvasTabProps extends React.ComponentPropsWithRef<

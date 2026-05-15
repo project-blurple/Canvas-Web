@@ -5,8 +5,7 @@ import { use, useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithNavbar";
 import { useAuthContext } from "@/contexts";
 import AdminDashboard from "../AdminDashboard";
-
-const validTabs = new Set(["event", "canvas", "color"]);
+import { isValidTab } from "../tabs";
 
 export default function AdminTabPage({
   params,
@@ -22,7 +21,7 @@ export default function AdminTabPage({
     if (!user?.isCanvasAdmin) router.replace("/");
   }, [isAuthResolved, router, user?.isCanvasAdmin]);
 
-  if (!validTabs.has(resolvedParams.tab)) {
+  if (!isValidTab(resolvedParams.tab)) {
     notFound();
   }
 
