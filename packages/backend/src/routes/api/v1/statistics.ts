@@ -1,8 +1,14 @@
 import { Router } from "express";
 import { ApiError } from "@/errors";
 import { parseCanvasId } from "@/models/canvas.models";
+import { parseEventId } from "@/models/event.models";
 import { LeaderboardQueryModel } from "@/models/pixel.models";
-import { getLeaderboard, getUserStats } from "@/services/statisticsService";
+import {
+  getCanvasStatisticsSummary,
+  getEventStatisticsSummary,
+  getLeaderboard,
+  getUserStats,
+} from "@/services/statisticsService";
 import { assertZodSuccess } from "@/utils/models";
 
 export const statisticsRouter = Router();
@@ -31,6 +37,28 @@ statisticsRouter.get("/leaderboard/:canvasId", async (req, res) => {
     const leaderboard = await getLeaderboard(canvasId, page, size);
 
     res.status(200).json(leaderboard);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+statisticsRouter.get("/summary/canvas/:canvasId", async (req, res) => {
+  try {
+    const canvasId = await parseCanvasId(req.params);
+    const summary = await getCanvasStatisticsSummary(canvasId);
+
+    res.status(200).json(summary);
+  } catch (error) {
+    ApiError.sendError(res, error);
+  }
+});
+
+statisticsRouter.get("/summary/event/:eventId", async (req, res) => {
+  try {
+    const eventId = await parseEventId(req.params);
+    const summary = await getEventStatisticsSummary(eventId);
+
+    res.status(200).json(summary);
   } catch (error) {
     ApiError.sendError(res, error);
   }

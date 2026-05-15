@@ -1,4 +1,5 @@
 import type { CanvasInfo } from "./canvasInfo";
+import type { BlurpleEvent } from "./event";
 import type { PaletteColorSummary } from "./palette";
 
 export interface UserStats {
@@ -17,4 +18,17 @@ export interface LeaderboardEntry {
   totalPixels: number;
   username?: string;
   profilePictureUrl: string;
+}
+
+export interface CanvasStatisticsSummary {
+  canvasId: CanvasInfo["id"];
+  totalUsersInvolved: number;
+  totalPixelsPlaced: number;
+}
+
+export interface EventStatisticsSummary {
+  eventId: BlurpleEvent["id"];
+  totalUsersInvolved: number;
+  totalPixelsPlaced: number;
+  canvasSummaries: CanvasStatisticsSummary[];
 }

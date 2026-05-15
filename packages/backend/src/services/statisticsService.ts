@@ -1,10 +1,14 @@
 import type {
+  BlurpleEvent,
   CanvasInfo,
+  CanvasStatisticsSummary,
+  EventStatisticsSummary,
   LeaderboardEntry,
   Paginated,
   UserStats,
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
+import { getCanvases } from "./canvasService";
 import { createDefaultAvatarUrl } from "./discordProfileService";
 import { toPaletteColorSummary } from "./paletteService";
 
@@ -101,5 +105,76 @@ export async function getLeaderboard(
         row.discord_user_profile?.profile_picture_url ??
         createDefaultAvatarUrl(row.user_id),
     })),
+  };
+}
+
+export async function getCanvasStatisticsSummary(
+  canvasId: CanvasInfo["id"],
+): Promise<CanvasStatisticsSummary> {
+  const leaderboardRows = await prisma.leaderboard.findMany({
+    where: {
+      canvas_id: canvasId,
+    },
+    select: {
+      total_pixels: true,
+    },
+  });
+
+  return {
+    canvasId,
+    totalUsersInvolved: leaderboardRows.length,
+    totalPixelsPlaced: leaderboardRows.reduce(
+      (total, row) => total + row.total_pixels,
+      0,
+    ),
+  };
+}
+
+export async function getEventStatisticsSummary(
+  eventId: BlurpleEvent["id"],
+): Promise<EventStatisticsSummary> {
+  const canvases = (await getCanvases()).filter(
+    (canvas) => canvas.eventId === eventId,
+  );
+
+  const leaderboardRows = await prisma.leaderboard.findMany({
+    where: {
+      canvas_id: {
+        in: canvases.map((canvas) => canvas.id),
+      },
+    },
+    select: {
+      user_id: true,
+      total_pixels: true,
+      canvas_id: true,
+    },
+  });
+
+  const canvasSummaries: CanvasStatisticsSummary[] = canvases.map((canvas) => {
+    const rowsForCanvas = leaderboardRows.filter(
+      (row) => row.canvas_id === canvas.id,
+    );
+
+    return {
+      canvasId: canvas.id,
+      totalUsersInvolved: rowsForCanvas.length,
+      totalPixelsPlaced: rowsForCanvas.reduce(
+        (total, row) => total + row.total_pixels,
+        0,
+      ),
+    };
+  });
+
+  return {
+    eventId,
+    totalUsersInvolved: leaderboardRows.reduce((uniqueUsers, row) => {
+      uniqueUsers.add(row.user_id.toString());
+      return uniqueUsers;
+    }, new Set<string>()).size,
+    totalPixelsPlaced: leaderboardRows.reduce(
+      (total, row) => total + row.total_pixels,
+      0,
+    ),
+    canvasSummaries,
   };
 }
