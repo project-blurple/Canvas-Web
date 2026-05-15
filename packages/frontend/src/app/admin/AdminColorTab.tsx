@@ -8,6 +8,7 @@ import {
   partitionPaletteByParticipation,
 } from "@/components/action-panel/tabs/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
+import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 
 const AdminColorTabBlock = styled(TabPanel)`
@@ -94,7 +95,8 @@ export default function AdminColorTab({
   active,
   ...props
 }: AdminColorTabProps) {
-  const { data: palette = [] } = usePalette(undefined, true);
+  const { canvas } = useCanvasContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, true);
   const [mainColors, partnerColors] = partitionPaletteByOwner(palette);
   const [participatingColors, nonParticipatingColors] =
     partitionPaletteByParticipation(partnerColors);
