@@ -30,5 +30,4 @@ export interface EventStatisticsSummary {
   eventId: BlurpleEvent["id"];
   totalUsersInvolved: number;
   totalPixelsPlaced: number;
-  canvasSummaries: CanvasStatisticsSummary[];
 }

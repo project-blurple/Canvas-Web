@@ -150,21 +150,6 @@ export async function getEventStatisticsSummary(
     },
   });
 
-  const canvasSummaries: CanvasStatisticsSummary[] = canvases.map((canvas) => {
-    const rowsForCanvas = leaderboardRows.filter(
-      (row) => row.canvas_id === canvas.id,
-    );
-
-    return {
-      canvasId: canvas.id,
-      totalUsersInvolved: rowsForCanvas.length,
-      totalPixelsPlaced: rowsForCanvas.reduce(
-        (total, row) => total + row.total_pixels,
-        0,
-      ),
-    };
-  });
-
   return {
     eventId,
     totalUsersInvolved: leaderboardRows.reduce((uniqueUsers, row) => {
@@ -175,6 +160,5 @@ export async function getEventStatisticsSummary(
       (total, row) => total + row.total_pixels,
       0,
     ),
-    canvasSummaries,
   };
 }
