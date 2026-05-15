@@ -1,4 +1,4 @@
-minimumReleaseAge: 10080
+minimumReleaseAge: 0 # 10080 TEMPORARY
 
 packages:
   - "packages/backend"
@@ -11,7 +11,7 @@ overrides:
   protobufjs: ^7.5.5
 
 allowBuilds:
-  '@prisma/engines': false
+  "@prisma/engines": false
   cpu-features: false
   esbuild: false
   prisma: false
