@@ -98,7 +98,7 @@ async function discordRequest<T>({
     const suffix =
       retryAfter ? ` after ${Number.parseFloat(retryAfter)} s` : "";
     throw new TooManyRequestsError(
-      `Rate limited by Discord API. Please try signing in again${suffix}.`,
+      `Rate limited by Discord API. Please try again${suffix}.`,
     );
   }
 
