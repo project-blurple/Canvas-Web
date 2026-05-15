@@ -6,7 +6,12 @@ import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import { useCanvasList, useEventInfo, usePalette } from "@/hooks";
+import {
+  useCanvasList,
+  useEventInfo,
+  useEventStats,
+  usePalette,
+} from "@/hooks";
 
 const AdminEventTabBlock = styled(TabPanel)`
   grid-template-rows: auto 1fr;
@@ -59,6 +64,14 @@ export default function AdminEventTab({
   const { canvas, setCanvas } = useCanvasContext();
   const { data: selectedEvent, isLoading: currentEventIsLoading } =
     useEventInfo(canvas.eventId ?? undefined);
+  const { data: canvases = [], isLoading: canvasListIsLoading } =
+    useCanvasList();
+  const { data: eventStats, isLoading: eventStatsIsLoading } = useEventStats(
+    selectedEvent?.id,
+    {
+      enabled: active,
+    },
+  );
   const { data: palette = [], isLoading: paletteIsLoading } = usePalette(
     selectedEvent?.id,
     true,
@@ -66,11 +79,12 @@ export default function AdminEventTab({
       enabled: active,
     },
   );
-  const { data: canvases = [], isLoading: canvasListIsLoading } =
-    useCanvasList();
 
   const isLoading =
-    currentEventIsLoading || canvasListIsLoading || paletteIsLoading;
+    currentEventIsLoading ||
+    canvasListIsLoading ||
+    paletteIsLoading ||
+    eventStatsIsLoading;
 
   const participatingGuildCount = palette.filter(
     (color) => !color.global && color.guildId,
@@ -107,11 +121,22 @@ export default function AdminEventTab({
             <EventStat>
               Participating guilds: {participatingGuildCount}
             </EventStat>
+            {eventStats && (
+              <>
+                <EventStat>
+                  Total users involved: {eventStats.totalUsersInvolved}
+                </EventStat>
+                <EventStat>
+                  Total pixels placed: {eventStats.totalPixelsPlaced}
+                </EventStat>
+              </>
+            )}
             <EventCanvasList>
               {eventCanvases.map((canvas) => (
                 <CanvasPreviewCard
                   key={canvas.id}
                   canvas={canvas}
+                  active={active}
                   onClick={() => setCanvas(canvas.id, true)}
                 />
               ))}

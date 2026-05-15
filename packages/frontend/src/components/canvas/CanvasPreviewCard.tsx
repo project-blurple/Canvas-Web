@@ -1,6 +1,6 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { useCanvasImage } from "@/hooks";
+import { useCanvasImage, useCanvasStats } from "@/hooks";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
 const EventCanvasCard = styled("button")`
@@ -65,13 +65,18 @@ interface CanvasPreviewCardProps extends React.ComponentPropsWithRef<
   typeof EventCanvasCard
 > {
   canvas: CanvasSummary;
+  active?: boolean;
 }
 
 export function CanvasPreviewCard({
   canvas,
+  active = true,
   ...props
 }: CanvasPreviewCardProps) {
   const sourceImage = useCanvasImage(canvas.id);
+  const { data: canvasStats } = useCanvasStats(canvas.id, {
+    enabled: active,
+  });
 
   return (
     <EventCanvasCard type="button" {...props}>
@@ -91,6 +96,12 @@ export function CanvasPreviewCard({
         <EventCanvasName>{canvas.name}</EventCanvasName>
         <EventCanvasId>ID: {canvas.id}</EventCanvasId>
       </EventCanvasMeta>
+      {canvasStats && (
+        <>
+          <div>Users: {canvasStats.totalUsersInvolved}</div>
+          <div>Pixels: {canvasStats.totalPixelsPlaced}</div>
+        </>
+      )}
     </EventCanvasCard>
   );
 }

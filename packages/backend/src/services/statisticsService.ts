@@ -146,7 +146,6 @@ export async function getEventStatisticsSummary(
     select: {
       user_id: true,
       total_pixels: true,
-      canvas_id: true,
     },
   });
 

@@ -1,6 +1,8 @@
 export { useCanvasInfo } from "./useCanvasInfo";
 export { useCanvasList } from "./useCanvasList";
+export { useCanvasStats } from "./useCanvasStats";
 export { useEventInfo } from "./useEventInfo";
+export { useEventStats } from "./useEventStats";
 export { useLeaderboard } from "./useLeaderboard";
 export { usePalette } from "./usePalette";
 export { usePixelHistory } from "./usePixelHistory";
