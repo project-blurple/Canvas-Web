@@ -40,9 +40,26 @@ const EventLiveIndicator = styled("div")`
   opacity: 0.75;
 `;
 
-const EventStat = styled("div")`
+const EventStatWrapper = styled("div")`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
+  gap: 0.5rem;
+`;
+
+const EventStatCard = styled("div")`
+  align-items: flex-start;
+  background: ${({ theme }) => theme.palette.background.paper};
+  border-radius: 0.5rem;
+  display: flex;
+  flex-direction: column;
   font-size: 0.875rem;
-  opacity: 0.9;
+  gap: 0.25rem;
+  padding: 1rem;
+
+  & > h1 {
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
 `;
 
 const EventCanvasList = styled("div")`
@@ -118,19 +135,24 @@ export default function AdminEventTab({
                 This event is currently live!
               </EventLiveIndicator>
             )}
-            <EventStat>
-              Participating guilds: {participatingGuildCount}
-            </EventStat>
-            {eventStats && (
-              <>
-                <EventStat>
-                  Total users involved: {eventStats.totalUsersInvolved}
-                </EventStat>
-                <EventStat>
-                  Total pixels placed: {eventStats.totalPixelsPlaced}
-                </EventStat>
-              </>
-            )}
+            <EventStatWrapper>
+              <EventStatCard>
+                <span>Guilds</span>
+                <h1>{participatingGuildCount.toLocaleString()}</h1>
+              </EventStatCard>
+              {eventStats && (
+                <>
+                  <EventStatCard>
+                    <span>Users</span>
+                    <h1>{eventStats.totalUsersInvolved.toLocaleString()}</h1>
+                  </EventStatCard>
+                  <EventStatCard>
+                    <span>Pixels placed</span>
+                    <h1>{eventStats.totalPixelsPlaced.toLocaleString()}</h1>
+                  </EventStatCard>
+                </>
+              )}
+            </EventStatWrapper>
             <EventCanvasList>
               {eventCanvases.map((canvas) => (
                 <CanvasPreviewCard

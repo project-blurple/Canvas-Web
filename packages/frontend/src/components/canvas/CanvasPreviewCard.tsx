@@ -1,13 +1,14 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
+import { Grip, Users } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
 const EventCanvasCard = styled("button")`
   align-items: flex-start;
-  background: transparent;
+  background: ${({ theme }) => theme.palette.background.paper};
   border-radius: 0.75rem;
-  border: oklch(from var(--discord-white) l c h / 12%) 1px solid;
+  border: transparent 1px solid;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -61,6 +62,21 @@ const EventCanvasId = styled("code")`
   opacity: 0.7;
 `;
 
+const EventCanvasStats = styled("div")`
+  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const EventCanvasStat = styled("div")`
+  align-items: center;
+  display: flex;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  opacity: 0.75;
+`;
+
 interface CanvasPreviewCardProps extends React.ComponentPropsWithRef<
   typeof EventCanvasCard
 > {
@@ -94,13 +110,19 @@ export function CanvasPreviewCard({
       }
       <EventCanvasMeta>
         <EventCanvasName>{canvas.name}</EventCanvasName>
-        <EventCanvasId>ID: {canvas.id}</EventCanvasId>
+        <EventCanvasId>ID:{canvas.id}</EventCanvasId>
       </EventCanvasMeta>
       {canvasStats && (
-        <>
-          <div>Users: {canvasStats.totalUsersInvolved}</div>
-          <div>Pixels: {canvasStats.totalPixelsPlaced}</div>
-        </>
+        <EventCanvasStats>
+          <EventCanvasStat>
+            <Users size={16} />
+            <span>{canvasStats.totalUsersInvolved.toLocaleString()}</span>
+          </EventCanvasStat>
+          <EventCanvasStat>
+            <Grip size={16} />
+            <span>{canvasStats.totalPixelsPlaced.toLocaleString()}</span>
+          </EventCanvasStat>
+        </EventCanvasStats>
       )}
     </EventCanvasCard>
   );
