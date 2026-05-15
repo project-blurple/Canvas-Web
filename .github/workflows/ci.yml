@@ -125,5 +125,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Install Playwright browsers
+        if: matrix.package == 'frontend'
+        run: pnpm exec playwright install
+
       - name: Run ${{ matrix.package }} tests
         run: pnpm --filter @blurple-canvas-web/${{ matrix.package }} test -- --run
