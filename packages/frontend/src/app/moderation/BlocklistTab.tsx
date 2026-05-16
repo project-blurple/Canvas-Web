@@ -39,7 +39,7 @@ const StyledCheckboxSetting = styled(CheckboxSetting)`
 
 const StyledEntryRow = styled("tr")`
   :hover {
-    background-color: oklch(from var(--discord-white) l c h / 10%);
+    background-color: oklch(from var(--discord-white) l c h / 5%);
   }
 `;
 
@@ -101,11 +101,13 @@ function BlocklistUserEntry({
         </UserId>
       </StyledUserRow>
       <td>
-        {new Date(user.dateAdded).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })}
+        <time
+          dateTime={new Date(user.dateAdded).toLocaleDateString("en-US", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          })}
+        />
       </td>
     </StyledEntryRow>
   );
@@ -149,9 +151,7 @@ export default function BlocklistTab(
   const displayList = useMemo(() => {
     if (!searchQuery) {
       // No filter: selected are raised to the top
-      const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
-      const unselected = blocklist.filter((u) => !selectedUsers.has(u.userId));
-      return [...selected, ...unselected];
+      return blocklist.sort((u) => (selectedUsers.has(u.userId) ? -1 : 1));
     }
 
     const lowerQuery = searchQuery.toLowerCase();
@@ -174,7 +174,7 @@ export default function BlocklistTab(
     <BlocklistTabBlock {...props}>
       <FullWidthScrollView>
         <ActionPanelTabBody>
-          <BlocklistBodyWrapper>
+          <BlocklistBodyWrapper aria-busy={isLoading}>
             <ActionPanelPrimitives.SectionHeading>
               Blocklist
             </ActionPanelPrimitives.SectionHeading>
@@ -182,7 +182,7 @@ export default function BlocklistTab(
             <StyledInput
               disabled={isLoading || blocklist.length === 0}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search users..."
+              placeholder="Search users…"
               type="text"
               value={searchQuery}
               style={{
@@ -191,9 +191,9 @@ export default function BlocklistTab(
             />
 
             {isLoading ?
-              <p>Loading...</p>
+              <p>Loading…</p>
             : blocklist.length === 0 ?
-              <p>The blocklist is currently empty.</p>
+              <p>The blocklist is currently empty</p>
             : displayList.length === 0 ?
               <p>No users match your search.</p>
             : <BlocklistEntryTable>
@@ -201,7 +201,7 @@ export default function BlocklistTab(
                   <tr>
                     <th /> {/* Checkbox column */}
                     <th>User</th>
-                    <th>Date Added</th>
+                    <th>Date added</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -224,7 +224,7 @@ export default function BlocklistTab(
         <BlocklistFooterSection
           selectedUsers={selectedUsers}
           userIdsToBlock={userIdsToBlock}
-          onUserIdsToBlockChange={setUserIdsToBlock}
+          onUserIdsToBlockChange={(value) => setUserIdsToBlock([...value])}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
         />
       </ActionPanelTabBody>

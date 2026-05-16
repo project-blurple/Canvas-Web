@@ -8,7 +8,7 @@ import { StyledButton } from "@/components/button/DynamicButton";
 import { AutocompleteInput } from "@/components/input/Input";
 import config from "@/config/clientConfig";
 
-const BlocklistFooter = styled("div")`
+const BlocklistFooter = styled("footer")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -67,13 +67,13 @@ const Button = styled(StyledButton)`
 interface BlocklistFooterSectionProps {
   selectedUsers: Set<bigint>;
   userIdsToBlock: bigint[];
-  onUserIdsToBlockChange: (value: bigint[]) => void;
+  onUserIdsToBlockChange: (value: Iterable<bigint>) => void;
   existingBlocklistIdStrings: Set<string>;
 }
 
 interface BlocklistAddSectionProps {
   userIdsToBlock: bigint[];
-  onUserIdsToBlockChange: (value: bigint[]) => void;
+  onUserIdsToBlockChange: (value: Iterable<bigint>) => void;
   existingBlocklistIdStrings: Set<string>;
   onBlock?: (userIds: bigint[]) => void;
   isBlocking?: boolean;
@@ -92,10 +92,6 @@ function parseUserIds(value: string): bigint[] {
     .map((id) => id.trim())
     .filter((id) => /^\d+$/.test(id))
     .map((id) => BigInt(id));
-}
-
-function normalizeUserIds(values: readonly bigint[]): bigint[] {
-  return [...new Set(values)];
 }
 
 function BlocklistAddSection({
@@ -120,9 +116,7 @@ function BlocklistAddSection({
     if (/\s|,/.test(newInputValue)) {
       const parsedIds = parseUserIds(newInputValue);
       if (parsedIds.length > 0) {
-        onUserIdsToBlockChange(
-          normalizeUserIds([...userIdsToBlock, ...parsedIds]),
-        );
+        onUserIdsToBlockChange(new Set([...userIdsToBlock, ...parsedIds]));
       }
       setUserIdsToBlockInputValue("");
       return;
@@ -140,7 +134,7 @@ function BlocklistAddSection({
       {inputtedUsersAlreadyBlocked && (
         <BlocklistWarning>
           <TriangleAlert size={14} /> You have listed users that are already
-          blocked.
+          blocked
         </BlocklistWarning>
       )}
       <BlocklistAddBody>
@@ -149,7 +143,7 @@ function BlocklistAddSection({
             freeSolo
             fullWidth
             multiple
-            options={[]}
+            options={[]} // Just want the chips, no autocomplete options
             value={userIdsToBlock}
             inputValue={userIdsToBlockInputValue}
             filterSelectedOptions
@@ -161,16 +155,16 @@ function BlocklistAddSection({
                 return;
               }
 
-              const normalizedIds = normalizeUserIds(
-                newValues.flatMap((value) => {
-                  if (typeof value === "bigint") {
-                    return [value];
-                  }
-                  return parseUserIds(String(value));
-                }),
+              onUserIdsToBlockChange(
+                new Set(
+                  newValues.flatMap((value) => {
+                    if (typeof value === "bigint") {
+                      return [value];
+                    }
+                    return parseUserIds(String(value));
+                  }),
+                ),
               );
-
-              onUserIdsToBlockChange(normalizedIds);
             }}
             onInputChange={handleUserIdsToBlockInputChange}
             renderValue={(values, getItemProps) => (

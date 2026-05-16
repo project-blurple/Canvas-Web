@@ -9,7 +9,7 @@ export const Input = styled(MuiInput)`
   border-radius: 0.5rem;
   padding: 0.25rem 0.75rem;
   transition-duration: var(--transition-duration-fast);
-  transition-property: background-color, border-color, color, scale;
+  transition-property: background-color, border-color, color;
   transition-timing-function: ease, ease, ease, ease, var(--ease-out-quad);
 
   &::after,
