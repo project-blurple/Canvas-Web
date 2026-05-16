@@ -2,7 +2,6 @@
 
 import type { Palette } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import {
   partitionPaletteByOwner,
   partitionPaletteByParticipation,
@@ -10,9 +9,10 @@ import {
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
+import AdminDashboard from "../AdminDashboard";
 
-const AdminColorTabBlock = styled(TabPanel)`
-  grid-template-rows: auto 1fr;
+const AdminColorTabBlock = styled("section")`
+  display: block;
   max-width: 80rem;
   width: 100%;
 `;
@@ -53,8 +53,8 @@ const ColorCardText = styled("div")`
 `;
 
 const GuildId = styled("code")`
-  font-size: 0.75rem;
   color: var(--discord-legacy-muted);
+  font-size: 0.75rem;
 `;
 
 function ColorListWrapper({
@@ -71,7 +71,7 @@ function ColorListWrapper({
         {colors.length > 0 ?
           colors.map((color) => (
             <ColorCard key={color.id}>
-              <StyledSwatch key={color.code} paletteColor={color} />
+              <StyledSwatch paletteColor={color} />
               <ColorCardText>
                 <span>{color.name}</span>
                 <code>{color.code}</code>
@@ -85,16 +85,7 @@ function ColorListWrapper({
   );
 }
 
-interface AdminColorTabProps extends React.ComponentPropsWithRef<
-  typeof AdminColorTabBlock
-> {
-  active: boolean;
-}
-
-export default function AdminColorTab({
-  active,
-  ...props
-}: AdminColorTabProps) {
+function AdminColorTab() {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, true);
   const [mainColors, partnerColors] = partitionPaletteByOwner(palette);
@@ -102,7 +93,7 @@ export default function AdminColorTab({
     partitionPaletteByParticipation(partnerColors);
 
   return (
-    <AdminColorTabBlock active={active} {...props}>
+    <AdminColorTabBlock>
       {palette.length === 0 ?
         "No colors found."
       : <ColorTabWrapper>
@@ -118,5 +109,13 @@ export default function AdminColorTab({
         </ColorTabWrapper>
       }
     </AdminColorTabBlock>
+  );
+}
+
+export default function ColorAdminPage() {
+  return (
+    <AdminDashboard>
+      <AdminColorTab />
+    </AdminDashboard>
   );
 }

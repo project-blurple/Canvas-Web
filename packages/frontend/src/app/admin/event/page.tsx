@@ -2,7 +2,6 @@
 
 import { styled } from "@mui/material";
 import { CalendarRange, Radio } from "lucide-react";
-import { TabPanel } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
@@ -12,9 +11,14 @@ import {
   useEventStats,
   usePalette,
 } from "@/hooks";
+import AdminDashboard from "../AdminDashboard";
 
-const AdminEventTabBlock = styled(TabPanel)`
+const AdminEventTabBlock = styled("section")`
+  display: grid;
+  gap: 1rem;
   grid-template-rows: auto 1fr;
+  max-width: 80rem;
+  width: 100%;
 `;
 
 const EventInfoWrapper = styled("div")`
@@ -42,8 +46,8 @@ const EventLiveIndicator = styled("div")`
 
 const EventStatWrapper = styled("div")`
   display: grid;
-  grid-template-columns: repeat(3, minmax(100px, 1fr));
   gap: 0.5rem;
+  grid-template-columns: repeat(3, minmax(100px, 1fr));
 `;
 
 const EventStatCard = styled("div")`
@@ -68,16 +72,7 @@ const EventCanvasList = styled("div")`
   grid-template-columns: repeat(auto-fill, 10rem);
 `;
 
-interface AdminEventTabProps extends React.ComponentPropsWithRef<
-  typeof AdminEventTabBlock
-> {
-  active: boolean;
-}
-
-export default function AdminEventTab({
-  active,
-  ...props
-}: AdminEventTabProps) {
+function AdminEventTab() {
   const { canvas, setCanvas } = useCanvasContext();
   const { data: selectedEvent, isLoading: currentEventIsLoading } =
     useEventInfo(canvas.eventId ?? undefined);
@@ -85,16 +80,10 @@ export default function AdminEventTab({
     useCanvasList();
   const { data: eventStats, isLoading: eventStatsIsLoading } = useEventStats(
     selectedEvent?.id,
-    {
-      enabled: active,
-    },
   );
   const { data: palette = [], isLoading: paletteIsLoading } = usePalette(
     selectedEvent?.id,
     true,
-    {
-      enabled: active,
-    },
   );
 
   const isLoading =
@@ -108,11 +97,11 @@ export default function AdminEventTab({
   ).length;
 
   const eventCanvases = canvases.filter(
-    (canvas) => canvas.eventId === selectedEvent?.id,
+    (canvasItem) => canvasItem.eventId === selectedEvent?.id,
   );
 
   return (
-    <AdminEventTabBlock active={active} {...props}>
+    <AdminEventTabBlock>
       <EventInfoWrapper>
         {isLoading ?
           <CanvasAnimatedIcon
@@ -154,12 +143,11 @@ export default function AdminEventTab({
               )}
             </EventStatWrapper>
             <EventCanvasList>
-              {eventCanvases.map((canvas) => (
+              {eventCanvases.map((canvasItem) => (
                 <CanvasPreviewCard
-                  key={canvas.id}
-                  canvas={canvas}
-                  active={active}
-                  onClick={() => setCanvas(canvas.id, true)}
+                  key={canvasItem.id}
+                  canvas={canvasItem}
+                  onClick={() => setCanvas(canvasItem.id, true)}
                 />
               ))}
             </EventCanvasList>
@@ -167,5 +155,13 @@ export default function AdminEventTab({
         }
       </EventInfoWrapper>
     </AdminEventTabBlock>
+  );
+}
+
+export default function EventAdminPage() {
+  return (
+    <AdminDashboard>
+      <AdminEventTab />
+    </AdminDashboard>
   );
 }

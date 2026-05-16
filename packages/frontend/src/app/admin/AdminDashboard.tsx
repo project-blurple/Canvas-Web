@@ -1,13 +1,11 @@
 "use client";
 
 import { styled } from "@mui/material";
-import { usePathname } from "next/navigation";
-import AdminCanvasTab from "./AdminCanvasTab";
-import AdminColorTab from "./AdminColorTab";
-import AdminEventTab from "./AdminEventTab";
-import AdminNoticeTab from "./AdminNoticeTab";
-import AdminPasteTab from "./AdminPasteTab";
-import { pathToTabKey, type TabKey } from "./tabs";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect } from "react";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
+import { useAuthContext } from "@/contexts";
 
 const Wrapper = styled("div")`
   display: flex;
@@ -20,20 +18,20 @@ const Wrapper = styled("div")`
 
 const NavBar = styled("nav")`
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
   gap: 1rem;
-  width: 100%;
+  grid-template-columns: repeat(5, 1fr);
   max-width: 600px;
+  width: 100%;
 `;
 
-const NavLink = styled("a")`
+const NavLink = styled(Link)`
+  border-radius: 4px;
+  color: inherit;
+  cursor: pointer;
   padding: 0.75rem 1rem;
   text-align: center;
   text-decoration: none;
-  border-radius: 4px;
   transition: background-color 0.2s;
-  cursor: pointer;
-  color: inherit;
 
   &:hover {
     background-color: oklch(from var(--discord-legacy-greyple) l c h / 20%);
@@ -45,17 +43,18 @@ const NavLink = styled("a")`
   }
 `;
 
-const TAB_ROUTES: { key: TabKey; label: string; path: string }[] = [
+const TAB_ROUTES = [
   { key: "event", label: "Event", path: "event" },
   { key: "notice", label: "Notice", path: "notice" },
   { key: "canvas", label: "Canvas", path: "canvas" },
   { key: "color", label: "Color", path: "color" },
   { key: "paste", label: "Paste", path: "paste" },
-];
+] as const;
 
-export default function AdminDashboard() {
+function AdminDashboardHeader() {
   const pathname = usePathname();
-  const activeTab = pathToTabKey[pathname ?? ""] ?? "event";
+  const activeTab = (TAB_ROUTES.find((tab) => pathname === `/admin/${tab.path}`)
+    ?.key ?? "event") as (typeof TAB_ROUTES)[number]["key"];
 
   return (
     <Wrapper>
@@ -71,12 +70,32 @@ export default function AdminDashboard() {
           </NavLink>
         ))}
       </NavBar>
-
-      <AdminEventTab active={activeTab === "event"} />
-      <AdminCanvasTab active={activeTab === "canvas"} />
-      <AdminColorTab active={activeTab === "color"} />
-      <AdminNoticeTab active={activeTab === "notice"} />
-      <AdminPasteTab active={activeTab === "paste"} />
+      {/* Tab content is provided by file-based pages under /admin/<tab> */}
     </Wrapper>
+  );
+}
+
+export default function AdminDashboard({
+  children,
+}: {
+  children?: React.ReactNode;
+}) {
+  const { user, isAuthResolved } = useAuthContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthResolved) return;
+    if (!user?.isCanvasAdmin) router.replace("/");
+  }, [isAuthResolved, router, user?.isCanvasAdmin]);
+
+  if (isAuthResolved && !user?.isCanvasAdmin) {
+    return null;
+  }
+
+  return (
+    <LayoutWithHeader>
+      <AdminDashboardHeader />
+      {children}
+    </LayoutWithHeader>
   );
 }

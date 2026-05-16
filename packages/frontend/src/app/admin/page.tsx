@@ -1,27 +1,19 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import LayoutWithHeader from "@/components/LayoutWithHeader";
-import { useAuthContext } from "@/contexts";
 import AdminDashboard from "./AdminDashboard";
 
 export default function AdminPage() {
-  const { user, isAuthResolved } = useAuthContext();
+  // Immediately redirect to the first tab (event) when visiting /admin
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
-    if (!isAuthResolved) return;
-    if (!user?.isCanvasAdmin) router.replace("/");
-  }, [isAuthResolved, router, user?.isCanvasAdmin]);
+    if (pathname === "/admin") {
+      router.replace("/admin/event");
+    }
+  }, [pathname, router]);
 
-  if (isAuthResolved && !user?.isCanvasAdmin) {
-    return null;
-  }
-
-  return (
-    <LayoutWithHeader>
-      <AdminDashboard />
-    </LayoutWithHeader>
-  );
+  return <AdminDashboard />;
 }
