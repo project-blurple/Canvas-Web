@@ -36,14 +36,16 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 }
 
 export default function FrameInfoPanel({
+  enabled = true,
   setActivePanel,
 }: {
+  enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
   return (
     <>
       <FullWidthScrollView>
-        <FrameList />
+        <FrameList enabled={enabled} />
       </FullWidthScrollView>
       <FrameInfoPanelBody setActivePanel={setActivePanel} />
     </>

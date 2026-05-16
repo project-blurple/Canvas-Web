@@ -12,7 +12,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { PanelSectionHeading } from "../action-panel/primitives";
+import ActionPanelPrimitives from "../action-panel/primitives";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
 
@@ -54,17 +54,24 @@ function selectSortedGuildFrameEntries(
     .sort(sortByOwnerGuildName);
 }
 
-export default function FrameList() {
+interface FrameListProps {
+  enabled?: boolean;
+}
+
+export default function FrameList({ enabled = true }: FrameListProps) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { setFrame: setSelectedFrame } = useSelectedFrameContext();
 
   const sourceImage = useCanvasImage(canvas.id);
 
-  const { data: userFramesResponse } = useUserFrames({
-    canvasId: canvas.id,
-    userId: user?.id,
-  });
+  const { data: userFramesResponse } = useUserFrames(
+    {
+      canvasId: canvas.id,
+      userId: user?.id,
+    },
+    { enabled },
+  );
   const userFrames = userFramesResponse?.data ?? [];
 
   const guildIds = Object.keys(user?.guilds ?? {});
@@ -75,6 +82,7 @@ export default function FrameList() {
     },
     {
       select: selectSortedGuildFrameEntries,
+      enabled,
     },
   );
 
@@ -95,7 +103,9 @@ export default function FrameList() {
   return (
     <ActionPanelTabBody>
       <FramesWrapper>
-        <PanelSectionHeading>Your frames</PanelSectionHeading>
+        <ActionPanelPrimitives.SectionHeading>
+          Your frames
+        </ActionPanelPrimitives.SectionHeading>
         {user ?
           userFrames.length !== 0 ?
             <FramePreviewList
@@ -110,7 +120,9 @@ export default function FrameList() {
         }
       </FramesWrapper>
       <FramesWrapper>
-        <PanelSectionHeading>Blurple Canvas</PanelSectionHeading>
+        <ActionPanelPrimitives.SectionHeading>
+          Blurple Canvas
+        </ActionPanelPrimitives.SectionHeading>
         <FramePreviewList
           items={[inbuiltFullCanvasFrame]}
           sourceImage={sourceImage}
@@ -125,9 +137,9 @@ export default function FrameList() {
 
         return (
           <FramesWrapper key={ownerId}>
-            <PanelSectionHeading>
+            <ActionPanelPrimitives.SectionHeading>
               {firstFrame.owner.guild.name}
-            </PanelSectionHeading>
+            </ActionPanelPrimitives.SectionHeading>
             <FramePreviewList
               items={frames.toSorted((a, b) => a.name.localeCompare(b.name))}
               sourceImage={sourceImage}

@@ -37,11 +37,12 @@ export function usePalette(
   };
 
   return useQuery<PaletteRequest.ResBody>({
+    ...useQueryOptions,
     queryKey: ["palette", eventId],
     queryFn: getPalette,
+    enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: [] as PaletteRequest.ResBody,
-    ...useQueryOptions,
   });
 }

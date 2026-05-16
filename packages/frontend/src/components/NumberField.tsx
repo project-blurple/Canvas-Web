@@ -32,8 +32,8 @@ const Label = styled("label")`
 const FieldRow = styled("div")<{ $size: "small" | "medium" }>(
   ({ $size, theme }) => `
     align-items: stretch;
-    background: ${theme.palette.background.paper};
-    border: 1px solid ${theme.palette.divider};
+    background: var(--discord-legacy-not-quite-black);
+    border: var(--card-border);
     border-radius: 0.5rem;
     display: flex;
     gap: 0;
@@ -44,8 +44,8 @@ const FieldRow = styled("div")<{ $size: "small" | "medium" }>(
     })};
 
     &:focus-within {
-      border-color: ${theme.palette.primary.main};
-      box-shadow: 0 0 0 1px ${theme.palette.primary.main};
+      border-color: var(--discord-blurple);
+      box-shadow: 0 0 0 1px var(--discord-blurple);
     }
   `,
 );
@@ -78,7 +78,7 @@ const NativeInput = styled("input", {
 
 const StepperColumn = styled("div")`
   background: ${({ theme }) => theme.palette.action.hover};
-  border-left: 1px solid ${({ theme }) => theme.palette.divider};
+  border-left: var(--card-border);
   display: flex;
   flex-direction: column;
 `;

@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { PanelSectionHeading } from "@/components/action-panel/primitives";
+import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -51,10 +51,10 @@ const SummaryGrid = styled("div")`
 `;
 
 const SummaryCard = styled("div")`
-  border: 1px solid ${({ theme }) => theme.palette.divider};
+  border: var(--card-border);
   border-radius: 0.75rem;
   padding: 0.75rem;
-  background: ${({ theme }) => theme.palette.background.paper};
+  background: var(--discord-legacy-not-quite-black);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
@@ -204,7 +204,9 @@ export default function ComplexSearchTab({
         return (
           <ActionPanelTabBody>
             <div>
-              <PanelSectionHeading>{errorText[status][0]}</PanelSectionHeading>
+              <ActionPanelPrimitives.SectionHeading>
+                {errorText[status][0]}
+              </ActionPanelPrimitives.SectionHeading>
               <p>{errorText[status][1]}</p>
             </div>
           </ActionPanelTabBody>
@@ -216,7 +218,9 @@ export default function ComplexSearchTab({
       return (
         <ActionPanelTabBody>
           <div>
-            <PanelSectionHeading>Search results</PanelSectionHeading>
+            <ActionPanelPrimitives.SectionHeading>
+              Search results
+            </ActionPanelPrimitives.SectionHeading>
             <SummaryGrid>
               <SummaryCard>
                 <strong>Total entries</strong>
@@ -225,7 +229,7 @@ export default function ComplexSearchTab({
               <SummaryCard>
                 <strong>Query duration</strong>
                 <span>
-                  {durationFormat?.format({
+                  {durationFormat()?.format({
                     milliseconds: Math.max(
                       0,
                       Math.floor(historyQuery.data?.executionDurationMs ?? 0),
@@ -240,7 +244,9 @@ export default function ComplexSearchTab({
             </SummaryGrid>
             {usersLength > 0 && (
               <>
-                <PanelSectionHeading>User summary</PanelSectionHeading>
+                <ActionPanelPrimitives.SectionHeading>
+                  User summary
+                </ActionPanelPrimitives.SectionHeading>
                 <SearchUserEntries
                   users={historyData.users}
                   palette={palette}
@@ -261,7 +267,9 @@ export default function ComplexSearchTab({
         <ActionPanelTabBody>
           <search>
             <Form onSubmit={handleSearchSubmit}>
-              <PanelSectionHeading>History search</PanelSectionHeading>
+              <ActionPanelPrimitives.SectionHeading>
+                History search
+              </ActionPanelPrimitives.SectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}

@@ -1,10 +1,13 @@
 import type {
   Palette,
+  PaletteColor,
   PixelHistoryUserSummary,
   PixelHistoryWrapper,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
+import { useMemo } from "react";
+import { PrimitiveButton } from "../button";
 import ColorCodeChip from "../ColorCodeChip";
 import VisuallyHidden from "../VisuallyHidden";
 
@@ -15,9 +18,9 @@ const UserWrapper = styled("div")`
 `;
 
 const UserCard = styled("div")`
-  background: ${({ theme }) => theme.palette.background.paper};
+  background: var(--discord-legacy-not-quite-black);
   border-radius: 0.75rem;
-  border: 1px solid ${({ theme }) => theme.palette.divider};
+  border: var(--card-border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -49,7 +52,7 @@ const ColorChipWrapper = styled("div")`
   overflow-x: auto;
 `;
 
-export const UserId = styled("button")`
+export const UserId = styled(PrimitiveButton)`
   appearance: none;
   border: none;
   background: none;
@@ -89,17 +92,17 @@ export const UserId = styled("button")`
 interface SearchUserEntryProps {
   userId: bigint;
   summary: PixelHistoryUserSummary;
-  palette: Palette;
+  colorById: Map<PaletteColor["id"], PaletteColor>;
 }
 
-function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
+function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
   const colors = Object.entries(summary.colors)
     .map(([colorId, count]) => {
-      const color = palette.find((c) => c.id === Number.parseInt(colorId, 10));
+      const color = colorById.get(Number.parseInt(colorId, 10));
       if (!color) return null;
       return { color, count };
     })
-    .filter((c): c is { color: Palette[number]; count: number } => c !== null)
+    .filter(<T,>(c: T): c is NonNullable<T> => c !== null)
     .sort((a, b) => b.count - a.count);
 
   return (
@@ -130,7 +133,9 @@ function SearchUserEntry({ userId, summary, palette }: SearchUserEntryProps) {
         }
       >
         <code aria-hidden>{userId}</code>
-        <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
+        <VisuallyHidden>
+          {summary.userProfile?.username}’s user ID. Click to copy.
+        </VisuallyHidden>
         <Copy size={12} />
       </UserId>
     </UserCard>
@@ -146,6 +151,11 @@ export default function SearchUserEntries({
   users,
   palette,
 }: SearchUserEntriesProps) {
+  const colorById = useMemo(
+    () => new Map(palette.map((color) => [color.id, color] as const)),
+    [palette],
+  );
+
   if (!users) return null;
 
   const sortedUsers = Object.entries(users).sort(
@@ -159,7 +169,7 @@ export default function SearchUserEntries({
           key={userId}
           userId={BigInt(userId)}
           summary={summary}
-          palette={palette}
+          colorById={colorById}
         />
       ))}
     </UserWrapper>

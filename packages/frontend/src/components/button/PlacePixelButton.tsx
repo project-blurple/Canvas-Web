@@ -120,7 +120,7 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
       <Button variant="contained" disabled>
         On cooldown (
         <Time>
-          {durationFormat?.format({ seconds: timeLeft }) ?? (
+          {durationFormat()?.format({ seconds: timeLeft }) ?? (
             <>{timeLeft}&nbsp;s</>
           )}
         </Time>
