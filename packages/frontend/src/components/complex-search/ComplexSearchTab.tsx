@@ -277,7 +277,6 @@ export default function ComplexSearchTab({
                 disabled={isLoading}
               />
               <ComplexSearchColorSelect
-                palette={palette}
                 value={selectedColorIds}
                 filterMode={colorFilterMode}
                 onChange={setSelectedColorIds}
