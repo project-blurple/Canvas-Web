@@ -2,7 +2,7 @@ import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
-import { PanelSectionHeading } from "@/components/action-panel/primitives";
+import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -175,7 +175,9 @@ export default function BlocklistTab(
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <BlocklistBodyWrapper>
-            <PanelSectionHeading>Blocklist</PanelSectionHeading>
+            <ActionPanelPrimitives.SectionHeading>
+              Blocklist
+            </ActionPanelPrimitives.SectionHeading>
 
             <StyledInput
               disabled={isLoading || blocklist.length === 0}
