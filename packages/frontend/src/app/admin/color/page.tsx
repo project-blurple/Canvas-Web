@@ -30,13 +30,13 @@ const StyledColorListWrapper = styled("div")`
   gap: 1rem;
 `;
 
-const ColorList = styled("div")`
+const ColorList = styled("ul")`
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 `;
 
-const ColorCard = styled("div")`
+const ColorCard = styled("li")`
   --min-swatch-width: 3rem;
 
   display: flex;
@@ -67,7 +67,7 @@ function ColorListWrapper({
   return (
     <StyledColorListWrapper>
       <h2>{header}</h2>
-      <ColorList>
+      <ColorList role="list">
         {colors.length > 0 ?
           colors.map((color) => (
             <ColorCard key={color.id}>
