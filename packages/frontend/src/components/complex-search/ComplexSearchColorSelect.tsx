@@ -32,44 +32,6 @@ const Code = styled("code")`
   opacity: 55%;
 `;
 
-export const ColorSelectChip = styled(Chip, {
-  shouldForwardProp: (prop) => prop !== "backgroundColorStr",
-})<{ backgroundColorStr?: string }>`
-  --color-select-chip-color: var(--discord-blurple);
-  ${({ backgroundColorStr }) =>
-    backgroundColorStr &&
-    css`
-      --color-select-chip-color: ${backgroundColorStr};
-    `}
-
-  background-color: var(--color-select-chip-color);
-  font-weight: 600;
-
-  & .MuiChip-label {
-    color: var(--color-select-chip-color);
-    transition:
-      color var(--transition-duration-fast) ease,
-      filter var(--transition-duration-fast) ease;
-  }
-
-  @supports (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      color: color-mix(
-        in oklab,
-        contrast-color(var(--color-select-chip-color)) 94%,
-        var(--color-select-chip-color)
-      );
-    }
-  }
-
-  @supports not (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-      mix-blend-mode: luminosity;
-    }
-  }
-`;
-
 const ColorSelectBlock = styled("fieldset")`
   display: flex;
   flex-direction: row;
@@ -170,16 +132,26 @@ export default function ComplexSearchColorSelect({
           getItemProps: (args: { index: number }) => Record<string, unknown>,
         ) => (
           <SelectedColorChips>
-            {values.map((tag, index) => {
-              const rgb = tag.rgba.slice(0, 3).join(" ");
+            {values.map((color, index) => {
               const itemProps = getItemProps({ index });
               const { key: _key, ...restProps } = itemProps;
               return (
-                <ColorSelectChip
-                  key={tag.id}
+                <Chip
+                  key={color.id}
                   {...restProps}
-                  backgroundColorStr={`rgb(${rgb})`}
-                  label={tag.name}
+                  label={
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <ColorPreview
+                        style={{
+                          color: rgbaToCssColor(color.rgba),
+                          height: 14,
+                          marginInline: "-3px 4px",
+                          width: 14,
+                        }}
+                      />
+                      {color.name}
+                    </div>
+                  }
                   size="small"
                 />
               );
