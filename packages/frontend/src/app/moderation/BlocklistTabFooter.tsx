@@ -1,6 +1,10 @@
 import styled from "@emotion/styled";
 import { Chip, css, TextField } from "@mui/material";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import axios from "axios";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
@@ -75,15 +79,13 @@ interface BlocklistAddSectionProps {
   userIdsToBlock: bigint[];
   onUserIdsToBlockChange: (value: Iterable<bigint>) => void;
   existingBlocklistIdStrings: Set<string>;
-  onBlock?: (userIds: bigint[]) => void;
-  isBlocking?: boolean;
+  onBlock?: (userIds: Iterable<bigint>) => void;
 }
 
 interface BlocklistRemoveSectionProps {
   selectedUsers: Set<bigint>;
   userIdsToBlock: bigint[];
-  onRemove?: (userIds: bigint[]) => void;
-  isRemoving?: boolean;
+  onRemove?: (userIds: Iterable<bigint>) => void;
 }
 
 function parseUserIds(value: string): bigint[] {
@@ -99,9 +101,10 @@ function BlocklistAddSection({
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
   onBlock,
-  isBlocking,
 }: BlocklistAddSectionProps) {
   const [userIdsToBlockInputValue, setUserIdsToBlockInputValue] = useState("");
+
+  const isBlocking = useIsMutating({ mutationKey: ["blocklist", "add"] }) > 0;
 
   function handleUserIdsToBlockInputChange(
     _event: unknown,
@@ -219,12 +222,14 @@ function BlocklistAddSection({
 function BlocklistRemoveSection({
   selectedUsers,
   onRemove,
-  isRemoving,
 }: BlocklistRemoveSectionProps) {
+  const isRemoving =
+    useIsMutating({ mutationKey: ["blocklist", "remove"] }) > 0;
+
   return (
     <Button
       disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
-      onClick={() => onRemove?.([...selectedUsers])}
+      onClick={() => onRemove?.(selectedUsers)}
     >
       Remove {selectedUsers.size} user
       {selectedUsers.size !== 1 ? "s" : ""} from blocklist
@@ -241,6 +246,7 @@ export function BlocklistFooterSection({
   const queryClient = useQueryClient();
 
   const addToBlocklistMutation = useMutation({
+    mutationKey: ["blocklist", "add"],
     mutationFn: async (ids: bigint[]) => {
       const url = `${config.apiUrl}/api/v1/blocklist`;
       await axios.put(
@@ -253,6 +259,7 @@ export function BlocklistFooterSection({
   });
 
   const removeFromBlocklistMutation = useMutation({
+    mutationKey: ["blocklist", "remove"],
     mutationFn: async (ids: bigint[]) => {
       const url = `${config.apiUrl}/api/v1/blocklist`;
       await axios.delete(url, {
@@ -263,9 +270,10 @@ export function BlocklistFooterSection({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
   });
 
-  async function handleAdd(ids: bigint[]) {
+  async function handleAdd(ids: Iterable<bigint>) {
     try {
-      await addToBlocklistMutation.mutateAsync(ids);
+      const arr = Array.from(ids);
+      await addToBlocklistMutation.mutateAsync(arr);
       onUserIdsToBlockChange([]);
     } catch (e) {
       console.error(e);
@@ -278,9 +286,10 @@ export function BlocklistFooterSection({
     }
   }
 
-  async function handleRemove(ids: bigint[]) {
+  async function handleRemove(ids: Iterable<bigint>) {
     try {
-      await removeFromBlocklistMutation.mutateAsync(ids);
+      const arr = Array.from(ids);
+      await removeFromBlocklistMutation.mutateAsync(arr);
     } catch (e) {
       console.error(e);
       if ((e as { response?: { status?: number } }).response?.status === 401) {
@@ -300,13 +309,11 @@ export function BlocklistFooterSection({
           onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
           onBlock={handleAdd}
-          isBlocking={addToBlocklistMutation.status === "pending"}
         />
       : <BlocklistRemoveSection
           selectedUsers={selectedUsers}
           userIdsToBlock={userIdsToBlock}
           onRemove={handleRemove}
-          isRemoving={removeFromBlocklistMutation.status === "pending"}
         />
       }
     </BlocklistFooter>

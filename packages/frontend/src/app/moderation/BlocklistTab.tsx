@@ -25,6 +25,7 @@ const BlocklistEntryTable = styled("table")`
   border-collapse: separate;
   border-spacing: 0 0.5rem;
   margin-top: 1rem;
+  max-inline-size: 100%;
   width: 100%;
 `;
 
@@ -41,18 +42,43 @@ const StyledEntryRow = styled("tr")`
   }
 `;
 
-const StyledUserRow = styled("div")`
+const CheckboxCell = styled("td")`
+  white-space: nowrap;
+  width: 1%;
+`;
+
+const UserCell = styled("td")`
+  min-inline-size: 0;
+`;
+
+const DateCell = styled("td")`
+  // Mobile responsiveness is still broken here, the date is overflowing width
+  white-space: nowrap;
+  width: 1%;
+`;
+
+const UserContents = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   padding-block: 0.25rem;
+
+  code {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-inline-size: 100%;
+  }
+
+  button {
+    min-inline-size: 0;
+    width: auto;
+    max-inline-size: 100%;
+  }
 `;
 
 const StyledUsername = styled("span")`
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-inline-size: 0;
+  overflow-wrap: break-word;
 `;
 
 const StyledInput = styled(Input)`
@@ -60,34 +86,25 @@ const StyledInput = styled(Input)`
   min-inline-size: 0;
 `;
 
-interface BlocklistUserEntryProps extends Pick<
+interface BlocklistUserEntryProps extends Omit<
   React.ComponentPropsWithoutRef<typeof CheckboxSetting>,
-  "aria-busy" | "checked" | "onChange"
+  "label"
 > {
   user: BlocklistEntry;
 }
 
-function BlocklistUserEntry({
-  user,
-  "aria-busy": ariaBusy,
-  checked,
-  onChange,
-}: BlocklistUserEntryProps) {
+function BlocklistUserEntry({ user, ...props }: BlocklistUserEntryProps) {
   const username = user.username || "Unknown User";
   const userId = user.userId;
+  const date = new Date(user.dateAdded);
 
   return (
     <StyledEntryRow>
-      <td>
-        <StyledCheckboxSetting
-          aria-busy={ariaBusy}
-          checked={checked}
-          onChange={onChange}
-          label={null}
-        />
-      </td>
-      <td>
-        <StyledUserRow title={username}>
+      <CheckboxCell>
+        <StyledCheckboxSetting label={null} {...props} />
+      </CheckboxCell>
+      <UserCell>
+        <UserContents title={username}>
           <StyledUsername>{username}</StyledUsername>
           <UserIdButton
             onClick={async () =>
@@ -98,17 +115,17 @@ function BlocklistUserEntry({
             <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
             <Copy size={12} />
           </UserIdButton>
-        </StyledUserRow>
-      </td>
-      <td>
-        <time
-          dateTime={new Date(user.dateAdded).toLocaleDateString("en-US", {
+        </UserContents>
+      </UserCell>
+      <DateCell>
+        <time dateTime={date.toISOString()}>
+          {date.toLocaleDateString("en-US", {
             day: "numeric",
             month: "short",
             year: "numeric",
           })}
-        />
-      </td>
+        </time>
+      </DateCell>
     </StyledEntryRow>
   );
 }
