@@ -12,7 +12,6 @@ import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import { useBlocklist } from "@/hooks/queries";
-import CheckboxSetting from "../settings/CheckboxSetting";
 import { BlocklistFooterSection } from "./BlocklistTabFooter";
 
 const BlocklistBodyWrapper = styled("div")`
@@ -29,9 +28,11 @@ const BlocklistEntryTable = styled("table")`
   width: 100%;
 `;
 
-const StyledCheckboxSetting = styled(CheckboxSetting)`
-  padding-block: 0.5rem;
-  padding-inline: 0.25rem;
+const StyledCheckboxInput = styled("input")`
+  block-size: 1rem;
+  cursor: pointer;
+  inline-size: 1rem;
+  margin-inline: 0.75rem;
 `;
 
 const StyledEntryRow = styled("tr")`
@@ -87,8 +88,8 @@ const StyledInput = styled(Input)`
 `;
 
 interface BlocklistUserEntryProps extends Omit<
-  React.ComponentPropsWithoutRef<typeof CheckboxSetting>,
-  "label"
+  React.ComponentPropsWithoutRef<"input">,
+  "type"
 > {
   user: BlocklistEntry;
 }
@@ -101,7 +102,7 @@ function BlocklistUserEntry({ user, ...props }: BlocklistUserEntryProps) {
   return (
     <StyledEntryRow>
       <CheckboxCell>
-        <StyledCheckboxSetting label={null} {...props} />
+        <StyledCheckboxInput type="checkbox" {...props} />
       </CheckboxCell>
       <UserCell>
         <UserContents title={username}>
