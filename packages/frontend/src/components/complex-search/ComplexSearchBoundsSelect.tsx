@@ -70,7 +70,6 @@ export default function ComplexSearchBoundsSelect({
               Left (<var>x</var>)
             </>
           }
-          placeholder="x"
           max={
             selectedBounds?.right != null ?
               selectedBounds.right +
@@ -88,6 +87,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          placeholder="x"
           required
           value={displayBounds?.left ?? startX}
         />
@@ -98,7 +98,6 @@ export default function ComplexSearchBoundsSelect({
               Top (<var>y</var>)
             </>
           }
-          placeholder="y"
           max={
             selectedBounds?.bottom != null ?
               selectedBounds.bottom +
@@ -116,6 +115,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          placeholder="y"
           required
           value={displayBounds?.top ?? startY}
         />
@@ -129,7 +129,6 @@ export default function ComplexSearchBoundsSelect({
               Right (<var>x</var>)
             </>
           }
-          placeholder="x"
           max={canvas.width + startX - 1}
           min={
             selectedBounds?.left != null ?
@@ -148,6 +147,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          placeholder="x"
           required
           value={displayBounds?.right ?? startX}
         />
@@ -158,7 +158,6 @@ export default function ComplexSearchBoundsSelect({
               Bottom (<var>y</var>)
             </>
           }
-          placeholder="y"
           max={canvas.height + startY - 1}
           min={
             selectedBounds?.top != null ?
@@ -177,6 +176,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          placeholder="y"
           required
           value={displayBounds?.bottom ?? startY}
         />
