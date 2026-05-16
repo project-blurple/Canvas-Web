@@ -1,5 +1,5 @@
-import { CanvasInfo } from "./canvasInfo";
-import { PaletteColorSummary } from "./palette";
+import type { CanvasInfo } from "./canvasInfo";
+import type { PaletteColorSummary } from "./palette";
 
 export interface UserStats {
   userId: string;

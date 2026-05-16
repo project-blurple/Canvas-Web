@@ -1,19 +1,19 @@
 import { Router } from "express";
 
 import { ApiError } from "@/errors";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import {
   CreateEventBodyModel,
   EditEventBodyModel,
+  type EventIdParam,
   parseEventId,
 } from "@/models/event.models";
-import { assertCanvasAdmin } from "@/services/discordGuildService";
 import {
   createEvent,
   editEvent,
   getCurrentEvent,
   getEventById,
 } from "@/services/eventService";
-import { assertLoggedIn } from "@/utils";
 import { assertZodSuccess } from "@/utils/models";
 
 export const eventRouter = Router();
@@ -38,11 +38,8 @@ eventRouter.get("/:eventId", async (req, res) => {
   }
 });
 
-eventRouter.post("/", async (req, res) => {
+eventRouter.post("/", requireCanvasAdmin, async (req, res) => {
   try {
-    assertLoggedIn(req);
-    assertCanvasAdmin(req.user);
-
     const eventData = await CreateEventBodyModel.safeParseAsync(req.body);
     assertZodSuccess(eventData);
 
@@ -54,21 +51,22 @@ eventRouter.post("/", async (req, res) => {
   }
 });
 
-eventRouter.put("/:eventId", async (req, res) => {
-  try {
-    assertLoggedIn(req);
-    assertCanvasAdmin(req.user);
+eventRouter.put<EventIdParam>(
+  "/:eventId",
+  requireCanvasAdmin,
+  async (req, res) => {
+    try {
+      const [eventId, eventData] = await Promise.all([
+        parseEventId(req.params),
+        EditEventBodyModel.safeParseAsync(req.body),
+      ]);
+      assertZodSuccess(eventData);
 
-    const [eventId, eventData] = await Promise.all([
-      parseEventId(req.params),
-      EditEventBodyModel.safeParseAsync(req.body),
-    ]);
-    assertZodSuccess(eventData);
+      const event = await editEvent(eventId, eventData.data.name);
 
-    const event = await editEvent(eventId, eventData.data.name);
-
-    res.status(200).json(event);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+      res.status(200).json(event);
+    } catch (error) {
+      ApiError.sendError(res, error);
+    }
+  },
+);

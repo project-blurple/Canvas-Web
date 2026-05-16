@@ -1,6 +1,6 @@
 import express from "express";
 import request from "supertest";
-
+import { isCanvasAdmin } from "@/services/discordGuildService";
 import { createEvent, editEvent } from "@/services/eventService";
 import { eventRouter } from "./event";
 
@@ -9,6 +9,11 @@ vi.mock("@/services/eventService", () => ({
   editEvent: vi.fn(),
   getCurrentEvent: vi.fn(),
   getEventById: vi.fn(),
+}));
+
+vi.mock("@/services/discordGuildService", () => ({
+  isCanvasAdmin: vi.fn(),
+  isCanvasModerator: vi.fn(),
 }));
 
 const createApp = () => {
@@ -31,6 +36,7 @@ describe("Event admin route tests", () => {
   });
 
   it("creates an event", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
     const app = createApp();
     vi.mocked(createEvent).mockResolvedValueOnce({
       id: 42,
@@ -51,6 +57,7 @@ describe("Event admin route tests", () => {
   });
 
   it("edits an event", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
     const app = createApp();
     vi.mocked(editEvent).mockResolvedValueOnce({
       id: 42,

@@ -1,9 +1,10 @@
-import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { GuildData } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import config from "@/config";
+import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
-import ForbiddenError from "@/errors/ForbiddenError";
 import NotFoundError from "@/errors/NotFoundError";
+import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 import fetchWithRetries from "@/utils/fetchWithRetries";
 
@@ -33,15 +34,27 @@ interface GuildPermissionsSummary {
 
 interface DiscordRequestOptions {
   endpoint: string;
-  authorization: string;
+  authorization: `Bearer ${string}`;
 }
 
-interface CanvasAdminUser extends DiscordUserProfile {
-  isCanvasAdmin: true;
-}
+type DiscordRateLimitHeader =
+  | "x-ratelimit-limit"
+  | "x-ratelimit-remaining"
+  | "x-ratelimit-reset"
+  | "x-ratelimit-reset-after"
+  | "x-ratelimit-bucket";
 
-interface CanvasModeratorUser extends DiscordUserProfile {
-  isCanvasModerator: true;
+/** @see https://docs.discord.com/developers/topics/rate-limits */
+const discordRateLimitHeaders = new Set<DiscordRateLimitHeader>([
+  "x-ratelimit-limit",
+  "x-ratelimit-remaining",
+  "x-ratelimit-reset",
+  "x-ratelimit-reset-after",
+  "x-ratelimit-bucket",
+]);
+
+function isDiscordRateLimitHeader(key: string): key is DiscordRateLimitHeader {
+  return (discordRateLimitHeaders as Set<string>).has(key);
 }
 
 async function discordRequest<T>({
@@ -67,16 +80,41 @@ async function discordRequest<T>({
     throw new NotFoundError(`Discord resource not found: ${endpoint}`);
   }
 
+  if (response.status === 429) {
+    const rateLimitHeaders: Partial<Record<DiscordRateLimitHeader, string>> =
+      {};
+    for (const [k, v] of response.headers.entries()) {
+      if (isDiscordRateLimitHeader(k)) rateLimitHeaders[k] = v;
+    }
+
+    console.error("Headers", rateLimitHeaders);
+    console.error("Body", await response.json());
+
+    const retryAfter = response.headers.get("retry-after");
+    /** @privateRemarks TODO: Update to Intl.DurationFormat once we target es2025 */
+    const suffix =
+      retryAfter ? ` after ${Number.parseFloat(retryAfter)} s` : "";
+    throw new TooManyRequestsError(
+      `Rate limited by Discord API. Please try again${suffix}.`,
+    );
+  }
+
   if (!response.ok) {
+    console.error(response);
     throw new BadRequestError(
       `Discord API request failed with status ${response.status}: ${endpoint}`,
     );
   }
 
+  const contentType = response.headers.get("content-type");
+  if (!contentType?.startsWith("application/json")) {
+    throw new ApiError(`Expected application/json but got ${contentType}`, 500);
+  }
+
   return (await response.json()) as T;
 }
 
-function asBearerToken(accessToken: string): string {
+function asBearerToken<T extends string>(accessToken: T): `Bearer ${T}` {
   return `Bearer ${accessToken}`;
 }
 
@@ -103,13 +141,13 @@ export async function getGuildPermissionsForUser(
 
 interface userHasRoleInGuildProps {
   guildId: string;
-  roleId: string;
+  roleIds: string[];
   accessToken: string;
 }
 
-async function userHasRoleInGuild({
+async function userHasRolesInGuild({
   guildId,
-  roleId,
+  roleIds: roleId,
   accessToken,
 }: userHasRoleInGuildProps): Promise<boolean> {
   let member: DiscordGuildMember;
@@ -127,7 +165,7 @@ async function userHasRoleInGuild({
     throw error;
   }
 
-  return member.roles.includes(roleId);
+  return member.roles.some((role) => roleId.includes(role));
 }
 
 export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
@@ -138,18 +176,21 @@ export async function isCanvasAdmin(accessToken: string): Promise<boolean> {
     return false;
   }
 
-  return userHasRoleInGuild({ guildId, roleId, accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds: [roleId], accessToken });
 }
 
 export async function isCanvasModerator(accessToken: string): Promise<boolean> {
   const guildId = config.discord.discordManagementGuild;
-  const roleId = config.discord.discordModeratorRole;
+  const roleIds = [
+    config.discord.discordModeratorRole,
+    config.discord.discordAdminRole,
+  ].filter((roleId): roleId is string => Boolean(roleId));
 
-  if (!guildId || !roleId || !accessToken) {
+  if (!guildId || !accessToken || roleIds.length === 0) {
     return false;
   }
 
-  return userHasRoleInGuild({ guildId, roleId, accessToken });
+  return await userHasRolesInGuild({ guildId, roleIds, accessToken });
 }
 
 export async function getCurrentUserGuildFlags(
@@ -189,26 +230,6 @@ function getPermissions(permissions: bigint): GuildPermissionsSummary {
     administrator,
     manage_guild: manageGuild,
   };
-}
-
-export function assertCanvasAdmin(
-  user: DiscordUserProfile,
-): asserts user is CanvasAdminUser {
-  if (!user.isCanvasAdmin) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
-    );
-  }
-}
-
-export function assertIsCanvasModerator(
-  user: DiscordUserProfile,
-): asserts user is CanvasModeratorUser | CanvasAdminUser {
-  if (!user.isCanvasModerator) {
-    throw new ForbiddenError(
-      "You do not have permission to perform this action",
-    );
-  }
 }
 
 export async function syncDiscordGuildRecords(

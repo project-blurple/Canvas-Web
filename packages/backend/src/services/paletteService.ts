@@ -51,7 +51,7 @@ export async function getEventPalette(
         },
       },
     },
-    // Filter the colours to only include global colours or colours that are part of the event
+    // Filter the colors to only include global colors or colors that are part of the event
     where: {
       OR: [
         { global: true },

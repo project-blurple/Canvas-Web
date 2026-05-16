@@ -94,6 +94,7 @@ export default function PlacePixelTab({
   const [prevTimeLeft, setPrevTimeLeft] = useState(0);
 
   const { data: palette } = usePalette(eventId ?? undefined);
+
   const [mainColors, partnerColors] = useMemo(
     () => (palette !== undefined ? partitionPalette(palette) : []),
     [palette],

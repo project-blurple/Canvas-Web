@@ -79,7 +79,9 @@ export default function PixelInfoTab({
 }: PixelInfoTabProps) {
   const { canvas } = useCanvasContext();
   const { adjustedCoords, containerRef, coords, zoom } = useCanvasViewContext();
-  const { data, isLoading } = usePixelHistory(canvasId, coords);
+  const { data, isLoading } = usePixelHistory(canvasId, coords, {
+    enabled: active,
+  });
 
   const pixelHistory = data?.pixelHistory ?? [];
 
