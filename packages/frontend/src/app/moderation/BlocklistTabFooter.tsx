@@ -8,7 +8,7 @@ import {
 import axios from "axios";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { StyledButton } from "@/components/button/DynamicButton";
+import { Button } from "@/components/button";
 import { AutocompleteInput } from "@/components/input/Input";
 import config from "@/config/clientConfig";
 
@@ -62,10 +62,16 @@ const BlocklistIdChip = styled(Chip, {
     `}
 `;
 
-const Button = styled(StyledButton)`
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
   color: white;
   flex-shrink: 0;
   width: auto;
+
+  &:hover,
+  &:focus-visible {
+    border-color: oklch(from var(--discord-white) l c h / 36%);
+  }
 `;
 
 interface BlocklistFooterSectionProps {
@@ -204,7 +210,7 @@ function BlocklistAddSection({
             )}
           />
         </BlocklistAutocompleteWrapper>
-        <Button
+        <StyledButton
           disabled={
             userIdsToBlock.length === 0 ||
             inputtedUsersAlreadyBlocked ||
@@ -213,7 +219,7 @@ function BlocklistAddSection({
           onClick={() => onBlock?.(userIdsToBlock)}
         >
           Block
-        </Button>
+        </StyledButton>
       </BlocklistAddBody>
     </BlocklistAddWrapper>
   );
@@ -227,13 +233,13 @@ function BlocklistRemoveSection({
     useIsMutating({ mutationKey: ["blocklist", "remove"] }) > 0;
 
   return (
-    <Button
+    <StyledButton
       disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
       onClick={() => onRemove?.(selectedUsers)}
     >
       Remove {selectedUsers.size} user
       {selectedUsers.size !== 1 ? "s" : ""} from blocklist
-    </Button>
+    </StyledButton>
   );
 }
 

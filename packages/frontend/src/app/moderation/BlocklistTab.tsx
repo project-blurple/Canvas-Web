@@ -216,7 +216,7 @@ export default function BlocklistTab(
             : <BlocklistEntryTable>
                 <thead>
                   <tr>
-                    <th /> {/* Checkbox column */}
+                    <th aria-label="Checkbox" />
                     <th>User</th>
                     <th>Date added</th>
                   </tr>
