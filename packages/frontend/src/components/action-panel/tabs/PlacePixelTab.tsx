@@ -86,7 +86,7 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
-  const { data: palette } = usePalette(eventId ?? undefined, {
+  const { data: palette } = usePalette(eventId ?? undefined, false, {
     enabled: active,
   });
   const [mainColors, partnerColors] = useMemo(
