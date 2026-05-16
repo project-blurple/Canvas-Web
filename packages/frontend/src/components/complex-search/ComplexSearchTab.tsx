@@ -225,7 +225,7 @@ export default function ComplexSearchTab({
               <SummaryCard>
                 <strong>Query duration</strong>
                 <span>
-                  {durationFormat?.format({
+                  {durationFormat()?.format({
                     milliseconds: Math.max(
                       0,
                       Math.floor(historyQuery.data?.executionDurationMs ?? 0),
