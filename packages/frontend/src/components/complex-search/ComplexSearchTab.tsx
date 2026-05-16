@@ -20,7 +20,7 @@ import {
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
-import { durationFormat } from "@/util";
+import { durationFormatNarrow } from "@/util/intl";
 import {
   ComplexSearchBoundsSelect,
   ComplexSearchColorSelect,
@@ -229,7 +229,7 @@ export default function ComplexSearchTab({
               <SummaryCard>
                 <strong>Query duration</strong>
                 <span>
-                  {durationFormat()?.format({
+                  {durationFormatNarrow?.format({
                     milliseconds: Math.max(
                       0,
                       Math.floor(historyQuery.data?.executionDurationMs ?? 0),
