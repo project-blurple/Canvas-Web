@@ -18,12 +18,9 @@ const ListItem = styled("li")`
   gap: 0.5rem;
 `;
 
-const ColorPreview = styled<{ $color: PixelColor }>("div", {
-  shouldForwardProp: (prop) => prop !== "$color",
-})`
+const ColorPreview = styled("div")`
   background-color: currentColor;
   border: 1px solid oklch(from white l c h / 15%);
-  color: ${(p) => rgbaToCssColor(p.$color)};
   height: 1em;
   width: 1em;
   border-radius: calc(infinity * 1px);
@@ -166,7 +163,7 @@ export default function ComplexSearchColorSelect({
 
           return (
             <ListItem key={key ?? option.id} {...liProps}>
-              <ColorPreview $color={option.rgba} />
+              <ColorPreview style={{ color: rgbaToCssColor(option.rgba) }} />
               <Code>{option.code}</Code> {option.name}
             </ListItem>
           );
