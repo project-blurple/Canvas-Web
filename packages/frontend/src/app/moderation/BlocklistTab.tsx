@@ -8,7 +8,7 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { UserId } from "@/components/complex-search/SearchUserEntry";
+import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import { useBlocklist } from "@/hooks/queries/useBlocklist";
@@ -26,10 +26,6 @@ const BlocklistEntryTable = styled("table")`
   border-spacing: 0 0.5rem;
   margin-top: 1rem;
   width: 100%;
-
-  * > th {
-    text-align: left;
-  }
 `;
 
 const StyledCheckboxSetting = styled(CheckboxSetting)`
@@ -38,12 +34,14 @@ const StyledCheckboxSetting = styled(CheckboxSetting)`
 `;
 
 const StyledEntryRow = styled("tr")`
-  :hover {
-    background-color: oklch(from var(--discord-white) l c h / 5%);
+  @media (hover: hover) {
+    &:hover {
+      background-color: oklch(from var(--discord-white) l c h / 5%);
+    }
   }
 `;
 
-const StyledUserRow = styled("td")`
+const StyledUserRow = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -59,7 +57,7 @@ const StyledUsername = styled("span")`
 
 const StyledInput = styled(Input)`
   flex: 1;
-  min-width: 0;
+  min-inline-size: 0;
 `;
 
 interface BlocklistUserEntryProps extends Pick<
@@ -88,18 +86,20 @@ function BlocklistUserEntry({
           label={null}
         />
       </td>
-      <StyledUserRow title={username}>
-        <StyledUsername>{username}</StyledUsername>
-        <UserId
-          onClick={async () =>
-            await navigator.clipboard.writeText(userId.toString())
-          }
-        >
-          <code aria-hidden>{userId}</code>
-          <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
-          <Copy size={12} />
-        </UserId>
-      </StyledUserRow>
+      <td>
+        <StyledUserRow title={username}>
+          <StyledUsername>{username}</StyledUsername>
+          <UserIdButton
+            onClick={async () =>
+              await navigator.clipboard.writeText(userId.toString())
+            }
+          >
+            <code aria-hidden>{userId}</code>
+            <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>
+            <Copy size={12} />
+          </UserIdButton>
+        </StyledUserRow>
+      </td>
       <td>
         <time
           dateTime={new Date(user.dateAdded).toLocaleDateString("en-US", {
@@ -186,7 +186,7 @@ export default function BlocklistTab(
               type="text"
               value={searchQuery}
               style={{
-                width: "100%",
+                inlineSize: "100%",
               }}
             />
 

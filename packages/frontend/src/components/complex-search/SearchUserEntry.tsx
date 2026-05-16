@@ -52,7 +52,7 @@ const ColorChipWrapper = styled("div")`
   overflow-x: auto;
 `;
 
-export const UserId = styled(PrimitiveButton)`
+export const UserIdButton = styled(PrimitiveButton)`
   appearance: none;
   border: none;
   background: none;
@@ -127,7 +127,7 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
           );
         })}
       </ColorChipWrapper>
-      <UserId
+      <UserIdButton
         onClick={async () =>
           await navigator.clipboard.writeText(userId.toString())
         }
@@ -137,7 +137,7 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
           {summary.userProfile?.username}’s user ID. Click to copy.
         </VisuallyHidden>
         <Copy size={12} />
-      </UserId>
+      </UserIdButton>
     </UserCard>
   );
 }

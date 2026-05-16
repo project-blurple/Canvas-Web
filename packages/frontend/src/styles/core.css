@@ -145,6 +145,10 @@
   table {
     border-collapse: collapse;
   }
+
+  th {
+    text-align: left;
+  }
 }
 
 @layer fonts {
