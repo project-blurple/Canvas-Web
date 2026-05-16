@@ -16,19 +16,28 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
+const NavWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: center;
+  place-items: center;
+  width: 100%;
+`;
+
 const NavBar = styled("nav")`
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(5, 1fr);
-  max-width: 600px;
+  max-width: 600px; // need mobile responsiveness
   width: 100%;
 `;
 
 const NavLink = styled(Link)`
-  border-radius: 4px;
+  border-radius: 0.5rem;
   color: inherit;
   cursor: pointer;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0.75rem;
   text-align: center;
   text-decoration: none;
   transition: background-color 0.2s;
@@ -57,7 +66,7 @@ function AdminDashboardHeader() {
     ?.key ?? "event") as (typeof TAB_ROUTES)[number]["key"];
 
   return (
-    <Wrapper>
+    <NavWrapper>
       <h1>Admin</h1>
       <NavBar>
         {TAB_ROUTES.map((tab) => (
@@ -70,8 +79,7 @@ function AdminDashboardHeader() {
           </NavLink>
         ))}
       </NavBar>
-      {/* Tab content is provided by file-based pages under /admin/<tab> */}
-    </Wrapper>
+    </NavWrapper>
   );
 }
 
@@ -94,8 +102,10 @@ export default function AdminDashboard({
 
   return (
     <LayoutWithHeader>
-      <AdminDashboardHeader />
-      {children}
+      <Wrapper>
+        <AdminDashboardHeader />
+        {children}
+      </Wrapper>
     </LayoutWithHeader>
   );
 }
