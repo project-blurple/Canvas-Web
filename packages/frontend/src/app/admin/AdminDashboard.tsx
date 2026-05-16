@@ -2,21 +2,12 @@
 
 import { styled } from "@mui/material";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useState } from "react";
-import {
-  ActionPanelTabBar,
-  GenericTab,
-} from "@/components/action-panel/primitives";
 import AdminCanvasTab from "./AdminCanvasTab";
 import AdminColorTab from "./AdminColorTab";
 import AdminEventTab from "./AdminEventTab";
 import AdminNoticeTab from "./AdminNoticeTab";
 import AdminPasteTab from "./AdminPasteTab";
-import { pathToTabKey, type TabKey, tabKeyToPath } from "./tabs";
-
-const AdminTabBar = styled(ActionPanelTabBar)`
-  grid-template-columns: repeat(5, 1fr);
-`;
+import { pathToTabKey, type TabKey } from "./tabs";
 
 const Wrapper = styled("div")`
   display: flex;
@@ -27,83 +18,65 @@ const Wrapper = styled("div")`
   place-items: center;
 `;
 
-const Tab = styled(GenericTab<TabKey>)`
-  &[aria-selected="true"] {
+const NavBar = styled("nav")`
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 600px;
+`;
+
+const NavLink = styled("a")`
+  padding: 0.75rem 1rem;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  cursor: pointer;
+  color: inherit;
+
+  &:hover {
+    background-color: oklch(from var(--discord-legacy-greyple) l c h / 20%);
+  }
+
+  &[aria-current="page"] {
     background-color: oklch(from var(--discord-legacy-greyple) l c h / 30%);
+    font-weight: 500;
   }
 `;
 
+const TAB_ROUTES: { key: TabKey; label: string; path: string }[] = [
+  { key: "event", label: "Event", path: "event" },
+  { key: "notice", label: "Notice", path: "notice" },
+  { key: "canvas", label: "Canvas", path: "canvas" },
+  { key: "color", label: "Color", path: "color" },
+  { key: "paste", label: "Paste", path: "paste" },
+];
+
 export default function AdminDashboard() {
   const pathname = usePathname();
-  const [activeTab, setActiveTab] = useState<TabKey>("event");
-
-  const canvasTabId = useId();
-  const colorTabId = useId();
-  const eventTabId = useId();
-  const noticeTabId = useId();
-  const pasteTabId = useId();
-
-  useEffect(() => {
-    const tabFromPath = pathToTabKey[pathname ?? ""] ?? "event";
-    setActiveTab(tabFromPath);
-  }, [pathname]);
-
-  const handleTabChange = (tabKey: TabKey) => {
-    setActiveTab(tabKey);
-    const newPath = `/admin/${tabKeyToPath[tabKey]}`;
-    window.history.replaceState(null, "", newPath);
-  };
+  const activeTab = pathToTabKey[pathname ?? ""] ?? "event";
 
   return (
     <Wrapper>
       <h1>Admin</h1>
-      <AdminTabBar role="tablist">
-        <Tab
-          aria-controls={eventTabId}
-          aria-selected={activeTab === "event"}
-          tabKey="event"
-          onSwitchTab={handleTabChange}
-        >
-          Event
-        </Tab>
-        <Tab
-          aria-controls={noticeTabId}
-          aria-selected={activeTab === "notice"}
-          tabKey="notice"
-          onSwitchTab={handleTabChange}
-        >
-          Notice
-        </Tab>
-        <Tab
-          aria-controls={canvasTabId}
-          aria-selected={activeTab === "canvas"}
-          tabKey="canvas"
-          onSwitchTab={handleTabChange}
-        >
-          Canvas
-        </Tab>
-        <Tab
-          aria-controls={colorTabId}
-          aria-selected={activeTab === "color"}
-          tabKey="color"
-          onSwitchTab={handleTabChange}
-        >
-          Color
-        </Tab>
-        <Tab
-          aria-controls={pasteTabId}
-          aria-selected={activeTab === "paste"}
-          tabKey="paste"
-          onSwitchTab={handleTabChange}
-        >
-          Paste
-        </Tab>
-      </AdminTabBar>
-      <AdminEventTab active={activeTab === "event"} id={eventTabId} />
-      <AdminCanvasTab active={activeTab === "canvas"} id={canvasTabId} />
-      <AdminColorTab active={activeTab === "color"} id={colorTabId} />
-      <AdminNoticeTab active={activeTab === "notice"} id={noticeTabId} />
-      <AdminPasteTab active={activeTab === "paste"} id={pasteTabId} />
+      <NavBar>
+        {TAB_ROUTES.map((tab) => (
+          <NavLink
+            key={tab.key}
+            href={`/admin/${tab.path}`}
+            aria-current={activeTab === tab.key ? "page" : undefined}
+          >
+            {tab.label}
+          </NavLink>
+        ))}
+      </NavBar>
+
+      <AdminEventTab active={activeTab === "event"} />
+      <AdminCanvasTab active={activeTab === "canvas"} />
+      <AdminColorTab active={activeTab === "color"} />
+      <AdminNoticeTab active={activeTab === "notice"} />
+      <AdminPasteTab active={activeTab === "paste"} />
     </Wrapper>
   );
 }
