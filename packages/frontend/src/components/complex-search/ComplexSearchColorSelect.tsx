@@ -5,6 +5,8 @@ import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type * as React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
+import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
@@ -63,7 +65,6 @@ const ToggleFilterModeButton = styled(DynamicButton)`
 `;
 
 interface ComplexSearchColorSelectProps {
-  palette: Palette;
   value: number[];
   filterMode: SearchFilterMode;
   onChange: (value: number[]) => void;
@@ -72,13 +73,15 @@ interface ComplexSearchColorSelectProps {
 }
 
 export default function ComplexSearchColorSelect({
-  palette,
   value,
   filterMode,
   onChange,
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
+  const { canvas } = useCanvasContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
+
   const sortedPalette = palette.toSorted((a, b) =>
     a.global === b.global ? 0
     : a.global ? -1
