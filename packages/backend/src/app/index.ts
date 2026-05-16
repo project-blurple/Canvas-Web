@@ -6,6 +6,7 @@ import { apiRouter } from "@/routes";
 import "@/utils";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import { prisma } from "@/client";
 import { initializeAuth } from "@/middleware/discordAuth";
 import { initializeCache } from "@/services/canvasService";
 import { SocketHandler } from "./SocketHandler";
@@ -43,6 +44,12 @@ export function createApp(): App {
 
   server.listen(config.api.port, () => {
     console.log(`⚡[server]: Server is running on port ${config.api.port}`);
+  });
+
+  prisma.guild.upsert({
+    where: { id: 0 },
+    update: { invite: config.frontendUrl },
+    create: { id: 0, invite: config.frontendUrl },
   });
 
   return { socketHandler };
