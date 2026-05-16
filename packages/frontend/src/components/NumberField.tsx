@@ -20,7 +20,7 @@ interface NumberFieldProps extends React.ComponentPropsWithRef<typeof Input> {
   label: React.ReactNode;
   labelProps?: React.ComponentPropsWithRef<typeof Label>;
   onValueChange?: (value: number | null) => void;
-  Wrapper?: React.FC;
+  value: number | null;
 }
 
 export default function NumberField({
@@ -31,7 +31,6 @@ export default function NumberField({
   min,
   onValueChange,
   value,
-  Wrapper = React.Fragment,
   ...props
 }: NumberFieldProps) {
   const _id = useId();
