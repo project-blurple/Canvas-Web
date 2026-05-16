@@ -158,16 +158,12 @@ export default function ComplexSearchColorSelect({
           option.global ? "Global colors" : "Partner colors"
         }
         renderInput={(params) => <TextField {...params} label={label} />}
-        renderOption={(props, option) => {
-          const { key, ...liProps } = props;
-
-          return (
-            <ListItem key={key ?? option.id} {...liProps}>
-              <ColorPreview style={{ color: rgbaToCssColor(option.rgba) }} />
-              <Code>{option.code}</Code> {option.name}
-            </ListItem>
-          );
-        }}
+        renderOption={(props, option) => (
+          <ListItem {...props} key={props.key ?? option.id}>
+            <ColorPreview style={{ color: rgbaToCssColor(option.rgba) }} />
+            <Code>{option.code}</Code> {option.name}
+          </ListItem>
+        )}
         isOptionEqualToValue={(option, value) =>
           option.id === (value as Palette[number]).id
         }
