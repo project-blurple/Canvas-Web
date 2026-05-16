@@ -7,6 +7,7 @@ import type {
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo } from "react";
+import { PrimitiveButton } from "../button";
 import ColorCodeChip from "../ColorCodeChip";
 import VisuallyHidden from "../VisuallyHidden";
 
@@ -17,9 +18,9 @@ const UserWrapper = styled("div")`
 `;
 
 const UserCard = styled("div")`
-  background: ${({ theme }) => theme.palette.background.paper};
+  background: var(--discord-legacy-not-quite-black);
   border-radius: 0.75rem;
-  border: 1px solid ${({ theme }) => theme.palette.divider};
+  border: var(--card-border);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -51,7 +52,7 @@ const ColorChipWrapper = styled("div")`
   overflow-x: auto;
 `;
 
-const UserId = styled("button")`
+const UserId = styled(PrimitiveButton)`
   appearance: none;
   border: none;
   background: none;

@@ -51,10 +51,10 @@ const SummaryGrid = styled("div")`
 `;
 
 const SummaryCard = styled("div")`
-  border: 1px solid ${({ theme }) => theme.palette.divider};
+  border: var(--card-border);
   border-radius: 0.75rem;
   padding: 0.75rem;
-  background: ${({ theme }) => theme.palette.background.paper};
+  background: var(--discord-legacy-not-quite-black);
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
