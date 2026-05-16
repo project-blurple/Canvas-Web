@@ -5,7 +5,6 @@ import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/button";
 import { AutocompleteInput } from "@/components/input/Input";
-import { useBlocklistMutations } from "@/hooks/queries";
 
 const BlocklistFooter = styled("footer")`
   display: flex;
@@ -74,19 +73,20 @@ interface BlocklistFooterSectionProps {
   userIdsToBlock: bigint[];
   onUserIdsToBlockChange: (value: Iterable<bigint>) => void;
   existingBlocklistIdStrings: Set<string>;
+  onBlock: (userIds: Iterable<bigint>) => Promise<boolean>;
+  selectionFormId: string;
 }
 
 interface BlocklistAddSectionProps {
   userIdsToBlock: bigint[];
   onUserIdsToBlockChange: (value: Iterable<bigint>) => void;
   existingBlocklistIdStrings: Set<string>;
-  onBlock?: (userIds: Iterable<bigint>) => void;
+  onBlock: (userIds: Iterable<bigint>) => Promise<boolean>;
 }
 
 interface BlocklistRemoveSectionProps {
   selectedUsers: Set<bigint>;
-  userIdsToBlock: bigint[];
-  onRemove?: (userIds: Iterable<bigint>) => void;
+  selectionFormId: string;
 }
 
 function parseUserIds(value: string): bigint[] {
@@ -206,12 +206,18 @@ function BlocklistAddSection({
           />
         </BlocklistAutocompleteWrapper>
         <StyledButton
+          type="button"
           disabled={
             userIdsToBlock.length === 0 ||
             inputtedUsersAlreadyBlocked ||
             Boolean(isBlocking)
           }
-          onClick={() => onBlock?.(userIdsToBlock)}
+          onClick={async () => {
+            const success = await onBlock(userIdsToBlock);
+            if (success) {
+              setUserIdsToBlockInputValue("");
+            }
+          }}
         >
           Block
         </StyledButton>
@@ -222,15 +228,16 @@ function BlocklistAddSection({
 
 function BlocklistRemoveSection({
   selectedUsers,
-  onRemove,
+  selectionFormId,
 }: BlocklistRemoveSectionProps) {
   const isRemoving =
     useIsMutating({ mutationKey: ["blocklist", "remove"] }) > 0;
 
   return (
     <StyledButton
+      form={selectionFormId}
+      type="submit"
       disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
-      onClick={() => onRemove?.(selectedUsers)}
     >
       Remove {selectedUsers.size} user
       {selectedUsers.size !== 1 ? "s" : ""} from blocklist
@@ -243,16 +250,9 @@ export function BlocklistFooterSection({
   userIdsToBlock,
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
+  onBlock,
+  selectionFormId,
 }: BlocklistFooterSectionProps) {
-  const { handleAdd, handleRemove } = useBlocklistMutations();
-
-  async function handleAddWithReset(ids: Iterable<bigint>) {
-    const success = await handleAdd(ids);
-    if (success) {
-      onUserIdsToBlockChange([]);
-    }
-  }
-
   return (
     <BlocklistFooter>
       {selectedUsers.size === 0 ?
@@ -260,12 +260,11 @@ export function BlocklistFooterSection({
           userIdsToBlock={userIdsToBlock}
           onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
-          onBlock={handleAddWithReset}
+          onBlock={onBlock}
         />
       : <BlocklistRemoveSection
           selectedUsers={selectedUsers}
-          userIdsToBlock={userIdsToBlock}
-          onRemove={handleRemove}
+          selectionFormId={selectionFormId}
         />
       }
     </BlocklistFooter>

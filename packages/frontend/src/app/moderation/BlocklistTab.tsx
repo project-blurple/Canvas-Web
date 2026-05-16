@@ -1,7 +1,7 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -11,7 +11,7 @@ import {
 import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
-import { useBlocklist } from "@/hooks/queries";
+import { useBlocklist, useBlocklistMutations } from "@/hooks/queries";
 import { BlocklistFooterSection } from "./BlocklistTabFooter";
 
 const BlocklistBodyWrapper = styled("div")`
@@ -33,6 +33,10 @@ const StyledCheckboxInput = styled("input")`
   cursor: pointer;
   inline-size: 1rem;
   margin-inline: 0.75rem;
+`;
+
+const SelectionForm = styled("form")`
+  display: contents;
 `;
 
 const StyledEntryRow = styled("tr")`
@@ -102,12 +106,18 @@ function BlocklistUserEntry({ user, ...props }: BlocklistUserEntryProps) {
   return (
     <StyledEntryRow>
       <CheckboxCell>
-        <StyledCheckboxInput type="checkbox" {...props} />
+        <StyledCheckboxInput
+          name="selectedUsers"
+          type="checkbox"
+          value={userId.toString()}
+          {...props}
+        />
       </CheckboxCell>
       <UserCell>
         <UserContents title={username}>
           <StyledUsername>{username}</StyledUsername>
           <UserIdButton
+            type="button"
             onClick={async () =>
               await navigator.clipboard.writeText(userId.toString())
             }
@@ -139,30 +149,64 @@ export default function BlocklistTab(
   props: React.ComponentPropsWithoutRef<typeof BlocklistTabBlock>,
 ) {
   const { data: blocklist = [], isLoading } = useBlocklist();
+  const { handleAdd, handleRemove } = useBlocklistMutations();
 
   const [selectedUsers, setSelectedUsers] = useState<Set<bigint>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
   const [userIdsToBlock, setUserIdsToBlock] = useState<bigint[]>([]);
+  const [selectionResetKey, setSelectionResetKey] = useState(0);
+  const selectionFormId = useId();
 
   const existingBlocklistIdStrings = useMemo(
     () => new Set(blocklist.map((entry) => entry.userId.toString())),
     [blocklist],
   );
 
-  function setUserSelected(
-    event: React.ChangeEvent<HTMLInputElement>,
-    userId: bigint,
-  ) {
-    setSelectedUsers((prev) => {
-      const newSet = new Set(prev);
-      if (event.target.checked) {
-        newSet.add(userId);
-      } else {
-        newSet.delete(userId);
+  function readSelectedUsers(form: HTMLFormElement | null) {
+    if (!form) {
+      return new Set<bigint>();
+    }
+
+    const selectedUserIds = new Set<bigint>();
+    for (const value of new FormData(form).getAll("selectedUsers")) {
+      if (typeof value !== "string" || !/^\d+$/.test(value)) {
+        continue;
       }
-      return newSet;
-    });
+
+      selectedUserIds.add(BigInt(value));
+    }
+
+    return selectedUserIds;
+  }
+
+  function handleSelectionChange(event: React.ChangeEvent<HTMLFormElement>) {
+    setSelectedUsers(readSelectedUsers(event.currentTarget));
+  }
+
+  async function handleSelectionSubmit(
+    event: React.SyntheticEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const userIds = readSelectedUsers(form);
+    if (userIds.size === 0) return;
+
+    const success = await handleRemove(userIds);
+    if (success) {
+      setSelectedUsers(new Set());
+      setSelectionResetKey((value) => value + 1);
+    }
+  }
+
+  async function handleBlockWithReset(ids: Iterable<bigint>) {
+    const success = await handleAdd(ids);
+    if (success) {
+      setUserIdsToBlock([]);
+    }
+
+    return success;
   }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: selectedUsers is not included as we don't want the list to re-order when selection changes
@@ -214,26 +258,32 @@ export default function BlocklistTab(
               <p>The blocklist is currently empty</p>
             : displayList.length === 0 ?
               <p>No users match your search.</p>
-            : <BlocklistEntryTable>
-                <thead>
-                  <tr>
-                    <th aria-label="Checkbox" />
-                    <th>User</th>
-                    <th>Date added</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayList.map((user) => (
-                    <BlocklistUserEntry
-                      key={user.userId}
-                      user={user}
-                      checked={selectedUsers.has(user.userId)}
-                      onChange={(event) => setUserSelected(event, user.userId)}
-                      aria-busy={isSelectDisabled}
-                    />
-                  ))}
-                </tbody>
-              </BlocklistEntryTable>
+            : <SelectionForm
+                key={selectionResetKey}
+                id={selectionFormId}
+                onChange={handleSelectionChange}
+                onSubmit={handleSelectionSubmit}
+              >
+                <BlocklistEntryTable>
+                  <thead>
+                    <tr>
+                      <th aria-label="Checkbox" />
+                      <th>User</th>
+                      <th>Date added</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {displayList.map((user) => (
+                      <BlocklistUserEntry
+                        key={user.userId}
+                        user={user}
+                        defaultChecked={selectedUsers.has(user.userId)}
+                        aria-busy={isSelectDisabled}
+                      />
+                    ))}
+                  </tbody>
+                </BlocklistEntryTable>
+              </SelectionForm>
             }
           </BlocklistBodyWrapper>
         </ActionPanelTabBody>
@@ -244,6 +294,8 @@ export default function BlocklistTab(
           userIdsToBlock={userIdsToBlock}
           onUserIdsToBlockChange={(value) => setUserIdsToBlock([...value])}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
+          onBlock={handleBlockWithReset}
+          selectionFormId={selectionFormId}
         />
       </ActionPanelTabBody>
     </BlocklistTabBlock>
