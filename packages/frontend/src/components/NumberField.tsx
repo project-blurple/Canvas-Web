@@ -16,11 +16,18 @@ const Input = styled("input")`
   padding-inline: 8px;
 `;
 
-interface NumberFieldProps extends React.ComponentPropsWithRef<typeof Input> {
+interface NumberFieldProps extends Omit<
+  React.ComponentPropsWithRef<typeof Input>,
+  "value"
+> {
+  // Overrides
+  max: number;
+  min: number;
+  value: number | null | undefined;
+  // Extensions
   label: React.ReactNode;
   labelProps?: React.ComponentPropsWithRef<typeof Label>;
   onValueChange?: (value: number | null) => void;
-  value: number | null;
 }
 
 export default function NumberField({
@@ -49,7 +56,11 @@ export default function NumberField({
     if (value === null || value === undefined) return;
     const clampedValue =
       min != null || max != null ?
-        clamp(value, min ?? -Infinity, max ?? Infinity)
+        clamp(
+          value,
+          min ?? Number.NEGATIVE_INFINITY,
+          max ?? Number.POSITIVE_INFINITY,
+        )
       : value;
 
     if (clampedValue !== value) {
