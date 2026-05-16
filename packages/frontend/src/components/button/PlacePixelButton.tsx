@@ -11,7 +11,7 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
-import { durationFormat } from "@/util";
+import { durationFormatNarrow } from "@/util/intl";
 import { Button } from "./Button";
 import ButtonSupplement from "./ButtonSupplement";
 import DynamicButton from "./DynamicButton";
@@ -120,7 +120,7 @@ export default function PlacePixelButton({ isVerbose }: PlacePixelButtonProps) {
       <Button variant="contained" disabled>
         On cooldown (
         <Time>
-          {durationFormat()?.format({ seconds: timeLeft }) ?? (
+          {durationFormatNarrow?.format({ seconds: timeLeft }) ?? (
             <>{timeLeft}&nbsp;s</>
           )}
         </Time>
