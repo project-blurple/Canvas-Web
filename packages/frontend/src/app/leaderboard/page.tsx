@@ -1,4 +1,4 @@
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import Leaderboard from "./Leaderboard";
 
 export default function LeaderboardPage() {

@@ -2,7 +2,7 @@
 
 import { notFound, useRouter } from "next/navigation";
 import { use, useEffect } from "react";
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import { useAuthContext } from "@/contexts";
 import AdminDashboard from "../AdminDashboard";
 import { isValidTab } from "../tabs";

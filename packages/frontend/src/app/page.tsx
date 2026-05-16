@@ -1,4 +1,4 @@
-import LayoutWithHeader from "../components/LayoutWithNavbar";
+import LayoutWithHeader from "../components/LayoutWithHeader";
 import Main from "./Main";
 
 export default async function Page() {

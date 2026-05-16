@@ -1,4 +1,4 @@
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import Settings from "./Settings";
 
 export default function SettingsPage() {
