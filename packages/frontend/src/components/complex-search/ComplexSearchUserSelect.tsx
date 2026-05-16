@@ -152,15 +152,11 @@ export default function ComplexSearchUserSelect({
         onChange={handleUserChange}
         options={availableUsers}
         renderInput={(params) => <TextField {...params} label={label} />}
-        renderOption={(props, option) => {
-          const { key, ...liProps } = props;
-
-          return (
-            <li key={key} {...liProps}>
-              {option.label}
-            </li>
-          );
-        }}
+        renderOption={({ key, ...props }, option) => (
+          <li key={key} {...props}>
+            {option.label}
+          </li>
+        )}
         size="small"
         value={selectedUserOptions}
         getOptionLabel={(option) => {

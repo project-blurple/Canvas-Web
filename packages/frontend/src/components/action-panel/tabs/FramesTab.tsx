@@ -20,10 +20,15 @@ export type FramePanelMode = ValueOf<typeof FramePanelMode>;
 interface FramesTabProps extends React.ComponentPropsWithRef<
   typeof FramesTabBlock
 > {
+  active?: boolean;
   setTabsLocked: (locked: boolean) => void;
 }
 
-export default function FramesTab({ setTabsLocked, ...props }: FramesTabProps) {
+export default function FramesTab({
+  active = false,
+  setTabsLocked,
+  ...props
+}: FramesTabProps) {
   const [activePanel, setActivePanel] = useState<FramePanelMode>(
     FramePanelMode.Info,
   );
@@ -33,7 +38,9 @@ export default function FramesTab({ setTabsLocked, ...props }: FramesTabProps) {
   }, [activePanel, setTabsLocked]);
 
   const panelByMode = {
-    [FramePanelMode.Info]: <FrameInfoPanel setActivePanel={setActivePanel} />,
+    [FramePanelMode.Info]: (
+      <FrameInfoPanel setActivePanel={setActivePanel} enabled={active} />
+    ),
     [FramePanelMode.Edit]: (
       <FrameEditPanel setActivePanel={setActivePanel} isCreateMode={false} />
     ),

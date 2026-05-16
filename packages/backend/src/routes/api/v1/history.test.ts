@@ -45,6 +45,8 @@ describe("History route tests", () => {
   });
 
   it("returns pixel history for a single coordinate", async () => {
+    const currentDate = new Date();
+
     const responseBody = {
       pixelHistory: [
         {
@@ -65,7 +67,7 @@ describe("History route tests", () => {
             "1": 1,
           },
           firstPlaced: new Date(0).toISOString(),
-          lastPlaced: new Date().toISOString(),
+          lastPlaced: currentDate.toISOString(),
         },
       },
     };

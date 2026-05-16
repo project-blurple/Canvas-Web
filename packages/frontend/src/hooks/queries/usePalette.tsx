@@ -39,11 +39,12 @@ export function usePalette(
   };
 
   return useQuery<PaletteRequest.ResBody>({
+    ...useQueryOptions,
     queryKey: ["palette", eventId, allColors],
     queryFn: getPalette,
+    enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: [] as PaletteRequest.ResBody,
-    ...useQueryOptions,
   });
 }
