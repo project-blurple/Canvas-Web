@@ -164,9 +164,7 @@ export default function ComplexSearchColorSelect({
             <Code>{option.code}</Code> {option.name}
           </ListItem>
         )}
-        isOptionEqualToValue={(option, value) =>
-          option.id === (value as Palette[number]).id
-        }
+        isOptionEqualToValue={(option, value) => option.id === value.id}
         renderValue={(
           values: Palette[number][],
           getItemProps: (args: { index: number }) => Record<string, unknown>,
