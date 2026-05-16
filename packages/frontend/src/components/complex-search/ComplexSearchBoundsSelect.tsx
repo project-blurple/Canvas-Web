@@ -88,6 +88,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          required
           value={displayBounds?.left ?? startX}
         />
         <NumberField
@@ -115,6 +116,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          required
           value={displayBounds?.top ?? startY}
         />
       </CoordinateInputWrapper>
@@ -146,6 +148,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          required
           value={displayBounds?.right ?? startX}
         />
         <NumberField
@@ -174,6 +177,7 @@ export default function ComplexSearchBoundsSelect({
               }),
             );
           }}
+          required
           value={displayBounds?.bottom ?? startY}
         />
       </CoordinateInputWrapper>
