@@ -1,16 +1,38 @@
 "use client";
 
-import type { Palette } from "@blurple-canvas-web/types";
+import type { Palette, PixelColor } from "@blurple-canvas-web/types";
 import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
-import type * as React from "react";
+import type React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
+import { rgbaToCssColor } from "@/util/color";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
   display: flex;
   flex-wrap: wrap;
   gap: 0.375rem;
+`;
+
+const ListItem = styled("li")`
+  gap: 0.5rem;
+`;
+
+const ColorPreview = styled<{ $color: PixelColor }>("div", {
+  shouldForwardProp: (prop) => prop !== "$color",
+})`
+  background-color: currentColor;
+  border: 1px solid oklch(from white l c h / 15%);
+  color: ${(p) => rgbaToCssColor(p.$color)};
+  height: 1em;
+  width: 1em;
+  border-radius: calc(infinity * 1px);
+`;
+
+const Code = styled("code")`
+  display: inline;
+  font-size: 0.875em;
+  opacity: 55%;
 `;
 
 export const ColorSelectChip = styled(Chip, {
@@ -51,7 +73,7 @@ export const ColorSelectChip = styled(Chip, {
   }
 `;
 
-const ColorSelectBlock = styled("div")`
+const ColorSelectBlock = styled("fieldset")`
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -143,9 +165,10 @@ export default function ComplexSearchColorSelect({
           const { key, ...liProps } = props;
 
           return (
-            <li key={key ?? option.id} {...liProps}>
-              {option.name} ({option.code})
-            </li>
+            <ListItem key={key ?? option.id} {...liProps}>
+              <ColorPreview $color={option.rgba} />
+              <Code>{option.code}</Code> {option.name}
+            </ListItem>
           );
         }}
         isOptionEqualToValue={(option, value) =>
