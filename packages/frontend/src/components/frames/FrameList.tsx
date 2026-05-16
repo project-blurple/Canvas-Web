@@ -54,17 +54,24 @@ function selectSortedGuildFrameEntries(
     .sort(sortByOwnerGuildName);
 }
 
-export default function FrameList() {
+interface FrameListProps {
+  enabled?: boolean;
+}
+
+export default function FrameList({ enabled = true }: FrameListProps) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { setFrame: setSelectedFrame } = useSelectedFrameContext();
 
   const sourceImage = useCanvasImage(canvas.id);
 
-  const { data: userFramesResponse } = useUserFrames({
-    canvasId: canvas.id,
-    userId: user?.id,
-  });
+  const { data: userFramesResponse } = useUserFrames(
+    {
+      canvasId: canvas.id,
+      userId: user?.id,
+    },
+    { enabled },
+  );
   const userFrames = userFramesResponse?.data ?? [];
 
   const guildIds = Object.keys(user?.guilds ?? {});
@@ -75,6 +82,7 @@ export default function FrameList() {
     },
     {
       select: selectSortedGuildFrameEntries,
+      enabled,
     },
   );
 

@@ -45,7 +45,15 @@ export function useFrameById({ frameId }: UseFrameByIdParams) {
   });
 }
 
-export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
+export function useUserFrames(
+  { canvasId, userId }: UseUserFramesParams,
+  options?: Omit<
+    UseQueryOptions<FrameRequest.UserFramesResBody>,
+    "queryKey" | "queryFn"
+  >,
+) {
+  const { enabled = true } = options ?? {};
+
   const getFrames = async (): Promise<FrameRequest.UserFramesResBody> => {
     if (!userId) return {} as FrameRequest.UserFramesResBody;
 
@@ -56,9 +64,10 @@ export function useUserFrames({ canvasId, userId }: UseUserFramesParams) {
   };
 
   return useQuery<FrameRequest.UserFramesResBody>({
+    ...options,
     queryKey: ["frame", "user", canvasId, userId],
     queryFn: getFrames,
-    enabled: Boolean(userId),
+    enabled: enabled && Boolean(userId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: {} as FrameRequest.UserFramesResBody,
@@ -72,6 +81,8 @@ export function useGuildFrames<TData = FrameRequest.GuildFramesResBody>(
     "queryKey" | "queryFn"
   >,
 ) {
+  const { enabled = true } = options ?? {};
+
   const getFrames = async (): Promise<FrameRequest.GuildFramesResBody> => {
     if (!guildIds || guildIds.length === 0)
       return {} as FrameRequest.GuildFramesResBody;
@@ -96,7 +107,7 @@ export function useGuildFrames<TData = FrameRequest.GuildFramesResBody>(
     ...options,
     queryKey: ["frame", "guild", canvasId, guildIds],
     queryFn: getFrames,
-    enabled: Boolean(guildIds?.length) && (options?.enabled ?? true),
+    enabled: enabled && Boolean(guildIds?.length),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     placeholderData: {} as FrameRequest.GuildFramesResBody,
