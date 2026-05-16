@@ -1,118 +1,41 @@
-// Custom number field built with a native <input type="number">.
-
 import { styled } from "@mui/material/styles";
-import { ChevronDown, ChevronUp } from "lucide-react";
-import React from "react";
+import React, { useId } from "react";
 import { clamp } from "@/util";
-
-type NumberFieldValue = number | null;
-
-type NumberFieldProps = {
-  label?: React.ReactNode;
-  size?: "small" | "medium";
-  value?: NumberFieldValue;
-  min?: number;
-  max?: number;
-  disabled?: boolean;
-  onValueChange?: (value: NumberFieldValue) => void;
-};
-
-const Root = styled("div")`
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-`;
 
 const Label = styled("label")`
   color: ${({ theme }) => theme.palette.text.secondary};
+  display: block;
   font-size: 0.875rem;
-  line-height: 1.4375;
+  line-height: 1.5;
+  margin-block-end: 0.5em;
 `;
 
-const FieldRow = styled("div")<{ $size: "small" | "medium" }>(
-  ({ $size, theme }) => `
-    align-items: stretch;
-    background: var(--discord-legacy-not-quite-black);
-    border: var(--card-border);
-    border-radius: 0.5rem;
-    display: flex;
-    gap: 0;
-    min-height: ${$size === "small" ? "2.25rem" : "3.5rem"};
-    overflow: hidden;
-    transition: ${theme.transitions.create(["border-color", "box-shadow"], {
-      duration: theme.transitions.duration.shorter,
-    })};
-
-    &:focus-within {
-      border-color: var(--discord-blurple);
-      box-shadow: 0 0 0 1px var(--discord-blurple);
-    }
-  `,
-);
-
-const NativeInput = styled("input", {
-  shouldForwardProp: (prop) => prop !== "$size",
-})<{ $size: "small" | "medium" }>`
-  appearance: textfield;
-  background: transparent;
-  border: 0;
-  color: inherit;
-  flex: 1;
-  font: inherit;
-  min-width: 0;
-  outline: 0;
-  padding: ${({ $size }) =>
-    $size === "small" ? "0.375rem 0.75rem" : "0.875rem 1rem"};
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  &::-webkit-outer-spin-button,
-  &::-webkit-inner-spin-button {
-    appearance: none;
-    margin: 0;
-  }
+const Input = styled("input")`
+  inline-size: 8ch;
+  padding-block: 6px;
+  padding-inline: 8px;
 `;
 
-const StepperColumn = styled("div")`
-  background: ${({ theme }) => theme.palette.action.hover};
-  border-left: var(--card-border);
-  display: flex;
-  flex-direction: column;
-`;
-
-const StepperButton = styled("button")`
-  background: transparent;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  display: grid;
-  flex: 1;
-  min-width: 2rem;
-  place-items: center;
-
-  &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.palette.action.selected};
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-`;
+interface NumberFieldProps extends React.ComponentPropsWithRef<typeof Input> {
+  label: React.ReactNode;
+  labelProps?: React.ComponentPropsWithRef<typeof Label>;
+  onValueChange?: (value: number | null) => void;
+  Wrapper?: React.FC;
+}
 
 export default function NumberField({
+  id,
   label,
-  size = "medium",
-  value,
-  min,
+  labelProps,
   max,
-  disabled,
+  min,
   onValueChange,
+  value,
+  Wrapper = React.Fragment,
+  ...props
 }: NumberFieldProps) {
-  const inputId = React.useId();
+  const _id = useId();
+  const resolvedId = id ?? _id;
 
   function handleInputChange(event: React.ChangeEvent<HTMLInputElement>) {
     const nextValue =
@@ -121,16 +44,6 @@ export default function NumberField({
       : Number.parseInt(event.target.value, 10);
 
     onValueChange?.(Number.isNaN(nextValue) ? null : nextValue);
-  }
-
-  function changeByStep(direction: 1 | -1) {
-    const baseValue = value ?? 0;
-    const nextValue =
-      min != null || max != null ?
-        clamp(baseValue + direction, min ?? -Infinity, max ?? Infinity)
-      : baseValue + direction;
-
-    onValueChange?.(nextValue);
   }
 
   function handleBlur() {
@@ -146,40 +59,15 @@ export default function NumberField({
   }
 
   return (
-    <Root>
-      {label && <Label htmlFor={inputId}>{label}</Label>}
-      <FieldRow $size={size}>
-        <NativeInput
-          id={inputId}
-          type="number"
-          $size={size}
-          value={value ?? ""}
-          onChange={handleInputChange}
-          onBlur={handleBlur}
-          disabled={disabled}
-          min={min}
-          max={max}
-          step={1}
-        />
-        <StepperColumn>
-          <StepperButton
-            type="button"
-            aria-label="Increase"
-            onClick={() => changeByStep(1)}
-            disabled={disabled}
-          >
-            <ChevronUp size={size === "small" ? 14 : 16} />
-          </StepperButton>
-          <StepperButton
-            type="button"
-            aria-label="Decrease"
-            onClick={() => changeByStep(-1)}
-            disabled={disabled}
-          >
-            <ChevronDown size={size === "small" ? 14 : 16} />
-          </StepperButton>
-        </StepperColumn>
-      </FieldRow>
-    </Root>
+    <div>
+      <Label htmlFor={resolvedId}>{label}</Label>
+      <Input
+        id={resolvedId}
+        onBlur={handleBlur}
+        onChange={handleInputChange}
+        type="number"
+        {...props}
+      />
+    </div>
   );
 }

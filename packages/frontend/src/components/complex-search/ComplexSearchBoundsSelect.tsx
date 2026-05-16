@@ -5,7 +5,7 @@ import NumberField from "@/components/NumberField";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import type { ViewBounds } from "@/util";
 
-const CoordinateRangeWrapper = styled("div")`
+const CoordinateRangeWrapper = styled("fieldset")`
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -15,11 +15,12 @@ const CoordinateRangeWrapper = styled("div")`
   }
 `;
 const CoordinateInputWrapper = styled("div")`
+  align-items: baseline;
   display: flex;
-  flex-direction: row;
   gap: 0.5rem;
-  width: 100%;
   justify-content: center;
+  width: 100%;
+  margin-block: 1em;
 `;
 
 interface ComplexSearchBoundsSelectProps {
@@ -66,6 +67,7 @@ export default function ComplexSearchBoundsSelect({
               Left (<var>x</var>)
             </>
           }
+          placeholder="x"
           value={displayBounds?.left ?? startX}
           min={startX}
           max={
@@ -75,7 +77,6 @@ export default function ComplexSearchBoundsSelect({
               COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
             : canvas.width + startX - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
-          size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -93,6 +94,7 @@ export default function ComplexSearchBoundsSelect({
               Top (<var>y</var>)
             </>
           }
+          placeholder="y"
           value={displayBounds?.top ?? startY}
           min={startY}
           max={
@@ -102,7 +104,6 @@ export default function ComplexSearchBoundsSelect({
               COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
             : canvas.height + startY - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
-          size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -124,6 +125,7 @@ export default function ComplexSearchBoundsSelect({
               Right (<var>x</var>)
             </>
           }
+          placeholder="x"
           value={displayBounds?.right ?? startX}
           min={
             selectedBounds?.left != null ?
@@ -134,7 +136,6 @@ export default function ComplexSearchBoundsSelect({
             : startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
           max={canvas.width + startX - 1}
-          size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -152,6 +153,7 @@ export default function ComplexSearchBoundsSelect({
               Bottom (<var>y</var>)
             </>
           }
+          placeholder="y"
           value={displayBounds?.bottom ?? startY}
           min={
             selectedBounds?.top != null ?
@@ -162,7 +164,6 @@ export default function ComplexSearchBoundsSelect({
             : startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
           max={canvas.height + startY - 1}
-          size="small"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
