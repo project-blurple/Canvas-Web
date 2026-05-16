@@ -3,7 +3,7 @@ import { styled } from "@mui/material";
 import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
-import { PanelSectionHeading } from "@/components/action-panel/primitives";
+import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -204,7 +204,9 @@ export default function ComplexSearchTab({
         return (
           <ActionPanelTabBody>
             <div>
-              <PanelSectionHeading>{errorText[status][0]}</PanelSectionHeading>
+              <ActionPanelPrimitives.SectionHeading>
+                {errorText[status][0]}
+              </ActionPanelPrimitives.SectionHeading>
               <p>{errorText[status][1]}</p>
             </div>
           </ActionPanelTabBody>
@@ -216,7 +218,9 @@ export default function ComplexSearchTab({
       return (
         <ActionPanelTabBody>
           <div>
-            <PanelSectionHeading>Search results</PanelSectionHeading>
+            <ActionPanelPrimitives.SectionHeading>
+              Search results
+            </ActionPanelPrimitives.SectionHeading>
             <SummaryGrid>
               <SummaryCard>
                 <strong>Total entries</strong>
@@ -240,7 +244,9 @@ export default function ComplexSearchTab({
             </SummaryGrid>
             {usersLength > 0 && (
               <>
-                <PanelSectionHeading>User summary</PanelSectionHeading>
+                <ActionPanelPrimitives.SectionHeading>
+                  User summary
+                </ActionPanelPrimitives.SectionHeading>
                 <SearchUserEntries
                   users={historyData.users}
                   palette={palette}
@@ -261,7 +267,9 @@ export default function ComplexSearchTab({
         <ActionPanelTabBody>
           <search>
             <Form onSubmit={handleSearchSubmit}>
-              <PanelSectionHeading>History search</PanelSectionHeading>
+              <ActionPanelPrimitives.SectionHeading>
+                History search
+              </ActionPanelPrimitives.SectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}

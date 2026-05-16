@@ -7,17 +7,11 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import {
-  ActionPanelTabBar,
-  ActionPanelWrapper,
-  GenericTab,
-} from "./primitives";
+import ActionPanelPrimitives from "./primitives";
 import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
 
 type TabKey = "look" | "place" | "frame";
-
-const Tab = GenericTab<TabKey>;
 
 export default function PrimaryActionPanel() {
   const {
@@ -55,9 +49,9 @@ export default function PrimaryActionPanel() {
   const frameTabId = useId();
 
   return (
-    <ActionPanelWrapper>
-      <ActionPanelTabBar role="tablist">
-        <Tab
+    <ActionPanelPrimitives.Root>
+      <ActionPanelPrimitives.TabBar role="tablist">
+        <ActionPanelPrimitives.GenericTab
           aria-controls={placeTabId}
           aria-disabled={areTabsLocked && currentTab !== "place"}
           aria-selected={currentTab === "place"}
@@ -65,8 +59,8 @@ export default function PrimaryActionPanel() {
           onSwitchTab={onSwitchTab}
         >
           Place
-        </Tab>
-        <Tab
+        </ActionPanelPrimitives.GenericTab>
+        <ActionPanelPrimitives.GenericTab
           aria-controls={lookTabId}
           aria-disabled={areTabsLocked && currentTab !== "look"}
           aria-selected={currentTab === "look"}
@@ -74,8 +68,8 @@ export default function PrimaryActionPanel() {
           onSwitchTab={onSwitchTab}
         >
           Look
-        </Tab>
-        <Tab
+        </ActionPanelPrimitives.GenericTab>
+        <ActionPanelPrimitives.GenericTab
           aria-controls={frameTabId}
           aria-disabled={areTabsLocked && currentTab !== "frame"}
           aria-selected={currentTab === "frame"}
@@ -83,8 +77,8 @@ export default function PrimaryActionPanel() {
           onSwitchTab={onSwitchTab}
         >
           Frame
-        </Tab>
-      </ActionPanelTabBar>
+        </ActionPanelPrimitives.GenericTab>
+      </ActionPanelPrimitives.TabBar>
       <PlacePixelTab
         active={currentTab === "place"}
         eventId={canvas.eventId}
@@ -100,6 +94,6 @@ export default function PrimaryActionPanel() {
         id={frameTabId}
         setTabsLocked={setAreTabsLocked}
       />
-    </ActionPanelWrapper>
+    </ActionPanelPrimitives.Root>
   );
 }

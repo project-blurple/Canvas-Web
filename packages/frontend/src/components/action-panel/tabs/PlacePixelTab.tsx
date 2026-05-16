@@ -11,7 +11,7 @@ import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton, PlacePixelButton } from "../../button";
 import { InteractiveSwatch } from "../../swatch";
-import { PanelSectionHeading } from "../primitives";
+import ActionPanelPrimitives from "../primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -184,7 +184,9 @@ function NamedPalette({ colors, name }: NamedPaletteProps) {
   const isLoading = colors === undefined;
   return (
     <>
-      <PanelSectionHeading>{name}</PanelSectionHeading>
+      <ActionPanelPrimitives.SectionHeading>
+        {name}
+      </ActionPanelPrimitives.SectionHeading>
       <Fieldset>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (

@@ -2,7 +2,7 @@ import { styled } from "@mui/material";
 import type React from "react";
 import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
 
-export const ActionPanelWrapper = styled("div")`
+const Root = styled("div")`
   --padding-width: 1rem;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
@@ -32,14 +32,14 @@ export const ActionPanelWrapper = styled("div")`
   }
 `;
 
-export const ActionPanelTabBar = styled("div")`
+const TabBar = styled("div")`
   border-radius: 0.5rem;
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(3, 1fr);
 `;
 
-export const ActionPanelTab = styled("button")`
+const Tab = styled("button")`
   appearance: none;
   border: none;
   color: inherit;
@@ -96,7 +96,7 @@ export const ActionPanelTab = styled("button")`
   }
 `;
 
-export const PanelSectionHeading = styled("h2")`
+const SectionHeading = styled("h2")`
   color: oklch(from var(--discord-white) l c h / 60%);
   font-weight: 600;
   font-size: 1rem;
@@ -106,16 +106,16 @@ export const PanelSectionHeading = styled("h2")`
   text-transform: uppercase;
 `;
 
-export function GenericTab<TabKey extends string>({
+function GenericTab<TabKey extends string>({
   tabKey,
   onSwitchTab,
   ...props
 }: {
   tabKey: TabKey;
   onSwitchTab: (tabKey: TabKey) => void;
-} & React.ComponentPropsWithRef<typeof ActionPanelTab>) {
+} & React.ComponentPropsWithRef<typeof Tab>) {
   return (
-    <ActionPanelTab
+    <Tab
       onClick={() => onSwitchTab(tabKey)}
       onKeyUp={(event) => {
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
@@ -125,3 +125,13 @@ export function GenericTab<TabKey extends string>({
     />
   );
 }
+
+const ActionPanelPrimitives = {
+  Root,
+  TabBar,
+  Tab,
+  SectionHeading,
+  GenericTab,
+} as const;
+
+export default ActionPanelPrimitives;

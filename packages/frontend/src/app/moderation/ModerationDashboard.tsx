@@ -1,10 +1,6 @@
 import styled from "@emotion/styled";
 import { useEffect, useId, useState } from "react";
-import {
-  ActionPanelTabBar,
-  ActionPanelWrapper,
-  GenericTab,
-} from "@/components/action-panel/primitives";
+import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import { CanvasView } from "@/components/canvas";
 import { ComplexSearchTab } from "@/components/complex-search";
 import { SlideableDrawer } from "@/components/slideable-drawer";
@@ -22,7 +18,7 @@ const DashboardWrapper = styled(CanvasWrapper)`
   }
 `;
 
-const ModTabBar = styled(ActionPanelTabBar)`
+const ModTabBar = styled(ActionPanelPrimitives.TabBar)`
   grid-template-columns: repeat(2, 1fr);
 `;
 
@@ -45,7 +41,7 @@ export default function ModerationDashboard() {
 
 type TabKey = "search" | "blocklist";
 
-const Tab = GenericTab<TabKey>;
+const Tab = ActionPanelPrimitives.GenericTab<TabKey>;
 
 function ModerationDashboardActionPanel() {
   const [currentTab, setCurrentTab] = useState("search");
@@ -70,7 +66,7 @@ function ModerationDashboardActionPanel() {
   };
 
   return (
-    <ActionPanelWrapper>
+    <ActionPanelPrimitives.Root>
       <ModTabBar role="tablist">
         <Tab
           aria-controls={searchTabId}
@@ -93,6 +89,6 @@ function ModerationDashboardActionPanel() {
       </ModTabBar>
       <ComplexSearchTab active={currentTab === "search"} id={searchTabId} />
       <BlocklistTab active={currentTab === "blocklist"} id={blocklistTabId} />
-    </ActionPanelWrapper>
+    </ActionPanelPrimitives.Root>
   );
 }
