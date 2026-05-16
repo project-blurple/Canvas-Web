@@ -1,4 +1,4 @@
-import { PixelColor } from "@blurple-canvas-web/types";
+import type { PixelColor } from "@blurple-canvas-web/types";
 
 /** `PixelColor` in, CSS `<color>` out */
 export function rgbaToCssColor([
