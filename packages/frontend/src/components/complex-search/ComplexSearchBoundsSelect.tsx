@@ -78,6 +78,7 @@ export default function ComplexSearchBoundsSelect({
             : canvas.width + startX - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
           min={startX}
+          name="x1"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -106,6 +107,7 @@ export default function ComplexSearchBoundsSelect({
             : canvas.height + startY - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
           min={startY}
+          name="y1"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -138,6 +140,7 @@ export default function ComplexSearchBoundsSelect({
               1
             : startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
           }
+          name="x2"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
@@ -167,6 +170,7 @@ export default function ComplexSearchBoundsSelect({
               1
             : startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
           }
+          name="y2"
           onValueChange={(value: number | null) => {
             if (!selectedBounds || value === null) return;
             setSelectedBounds(
