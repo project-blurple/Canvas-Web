@@ -1,16 +1,11 @@
 import styled from "@emotion/styled";
 import { Chip, css, TextField } from "@mui/material";
-import {
-  useIsMutating,
-  useMutation,
-  useQueryClient,
-} from "@tanstack/react-query";
-import axios from "axios";
+import { useIsMutating } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/button";
 import { AutocompleteInput } from "@/components/input/Input";
-import config from "@/config/clientConfig";
+import { useBlocklistMutations } from "@/hooks/queries";
 
 const BlocklistFooter = styled("footer")`
   display: flex;
@@ -249,61 +244,12 @@ export function BlocklistFooterSection({
   onUserIdsToBlockChange,
   existingBlocklistIdStrings,
 }: BlocklistFooterSectionProps) {
-  const queryClient = useQueryClient();
+  const { handleAdd, handleRemove } = useBlocklistMutations();
 
-  const addToBlocklistMutation = useMutation({
-    mutationKey: ["blocklist", "add"],
-    mutationFn: async (ids: bigint[]) => {
-      const url = `${config.apiUrl}/api/v1/blocklist`;
-      await axios.put(
-        url,
-        { userId: ids.map((id) => id.toString()) },
-        { withCredentials: true },
-      );
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
-  });
-
-  const removeFromBlocklistMutation = useMutation({
-    mutationKey: ["blocklist", "remove"],
-    mutationFn: async (ids: bigint[]) => {
-      const url = `${config.apiUrl}/api/v1/blocklist`;
-      await axios.delete(url, {
-        data: { userId: ids.map((id) => id.toString()) },
-        withCredentials: true,
-      });
-    },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
-  });
-
-  async function handleAdd(ids: Iterable<bigint>) {
-    try {
-      const arr = Array.from(ids);
-      await addToBlocklistMutation.mutateAsync(arr);
+  async function handleAddWithReset(ids: Iterable<bigint>) {
+    const success = await handleAdd(ids);
+    if (success) {
       onUserIdsToBlockChange([]);
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return;
-      }
-
-      alert("Failed to add users to blocklist");
-    }
-  }
-
-  async function handleRemove(ids: Iterable<bigint>) {
-    try {
-      const arr = Array.from(ids);
-      await removeFromBlocklistMutation.mutateAsync(arr);
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return;
-      }
-
-      alert("Failed to remove users from blocklist");
     }
   }
 
@@ -314,7 +260,7 @@ export function BlocklistFooterSection({
           userIdsToBlock={userIdsToBlock}
           onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
-          onBlock={handleAdd}
+          onBlock={handleAddWithReset}
         />
       : <BlocklistRemoveSection
           selectedUsers={selectedUsers}

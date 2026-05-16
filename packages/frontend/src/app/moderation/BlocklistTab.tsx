@@ -11,7 +11,7 @@ import {
 import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
-import { useBlocklist } from "@/hooks/queries/useBlocklist";
+import { useBlocklist } from "@/hooks/queries";
 import CheckboxSetting from "../settings/CheckboxSetting";
 import { BlocklistFooterSection } from "./BlocklistTabFooter";
 
