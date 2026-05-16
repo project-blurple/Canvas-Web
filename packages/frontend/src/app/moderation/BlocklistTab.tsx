@@ -39,12 +39,14 @@ const SelectionForm = styled("form")`
   display: contents;
 `;
 
-const StyledEntryRow = styled("tr")`
+const StyledEntryRow = styled("tr")<{ $hidden?: boolean }>`
   @media (hover: hover) {
     &:hover {
       background-color: oklch(from var(--discord-white) l c h / 5%);
     }
   }
+
+  ${(props) => (props.$hidden ? "display: none;" : "")}
 `;
 
 const CheckboxCell = styled("td")`
@@ -91,26 +93,29 @@ const StyledInput = styled(Input)`
   min-inline-size: 0;
 `;
 
-interface BlocklistUserEntryProps extends Omit<
-  React.ComponentPropsWithoutRef<"input">,
-  "type"
-> {
+interface BlocklistUserEntryProps {
   user: BlocklistEntry;
+  defaultChecked?: boolean;
+  $hidden?: boolean;
 }
 
-function BlocklistUserEntry({ user, ...props }: BlocklistUserEntryProps) {
+function BlocklistUserEntry({
+  user,
+  defaultChecked,
+  $hidden,
+}: BlocklistUserEntryProps) {
   const username = user.username || "Unknown User";
   const userId = user.userId;
   const date = new Date(user.dateAdded);
 
   return (
-    <StyledEntryRow>
+    <StyledEntryRow $hidden={$hidden}>
       <CheckboxCell>
         <StyledCheckboxInput
           name="selectedUsers"
           type="checkbox"
           value={userId.toString()}
-          {...props}
+          defaultChecked={defaultChecked}
         />
       </CheckboxCell>
       <UserCell>
@@ -153,7 +158,6 @@ export default function BlocklistTab(
 
   const [selectedUsers, setSelectedUsers] = useState<Set<bigint>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-
   const [userIdsToBlock, setUserIdsToBlock] = useState<bigint[]>([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
   const selectionFormId = useId();
@@ -180,24 +184,23 @@ export default function BlocklistTab(
     return selectedUserIds;
   }
 
-  function handleSelectionChange(event: React.ChangeEvent<HTMLFormElement>) {
-    setSelectedUsers(readSelectedUsers(event.currentTarget));
-  }
-
-  async function handleSelectionSubmit(
-    event: React.SyntheticEvent<HTMLFormElement>,
-  ) {
+  function handleSelectionSubmit(event: React.SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const userIds = readSelectedUsers(form);
     if (userIds.size === 0) return;
 
-    const success = await handleRemove(userIds);
-    if (success) {
-      setSelectedUsers(new Set());
-      setSelectionResetKey((value) => value + 1);
-    }
+    handleRemove(userIds).then((success) => {
+      if (success) {
+        setSelectedUsers(new Set());
+        setSelectionResetKey((value) => value + 1);
+      }
+    });
+  }
+
+  function handleSelectionChange(event: React.ChangeEvent<HTMLFormElement>) {
+    setSelectedUsers(readSelectedUsers(event.currentTarget));
   }
 
   async function handleBlockWithReset(ids: Iterable<bigint>) {
@@ -209,13 +212,7 @@ export default function BlocklistTab(
     return success;
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedUsers is not included as we don't want the list to re-order when selection changes
   const displayList = useMemo(() => {
-    if (!searchQuery) {
-      // No filter: selected are raised to the top
-      return blocklist.sort((u) => (selectedUsers.has(u.userId) ? -1 : 1));
-    }
-
     const lowerQuery = searchQuery.toLowerCase();
     const filtered = blocklist.filter((entry) => {
       const matchesUsername =
@@ -225,12 +222,21 @@ export default function BlocklistTab(
     });
 
     // Selected are raised to the top, shows all selected even if they don't match the filter
-    const selected = blocklist.filter((u) => selectedUsers.has(u.userId));
-    const unselected = filtered.filter((u) => !selectedUsers.has(u.userId));
+    const selected = blocklist.filter((u) =>
+      selectedUsers.has(BigInt(u.userId)),
+    );
+    const unselected = filtered.filter(
+      (u) => !selectedUsers.has(BigInt(u.userId)),
+    );
     return [...selected, ...unselected];
-  }, [blocklist, searchQuery]);
+  }, [blocklist, searchQuery, selectedUsers]);
 
-  const isSelectDisabled = userIdsToBlock.length > 0;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: selectedUsers is not included as we don't want the list to re-order when selection changes
+  const sortedBlocklist = useMemo(() => {
+    return blocklist.toSorted((u) =>
+      selectedUsers.has(BigInt(u.userId)) ? -1 : 1,
+    );
+  }, [blocklist, searchQuery]);
 
   return (
     <BlocklistTabBlock {...props}>
@@ -273,14 +279,21 @@ export default function BlocklistTab(
                     </tr>
                   </thead>
                   <tbody>
-                    {displayList.map((user) => (
-                      <BlocklistUserEntry
-                        key={user.userId}
-                        user={user}
-                        defaultChecked={selectedUsers.has(user.userId)}
-                        aria-busy={isSelectDisabled}
-                      />
-                    ))}
+                    {sortedBlocklist.map((user) => {
+                      const isVisible = displayList.some(
+                        (u) => u.userId === user.userId,
+                      );
+                      return (
+                        <BlocklistUserEntry
+                          key={user.userId}
+                          user={user}
+                          defaultChecked={selectedUsers.has(
+                            BigInt(user.userId),
+                          )}
+                          $hidden={!isVisible}
+                        />
+                      );
+                    })}
                   </tbody>
                 </BlocklistEntryTable>
               </SelectionForm>
