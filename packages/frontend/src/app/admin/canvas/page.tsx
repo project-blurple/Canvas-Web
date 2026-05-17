@@ -1,6 +1,6 @@
 "use client";
 
-import { styled } from "@mui/material";
+import { Switch, styled } from "@mui/material";
 import { RulerDimensionLine, X } from "lucide-react";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
@@ -115,7 +115,26 @@ function AdminCanvasTab() {
                 <X size={12} />
                 {activeCanvas.height}
               </CanvasDimensions>
-              {/* Toggle switch: isLocked, allColorsGlobal */}
+              <table>
+                <tbody>
+                  <tr>
+                    <td>
+                      <Switch type="checkbox" checked={activeCanvas.isLocked} />
+                    </td>
+                    <td>Locked</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <Switch
+                        type="checkbox"
+                        checked={activeCanvas.allColorsGlobal}
+                        disabled // currently controlled by env rather than db
+                      />
+                    </td>
+                    <td>All colors global</td>
+                  </tr>
+                </tbody>
+              </table>
             </CanvasContents>
           </>
         }
