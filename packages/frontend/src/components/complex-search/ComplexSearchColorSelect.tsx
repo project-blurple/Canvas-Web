@@ -5,6 +5,8 @@ import { Autocomplete, Chip, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
+import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
 import { rgbaToCssColor } from "@/util/color";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
@@ -26,6 +28,11 @@ const ColorPreview = styled("div")`
   width: 1em;
 `;
 
+const ChipColorPreview = styled(ColorPreview)`
+  font-size: 14px;
+  margin-inline: -3px 4px;
+`;
+
 const Code = styled("code")`
   display: inline;
   font-size: 0.875em;
@@ -44,7 +51,6 @@ const ToggleFilterModeButton = styled(DynamicButton)`
 `;
 
 interface ComplexSearchColorSelectProps {
-  palette: Palette;
   value: number[];
   filterMode: SearchFilterMode;
   onChange: (value: number[]) => void;
@@ -52,21 +58,28 @@ interface ComplexSearchColorSelectProps {
   disabled: boolean;
 }
 
+function sortPalette(palette: Palette) {
+  return palette.toSorted((a, b) =>
+    a.global === b.global ? 0
+    : a.global ? -1
+    : 1,
+  );
+}
+
 export default function ComplexSearchColorSelect({
-  palette,
   value,
   filterMode,
   onChange,
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
-  const sortedPalette = palette.toSorted((a, b) =>
-    a.global === b.global ? 0
-    : a.global ? -1
-    : 1,
-  ); // Ensure palette is sorted for consistent option order
+  const { canvas } = useCanvasContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, {
+    select: sortPalette,
+  });
+
   const paletteById = Object.fromEntries(
-    sortedPalette.map((color) => [color.id, color]),
+    palette.map((color) => [color.id, color]),
   );
 
   function handleColorChange(
@@ -104,7 +117,7 @@ export default function ComplexSearchColorSelect({
         getOptionLabel={(option) => `${option.name} (${option.code})`}
         multiple
         onChange={handleColorChange}
-        options={sortedPalette}
+        options={palette}
         size="small"
         value={selectedOptions}
         filterOptions={(options, { inputValue }) => {
@@ -144,13 +157,8 @@ export default function ComplexSearchColorSelect({
                   {...restProps}
                   label={
                     <div style={{ display: "flex", alignItems: "center" }}>
-                      <ColorPreview
-                        style={{
-                          color: rgbaToCssColor(color.rgba),
-                          height: 14,
-                          marginInline: "-3px 4px",
-                          width: 14,
-                        }}
+                      <ChipColorPreview
+                        style={{ color: rgbaToCssColor(color.rgba) }}
                       />
                       {color.name}
                     </div>

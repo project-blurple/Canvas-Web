@@ -107,9 +107,3 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
   const b = Number.parseInt(hex.slice(-2), 16);
   return [r, g, b, 255];
 }
-
-export function durationFormat(style: Intl.DurationFormatStyle = "narrow") {
-  return "DurationFormat" in Intl ?
-      new Intl.DurationFormat("en-US", { style })
-    : undefined;
-}
