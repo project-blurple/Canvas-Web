@@ -2,11 +2,14 @@
 
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
-import { X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
-import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
+import {
+  CanvasPreviewCard,
+  EventCanvasCard,
+} from "@/components/canvas/CanvasPreviewCard";
 import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
@@ -40,6 +43,11 @@ const CanvasList = styled("div")`
     flex: 0 0 10rem;
     width: 10rem;
   }
+`;
+
+const AddCanvasCard = styled(EventCanvasCard)`
+  align-items: center;
+  justify-content: center;
 `;
 
 const CanvasContents = styled("form")`
@@ -248,6 +256,7 @@ function AdminCanvasTab() {
     useCanvasList();
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
+  const [mode, setMode] = useState<"create" | "edit">("edit");
 
   const isLoading = canvasListIsLoading || eventIsLoading;
 
@@ -260,13 +269,25 @@ function AdminCanvasTab() {
           <div>No canvases found.</div>
         : <>
             <CanvasList>
+              <AddCanvasCard
+                type="button"
+                onClick={() => setMode("create")}
+                aria-current={mode === "create"}
+              >
+                <Plus />
+              </AddCanvasCard>
               {canvases.map((canvasItem) => (
                 <CanvasPreviewCard
                   canvas={canvasItem}
                   currentEventId={event?.id}
                   key={canvasItem.id}
-                  onClick={() => setCanvas(canvasItem.id, false)}
-                  aria-current={activeCanvas?.id === canvasItem.id}
+                  onClick={() => {
+                    setCanvas(canvasItem.id, false);
+                    setMode("edit");
+                  }}
+                  aria-current={
+                    activeCanvas?.id === canvasItem.id && mode === "edit"
+                  }
                 />
               ))}
             </CanvasList>

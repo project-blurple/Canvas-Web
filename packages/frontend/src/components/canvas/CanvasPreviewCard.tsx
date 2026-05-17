@@ -5,9 +5,9 @@ import { useCanvasImage, useCanvasStats } from "@/hooks";
 import { dateToRelativeTime } from "@/util/text";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
-const EventCanvasCard = styled("button")`
+export const EventCanvasCard = styled("button")`
   align-items: flex-start;
-  background: ${({ theme }) => theme.palette.background.paper};
+  background: var(--discord-legacy-not-quite-black);
   border-radius: 0.75rem;
   border: transparent 1px solid;
   cursor: pointer;
