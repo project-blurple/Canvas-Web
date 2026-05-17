@@ -428,10 +428,17 @@ async function createCanvasPixelEntries(
     }
   }
 
+  console.log(
+    `Creating ${pixelsData.length} pixel entries for canvas ${canvasId}`,
+  );
+
   // Insert pixels in batches to avoid overwhelming the database
   const batchSize = 10_000;
   for (let i = 0; i < pixelsData.length; i += batchSize) {
     const batch = pixelsData.slice(i, i + batchSize);
+    console.log(
+      `Inserting pixels ${i} to ${i + batch.length} for canvas ${canvasId}`,
+    );
     await prisma.pixel.createMany({
       data: batch,
     });

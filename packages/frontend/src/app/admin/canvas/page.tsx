@@ -385,6 +385,12 @@ function AdminCanvasTab() {
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<FormMode>("edit");
 
+  canvases.sort((a, b) =>
+    a.eventId === event?.id ? -1
+    : b.eventId === event?.id ? 1
+    : 0,
+  );
+
   const [formValues, setFormValues] = useState({
     allColorsGlobal:
       activeCanvas?.allColorsGlobal ?? createDefaults.allColorsGlobal,
