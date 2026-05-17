@@ -85,6 +85,12 @@ const TextInput = styled("input")`
   padding-inline: 8px;
 `;
 
+const ErrorText = styled("div")`
+  color: #e04848;
+  font-size: 0.85rem;
+  margin-top: 4px;
+`;
+
 const StyledButton = styled(Button)`
   background-color: var(--discord-blurple);
   color: var(--discord-legacy-full-white);
@@ -197,8 +203,16 @@ function CanvasSettingsForm({
     });
   }
 
+  function isFormInvalid(values = formValues) {
+    return values.name.trim().length === 0;
+  }
+
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isFormInvalid()) {
+      alert("Name cannot be empty.");
+      return;
+    }
 
     try {
       if (mode === "create") {
@@ -243,6 +257,7 @@ function CanvasSettingsForm({
                 type="text"
                 value={formValues.name}
               />
+              {isFormInvalid() && <ErrorText>Name cannot be empty</ErrorText>}
             </td>
           </tr>
           <tr>
@@ -315,6 +330,7 @@ function CanvasSettingsForm({
       <StyledButton
         disabled={
           !isDirty ||
+          isFormInvalid() ||
           (mode === "create" ?
             createCanvas.isPending
           : updateCanvasInfo.isPending)
