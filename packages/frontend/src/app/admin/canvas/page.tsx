@@ -93,6 +93,16 @@ const StyledButton = styled(Button)`
   transition-timing-function: ease;
 `;
 
+const createDefaults = {
+  allColorsGlobal: false,
+  cooldownLength: 0,
+  height: 1,
+  id: 0,
+  isLocked: true,
+  name: "",
+  width: 1,
+};
+
 type FormMode = "edit" | "create";
 
 interface CanvasSettingsFormProps {
@@ -219,7 +229,9 @@ function CanvasSettingsForm({
     <CanvasContents onSubmit={handleSaveChanges}>
       <CanvasHeader>
         <CanvasIcon size={20} />
-        {activeCanvas.name}
+        {mode === "create" ?
+          formValues.name || "New canvas"
+        : activeCanvas.name}
       </CanvasHeader>
       <Table>
         <tbody>
@@ -301,10 +313,15 @@ function CanvasSettingsForm({
         </tbody>
       </Table>
       <StyledButton
-        disabled={!isDirty || updateCanvasInfo.isPending}
+        disabled={
+          !isDirty ||
+          (mode === "create" ?
+            createCanvas.isPending
+          : updateCanvasInfo.isPending)
+        }
         type="submit"
       >
-        Save changes
+        {mode === "create" ? "Create canvas" : "Save changes"}
       </StyledButton>
     </CanvasContents>
   );
@@ -316,17 +333,49 @@ function AdminCanvasTab() {
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<FormMode>("edit");
+
   const [formValues, setFormValues] = useState({
-    allColorsGlobal: activeCanvas?.allColorsGlobal ?? false,
-    cooldownLength: activeCanvas?.cooldownLength ?? 0,
-    height: activeCanvas?.height ?? 0,
-    id: activeCanvas?.id ?? 0,
-    isLocked: activeCanvas?.isLocked ?? true,
-    name: activeCanvas?.name ?? "",
-    width: activeCanvas?.width ?? 0,
+    allColorsGlobal:
+      activeCanvas?.allColorsGlobal ?? createDefaults.allColorsGlobal,
+    cooldownLength:
+      activeCanvas?.cooldownLength ?? createDefaults.cooldownLength,
+    height: activeCanvas?.height ?? createDefaults.height,
+    id: activeCanvas?.id ?? createDefaults.id,
+    isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
+    name: activeCanvas?.name ?? createDefaults.name,
+    width: activeCanvas?.width ?? createDefaults.width,
   });
 
+  useEffect(() => {
+    if (mode === "create") {
+      setFormValues({ ...createDefaults });
+    } else if (activeCanvas) {
+      setFormValues({
+        allColorsGlobal:
+          activeCanvas.allColorsGlobal ?? createDefaults.allColorsGlobal,
+        cooldownLength:
+          activeCanvas.cooldownLength ?? createDefaults.cooldownLength,
+        height: activeCanvas.height ?? createDefaults.height,
+        id: activeCanvas.id ?? createDefaults.id,
+        isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
+        name: activeCanvas.name ?? createDefaults.name,
+        width: activeCanvas.width ?? createDefaults.width,
+      });
+    }
+  }, [mode, activeCanvas]);
+
   const isDirty = useMemo(() => {
+    if (mode === "create") {
+      return (
+        formValues.isLocked !== createDefaults.isLocked ||
+        formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
+        formValues.cooldownLength !== createDefaults.cooldownLength ||
+        formValues.name !== createDefaults.name ||
+        formValues.id !== createDefaults.id ||
+        formValues.width !== createDefaults.width ||
+        formValues.height !== createDefaults.height
+      );
+    }
     if (!activeCanvas) return false;
     return (
       formValues.isLocked !== activeCanvas.isLocked ||
@@ -337,7 +386,7 @@ function AdminCanvasTab() {
       formValues.width !== activeCanvas.width ||
       formValues.height !== activeCanvas.height
     );
-  }, [formValues, activeCanvas]);
+  }, [formValues, activeCanvas, mode]);
 
   const isLoading = canvasListIsLoading || eventIsLoading;
 
