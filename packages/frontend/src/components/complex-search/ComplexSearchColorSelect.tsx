@@ -1,13 +1,13 @@
 "use client";
 
-import DynamicButton from "@/components/button/DynamicButton";
-import { useCanvasContext } from "@/contexts";
-import { usePalette } from "@/hooks";
-import { rgbaToCssColor } from "@/util/color";
 import type { Palette } from "@blurple-canvas-web/types";
 import { Autocomplete, Chip, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type React from "react";
+import DynamicButton from "@/components/button/DynamicButton";
+import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
+import { rgbaToCssColor } from "@/util/color";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
