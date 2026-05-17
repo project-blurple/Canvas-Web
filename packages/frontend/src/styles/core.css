@@ -258,11 +258,23 @@
     border-radius: 8px;
     border-style: solid;
     border-width: 1px;
+  }
 
-    &:user-invalid {
-      border: 1px solid var(--discord-red);
-      background-color: oklch(from var(--discord-red) l c h / 3%);
-    }
+  input:where(
+      [type="date"],
+      [type="datetime-local"],
+      [type="email"],
+      [type="month"],
+      [type="number"],
+      [type="password"],
+      [type="search"],
+      [type="tel"],
+      [type="text"],
+      [type="url"],
+      [type="week"]
+    ):user-invalid {
+    border: 1px solid var(--discord-red);
+    background-color: oklch(from var(--discord-red) l c h / 3%);
   }
 
   /*
