@@ -1,6 +1,7 @@
 import console from "node:console";
 import { performance } from "node:perf_hooks";
 import process from "node:process";
+import { parseArgs } from "node:util";
 import { PrismaPg } from "@prisma/adapter-pg";
 // @ts-expect-error Runtime uses built JS Prisma client; no declaration file is emitted.
 import { PrismaClient } from "../../build/client/generated/client.js";
@@ -33,9 +34,29 @@ const allSeedings = [
   "participation",
   "pixel",
   "user",
+  "web_guild",
 ] as const;
 type Seeding = (typeof allSeedings)[number];
-const seedings = new Set<Seeding>(allSeedings);
+
+const { values: parametersValues } = parseArgs({
+  options: {
+    seedings: {
+      type: "string",
+      multiple: true,
+      short: "s",
+      default: Object.values(allSeedings),
+    },
+    overwrite: {
+      type: "boolean",
+      short: "o",
+      default: false,
+    },
+  },
+});
+
+const seedings = new Set<Seeding>(
+  allSeedings.filter((seeding) => parametersValues.seedings.includes(seeding)),
+);
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg(process.env.DATABASE_URL ?? ""),
@@ -60,36 +81,45 @@ async function runSeedingStep(
   );
 }
 
-const overwriteArg = process.argv.find((arg) => arg.startsWith("--overwrite="));
-const OVERWRITE = overwriteArg?.split("=")[1] === "true";
-
-console.log(`Database seeding started. OVERWRITE=${OVERWRITE}`);
+console.log(
+  "Database",
+  seedings.size,
+  "seedings started. Overwrite:",
+  parametersValues.overwrite,
+);
 
 async function main() {
   logWithTiming("Starting database seed");
 
   async function countRecords(seeding: Seeding): Promise<number> {
     switch (seeding) {
+      case "guild":
+        return prisma.guild.count({
+          where: { id: { not: 0 } },
+        });
       case "history":
         return prisma.history.count({
           where: {
             erased_at: null,
           },
         });
+      case "web_guild":
+        return prisma.guild.count({
+          where: { id: 0 },
+        });
       default:
         return await prisma[seeding].count();
     }
   }
 
-  if (!OVERWRITE) {
-    Promise.all(
-      allSeedings.map(async (seeding) => {
-        const count = await countRecords(seeding);
-        if (count && count >= 1) {
-          seedings.delete(seeding);
-        }
-      }),
-    );
+  if (!parametersValues.overwrite) {
+    for (const seeding of seedings) {
+      const count = await countRecords(seeding);
+
+      if (count && count >= 1) {
+        seedings.delete(seeding);
+      }
+    }
   }
 
   if (seedings.size === 0) {
@@ -100,27 +130,43 @@ async function main() {
   const formatter = new Intl.ListFormat();
   logWithTiming(`Seedings to run: ${formatter.format(Array.from(seedings))}`);
 
-  const cleanupOrder: Seeding[] = [
-    "pixel",
-    "participation",
-    "info",
-    "history",
-    "guild",
-    "discord_guild_record",
-    "frame",
-    "canvas",
+  const seedingOrder = [
     "user",
-    "event",
     "discord_user_profile",
+    "discord_guild_record",
+    "web_guild",
+    "guild",
     "color",
-  ];
+    "event",
+    "info",
+    "canvas",
+    "participation",
+    "frame",
+    "pixel",
+    "history",
+  ] as const satisfies Seeding[];
+
   await runSeedingStep("cleanup", async () => {
+    const invertedSeedingOrder = [...seedingOrder].reverse();
     const sortedSeedings = Array.from(seedings).sort(
-      (a, b) => cleanupOrder.indexOf(a) - cleanupOrder.indexOf(b),
+      (a, b) =>
+        invertedSeedingOrder.indexOf(a) - invertedSeedingOrder.indexOf(b),
     );
-    await prisma.$transaction(
-      sortedSeedings.map((seeding) => prisma[seeding].deleteMany()),
-    );
+
+    for (const seeding of sortedSeedings) {
+      switch (seeding) {
+        case "guild":
+          return prisma.guild.deleteMany({
+            where: { id: { not: 0 } },
+          });
+        case "web_guild":
+          return prisma.guild.delete({
+            where: { id: 0 },
+          });
+        default:
+          return prisma[seeding].deleteMany();
+      }
+    }
   });
 
   const userData = discordUserProfileSeedData();
@@ -147,6 +193,11 @@ async function main() {
     frame: async () => {
       await prisma.frame.createMany({ data: frameSeedData });
     },
+    web_guild: async () => {
+      await prisma.guild.create({
+        data: { id: 0 },
+      });
+    },
     guild: async () => {
       await prisma.guild.createMany({ data: guildSeedData() });
     },
@@ -170,21 +221,6 @@ async function main() {
       await prisma.user.createMany({ data: userSeedData(userData) });
     },
   };
-
-  const seedingOrder: Seeding[] = [
-    "user",
-    "discord_user_profile",
-    "discord_guild_record",
-    "guild",
-    "color",
-    "event",
-    "info",
-    "canvas",
-    "participation",
-    "frame",
-    "pixel",
-    "history",
-  ];
 
   for (const seeding of seedingOrder) {
     if (!seedings.has(seeding)) {
