@@ -122,7 +122,10 @@ export default function ComplexSearchColorSelect({
         renderInput={(params) => <TextField {...params} label={label} />}
         renderOption={(props, option) => (
           <ListItem {...props} key={props.key ?? option.id}>
-            <ColorPreview style={{ color: rgbaToCssColor(option.rgba) }} />
+            <ColorPreview
+              aria-hidden
+              style={{ color: rgbaToCssColor(option.rgba) }}
+            />
             <Code>{option.code}</Code> {option.name}
           </ListItem>
         )}
