@@ -232,6 +232,18 @@ export async function getCanvasPng(canvasId: number): Promise<CachedCanvas> {
 }
 
 /**
+ * Clears a canvas from the in-memory cache. If the canvas is locked, the cached image is also
+ * removed from the file system.
+ *
+ * @param canvasId The ID of the canvas to clear from cache
+ */
+export async function clearCachedCanvas(canvasId: number): Promise<void> {
+  await clearCanvasFromFileSystem(canvasId);
+  delete CANVAS_CACHE[canvasId];
+  console.debug(`Cleared canvas ${canvasId} from cache`);
+}
+
+/**
  * Updates many pixels in the canvas cache at once. If the canvas is not in the cache or the canvas
  * is locked this will do nothing.
  *

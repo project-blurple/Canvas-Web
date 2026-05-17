@@ -9,6 +9,7 @@ import {
 } from "@/models/canvas.models";
 import {
   type CachedCanvas,
+  clearCachedCanvas,
   createCanvas,
   editCanvas,
   getCanvases,
@@ -114,6 +115,21 @@ canvasRouter.put<CanvasIdParam>(
       });
 
       res.status(200).json(canvas);
+    } catch (error) {
+      ApiError.sendError(res, error);
+    }
+  },
+);
+
+canvasRouter.delete<CanvasIdParam>(
+  "/:canvasId/cache",
+  requireCanvasAdmin,
+  async (req, res) => {
+    try {
+      const canvasId = await parseCanvasId(req.params);
+      await clearCachedCanvas(canvasId);
+
+      res.status(204).end();
     } catch (error) {
       ApiError.sendError(res, error);
     }
