@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
+import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
 import AdminDashboard from "../AdminDashboard";
@@ -95,6 +96,9 @@ function AdminCanvasTab() {
   const [allColorsGlobal, setAllColorsGlobal] = useState(
     activeCanvas?.allColorsGlobal ?? false,
   );
+  const [cooldownDuration, setCooldownDuration] = useState(
+    activeCanvas?.cooldownLength ?? 0,
+  );
   const [isDirty, setIsDirty] = useState(false);
 
   // Initialize form values when activeCanvas changes
@@ -102,6 +106,7 @@ function AdminCanvasTab() {
     if (activeCanvas) {
       setIsLocked(activeCanvas.isLocked);
       setAllColorsGlobal(activeCanvas.allColorsGlobal);
+      setCooldownDuration(activeCanvas.cooldownLength ?? 0);
       setIsDirty(false);
     }
   }, [activeCanvas]);
@@ -111,17 +116,19 @@ function AdminCanvasTab() {
   function checkIfDirty(
     checkedIsLocked: boolean,
     checkedAllColorsGlobal: boolean,
+    checkedCooldownDuration: number,
   ) {
     return (
       checkedIsLocked !== activeCanvas?.isLocked ||
-      checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal
+      checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal ||
+      checkedCooldownDuration !== activeCanvas?.cooldownLength
     );
   }
 
   function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
     const newIsLocked = event.target.checked;
     setIsLocked(newIsLocked);
-    setIsDirty(checkIfDirty(newIsLocked, allColorsGlobal));
+    setIsDirty(checkIfDirty(newIsLocked, allColorsGlobal, cooldownDuration));
   }
 
   function handleAllColorsGlobalChange(
@@ -129,7 +136,12 @@ function AdminCanvasTab() {
   ) {
     const newAllColorsGlobal = event.target.checked;
     setAllColorsGlobal(newAllColorsGlobal);
-    setIsDirty(checkIfDirty(isLocked, newAllColorsGlobal));
+    setIsDirty(checkIfDirty(isLocked, newAllColorsGlobal, cooldownDuration));
+  }
+
+  function handleCooldownDurationChange(value: number | null) {
+    setCooldownDuration(value ?? 0);
+    setIsDirty(checkIfDirty(isLocked, allColorsGlobal, value ?? 0));
   }
 
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
@@ -138,7 +150,10 @@ function AdminCanvasTab() {
     if (!activeCanvas) return;
 
     try {
-      await updateCanvasInfo.mutateAsync({ isLocked });
+      await updateCanvasInfo.mutateAsync({
+        isLocked,
+        cooldownLength: cooldownDuration,
+      });
       await setCanvas(activeCanvas.id, false);
     } catch {
       alert("Failed to update canvas info. Please try again.");
@@ -193,7 +208,11 @@ function AdminCanvasTab() {
                   <tr>
                     <td>Cooldown (s)</td>
                     <td>
-                      <p>{activeCanvas.cooldownLength}</p>
+                      <NumberField
+                        min={0}
+                        onValueChange={handleCooldownDurationChange}
+                        value={cooldownDuration}
+                      />
                     </td>
                   </tr>
                   <tr>

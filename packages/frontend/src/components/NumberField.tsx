@@ -22,11 +22,11 @@ interface NumberFieldProps extends Omit<
   "value"
 > {
   // Overrides
-  max: number;
-  min: number;
+  max?: number;
+  min?: number;
   value: number | null | undefined;
   // Extensions
-  label: React.ReactNode;
+  label?: React.ReactNode;
   labelProps?: React.ComponentPropsWithRef<typeof Label>;
   onValueChange?: (value: number | null) => void;
 }
@@ -72,7 +72,7 @@ export default function NumberField({
 
   return (
     <div className={className}>
-      <Label htmlFor={resolvedId}>{label}</Label>
+      {label && <Label htmlFor={resolvedId}>{label}</Label>}
       <Input
         id={resolvedId}
         max={max}
