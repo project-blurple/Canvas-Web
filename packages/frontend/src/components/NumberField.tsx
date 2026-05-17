@@ -74,6 +74,8 @@ export default function NumberField({
       <Label htmlFor={resolvedId}>{label}</Label>
       <Input
         id={resolvedId}
+        max={max}
+        min={min}
         onBlur={handleBlur}
         onChange={handleInputChange}
         type="number"
