@@ -77,6 +77,11 @@ const CanvasDimensions = styled("code")`
   gap: 0.25rem;
 `;
 
+const TextInput = styled("input")`
+  padding-block: 6px;
+  padding-inline: 8px;
+`;
+
 const StyledButton = styled(Button)`
   background-color: var(--discord-blurple);
   color: var(--discord-legacy-full-white);
@@ -92,6 +97,7 @@ function AdminCanvasTab() {
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas?.id);
 
+  const [name, setName] = useState(activeCanvas?.name ?? "");
   const [isLocked, setIsLocked] = useState(activeCanvas?.isLocked ?? false);
   const [allColorsGlobal, setAllColorsGlobal] = useState(
     activeCanvas?.allColorsGlobal ?? false,
@@ -107,6 +113,7 @@ function AdminCanvasTab() {
       setIsLocked(activeCanvas.isLocked);
       setAllColorsGlobal(activeCanvas.allColorsGlobal);
       setCooldownDuration(activeCanvas.cooldownLength ?? 0);
+      setName(activeCanvas.name);
       setIsDirty(false);
     }
   }, [activeCanvas]);
@@ -117,18 +124,22 @@ function AdminCanvasTab() {
     checkedIsLocked: boolean,
     checkedAllColorsGlobal: boolean,
     checkedCooldownDuration: number,
+    checkedName: string,
   ) {
     return (
       checkedIsLocked !== activeCanvas?.isLocked ||
       checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal ||
-      checkedCooldownDuration !== activeCanvas?.cooldownLength
+      checkedCooldownDuration !== activeCanvas?.cooldownLength ||
+      checkedName !== activeCanvas?.name
     );
   }
 
   function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
     const newIsLocked = event.target.checked;
     setIsLocked(newIsLocked);
-    setIsDirty(checkIfDirty(newIsLocked, allColorsGlobal, cooldownDuration));
+    setIsDirty(
+      checkIfDirty(newIsLocked, allColorsGlobal, cooldownDuration, name),
+    );
   }
 
   function handleAllColorsGlobalChange(
@@ -136,12 +147,22 @@ function AdminCanvasTab() {
   ) {
     const newAllColorsGlobal = event.target.checked;
     setAllColorsGlobal(newAllColorsGlobal);
-    setIsDirty(checkIfDirty(isLocked, newAllColorsGlobal, cooldownDuration));
+    setIsDirty(
+      checkIfDirty(isLocked, newAllColorsGlobal, cooldownDuration, name),
+    );
   }
 
   function handleCooldownDurationChange(value: number | null) {
     setCooldownDuration(value ?? 0);
-    setIsDirty(checkIfDirty(isLocked, allColorsGlobal, value ?? 0));
+    setIsDirty(checkIfDirty(isLocked, allColorsGlobal, value ?? 0, name));
+  }
+
+  function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newName = event.target.value;
+    setName(newName);
+    setIsDirty(
+      checkIfDirty(isLocked, allColorsGlobal, cooldownDuration, newName),
+    );
   }
 
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
@@ -151,8 +172,9 @@ function AdminCanvasTab() {
 
     try {
       await updateCanvasInfo.mutateAsync({
-        isLocked,
         cooldownLength: cooldownDuration,
+        isLocked,
+        name,
       });
       await setCanvas(activeCanvas.id, false);
     } catch {
@@ -192,7 +214,11 @@ function AdminCanvasTab() {
                   <tr>
                     <td>Name</td>
                     <td>
-                      <p>{activeCanvas.name}</p>
+                      <TextInput
+                        type="text"
+                        value={name}
+                        onChange={handleNameChange}
+                      />
                     </td>
                   </tr>
                   <tr>
