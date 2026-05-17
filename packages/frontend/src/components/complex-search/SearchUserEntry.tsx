@@ -1,5 +1,4 @@
 import type {
-  Palette,
   PaletteColor,
   PixelHistoryUserSummary,
   PixelHistoryWrapper,
@@ -7,71 +6,52 @@ import type {
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo } from "react";
+import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
 import { PrimitiveButton } from "../button";
 import ColorCodeChip from "../ColorCodeChip";
 import VisuallyHidden from "../VisuallyHidden";
 
-const UserWrapper = styled("div")`
+const UserWrapper = styled("ul")`
   display: grid;
   gap: 0.5rem;
   grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
 `;
 
-const UserCard = styled("div")`
+const UserCard = styled("li")`
+  align-items: baseline;
   background: var(--discord-legacy-not-quite-black);
   border-radius: 0.75rem;
   border: var(--card-border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list";
+  grid-template-columns: 1fr auto;
   padding: 0.75rem;
 `;
 
-const CardHeader = styled("div")`
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  width: 100%;
-
-  > *:first-child {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  > *:last-child {
-    flex: 0 0 auto;
-  }
+const Heading = styled("h3")`
+  font: inherit;
+  grid-area: --username;
+  margin-block: 0;
+  font-weight: 600;
 `;
 
-const ColorChipWrapper = styled("div")`
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  gap: 0.25rem;
-  overflow-x: auto;
+const Paragraph = styled("p")`
+  font: inherit;
+  font-variant-numeric: lining-nums tabular-nums;
+  grid-area: --entry-count;
 `;
 
 const UserId = styled(PrimitiveButton)`
-  appearance: none;
-  border: none;
-  background: none;
-  padding: 0;
-  margin: 0;
-
-  align-items: center;
   color: oklch(from var(--discord-white) l c h / 60%);
-  display: flex;
+  cursor: pointer;
   font-size: 0.75rem;
   gap: 0.25rem;
+  grid-area: --user-id;
   letter-spacing: 0.01em;
-  word-break: break-all;
+  margin-block-start: 0.5em;
   width: fit-content;
-  cursor: pointer;
-
-  transition-duration: var(--transition-duration-fast);
-  transition-property: color;
-  transition-timing-function: ease;
+  word-break: break-all;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -87,6 +67,15 @@ const UserId = styled(PrimitiveButton)`
   &:active {
     color: oklch(from var(--discord-white) l c h / 55%);
   }
+`;
+
+const ColorChipList = styled("ul")`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  margin-block-start: 1em;
+  overflow-x: auto;
 `;
 
 interface SearchUserEntryProps {
@@ -107,36 +96,35 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
 
   return (
     <UserCard>
-      <CardHeader>
-        <strong title={summary.userProfile?.username ?? userId.toString()}>
-          {summary.userProfile?.username ?? userId}
-        </strong>
-        <span>
-          {summary.count.toLocaleString()} pixel{summary.count !== 1 && "s"}
-        </span>
-      </CardHeader>
-      <ColorChipWrapper>
+      <Heading>{summary.userProfile?.username ?? userId}</Heading>
+      <Paragraph>
+        {summary.count.toLocaleString()}&nbsp;
+        {summary.count === 1 ? "entry" : "entries"}
+      </Paragraph>
+
+      <ColorChipList role="list" style={{ gridArea: "--color-list" }}>
         {colors.slice(0, 5).map(({ color }) => {
           const rgb = color.rgba.slice(0, 3).join(" ");
           return (
-            <ColorCodeChip
-              key={color.id}
-              color={color}
-              backgroundColorStr={`rgb(${rgb})`}
-            />
+            <li key={color.id}>
+              <ColorCodeChip color={color} backgroundColorStr={`rgb(${rgb})`} />
+            </li>
           );
         })}
-      </ColorChipWrapper>
+      </ColorChipList>
       <UserId
         onClick={async () =>
-          await navigator.clipboard.writeText(userId.toString())
+          void (await navigator.clipboard.writeText(userId.toString()))
         }
       >
         <code aria-hidden>{userId}</code>
+        <Copy
+          size={12}
+          style={{ display: "inline-block", marginInlineStart: 4 }}
+        />
         <VisuallyHidden>
           {summary.userProfile?.username}’s user ID. Click to copy.
         </VisuallyHidden>
-        <Copy size={12} />
       </UserId>
     </UserCard>
   );
@@ -144,13 +132,12 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
 
 interface SearchUserEntriesProps {
   users: PixelHistoryWrapper["users"];
-  palette: Palette;
 }
 
-export default function SearchUserEntries({
-  users,
-  palette,
-}: SearchUserEntriesProps) {
+export default function SearchUserEntries({ users }: SearchUserEntriesProps) {
+  const { canvas } = useCanvasContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
+
   const colorById = useMemo(
     () => new Map(palette.map((color) => [color.id, color] as const)),
     [palette],
@@ -163,7 +150,7 @@ export default function SearchUserEntries({
   );
 
   return (
-    <UserWrapper>
+    <UserWrapper role="list">
       {sortedUsers.map(([userId, summary]) => (
         <SearchUserEntry
           key={userId}

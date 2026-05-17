@@ -2,6 +2,7 @@ import { styled } from "@mui/material";
 
 const PrimitiveButton = styled("button")`
   appearance: none;
+  background-color: transparent;
   border: none;
   color: inherit;
   font-family: inherit;
@@ -9,7 +10,6 @@ const PrimitiveButton = styled("button")`
   font-style: inherit;
   font-weight: inherit;
   line-height: inherit;
-  touch-action: manipulation;
 `;
 
 export default PrimitiveButton;
