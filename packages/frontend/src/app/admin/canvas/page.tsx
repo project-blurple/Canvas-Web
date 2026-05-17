@@ -362,7 +362,12 @@ function CanvasSettingsForm({
           {mode === "create" ? "Create canvas" : "Save changes"}
         </StyledButton>
         <StyledButton
-          disabled={mode === "create" || !isDirty}
+          disabled={
+            !isDirty ||
+            (mode === "create" ?
+              createCanvas.isPending
+            : updateCanvasInfo.isPending)
+          }
           type="reset"
           onClick={resetForm}
         >
