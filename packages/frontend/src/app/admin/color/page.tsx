@@ -5,7 +5,7 @@ import { styled } from "@mui/material";
 import {
   partitionPaletteByOwner,
   partitionPaletteByParticipation,
-} from "@/components/action-panel/tabs/PlacePixelTab";
+} from "@/components/action-panel/tabs/place/PlacePixelTab";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
