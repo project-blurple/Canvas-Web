@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
+import { RulerDimensionLine, X } from "lucide-react";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts";
@@ -66,6 +67,13 @@ const CanvasId = styled("code")`
   font-size: 0.875rem;
 `;
 
+const CanvasDimensions = styled("code")`
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+`;
+
 function AdminCanvasTab() {
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
@@ -89,6 +97,7 @@ function AdminCanvasTab() {
                   currentEventId={event?.id}
                   key={canvasItem.id}
                   onClick={() => setCanvas(canvasItem.id, false)}
+                  aria-current={activeCanvas?.id === canvasItem.id}
                 />
               ))}
             </CanvasList>
@@ -101,7 +110,11 @@ function AdminCanvasTab() {
                 <CanvasId>ID: {activeCanvas.id}</CanvasId>
               </CanvasHeader>
               {/* View: width and height */}
-              {/* View: start coordinates */}
+              <CanvasDimensions>
+                {activeCanvas.width}
+                <X size={12} />
+                {activeCanvas.height}
+              </CanvasDimensions>
               {/* Toggle switch: isLocked, allColorsGlobal */}
             </CanvasContents>
           </>

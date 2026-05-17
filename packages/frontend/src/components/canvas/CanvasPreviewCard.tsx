@@ -22,6 +22,10 @@ const EventCanvasCard = styled("button")`
   &:hover {
     border-color: oklch(from var(--discord-white) l c h / 20%);
   }
+
+  &[aria-current="true"] {
+    border-color: var(--discord-blurple);
+  }
 `;
 
 const eventCanvasPreviewCss = css`
