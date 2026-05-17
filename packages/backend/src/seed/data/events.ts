@@ -10,7 +10,6 @@ export const infoSeedData: Prisma.infoUncheckedCreateInput = {
   current_emoji_server_id: 412754940885467146n,
   host_server_id: 412754940885467146n,
   default_canvas_id: 2034,
-  all_colors_global: false,
 };
 
 export const eventSeedData = [

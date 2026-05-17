@@ -27,6 +27,7 @@ export const CreateCanvasBodyModel = z.object({
   startCoordinates: z
     .tuple([z.number().int().nonnegative(), z.number().int().nonnegative()])
     .optional(),
+  allColorsGlobal: z.boolean().optional(),
   cooldownLength: z.number().int().nonnegative().optional(),
 });
 
@@ -34,4 +35,5 @@ export const EditCanvasBodyModel = z.object({
   name: z.string().min(1).optional(),
   cooldownLength: z.number().int().nonnegative().optional(),
   isLocked: z.boolean().optional(),
+  allColorsGlobal: z.boolean().optional(),
 });

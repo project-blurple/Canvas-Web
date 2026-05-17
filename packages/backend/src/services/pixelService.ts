@@ -53,25 +53,36 @@ export async function validatePixel(
 }
 
 /**
- * Ensures that the given color exists in the DB and it is allowed to be used in the given canvas
+ * Ensures that the given color exists in the DB and it is allowed to be used in the given canvas.
+ *
+ * Partnered (non-global) colors are only allowed when the target canvas has
+ * `all_colors_global` enabled.
  *
  * @param colorId - The ID of the color
+ * @param canvasId - The ID of the canvas the color is being used on
  * @returns The corresponding color object
  */
 export async function validateColor(
   colorId: number,
+  canvasId: number,
 ): Promise<color & { rgba: PixelColor }> {
-  const color = (await prisma.color.findFirst({
-    where: {
-      id: colorId,
-    },
-  })) as (color & { rgba: PixelColor }) | null;
+  const [color, canvas] = await Promise.all([
+    prisma.color.findFirst({
+      where: {
+        id: colorId,
+      },
+    }) as Promise<(color & { rgba: PixelColor }) | null>,
+    prisma.canvas.findFirst({
+      where: { id: canvasId },
+      select: { all_colors_global: true },
+    }),
+  ]);
 
   if (!color) {
     throw new NotFoundError(`There is no color with ID ${colorId}`);
   }
 
-  if (!color.global && !config.allColorsGlobal) {
+  if (!color.global && !canvas?.all_colors_global) {
     throw new ForbiddenError(
       `Partnered color with ID ${colorId} is not allowed from web client`,
     );

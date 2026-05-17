@@ -83,7 +83,7 @@ pixelRouter.post<CanvasIdParam>(
 
       const coordinates: Point = { x, y };
       const [color] = await Promise.all([
-        validateColor(colorId),
+        validateColor(colorId, canvasId),
         validatePixel(canvasId, coordinates, true),
         validateUser(BigInt(profile.id)),
       ]);
