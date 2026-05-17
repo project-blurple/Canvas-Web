@@ -1,40 +1,58 @@
 import z from "zod";
-import { assertZodSuccess } from "@/utils/models";
+import { CanvasIdParamModel } from "./canvas.models";
 
-const FrameIdParamModel = z.object({
+export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
 });
+
+const FrameBoundsModel = z.object({
+  x0: z.coerce.number().int().nonnegative(),
+  y0: z.coerce.number().int().nonnegative(),
+  x1: z.coerce.number().int().positive(),
+  y1: z.coerce.number().int().positive(),
+});
+
+const frameBoundsRefiner = (
+  { x0, y0, x1, y1 }: z.infer<typeof FrameBoundsModel>,
+  ctx: z.core.$RefinementCtx,
+) => {
+  if (x0 === x1) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["x1"],
+      message: "x0 must not be equal to x1",
+    });
+  }
+
+  if (y0 === y1) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["y1"],
+      message: "y0 must not be equal to y1",
+    });
+  }
+};
 
 export const FrameDataParamModel = z
   .object({
     name: z.string().min(1).max(100),
-    x0: z.coerce.number().int().nonnegative(),
-    y0: z.coerce.number().int().nonnegative(),
-    x1: z.coerce.number().int().positive(),
-    y1: z.coerce.number().int().positive(),
+    ...FrameBoundsModel.shape,
   })
-  .superRefine(({ x0, y0, x1, y1 }, ctx) => {
-    if (x0 === x1) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["x1"],
-        message: "x0 must not be equal to x1",
-      });
-    }
-
-    if (y0 === y1) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["y1"],
-        message: "y0 must not be equal to y1",
-      });
-    }
-  });
+  .superRefine(frameBoundsRefiner);
 
 export const FrameOwnerParamModel = z.object({
   ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
   isGuildOwned: z.boolean(),
 });
+
+export const CreateFrameBodyModel = z
+  .object({
+    name: z.string().min(1).max(100),
+    ...FrameBoundsModel.shape,
+    ...FrameOwnerParamModel.shape,
+    ...CanvasIdParamModel.shape,
+  })
+  .superRefine(frameBoundsRefiner);
 
 export const FrameGuildIdsQueryModel = z.object({
   guildIds: z
@@ -46,15 +64,3 @@ export const FrameGuildIdsQueryModel = z.object({
       : [value],
     ),
 });
-
-export interface FrameIdParam {
-  frameId: string;
-  [key: string]: string;
-}
-
-export async function parseFrameId(params: FrameIdParam): Promise<string> {
-  const result = await FrameIdParamModel.safeParseAsync(params);
-  assertZodSuccess(result, `${params.frameId} is not a valid frame ID`);
-
-  return result.data.frameId;
-}

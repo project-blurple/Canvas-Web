@@ -1,11 +1,12 @@
 import type { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
-import { ApiError } from "@/errors";
 import {
   assertLoggedIn,
   requireCanvasModerator,
 } from "@/middleware/canvasAuth";
-import { type CanvasIdParam, parseCanvasId } from "@/models/canvas.models";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { CanvasIdParamModel } from "@/models/canvas.models";
 import {
   PixelHistoryComplexBodyModel,
   PixelHistoryComplexParamModel,
@@ -16,26 +17,18 @@ import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
 } from "@/services/historyService";
-import { assertZodSuccess } from "@/utils/models";
 
-export const historyRouter = Router({ mergeParams: true });
+export const historyRouter = typedRouter(Router({ mergeParams: true }));
 
-historyRouter.get<CanvasIdParam>("/", async (req, res) => {
-  try {
-    const canvasId = await parseCanvasId(req.params);
-
-    const queryResult = await PixelHistoryParamModel.safeParseAsync(req.query);
-    assertZodSuccess(
-      queryResult,
-      "Invalid query parameters. Expected x, and y as positive integers",
-    );
-
-    const coordinates = queryResult.data;
+historyRouter.get(
+  "/",
+  validate({ params: CanvasIdParamModel, query: PixelHistoryParamModel }),
+  async (req, res) => {
     const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
       {
-        canvasId,
-        points: coordinates,
+        canvasId: req.params.canvasId,
+        points: req.query,
       },
       false,
     );
@@ -44,146 +37,120 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
       ...pixelHistory,
       executionDurationMs: performance.now() - startedAt,
     });
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
 /**
  * @privateRemarks
  * Could become a QUERY endpoint in the future once it becomes supported
  */
-historyRouter.post<CanvasIdParam>(
+
+historyRouter.post(
   "/",
   requireCanvasModerator,
+  validate({
+    params: CanvasIdParamModel,
+    query: PixelHistoryComplexParamModel,
+    body: PixelHistoryComplexBodyModel,
+  }),
   async (req, res) => {
-    try {
-      assertLoggedIn(req);
+    assertLoggedIn(req);
 
-      const canvasId = await parseCanvasId(req.params);
+    const point0 = {
+      x: req.query.x0,
+      y: req.query.y0,
+    };
+    const point1 = {
+      x: req.query.x1 ?? req.query.x0,
+      y: req.query.y1 ?? req.query.y0,
+    };
+    const points: [Point, Point] = [point0, point1];
 
-      const [queryResult, bodyResult] = await Promise.all([
-        PixelHistoryComplexParamModel.safeParseAsync(req.query),
-        PixelHistoryComplexBodyModel.safeParseAsync(req.body),
-      ]);
-      assertZodSuccess(
-        queryResult,
-        "Invalid query parameters. Expected x0, y0, x1, and y1 as positive integers, with x1 and y1 being optional",
-      );
-      assertZodSuccess(
-        bodyResult,
-        "Invalid request body. Expected a valid history query object",
-      );
+    const dateRange = {
+      from: req.body.fromDateTime,
+      to: req.body.toDateTime,
+    };
 
-      const point0 = {
-        x: queryResult.data.x0,
-        y: queryResult.data.y0,
-      };
-      const point1 = {
-        x: queryResult.data.x1 ?? queryResult.data.x0,
-        y: queryResult.data.y1 ?? queryResult.data.y0,
-      };
-      const points: [Point, Point] = [point0, point1];
+    const userIdFilter =
+      req.body.includeUserIds ?
+        { ids: req.body.includeUserIds.map(BigInt), include: true }
+      : req.body.excludeUserIds ?
+        { ids: req.body.excludeUserIds.map(BigInt), include: false }
+      : undefined;
 
-      const dateRange = {
-        from: bodyResult.data.fromDateTime,
-        to: bodyResult.data.toDateTime,
-      };
+    const colorFilter =
+      req.body.includeColors ? { colors: req.body.includeColors, include: true }
+      : req.body.excludeColors ?
+        { colors: req.body.excludeColors, include: false }
+      : undefined;
 
-      const userIdFilter =
-        bodyResult.data.includeUserIds ?
-          { ids: bodyResult.data.includeUserIds.map(BigInt), include: true }
-        : bodyResult.data.excludeUserIds ?
-          { ids: bodyResult.data.excludeUserIds.map(BigInt), include: false }
-        : undefined;
+    const startedAt = Date.now();
+    const pixelHistory = await getPixelHistorySummary(
+      {
+        canvasId: req.params.canvasId,
+        points,
+        dateRange,
+        userIdFilter,
+        colorFilter,
+      },
+      true,
+    );
 
-      const colorFilter =
-        bodyResult.data.includeColors ?
-          { colors: bodyResult.data.includeColors, include: true }
-        : bodyResult.data.excludeColors ?
-          { colors: bodyResult.data.excludeColors, include: false }
-        : undefined;
-
-      const startedAt = Date.now();
-      const pixelHistory = await getPixelHistorySummary(
-        {
-          canvasId,
-          points,
-          dateRange,
-          userIdFilter,
-          colorFilter,
-        },
-        true,
-      );
-
-      res.status(200).json({
-        ...pixelHistory,
-        executionDurationMs: Date.now() - startedAt,
-      });
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    res.status(200).json({
+      ...pixelHistory,
+      executionDurationMs: Date.now() - startedAt,
+    });
   },
 );
 
-historyRouter.delete<CanvasIdParam>(
+historyRouter.delete(
   "/",
   requireCanvasModerator,
+  validate({ params: CanvasIdParamModel, body: PixelHistoryDeleteBodyModel }),
   async (req, res) => {
-    try {
-      assertLoggedIn(req);
+    assertLoggedIn(req);
 
-      const canvasId = await parseCanvasId(req.params);
+    const {
+      x0,
+      y0,
+      x1,
+      y1,
+      fromDateTime,
+      toDateTime,
+      includeUserIds,
+      excludeUserIds,
+      includeColors,
+      excludeColors,
+      shouldBlockAuthors,
+    } = req.body;
 
-      const bodyResult = await PixelHistoryDeleteBodyModel.safeParseAsync(
-        req.body,
-      );
-      assertZodSuccess(bodyResult);
+    const point0 = { x: x0, y: y0 };
+    const point1 = { x: x1 ?? x0, y: y1 ?? y0 };
 
-      const {
-        x0,
-        y0,
-        x1,
-        y1,
-        fromDateTime,
-        toDateTime,
-        includeUserIds,
-        excludeUserIds,
-        includeColors,
-        excludeColors,
-        shouldBlockAuthors,
-      } = bodyResult.data;
+    const userIdFilter =
+      includeUserIds ? { ids: includeUserIds.map(BigInt), include: true }
+      : excludeUserIds ? { ids: excludeUserIds.map(BigInt), include: false }
+      : undefined;
 
-      const point0 = { x: x0, y: y0 };
-      const point1 = { x: x1 ?? x0, y: y1 ?? y0 };
+    const colorFilter =
+      includeColors ? { colors: includeColors, include: true }
+      : excludeColors ? { colors: excludeColors, include: false }
+      : undefined;
 
-      const userIdFilter =
-        includeUserIds ? { ids: includeUserIds.map(BigInt), include: true }
-        : excludeUserIds ? { ids: excludeUserIds.map(BigInt), include: false }
-        : undefined;
-
-      const colorFilter =
-        includeColors ? { colors: includeColors, include: true }
-        : excludeColors ? { colors: excludeColors, include: false }
-        : undefined;
-
-      await deletePixelHistoryEntries(
-        {
-          canvasId,
-          points: [point0, point1],
-          dateRange: {
-            from: fromDateTime,
-            to: toDateTime,
-          },
-          userIdFilter,
-          colorFilter,
+    await deletePixelHistoryEntries(
+      {
+        canvasId: req.params.canvasId,
+        points: [point0, point1],
+        dateRange: {
+          from: fromDateTime,
+          to: toDateTime,
         },
-        shouldBlockAuthors,
-      );
+        userIdFilter,
+        colorFilter,
+      },
+      shouldBlockAuthors,
+    );
 
-      res.status(204).send();
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    res.status(204).send();
   },
 );

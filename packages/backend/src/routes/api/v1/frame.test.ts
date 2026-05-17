@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { ForbiddenError, UnprocessableError } from "@/errors";
+import { errorHandler } from "@/middleware/errorHandler";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -104,6 +105,7 @@ const createApp = (includeAccessToken: boolean) => {
     next();
   });
   app.use("/api/v1/frame", frameRouter);
+  app.use(errorHandler);
   return app;
 };
 
