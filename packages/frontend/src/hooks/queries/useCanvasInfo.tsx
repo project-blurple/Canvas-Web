@@ -65,3 +65,22 @@ export function useCreateCanvas() {
     },
   });
 }
+
+export function useClearCanvasCache(canvasId: CanvasInfo["id"]) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/cache`;
+
+      return axios.delete(requestUrl, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["canvasInfo", canvasId],
+      });
+    },
+  });
+}
