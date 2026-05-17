@@ -102,7 +102,7 @@ function AdminCanvasTab() {
   const [allColorsGlobal, setAllColorsGlobal] = useState(
     activeCanvas?.allColorsGlobal ?? false,
   );
-  const [cooldownDuration, setCooldownDuration] = useState(
+  const [cooldownLength, setCooldownLength] = useState(
     activeCanvas?.cooldownLength ?? 0,
   );
   const [isDirty, setIsDirty] = useState(false);
@@ -112,7 +112,7 @@ function AdminCanvasTab() {
     if (activeCanvas) {
       setIsLocked(activeCanvas.isLocked);
       setAllColorsGlobal(activeCanvas.allColorsGlobal);
-      setCooldownDuration(activeCanvas.cooldownLength ?? 0);
+      setCooldownLength(activeCanvas.cooldownLength ?? 0);
       setName(activeCanvas.name);
       setIsDirty(false);
     }
@@ -123,13 +123,13 @@ function AdminCanvasTab() {
   function checkIfDirty(
     checkedIsLocked: boolean,
     checkedAllColorsGlobal: boolean,
-    checkedCooldownDuration: number,
+    checkedCooldownLength: number,
     checkedName: string,
   ) {
     return (
       checkedIsLocked !== activeCanvas?.isLocked ||
       checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal ||
-      checkedCooldownDuration !== activeCanvas?.cooldownLength ||
+      checkedCooldownLength !== activeCanvas?.cooldownLength ||
       checkedName !== activeCanvas?.name
     );
   }
@@ -138,7 +138,7 @@ function AdminCanvasTab() {
     const newIsLocked = event.target.checked;
     setIsLocked(newIsLocked);
     setIsDirty(
-      checkIfDirty(newIsLocked, allColorsGlobal, cooldownDuration, name),
+      checkIfDirty(newIsLocked, allColorsGlobal, cooldownLength, name),
     );
   }
 
@@ -148,12 +148,12 @@ function AdminCanvasTab() {
     const newAllColorsGlobal = event.target.checked;
     setAllColorsGlobal(newAllColorsGlobal);
     setIsDirty(
-      checkIfDirty(isLocked, newAllColorsGlobal, cooldownDuration, name),
+      checkIfDirty(isLocked, newAllColorsGlobal, cooldownLength, name),
     );
   }
 
   function handleCooldownDurationChange(value: number | null) {
-    setCooldownDuration(value ?? 0);
+    setCooldownLength(value ?? 0);
     setIsDirty(checkIfDirty(isLocked, allColorsGlobal, value ?? 0, name));
   }
 
@@ -161,7 +161,7 @@ function AdminCanvasTab() {
     const newName = event.target.value;
     setName(newName);
     setIsDirty(
-      checkIfDirty(isLocked, allColorsGlobal, cooldownDuration, newName),
+      checkIfDirty(isLocked, allColorsGlobal, cooldownLength, newName),
     );
   }
 
@@ -172,7 +172,7 @@ function AdminCanvasTab() {
 
     try {
       await updateCanvasInfo.mutateAsync({
-        cooldownLength: cooldownDuration,
+        cooldownLength: cooldownLength,
         isLocked,
         name,
       });
@@ -237,7 +237,7 @@ function AdminCanvasTab() {
                       <NumberField
                         min={0}
                         onValueChange={handleCooldownDurationChange}
-                        value={cooldownDuration}
+                        value={cooldownLength}
                       />
                     </td>
                   </tr>
