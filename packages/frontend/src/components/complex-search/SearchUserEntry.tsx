@@ -19,6 +19,7 @@ const UserWrapper = styled("ul")`
 `;
 
 const UserCard = styled("li")`
+  align-items: baseline;
   background: var(--discord-legacy-not-quite-black);
   border-radius: 0.75rem;
   border: var(--card-border);
@@ -26,7 +27,6 @@ const UserCard = styled("li")`
   grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list";
   grid-template-columns: 1fr auto;
   padding: 0.75rem;
-  align-items: baseline;
 `;
 
 const Heading = styled("h3")`
