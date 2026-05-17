@@ -1,10 +1,13 @@
 "use client";
 
 import type { Palette } from "@blurple-canvas-web/types";
-import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
+import { Autocomplete, Chip, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
-import type * as React from "react";
+import type React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
+import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
+import { rgbaToCssColor } from "@/util/color";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
@@ -13,45 +16,30 @@ const SelectedColorChips = styled("div")`
   gap: 0.375rem;
 `;
 
-export const ColorSelectChip = styled(Chip, {
-  shouldForwardProp: (prop) => prop !== "backgroundColorStr",
-})<{ backgroundColorStr?: string }>`
-  --color-select-chip-color: var(--discord-blurple);
-  ${({ backgroundColorStr }) =>
-    backgroundColorStr &&
-    css`
-      --color-select-chip-color: ${backgroundColorStr};
-    `}
-
-  background-color: var(--color-select-chip-color);
-  font-weight: 600;
-
-  & .MuiChip-label {
-    color: var(--color-select-chip-color);
-    transition:
-      color var(--transition-duration-fast) ease,
-      filter var(--transition-duration-fast) ease;
-  }
-
-  @supports (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      color: color-mix(
-        in oklab,
-        contrast-color(var(--color-select-chip-color)) 94%,
-        var(--color-select-chip-color)
-      );
-    }
-  }
-
-  @supports not (color: color-mix(in oklab, black, black)) {
-    & .MuiChip-label {
-      filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-      mix-blend-mode: luminosity;
-    }
-  }
+const ListItem = styled("li")`
+  gap: 0.5rem;
 `;
 
-const ColorSelectBlock = styled("div")`
+const ColorPreview = styled("div")`
+  background-color: currentColor;
+  border-radius: calc(infinity * 1px);
+  border: var(--card-border);
+  height: 1em;
+  width: 1em;
+`;
+
+const ChipColorPreview = styled(ColorPreview)`
+  font-size: 14px;
+  margin-inline: -3px 4px;
+`;
+
+const Code = styled("code")`
+  display: inline;
+  font-size: 0.875em;
+  opacity: 55%;
+`;
+
+const ColorSelectBlock = styled("fieldset")`
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
@@ -63,7 +51,6 @@ const ToggleFilterModeButton = styled(DynamicButton)`
 `;
 
 interface ComplexSearchColorSelectProps {
-  palette: Palette;
   value: number[];
   filterMode: SearchFilterMode;
   onChange: (value: number[]) => void;
@@ -71,21 +58,28 @@ interface ComplexSearchColorSelectProps {
   disabled: boolean;
 }
 
+function sortPalette(palette: Palette) {
+  return palette.toSorted((a, b) =>
+    a.global === b.global ? 0
+    : a.global ? -1
+    : 1,
+  );
+}
+
 export default function ComplexSearchColorSelect({
-  palette,
   value,
   filterMode,
   onChange,
   onFilterModeChange,
   disabled,
 }: ComplexSearchColorSelectProps) {
-  const sortedPalette = palette.toSorted((a, b) =>
-    a.global === b.global ? 0
-    : a.global ? -1
-    : 1,
-  ); // Ensure palette is sorted for consistent option order
+  const { canvas } = useCanvasContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, {
+    select: sortPalette,
+  });
+
   const paletteById = Object.fromEntries(
-    sortedPalette.map((color) => [color.id, color]),
+    palette.map((color) => [color.id, color]),
   );
 
   function handleColorChange(
@@ -123,7 +117,7 @@ export default function ComplexSearchColorSelect({
         getOptionLabel={(option) => `${option.name} (${option.code})`}
         multiple
         onChange={handleColorChange}
-        options={sortedPalette}
+        options={palette}
         size="small"
         value={selectedOptions}
         filterOptions={(options, { inputValue }) => {
@@ -139,33 +133,36 @@ export default function ComplexSearchColorSelect({
           option.global ? "Global colors" : "Partner colors"
         }
         renderInput={(params) => <TextField {...params} label={label} />}
-        renderOption={(props, option) => {
-          const { key, ...liProps } = props;
-
-          return (
-            <li key={key ?? option.id} {...liProps}>
-              {option.name} ({option.code})
-            </li>
-          );
-        }}
-        isOptionEqualToValue={(option, value) =>
-          option.id === (value as Palette[number]).id
-        }
+        renderOption={(props, option) => (
+          <ListItem {...props} key={props.key ?? option.id}>
+            <ColorPreview
+              aria-hidden
+              style={{ color: rgbaToCssColor(option.rgba) }}
+            />
+            <Code>{option.code}</Code> {option.name}
+          </ListItem>
+        )}
+        isOptionEqualToValue={(option, value) => option.id === value.id}
         renderValue={(
           values: Palette[number][],
           getItemProps: (args: { index: number }) => Record<string, unknown>,
         ) => (
           <SelectedColorChips>
-            {values.map((tag, index) => {
-              const rgb = tag.rgba.slice(0, 3).join(" ");
+            {values.map((color, index) => {
               const itemProps = getItemProps({ index });
               const { key: _key, ...restProps } = itemProps;
               return (
-                <ColorSelectChip
-                  key={tag.id}
+                <Chip
+                  key={color.id}
                   {...restProps}
-                  backgroundColorStr={`rgb(${rgb})`}
-                  label={tag.name}
+                  label={
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <ChipColorPreview
+                        style={{ color: rgbaToCssColor(color.rgba) }}
+                      />
+                      {color.name}
+                    </div>
+                  }
                   size="small"
                 />
               );
