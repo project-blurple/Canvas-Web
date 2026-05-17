@@ -3,7 +3,7 @@
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
 import { X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
@@ -102,71 +102,60 @@ function CanvasSettingsForm({
 }: CanvasSettingsFormProps) {
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
 
-  const [name, setName] = useState(activeCanvas.name);
-  const [isLocked, setIsLocked] = useState(activeCanvas.isLocked);
-  const [allColorsGlobal, setAllColorsGlobal] = useState(
-    activeCanvas.allColorsGlobal,
-  );
-  const [cooldownLength, setCooldownLength] = useState(
-    activeCanvas.cooldownLength ?? 0,
-  );
-  const [isDirty, setIsDirty] = useState(false);
+  const [formValues, setFormValues] = useState({
+    allColorsGlobal: activeCanvas.allColorsGlobal,
+    cooldownLength: activeCanvas.cooldownLength ?? 0,
+    isLocked: activeCanvas.isLocked,
+    name: activeCanvas.name,
+  });
 
   // Initialize form values when activeCanvas changes
   useEffect(() => {
-    setIsLocked(activeCanvas.isLocked);
-    setAllColorsGlobal(activeCanvas.allColorsGlobal);
-    setCooldownLength(activeCanvas.cooldownLength ?? 0);
-    setName(activeCanvas.name);
-    setIsDirty(false);
+    setFormValues({
+      allColorsGlobal: activeCanvas.allColorsGlobal,
+      cooldownLength: activeCanvas.cooldownLength ?? 0,
+      isLocked: activeCanvas.isLocked,
+      name: activeCanvas.name,
+    });
   }, [activeCanvas]);
 
-  function checkIfDirty(
-    checkedIsLocked: boolean,
-    checkedAllColorsGlobal: boolean,
-    checkedCooldownLength: number,
-    checkedName: string,
-  ) {
+  const isDirty = useMemo(() => {
     return (
-      checkedIsLocked !== activeCanvas.isLocked ||
-      checkedAllColorsGlobal !== activeCanvas.allColorsGlobal ||
-      checkedCooldownLength !== activeCanvas.cooldownLength ||
-      checkedName !== activeCanvas.name
+      formValues.isLocked !== activeCanvas.isLocked ||
+      formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
+      formValues.cooldownLength !== activeCanvas.cooldownLength ||
+      formValues.name !== activeCanvas.name
     );
-  }
+  }, [formValues, activeCanvas]);
 
   function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const newIsLocked = event.target.checked;
-    setIsLocked(newIsLocked);
-    setIsDirty(
-      checkIfDirty(newIsLocked, allColorsGlobal, cooldownLength, name),
-    );
+    setFormValues((previousValues) => ({
+      ...previousValues,
+      isLocked: event.target.checked,
+    }));
   }
 
   function handleAllColorsGlobalChange(
     event: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const newAllColorsGlobal = event.target.checked;
-    setAllColorsGlobal(newAllColorsGlobal);
-    setIsDirty(
-      checkIfDirty(isLocked, newAllColorsGlobal, cooldownLength, name),
-    );
+    setFormValues((previousValues) => ({
+      ...previousValues,
+      allColorsGlobal: event.target.checked,
+    }));
   }
 
   function handleCooldownDurationChange(value: number | null) {
-    const newCooldownLength = value ?? 0;
-    setCooldownLength(newCooldownLength);
-    setIsDirty(
-      checkIfDirty(isLocked, allColorsGlobal, newCooldownLength, name),
-    );
+    setFormValues((previousValues) => ({
+      ...previousValues,
+      cooldownLength: value ?? 0,
+    }));
   }
 
   function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const newName = event.target.value;
-    setName(newName);
-    setIsDirty(
-      checkIfDirty(isLocked, allColorsGlobal, cooldownLength, newName),
-    );
+    setFormValues((previousValues) => ({
+      ...previousValues,
+      name: event.target.value,
+    }));
   }
 
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
@@ -174,9 +163,9 @@ function CanvasSettingsForm({
 
     try {
       await updateCanvasInfo.mutateAsync({
-        cooldownLength,
-        isLocked,
-        name,
+        cooldownLength: formValues.cooldownLength,
+        isLocked: formValues.isLocked,
+        name: formValues.name,
       });
       await onSaved(activeCanvas.id);
     } catch {
@@ -198,7 +187,11 @@ function CanvasSettingsForm({
           <tr>
             <td>Name</td>
             <td>
-              <TextInput type="text" value={name} onChange={handleNameChange} />
+              <TextInput
+                type="text"
+                value={formValues.name}
+                onChange={handleNameChange}
+              />
             </td>
           </tr>
           <tr>
@@ -217,7 +210,7 @@ function CanvasSettingsForm({
               <NumberField
                 min={0}
                 onValueChange={handleCooldownDurationChange}
-                value={cooldownLength}
+                value={formValues.cooldownLength}
               />
             </td>
           </tr>
@@ -226,17 +219,17 @@ function CanvasSettingsForm({
             <td>
               <Switch
                 type="checkbox"
-                checked={isLocked}
+                checked={formValues.isLocked}
                 onChange={handleIsLockedChange}
               />
             </td>
           </tr>
           <tr>
-            <td>Partner colors global</td>
+            <td>Global colors</td>
             <td>
               <Switch
                 type="checkbox"
-                checked={allColorsGlobal}
+                checked={formValues.allColorsGlobal}
                 onChange={handleAllColorsGlobalChange}
                 disabled // currently controlled by env rather than db
               />
