@@ -1,7 +1,9 @@
 "use client";
 
 import { Switch, styled } from "@mui/material";
-import { RulerDimensionLine, X } from "lucide-react";
+import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts";
@@ -38,7 +40,7 @@ const CanvasList = styled("div")`
   }
 `;
 
-const CanvasContents = styled("div")`
+const CanvasContents = styled("form")`
   align-items: center;
   display: flex;
   flex-direction: column;
@@ -74,13 +76,65 @@ const CanvasDimensions = styled("code")`
   gap: 0.25rem;
 `;
 
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
+  color: var(--discord-legacy-full-white);
+  transition-duration: var(--transition-duration-fast);
+  transition-property: background-color, color, opacity;
+  transition-timing-function: ease;
+`;
+
 function AdminCanvasTab() {
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
 
+  const [isLocked, setIsLocked] = useState(activeCanvas?.isLocked ?? false);
+  const [allColorsGlobal, setAllColorsGlobal] = useState(
+    activeCanvas?.allColorsGlobal ?? false,
+  );
+  const [isDirty, setIsDirty] = useState(false);
+
+  // Initialize form values when activeCanvas changes
+  useEffect(() => {
+    if (activeCanvas) {
+      setIsLocked(activeCanvas.isLocked);
+      setAllColorsGlobal(activeCanvas.allColorsGlobal);
+      setIsDirty(false);
+    }
+  }, [activeCanvas]);
+
   const isLoading = canvasListIsLoading || eventIsLoading;
+
+  function checkIfDirty(
+    checkedIsLocked: boolean,
+    checkedAllColorsGlobal: boolean,
+  ) {
+    return (
+      checkedIsLocked !== activeCanvas?.isLocked ||
+      checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal
+    );
+  }
+
+  function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const newIsLocked = event.target.checked;
+    setIsLocked(newIsLocked);
+    setIsDirty(checkIfDirty(newIsLocked, allColorsGlobal));
+  }
+
+  function handleAllColorsGlobalChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const newAllColorsGlobal = event.target.checked;
+    setAllColorsGlobal(newAllColorsGlobal);
+    setIsDirty(checkIfDirty(isLocked, newAllColorsGlobal));
+  }
+
+  function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    // TODO: implement saving changes
+  }
 
   return (
     <AdminCanvasTabBlock>
@@ -101,7 +155,7 @@ function AdminCanvasTab() {
                 />
               ))}
             </CanvasList>
-            <CanvasContents>
+            <CanvasContents onSubmit={handleSaveChanges}>
               <CanvasHeader>
                 <span>
                   <CanvasIcon size={20} />
@@ -119,7 +173,11 @@ function AdminCanvasTab() {
                 <tbody>
                   <tr>
                     <td>
-                      <Switch type="checkbox" checked={activeCanvas.isLocked} />
+                      <Switch
+                        type="checkbox"
+                        checked={isLocked}
+                        onChange={handleIsLockedChange}
+                      />
                     </td>
                     <td>Locked</td>
                   </tr>
@@ -127,7 +185,8 @@ function AdminCanvasTab() {
                     <td>
                       <Switch
                         type="checkbox"
-                        checked={activeCanvas.allColorsGlobal}
+                        checked={allColorsGlobal}
+                        onChange={handleAllColorsGlobalChange}
                         disabled // currently controlled by env rather than db
                       />
                     </td>
@@ -135,6 +194,9 @@ function AdminCanvasTab() {
                   </tr>
                 </tbody>
               </table>
+              <StyledButton disabled={!isDirty} type="submit">
+                Save changes
+              </StyledButton>
             </CanvasContents>
           </>
         }
