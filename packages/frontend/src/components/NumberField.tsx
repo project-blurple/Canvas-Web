@@ -32,6 +32,7 @@ interface NumberFieldProps extends Omit<
 }
 
 export default function NumberField({
+  className,
   id,
   label,
   labelProps,
@@ -70,7 +71,7 @@ export default function NumberField({
   }
 
   return (
-    <div>
+    <div className={className}>
       <Label htmlFor={resolvedId}>{label}</Label>
       <Input
         id={resolvedId}
