@@ -82,6 +82,7 @@ const defaultCanvasInfo = {
   eventId: 1,
   webPlacingEnabled: false,
   allColorsGlobal: false,
+  cooldownLength: 0,
 } satisfies CanvasInfo;
 
 export default async function RootLayout({
