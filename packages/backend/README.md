@@ -27,6 +27,12 @@ pnpm prisma:migrate
 pnpm prisma:seed
 ```
 
+If you do not want to use the test data, you should at least add the web guild (used internally) via:
+
+```sh
+pnpm prisma:seed --seedings web_guild
+```
+
 ### Running
 
 ```sh
