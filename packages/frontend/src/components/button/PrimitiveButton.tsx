@@ -9,7 +9,6 @@ const PrimitiveButton = styled("button")`
   font-style: inherit;
   font-weight: inherit;
   line-height: inherit;
-  touch-action: manipulation;
 `;
 
 export default PrimitiveButton;
