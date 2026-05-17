@@ -165,7 +165,7 @@ async function main() {
           break;
         case "web_guild":
           await prisma.guild
-            .delete({
+            .deleteMany({
               where: { id: 0 },
             })
             .catch();
