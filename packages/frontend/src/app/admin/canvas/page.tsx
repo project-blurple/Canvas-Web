@@ -13,7 +13,10 @@ import {
 import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
-import { useCreateCanvas } from "@/hooks/queries/useCanvasInfo";
+import {
+  useClearCanvasCache,
+  useCreateCanvas,
+} from "@/hooks/queries/useCanvasInfo";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminCanvasTabBlock = styled("section")`
@@ -366,6 +369,8 @@ function AdminCanvasTab() {
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<FormMode>("edit");
 
+  const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
+
   canvases.sort((a, b) =>
     a.eventId === event?.id ? -1
     : b.eventId === event?.id ? 1
@@ -469,6 +474,13 @@ function AdminCanvasTab() {
               onFormValuesChange={setFormValues}
               onSaved={async (canvasId) => setCanvas(canvasId, false)}
             />
+            {mode !== "create" && (
+              <StyledButton
+                onClick={async () => await clearCanvasCache.mutateAsync()}
+              >
+                Clear cached image
+              </StyledButton>
+            )}
           </>
         }
       </CanvasInfoWrapper>
