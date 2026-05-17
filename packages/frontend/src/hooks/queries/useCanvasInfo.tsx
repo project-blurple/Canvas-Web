@@ -49,7 +49,11 @@ export function useCreateCanvas() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: Omit<CanvasInfo, "eventId">) => {
+    mutationFn: (
+      data: Partial<
+        Omit<CanvasInfo, "eventId" | "webPlacingEnabled" | "allColorsGlobal">
+      >,
+    ) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas`;
 
       return axios.post(requestUrl, data, {

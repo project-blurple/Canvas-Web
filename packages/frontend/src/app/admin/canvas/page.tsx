@@ -13,6 +13,7 @@ import {
 import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
+import { useCreateCanvas } from "@/hooks/queries/useCanvasInfo";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminCanvasTabBlock = styled("section")`
@@ -92,35 +93,46 @@ const StyledButton = styled(Button)`
   transition-timing-function: ease;
 `;
 
+type FormMode = "edit" | "create";
+
 interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
-  onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
-  isDirty: boolean;
   formValues: {
     allColorsGlobal: boolean;
     cooldownLength: number;
+    height: number;
+    id: number;
     isLocked: boolean;
     name: string;
+    width: number;
   };
+  isDirty: boolean;
+  mode: FormMode;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
+  onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
 
 function CanvasSettingsForm({
   activeCanvas,
-  onSaved,
-  isDirty,
   formValues,
+  isDirty,
+  mode,
   onFormValuesChange,
+  onSaved,
 }: CanvasSettingsFormProps) {
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
+  const createCanvas = useCreateCanvas();
 
   // Initialize form values when activeCanvas changes
   useEffect(() => {
     onFormValuesChange({
       allColorsGlobal: activeCanvas.allColorsGlobal,
       cooldownLength: activeCanvas.cooldownLength ?? 0,
+      height: activeCanvas.height,
+      id: activeCanvas.id,
       isLocked: activeCanvas.isLocked,
       name: activeCanvas.name,
+      width: activeCanvas.width,
     });
   }, [activeCanvas, onFormValuesChange]);
 
@@ -154,16 +166,50 @@ function CanvasSettingsForm({
     });
   }
 
+  function handleIdChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      id: value ?? 0,
+    });
+  }
+
+  function handleWidthChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      width: value ?? 0,
+    });
+  }
+
+  function handleHeightChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      height: value ?? 0,
+    });
+  }
+
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {
-      await updateCanvasInfo.mutateAsync({
-        cooldownLength: formValues.cooldownLength,
-        isLocked: formValues.isLocked,
-        name: formValues.name,
-      });
-      await onSaved(activeCanvas.id);
+      if (mode === "create") {
+        await createCanvas.mutateAsync({
+          // allColorsGlobal: formValues.allColorsGlobal, currently controlled by env rather than db
+          cooldownLength: formValues.cooldownLength,
+          height: formValues.height,
+          id: formValues.id,
+          isLocked: formValues.isLocked,
+          name: formValues.name,
+          width: formValues.width,
+        });
+        await onSaved(formValues.id);
+      } else {
+        await updateCanvasInfo.mutateAsync({
+          cooldownLength: formValues.cooldownLength,
+          isLocked: formValues.isLocked,
+          name: formValues.name,
+        });
+        await onSaved(activeCanvas.id);
+      }
     } catch {
       alert("Failed to update canvas info. Please try again.");
     }
@@ -181,25 +227,43 @@ function CanvasSettingsForm({
             <td>Name</td>
             <td>
               <TextInput
+                onChange={handleNameChange}
                 type="text"
                 value={formValues.name}
-                onChange={handleNameChange}
               />
             </td>
           </tr>
           <tr>
             <td>ID</td>
             <td>
-              <code>{activeCanvas.id}</code>
+              {mode === "create" ?
+                <NumberField
+                  min={0}
+                  onValueChange={handleIdChange}
+                  value={formValues.id}
+                />
+              : <code>{activeCanvas.id}</code>}
             </td>
           </tr>
           <tr>
             <td>Dimensions</td>
             <td>
               <CanvasDimensions>
-                {activeCanvas.width}
+                {mode === "create" ?
+                  <NumberField
+                    min={1}
+                    onValueChange={handleWidthChange}
+                    value={formValues.width}
+                  />
+                : activeCanvas.width}
                 <X size={12} />
-                {activeCanvas.height}
+                {mode === "create" ?
+                  <NumberField
+                    min={1}
+                    onValueChange={handleHeightChange}
+                    value={formValues.height}
+                  />
+                : activeCanvas.height}
               </CanvasDimensions>
             </td>
           </tr>
@@ -251,12 +315,15 @@ function AdminCanvasTab() {
     useCanvasList();
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
-  const [mode, setMode] = useState<"create" | "edit">("edit");
+  const [mode, setMode] = useState<FormMode>("edit");
   const [formValues, setFormValues] = useState({
     allColorsGlobal: activeCanvas?.allColorsGlobal ?? false,
     cooldownLength: activeCanvas?.cooldownLength ?? 0,
+    height: activeCanvas?.height ?? 0,
+    id: activeCanvas?.id ?? 0,
     isLocked: activeCanvas?.isLocked ?? true,
     name: activeCanvas?.name ?? "",
+    width: activeCanvas?.width ?? 0,
   });
 
   const isDirty = useMemo(() => {
@@ -265,7 +332,10 @@ function AdminCanvasTab() {
       formValues.isLocked !== activeCanvas.isLocked ||
       formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
       formValues.cooldownLength !== activeCanvas.cooldownLength ||
-      formValues.name !== activeCanvas.name
+      formValues.name !== activeCanvas.name ||
+      formValues.id !== activeCanvas.id ||
+      formValues.width !== activeCanvas.width ||
+      formValues.height !== activeCanvas.height
     );
   }, [formValues, activeCanvas]);
 
@@ -305,10 +375,11 @@ function AdminCanvasTab() {
             </CanvasList>
             <CanvasSettingsForm
               activeCanvas={activeCanvas}
-              onSaved={async (canvasId) => setCanvas(canvasId, false)}
-              isDirty={isDirty}
               formValues={formValues}
+              isDirty={isDirty}
+              mode={mode}
               onFormValuesChange={setFormValues}
+              onSaved={async (canvasId) => setCanvas(canvasId, false)}
             />
           </>
         }
