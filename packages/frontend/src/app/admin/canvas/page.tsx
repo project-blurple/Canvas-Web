@@ -431,7 +431,8 @@ function AdminCanvasTab() {
     return (
       formValues.isLocked !== activeCanvas.isLocked ||
       formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
-      formValues.cooldownLength !== activeCanvas.cooldownLength ||
+      (formValues.cooldownLength !== activeCanvas.cooldownLength &&
+        activeCanvas.cooldownLength !== null) ||
       formValues.name !== activeCanvas.name ||
       formValues.id !== activeCanvas.id ||
       formValues.width !== activeCanvas.width ||
