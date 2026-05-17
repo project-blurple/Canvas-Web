@@ -2,7 +2,7 @@
 
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
-import { Plus, X } from "lucide-react";
+import { ListRestart, Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
@@ -89,6 +89,11 @@ const ErrorText = styled("div")`
   color: #e04848;
   font-size: 0.85rem;
   margin-top: 4px;
+`;
+
+const ButtonWrapper = styled("div")`
+  display: flex;
+  gap: 0.5rem;
 `;
 
 const StyledButton = styled(Button)`
@@ -201,6 +206,22 @@ function CanvasSettingsForm({
       ...formValues,
       height: value ?? 0,
     });
+  }
+
+  function resetForm() {
+    if (mode === "create") {
+      onFormValuesChange({ ...createDefaults });
+    } else {
+      onFormValuesChange({
+        allColorsGlobal: activeCanvas.allColorsGlobal,
+        cooldownLength: activeCanvas.cooldownLength ?? 0,
+        height: activeCanvas.height,
+        id: activeCanvas.id,
+        isLocked: activeCanvas.isLocked,
+        name: activeCanvas.name,
+        width: activeCanvas.width,
+      });
+    }
   }
 
   function isFormInvalid(values = formValues) {
@@ -327,18 +348,27 @@ function CanvasSettingsForm({
           </tr>
         </tbody>
       </Table>
-      <StyledButton
-        disabled={
-          !isDirty ||
-          isFormInvalid() ||
-          (mode === "create" ?
-            createCanvas.isPending
-          : updateCanvasInfo.isPending)
-        }
-        type="submit"
-      >
-        {mode === "create" ? "Create canvas" : "Save changes"}
-      </StyledButton>
+      <ButtonWrapper>
+        <StyledButton
+          disabled={
+            !isDirty ||
+            isFormInvalid() ||
+            (mode === "create" ?
+              createCanvas.isPending
+            : updateCanvasInfo.isPending)
+          }
+          type="submit"
+        >
+          {mode === "create" ? "Create canvas" : "Save changes"}
+        </StyledButton>
+        <StyledButton
+          disabled={mode === "create" || !isDirty}
+          type="reset"
+          onClick={resetForm}
+        >
+          <ListRestart />
+        </StyledButton>
+      </ButtonWrapper>
     </CanvasContents>
   );
 }
