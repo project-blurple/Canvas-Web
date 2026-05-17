@@ -54,21 +54,14 @@ const CanvasContents = styled("form")`
 const CanvasHeader = styled("h1")`
   align-items: center;
   display: flex;
-  flex-direction: column;
   font-size: 1.5rem;
   font-weight: 600;
-  gap: 0.25rem;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
+  gap: 0.5rem;
 `;
 
-const CanvasId = styled("code")`
-  opacity: 0.75;
-  font-size: 0.875rem;
+const Table = styled("table")`
+  border-collapse: separate;
+  border-spacing: 2rem 0.5rem;
 `;
 
 const CanvasDimensions = styled("code")`
@@ -176,13 +169,10 @@ function CanvasSettingsForm({
   return (
     <CanvasContents onSubmit={handleSaveChanges}>
       <CanvasHeader>
-        <span>
-          <CanvasIcon size={20} />
-          {activeCanvas.name}
-        </span>
-        <CanvasId>ID: {activeCanvas.id}</CanvasId>
+        <CanvasIcon size={20} />
+        {activeCanvas.name}
       </CanvasHeader>
-      <table>
+      <Table>
         <tbody>
           <tr>
             <td>Name</td>
@@ -192,6 +182,12 @@ function CanvasSettingsForm({
                 value={formValues.name}
                 onChange={handleNameChange}
               />
+            </td>
+          </tr>
+          <tr>
+            <td>ID</td>
+            <td>
+              <code>{activeCanvas.id}</code>
             </td>
           </tr>
           <tr>
@@ -236,7 +232,7 @@ function CanvasSettingsForm({
             </td>
           </tr>
         </tbody>
-      </table>
+      </Table>
       <StyledButton
         disabled={!isDirty || updateCanvasInfo.isPending}
         type="submit"
