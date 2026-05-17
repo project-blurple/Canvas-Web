@@ -1,5 +1,6 @@
 import { styled } from "@mui/material/styles";
-import React, { useId } from "react";
+import type React from "react";
+import { useId } from "react";
 import { clamp } from "@/util";
 
 const Label = styled("label")`
