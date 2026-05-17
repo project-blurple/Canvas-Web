@@ -108,7 +108,6 @@ const createDefaults = {
   allColorsGlobal: false,
   cooldownLength: 0,
   height: 1,
-  id: 0,
   isLocked: true,
   name: "",
   width: 1,
@@ -123,7 +122,6 @@ interface CanvasSettingsFormProps {
     allColorsGlobal: boolean;
     cooldownLength: number;
     height: number;
-    id: number;
     isLocked: boolean;
     name: string;
     width: number;
@@ -152,7 +150,6 @@ function CanvasSettingsForm({
       allColorsGlobal: activeCanvas.allColorsGlobal,
       cooldownLength: activeCanvas.cooldownLength ?? 0,
       height: activeCanvas.height,
-      id: activeCanvas.id,
       isLocked: activeCanvas.isLocked,
       name: activeCanvas.name,
       width: activeCanvas.width,
@@ -190,13 +187,6 @@ function CanvasSettingsForm({
     });
   }
 
-  function handleIdChange(value: number | null) {
-    onFormValuesChange({
-      ...formValues,
-      id: value ?? 0,
-    });
-  }
-
   function handleWidthChange(value: number | null) {
     onFormValuesChange({
       ...formValues,
@@ -219,7 +209,6 @@ function CanvasSettingsForm({
         allColorsGlobal: activeCanvas.allColorsGlobal,
         cooldownLength: activeCanvas.cooldownLength ?? 0,
         height: activeCanvas.height,
-        id: activeCanvas.id,
         isLocked: activeCanvas.isLocked,
         name: activeCanvas.name,
         width: activeCanvas.width,
@@ -241,17 +230,16 @@ function CanvasSettingsForm({
 
     try {
       if (mode === "create") {
-        await createCanvas.mutateAsync({
+        const response = await createCanvas.mutateAsync({
           // allColorsGlobal: formValues.allColorsGlobal, currently controlled by env rather than db
           cooldownLength: formValues.cooldownLength,
           height: formValues.height,
-          id: formValues.id,
           isLocked: formValues.isLocked,
           name: formValues.name,
           width: formValues.width,
           startCoordinates: formValues.startCoordinates,
         });
-        await onSaved(formValues.id);
+        await onSaved(response.data.id);
       } else {
         await updateCanvasInfo.mutateAsync({
           cooldownLength: formValues.cooldownLength,
@@ -284,18 +272,6 @@ function CanvasSettingsForm({
                 value={formValues.name}
               />
               {isFormInvalid() && <ErrorText>Name cannot be empty</ErrorText>}
-            </td>
-          </tr>
-          <tr>
-            <td>ID</td>
-            <td>
-              {mode === "create" ?
-                <NumberField
-                  min={0}
-                  onValueChange={handleIdChange}
-                  value={formValues.id}
-                />
-              : <code>{activeCanvas.id}</code>}
             </td>
           </tr>
           <tr>
@@ -402,7 +378,6 @@ function AdminCanvasTab() {
     cooldownLength:
       activeCanvas?.cooldownLength ?? createDefaults.cooldownLength,
     height: activeCanvas?.height ?? createDefaults.height,
-    id: activeCanvas?.id ?? createDefaults.id,
     isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
     name: activeCanvas?.name ?? createDefaults.name,
     width: activeCanvas?.width ?? createDefaults.width,
@@ -420,7 +395,6 @@ function AdminCanvasTab() {
         cooldownLength:
           activeCanvas.cooldownLength ?? createDefaults.cooldownLength,
         height: activeCanvas.height ?? createDefaults.height,
-        id: activeCanvas.id ?? createDefaults.id,
         isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
         name: activeCanvas.name ?? createDefaults.name,
         width: activeCanvas.width ?? createDefaults.width,
@@ -437,7 +411,6 @@ function AdminCanvasTab() {
         formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
         formValues.cooldownLength !== createDefaults.cooldownLength ||
         formValues.name !== createDefaults.name ||
-        formValues.id !== createDefaults.id ||
         formValues.width !== createDefaults.width ||
         formValues.height !== createDefaults.height
       );
@@ -449,7 +422,6 @@ function AdminCanvasTab() {
       (formValues.cooldownLength !== activeCanvas.cooldownLength &&
         activeCanvas.cooldownLength !== null) ||
       formValues.name !== activeCanvas.name ||
-      formValues.id !== activeCanvas.id ||
       formValues.width !== activeCanvas.width ||
       formValues.height !== activeCanvas.height
     );

@@ -2,7 +2,7 @@
 
 import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import axios, { type AxiosError, type AxiosResponse } from "axios";
 import config from "@/config/clientConfig";
 
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
@@ -45,15 +45,15 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
   });
 }
 
+type CreateCanvasInput = Partial<
+  Omit<CanvasInfo, "eventId" | "webPlacingEnabled" | "allColorsGlobal">
+>;
+
 export function useCreateCanvas() {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (
-      data: Partial<
-        Omit<CanvasInfo, "eventId" | "webPlacingEnabled" | "allColorsGlobal">
-      >,
-    ) => {
+  return useMutation<AxiosResponse<CanvasInfo>, AxiosError, CreateCanvasInput>({
+    mutationFn: (data: CreateCanvasInput) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas`;
 
       return axios.post(requestUrl, data, {
