@@ -1,7 +1,7 @@
 "use client";
 
 import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
 
@@ -18,5 +18,29 @@ export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
     queryFn: getMainCanvasInfo,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (
+      data: Partial<Pick<CanvasInfo, "name" | "isLocked" | "cooldownLength">>,
+    ) => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}`;
+
+      return axios.put(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["canvas"] }),
+        canvasId === undefined ?
+          Promise.resolve()
+        : queryClient.invalidateQueries({ queryKey: ["canvasInfo", canvasId] }),
+      ]);
+    },
   });
 }

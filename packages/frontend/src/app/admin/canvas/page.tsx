@@ -7,7 +7,7 @@ import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts";
-import { useCanvasList, useEventInfo } from "@/hooks";
+import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminCanvasTabBlock = styled("section")`
@@ -89,6 +89,7 @@ function AdminCanvasTab() {
     useCanvasList();
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
+  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas?.id);
 
   const [isLocked, setIsLocked] = useState(activeCanvas?.isLocked ?? false);
   const [allColorsGlobal, setAllColorsGlobal] = useState(
@@ -131,9 +132,17 @@ function AdminCanvasTab() {
     setIsDirty(checkIfDirty(isLocked, newAllColorsGlobal));
   }
 
-  function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    // TODO: implement saving changes
+
+    if (!activeCanvas) return;
+
+    try {
+      await updateCanvasInfo.mutateAsync({ isLocked });
+      await setCanvas(activeCanvas.id, false);
+    } catch {
+      alert("Failed to update canvas info. Please try again.");
+    }
   }
 
   return (
@@ -173,6 +182,12 @@ function AdminCanvasTab() {
                 <tbody>
                   <tr>
                     <td>
+                      <p>x</p>
+                    </td>
+                    <td>Cooldown duration</td>
+                  </tr>
+                  <tr>
+                    <td>
                       <Switch
                         type="checkbox"
                         checked={isLocked}
@@ -194,7 +209,10 @@ function AdminCanvasTab() {
                   </tr>
                 </tbody>
               </table>
-              <StyledButton disabled={!isDirty} type="submit">
+              <StyledButton
+                disabled={!isDirty || updateCanvasInfo.isPending}
+                type="submit"
+              >
                 Save changes
               </StyledButton>
             </CanvasContents>

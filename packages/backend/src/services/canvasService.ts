@@ -97,6 +97,7 @@ interface CanvasSummaryRow {
   last_pixel_timestamp: Date | null;
   width: number;
   height: number;
+  cooldown_length: number;
 }
 
 /**
@@ -113,6 +114,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
       c.locked,
       c.width,
       c.height,
+      c.cooldown_length,
       MAX(h.timestamp) AS last_pixel_timestamp
     FROM canvas c
     LEFT JOIN history h
@@ -131,6 +133,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     isLocked: canvas.locked,
     width: canvas.width,
     height: canvas.height,
+    cooldownLength: canvas.cooldown_length,
   }));
 }
 
@@ -168,6 +171,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
       start_coordinates: true,
       locked: true,
       event_id: true,
+      cooldown_length: true,
     },
     where: {
       id: canvasId,
@@ -191,6 +195,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
     allColorsGlobal: config.allColorsGlobal,
+    cooldownLength: canvas.cooldown_length,
   };
 }
 
