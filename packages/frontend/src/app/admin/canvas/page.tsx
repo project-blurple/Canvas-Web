@@ -1,5 +1,6 @@
 "use client";
 
+import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -90,35 +91,35 @@ const StyledButton = styled(Button)`
   transition-timing-function: ease;
 `;
 
-function AdminCanvasTab() {
-  const { data: canvases = [], isLoading: canvasListIsLoading } =
-    useCanvasList();
-  const { canvas: activeCanvas, setCanvas } = useCanvasContext();
-  const { data: event, isLoading: eventIsLoading } = useEventInfo();
-  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas?.id);
+interface CanvasSettingsFormProps {
+  activeCanvas: CanvasInfo;
+  onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
+}
 
-  const [name, setName] = useState(activeCanvas?.name ?? "");
-  const [isLocked, setIsLocked] = useState(activeCanvas?.isLocked ?? false);
+function CanvasSettingsForm({
+  activeCanvas,
+  onSaved,
+}: CanvasSettingsFormProps) {
+  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
+
+  const [name, setName] = useState(activeCanvas.name);
+  const [isLocked, setIsLocked] = useState(activeCanvas.isLocked);
   const [allColorsGlobal, setAllColorsGlobal] = useState(
-    activeCanvas?.allColorsGlobal ?? false,
+    activeCanvas.allColorsGlobal,
   );
   const [cooldownLength, setCooldownLength] = useState(
-    activeCanvas?.cooldownLength ?? 0,
+    activeCanvas.cooldownLength ?? 0,
   );
   const [isDirty, setIsDirty] = useState(false);
 
   // Initialize form values when activeCanvas changes
   useEffect(() => {
-    if (activeCanvas) {
-      setIsLocked(activeCanvas.isLocked);
-      setAllColorsGlobal(activeCanvas.allColorsGlobal);
-      setCooldownLength(activeCanvas.cooldownLength ?? 0);
-      setName(activeCanvas.name);
-      setIsDirty(false);
-    }
+    setIsLocked(activeCanvas.isLocked);
+    setAllColorsGlobal(activeCanvas.allColorsGlobal);
+    setCooldownLength(activeCanvas.cooldownLength ?? 0);
+    setName(activeCanvas.name);
+    setIsDirty(false);
   }, [activeCanvas]);
-
-  const isLoading = canvasListIsLoading || eventIsLoading;
 
   function checkIfDirty(
     checkedIsLocked: boolean,
@@ -127,10 +128,10 @@ function AdminCanvasTab() {
     checkedName: string,
   ) {
     return (
-      checkedIsLocked !== activeCanvas?.isLocked ||
-      checkedAllColorsGlobal !== activeCanvas?.allColorsGlobal ||
-      checkedCooldownLength !== activeCanvas?.cooldownLength ||
-      checkedName !== activeCanvas?.name
+      checkedIsLocked !== activeCanvas.isLocked ||
+      checkedAllColorsGlobal !== activeCanvas.allColorsGlobal ||
+      checkedCooldownLength !== activeCanvas.cooldownLength ||
+      checkedName !== activeCanvas.name
     );
   }
 
@@ -153,8 +154,11 @@ function AdminCanvasTab() {
   }
 
   function handleCooldownDurationChange(value: number | null) {
-    setCooldownLength(value ?? 0);
-    setIsDirty(checkIfDirty(isLocked, allColorsGlobal, value ?? 0, name));
+    const newCooldownLength = value ?? 0;
+    setCooldownLength(newCooldownLength);
+    setIsDirty(
+      checkIfDirty(isLocked, allColorsGlobal, newCooldownLength, name),
+    );
   }
 
   function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -168,19 +172,95 @@ function AdminCanvasTab() {
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!activeCanvas) return;
-
     try {
       await updateCanvasInfo.mutateAsync({
-        cooldownLength: cooldownLength,
+        cooldownLength,
         isLocked,
         name,
       });
-      await setCanvas(activeCanvas.id, false);
+      await onSaved(activeCanvas.id);
     } catch {
       alert("Failed to update canvas info. Please try again.");
     }
   }
+
+  return (
+    <CanvasContents onSubmit={handleSaveChanges}>
+      <CanvasHeader>
+        <span>
+          <CanvasIcon size={20} />
+          {activeCanvas.name}
+        </span>
+        <CanvasId>ID: {activeCanvas.id}</CanvasId>
+      </CanvasHeader>
+      <table>
+        <tbody>
+          <tr>
+            <td>Name</td>
+            <td>
+              <TextInput type="text" value={name} onChange={handleNameChange} />
+            </td>
+          </tr>
+          <tr>
+            <td>Dimensions</td>
+            <td>
+              <CanvasDimensions>
+                {activeCanvas.width}
+                <X size={12} />
+                {activeCanvas.height}
+              </CanvasDimensions>
+            </td>
+          </tr>
+          <tr>
+            <td>Cooldown (s)</td>
+            <td>
+              <NumberField
+                min={0}
+                onValueChange={handleCooldownDurationChange}
+                value={cooldownLength}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Locked</td>
+            <td>
+              <Switch
+                type="checkbox"
+                checked={isLocked}
+                onChange={handleIsLockedChange}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Partner colors global</td>
+            <td>
+              <Switch
+                type="checkbox"
+                checked={allColorsGlobal}
+                onChange={handleAllColorsGlobalChange}
+                disabled // currently controlled by env rather than db
+              />
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <StyledButton
+        disabled={!isDirty || updateCanvasInfo.isPending}
+        type="submit"
+      >
+        Save changes
+      </StyledButton>
+    </CanvasContents>
+  );
+}
+
+function AdminCanvasTab() {
+  const { data: canvases = [], isLoading: canvasListIsLoading } =
+    useCanvasList();
+  const { canvas: activeCanvas, setCanvas } = useCanvasContext();
+  const { data: event, isLoading: eventIsLoading } = useEventInfo();
+
+  const isLoading = canvasListIsLoading || eventIsLoading;
 
   return (
     <AdminCanvasTabBlock>
@@ -201,76 +281,10 @@ function AdminCanvasTab() {
                 />
               ))}
             </CanvasList>
-            <CanvasContents onSubmit={handleSaveChanges}>
-              <CanvasHeader>
-                <span>
-                  <CanvasIcon size={20} />
-                  {activeCanvas.name}
-                </span>
-                <CanvasId>ID: {activeCanvas.id}</CanvasId>
-              </CanvasHeader>
-              <table>
-                <tbody>
-                  <tr>
-                    <td>Name</td>
-                    <td>
-                      <TextInput
-                        type="text"
-                        value={name}
-                        onChange={handleNameChange}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Dimensions</td>
-                    <td>
-                      <CanvasDimensions>
-                        {activeCanvas.width}
-                        <X size={12} />
-                        {activeCanvas.height}
-                      </CanvasDimensions>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Cooldown (s)</td>
-                    <td>
-                      <NumberField
-                        min={0}
-                        onValueChange={handleCooldownDurationChange}
-                        value={cooldownLength}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Locked</td>
-                    <td>
-                      <Switch
-                        type="checkbox"
-                        checked={isLocked}
-                        onChange={handleIsLockedChange}
-                      />
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>Partner colors global</td>
-                    <td>
-                      <Switch
-                        type="checkbox"
-                        checked={allColorsGlobal}
-                        onChange={handleAllColorsGlobalChange}
-                        disabled // currently controlled by env rather than db
-                      />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-              <StyledButton
-                disabled={!isDirty || updateCanvasInfo.isPending}
-                type="submit"
-              >
-                Save changes
-              </StyledButton>
-            </CanvasContents>
+            <CanvasSettingsForm
+              activeCanvas={activeCanvas}
+              onSaved={async (canvasId) => setCanvas(canvasId, false)}
+            />
           </>
         }
       </CanvasInfoWrapper>
