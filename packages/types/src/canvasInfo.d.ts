@@ -12,5 +12,5 @@ export interface CanvasInfo {
 
 export type CanvasSummary = Pick<
   CanvasInfo,
-  "id" | "name" | "eventId" | "isLocked"
+  "id" | "name" | "eventId" | "isLocked" | "width" | "height"
 >;

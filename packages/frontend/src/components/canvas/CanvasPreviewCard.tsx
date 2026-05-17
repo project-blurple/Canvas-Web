@@ -1,7 +1,8 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { Grip, Users } from "lucide-react";
+import { Grip, History, Radio, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
+import { dateToRelativeTime } from "@/util/text";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
 
 const EventCanvasCard = styled("button")`
@@ -49,6 +50,14 @@ const EventCanvasMeta = styled("div")`
   gap: 0.125rem;
   min-width: 0;
   padding-inline: 0.125rem;
+  width: 100%;
+`;
+
+const EventCanvasNameWrapper = styled("div")`
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
 `;
 
 const EventCanvasName = styled("h3")`
@@ -57,8 +66,11 @@ const EventCanvasName = styled("h3")`
   white-space: nowrap;
 `;
 
-const EventCanvasId = styled("code")`
+const EventCanvasCoords = styled("code")`
+  display: flex;
+  flex-direction: row;
   font-size: 0.875rem;
+  gap: 0;
   opacity: 0.7;
 `;
 
@@ -81,11 +93,13 @@ interface CanvasPreviewCardProps extends React.ComponentPropsWithRef<
   typeof EventCanvasCard
 > {
   canvas: CanvasSummary;
+  currentEventId?: number;
   active?: boolean;
 }
 
 export function CanvasPreviewCard({
   canvas,
+  currentEventId,
   active = true,
   ...props
 }: CanvasPreviewCardProps) {
@@ -109,18 +123,53 @@ export function CanvasPreviewCard({
         </EventCanvasPreviewPlaceholder>
       }
       <EventCanvasMeta>
-        <EventCanvasName>{canvas.name}</EventCanvasName>
-        <EventCanvasId>ID:{canvas.id}</EventCanvasId>
+        <EventCanvasNameWrapper>
+          <EventCanvasName>{canvas.name}</EventCanvasName>
+          {currentEventId === canvas.eventId && <Radio size={16} />}
+        </EventCanvasNameWrapper>
+        <EventCanvasCoords>
+          {canvas.width}
+          <X size={12} />
+          {canvas.height}
+        </EventCanvasCoords>
       </EventCanvasMeta>
       {canvasStats && (
         <EventCanvasStats>
-          <EventCanvasStat>
+          <EventCanvasStat
+            title={`${canvasStats.totalUsersInvolved.toLocaleString()} total ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"} involved`}
+          >
             <Users size={16} />
-            <span>{canvasStats.totalUsersInvolved.toLocaleString()}</span>
+            <span>{`${canvasStats.totalUsersInvolved.toLocaleString()} ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"}`}</span>
           </EventCanvasStat>
-          <EventCanvasStat>
+          <EventCanvasStat
+            title={`${canvasStats.totalPixelsPlaced.toLocaleString()} total ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"} placed`}
+          >
             <Grip size={16} />
-            <span>{canvasStats.totalPixelsPlaced.toLocaleString()}</span>
+            <span>{`${canvasStats.totalPixelsPlaced.toLocaleString()} ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"}`}</span>
+          </EventCanvasStat>
+          <EventCanvasStat
+            title={
+              canvasStats.lastPlacedAt ?
+                `Most recent pixel placed at ${new Date(
+                  canvasStats.lastPlacedAt,
+                ).toLocaleString(undefined, {
+                  weekday: "long",
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                  hour12: true,
+                })}`
+              : "No history recorded"
+            }
+          >
+            <History size={16} />
+            <span>
+              {canvasStats.lastPlacedAt ?
+                dateToRelativeTime(new Date(canvasStats.lastPlacedAt))
+              : "Never"}
+            </span>
           </EventCanvasStat>
         </EventCanvasStats>
       )}

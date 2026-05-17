@@ -89,29 +89,48 @@ export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
   );
 }
 
+interface CanvasSummaryRow {
+  id: number;
+  name: string;
+  event_id: number | null;
+  locked: boolean;
+  last_pixel_timestamp: Date | null;
+  width: number;
+  height: number;
+}
+
 /**
  * Retrieves canvas summary info for all canvases.
  *
  * @returns The canvas summary info of all canvases
  */
 export async function getCanvases(): Promise<CanvasSummary[]> {
-  const canvases = await prisma.canvas.findMany({
-    orderBy: {
-      id: "desc",
-    },
-    select: {
-      id: true,
-      name: true,
-      event_id: true,
-      locked: true,
-    },
-  });
+  const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
+    SELECT
+      c.id,
+      c.name,
+      c.event_id,
+      c.locked,
+      c.width,
+      c.height,
+      MAX(h.timestamp) AS last_pixel_timestamp
+    FROM canvas c
+    LEFT JOIN history h
+      ON h.canvas_id = c.id
+      AND h.erased_at IS NULL
+    GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
+    ORDER BY
+      MAX(h.timestamp) DESC NULLS LAST,
+      c.id DESC
+  `;
 
   return canvases.map((canvas) => ({
     id: canvas.id,
     name: canvas.name,
     eventId: canvas.event_id,
     isLocked: canvas.locked,
+    width: canvas.width,
+    height: canvas.height,
   }));
 }
 

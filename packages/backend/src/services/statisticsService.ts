@@ -111,14 +111,26 @@ export async function getLeaderboard(
 export async function getCanvasStatisticsSummary(
   canvasId: CanvasInfo["id"],
 ): Promise<CanvasStatisticsSummary> {
-  const leaderboardRows = await prisma.leaderboard.findMany({
-    where: {
-      canvas_id: canvasId,
-    },
-    select: {
-      total_pixels: true,
-    },
-  });
+  const [leaderboardRows, latestHistoryRow] = await Promise.all([
+    prisma.leaderboard.findMany({
+      where: {
+        canvas_id: canvasId,
+      },
+      select: {
+        total_pixels: true,
+      },
+    }),
+    prisma.history.findFirst({
+      where: {
+        canvas_id: canvasId,
+        erased_at: null,
+      },
+      orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+      select: {
+        timestamp: true,
+      },
+    }),
+  ]);
 
   return {
     canvasId,
@@ -127,6 +139,7 @@ export async function getCanvasStatisticsSummary(
       (total, row) => total + row.total_pixels,
       0,
     ),
+    lastPlacedAt: latestHistoryRow?.timestamp ?? null,
   };
 }
 
