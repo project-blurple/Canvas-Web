@@ -1,6 +1,6 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { Grip, History, Radio, Users, X } from "lucide-react";
+import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
 import { dateToRelativeTime } from "@/util/text";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
@@ -130,6 +130,7 @@ export function CanvasPreviewCard({
         <EventCanvasNameWrapper>
           <EventCanvasName>{canvas.name}</EventCanvasName>
           {currentEventId === canvas.eventId && <Radio size={16} />}
+          {canvas.isLocked && <Lock size={16} />}
         </EventCanvasNameWrapper>
         <EventCanvasCoords>
           {canvas.width}
