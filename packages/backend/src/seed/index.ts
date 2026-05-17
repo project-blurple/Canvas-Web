@@ -70,30 +70,14 @@ async function main() {
 
   async function countRecords(seeding: Seeding): Promise<number> {
     switch (seeding) {
-      case "canvas":
-        return prisma.canvas.count();
-      case "color":
-        return prisma.color.count();
-      case "discord_guild_record":
-        return prisma.discord_guild_record.count();
-      case "discord_user_profile":
-        return prisma.discord_user_profile.count();
-      case "event":
-        return prisma.event.count();
-      case "frame":
-        return prisma.frame.count();
-      case "guild":
-        return prisma.guild.count();
       case "history":
-        return prisma.history.count();
-      case "info":
-        return prisma.info.count();
-      case "participation":
-        return prisma.participation.count();
-      case "pixel":
-        return prisma.pixel.count();
-      case "user":
-        return prisma.user.count();
+        return prisma.history.count({
+          where: {
+            erased_at: null,
+          },
+        });
+      default:
+        return await prisma[seeding].count();
     }
   }
 

@@ -1,19 +1,8 @@
-"use client";
-
 import { styled } from "@mui/material";
 import type React from "react";
-import { useId } from "react";
-import {
-  useActionPanelContext,
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedColorContext,
-} from "@/contexts";
 import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
-import { PixelInfoTab, PlacePixelTab } from "./tabs";
-import FramesTab from "./tabs/FramesTab";
 
-const Wrapper = styled("div")`
+const Root = styled("div")`
   --padding-width: 1rem;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
@@ -50,7 +39,7 @@ const TabBar = styled("div")`
   grid-template-columns: repeat(3, 1fr);
 `;
 
-const StyledTab = styled("button")`
+const Tab = styled("button")`
   appearance: none;
   border: none;
   color: inherit;
@@ -107,7 +96,7 @@ const StyledTab = styled("button")`
   }
 `;
 
-export const Heading = styled("h2")`
+const SectionHeading = styled("h2")`
   color: oklch(from var(--discord-white) l c h / 60%);
   font-weight: 600;
   font-size: 1rem;
@@ -117,18 +106,16 @@ export const Heading = styled("h2")`
   text-transform: uppercase;
 `;
 
-type TabKey = "look" | "place" | "frame";
-
-function Tab({
+function GenericTab<TabKey extends string>({
   tabKey,
   onSwitchTab,
   ...props
 }: {
   tabKey: TabKey;
   onSwitchTab: (tabKey: TabKey) => void;
-} & React.ComponentPropsWithRef<typeof StyledTab>) {
+} & React.ComponentPropsWithRef<typeof Tab>) {
   return (
-    <StyledTab
+    <Tab
       onClick={() => onSwitchTab(tabKey)}
       onKeyUp={(event) => {
         if (event.key === "Enter" || event.key === " ") onSwitchTab(tabKey);
@@ -139,87 +126,12 @@ function Tab({
   );
 }
 
-export default function ActionPanel() {
-  const {
-    areTabsLocked,
-    currentTab,
-    setAreTabsLocked,
-    setCurrentTab,
-    setTempColor,
-    tempColor,
-  } = useActionPanelContext();
+const ActionPanelPrimitives = {
+  Root,
+  TabBar,
+  Tab,
+  SectionHeading,
+  GenericTab,
+} as const;
 
-  const { color, setColor } = useSelectedColorContext();
-  const { canvas } = useCanvasContext();
-  const { setIsReticleVisible } = useCanvasViewContext();
-
-  const onSwitchTab = (newTab: TabKey) => {
-    if (areTabsLocked) return;
-
-    setCurrentTab(newTab);
-
-    // hiding colour from reticle if we are on look tab
-    if (newTab === "look") {
-      setTempColor(color);
-      setColor(null);
-    } else {
-      setColor(tempColor);
-    }
-
-    // hiding reticle if we are on frames tab
-    setIsReticleVisible(newTab !== "frame");
-  };
-
-  const placeTabId = useId();
-  const lookTabId = useId();
-  const frameTabId = useId();
-
-  return (
-    <Wrapper>
-      <TabBar role="tablist">
-        <Tab
-          aria-controls={placeTabId}
-          aria-disabled={areTabsLocked && currentTab !== "place"}
-          aria-selected={currentTab === "place"}
-          tabKey="place"
-          onSwitchTab={onSwitchTab}
-        >
-          Place
-        </Tab>
-        <Tab
-          aria-controls={lookTabId}
-          aria-disabled={areTabsLocked && currentTab !== "look"}
-          aria-selected={currentTab === "look"}
-          tabKey="look"
-          onSwitchTab={onSwitchTab}
-        >
-          Look
-        </Tab>
-        <Tab
-          aria-controls={frameTabId}
-          aria-disabled={areTabsLocked && currentTab !== "frame"}
-          aria-selected={currentTab === "frame"}
-          tabKey="frame"
-          onSwitchTab={onSwitchTab}
-        >
-          Frame
-        </Tab>
-      </TabBar>
-      <PlacePixelTab
-        active={currentTab === "place"}
-        eventId={canvas.eventId}
-        id={placeTabId}
-      />
-      <PixelInfoTab
-        active={currentTab === "look"}
-        canvasId={canvas.id}
-        id={lookTabId}
-      />
-      <FramesTab
-        active={currentTab === "frame"}
-        id={frameTabId}
-        setTabsLocked={setAreTabsLocked}
-      />
-    </Wrapper>
-  );
-}
+export default ActionPanelPrimitives;

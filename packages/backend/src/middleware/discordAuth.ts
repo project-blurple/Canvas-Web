@@ -58,7 +58,7 @@ const discordStrategy = new DiscordStrategy(
           profile.avatar ?? null,
         ),
         isCanvasAdmin: userIsCanvasAdmin,
-        isCanvasModerator: userIsCanvasModerator,
+        isCanvasModerator: userIsCanvasAdmin || userIsCanvasModerator,
       };
 
       done(null, user, {

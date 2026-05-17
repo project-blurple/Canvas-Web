@@ -1,7 +1,10 @@
 import { prisma } from "@/client";
 import seedAll from "@/test";
 import { userIsBlocklisted } from "./blocklistService";
-import { deletePixelHistoryEntries, getPixelHistory } from "./historyService";
+import {
+  deletePixelHistoryEntries,
+  getPixelHistorySummary,
+} from "./historyService";
 
 vi.mock("@/index", () => ({
   socketHandler: {
@@ -16,9 +19,9 @@ describe.skip("historyService", () => {
     await seedAll();
   });
 
-  describe("getPixelHistory", () => {
+  describe("getPixelHistorySummary", () => {
     it("returns pixel history for a single point", async () => {
-      const history = await getPixelHistory({
+      const history = await getPixelHistorySummary({
         canvasId: 1,
         points: { x: 0, y: 0 },
       });
@@ -31,6 +34,16 @@ describe.skip("historyService", () => {
         new Date(2),
         new Date(1),
       ]);
+      expect(history.users).toMatchObject({
+        "1": {
+          count: 4,
+          colors: {
+            "1": 4,
+          },
+          firstPlaced: new Date(1),
+          lastPlaced: new Date(7),
+        },
+      });
       expect(history.pixelHistory[0]).toMatchObject({
         color: {
           id: 1,
@@ -49,7 +62,7 @@ describe.skip("historyService", () => {
     });
 
     it("applies range and filter conditions", async () => {
-      const history = await getPixelHistory({
+      const history = await getPixelHistorySummary({
         canvasId: 1,
         points: [
           { x: 0, y: 0 },
@@ -71,6 +84,17 @@ describe.skip("historyService", () => {
         new Date(9),
         new Date(8),
       ]);
+      expect(history.users).toMatchObject({
+        "1": {
+          count: 2,
+          colors: {
+            "3": 1,
+            "1": 1,
+          },
+          firstPlaced: new Date(8),
+          lastPlaced: new Date(9),
+        },
+      });
       expect(history.pixelHistory[0]).toMatchObject({
         color: {
           id: 3,
@@ -107,11 +131,21 @@ describe.skip("historyService", () => {
         },
       });
 
-      await deletePixelHistoryEntries(1, [entryOne.id, entryTwo.id], true);
+      await deletePixelHistoryEntries(
+        {
+          canvasId: 1,
+          points: [
+            { x: 1, y: 0 },
+            { x: 1, y: 1 },
+          ],
+        },
+        true,
+      );
 
       await expect(
         prisma.history.findMany({
           where: {
+            erased_at: null,
             canvas_id: 1,
             id: {
               in: [entryOne.id, entryTwo.id],
@@ -120,23 +154,26 @@ describe.skip("historyService", () => {
         }),
       ).resolves.toStrictEqual([]);
 
+      await expect(
+        prisma.history.findMany({
+          where: {
+            erased_at: {
+              not: null,
+            },
+            canvas_id: 1,
+            id: {
+              in: [entryOne.id, entryTwo.id],
+            },
+          },
+        }),
+      ).resolves.toHaveLength(2);
+
       await expect(userIsBlocklisted(1n)).resolves.toBe(true);
     });
 
     it("rejects history IDs that do not belong to the canvas", async () => {
-      const entry = await prisma.history.create({
-        data: {
-          canvas_id: 1,
-          user_id: 1n,
-          x: 0,
-          y: 0,
-          color_id: 1,
-          timestamp: new Date(102),
-        },
-      });
-
       await expect(
-        deletePixelHistoryEntries(1, [entry.id, 999n]),
+        deletePixelHistoryEntries({ canvasId: 1, points: { x: 0, y: 0 } }),
       ).rejects.toThrow(
         `The following history IDs do not exist for canvas 1: 999`,
       );

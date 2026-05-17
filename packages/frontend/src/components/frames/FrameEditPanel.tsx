@@ -40,7 +40,7 @@ import {
   normalizeFrameBounds,
   type ViewBounds,
 } from "@/util";
-import { Heading } from "../action-panel/ActionPanel";
+import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -131,11 +131,12 @@ export default function FrameEditPanel({
   const { canvas } = useCanvasContext();
   const queryClient = useQueryClient();
   const {
-    clearSelectedBounds,
+    resetSelectedBounds,
     setCanEdit,
     selectedBounds: frameBounds,
     setSelectedBounds: setFrameBounds,
     setBoundsToCurrentView,
+    setShowSelectedBounds,
   } = useSelectedBoundsContext();
   const { frame: selectedFrame, setFrame: setSelectedFrame } =
     useSelectedFrameContext();
@@ -174,10 +175,17 @@ export default function FrameEditPanel({
       }
 
       setCanEdit(true);
+      setShowSelectedBounds(true);
 
       didInitBoundsRef.current = true;
     },
-    [selectedFrame, setFrameBounds, setBoundsToCurrentView, setCanEdit],
+    [
+      selectedFrame,
+      setFrameBounds,
+      setBoundsToCurrentView,
+      setCanEdit,
+      setShowSelectedBounds,
+    ],
   );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
@@ -283,7 +291,7 @@ export default function FrameEditPanel({
 
   const closeEditor = () => {
     setActivePanel(FramePanelMode.Info);
-    clearSelectedBounds();
+    resetSelectedBounds();
   };
 
   const invalidateFrameQueries = async () => {
@@ -471,9 +479,9 @@ export default function FrameEditPanel({
       // Shouldn't be able to get to this tab without being logged in,
       // but this prevents that at the least
       setActivePanel(FramePanelMode.Info);
-      clearSelectedBounds();
+      resetSelectedBounds();
     }
-  }, [user, setActivePanel, clearSelectedBounds]);
+  }, [user, setActivePanel, resetSelectedBounds]);
 
   const isAtMaxFrames =
     selectedOwner === "user" ?
@@ -485,7 +493,9 @@ export default function FrameEditPanel({
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <EditContainer>
-            <Heading>{isCreateMode ? "Create frame" : "Edit frame"}</Heading>
+            <ActionPanelPrimitives.SectionHeading>
+              {isCreateMode ? "Create frame" : "Edit frame"}
+            </ActionPanelPrimitives.SectionHeading>
             <TextField
               label="Name"
               onChange={(e) => setFrameName(e.target.value)}
@@ -537,7 +547,7 @@ export default function FrameEditPanel({
                 />
                 <CoordinatesCard
                   coordinates={addPoints(
-                    { x: frameBounds.right, y: frameBounds.bottom },
+                    { x: frameBounds.right - 1, y: frameBounds.bottom - 1 },
                     tupleToPoint(canvas.startCoordinates),
                   )}
                 />
@@ -545,7 +555,9 @@ export default function FrameEditPanel({
             )}
           </EditContainer>
           <PreviewContainer>
-            <Heading>Preview</Heading>
+            <ActionPanelPrimitives.SectionHeading>
+              Preview
+            </ActionPanelPrimitives.SectionHeading>
             {frameBounds ?
               <EditPreviewCanvas
                 ref={previewCanvasRef}

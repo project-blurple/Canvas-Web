@@ -1,1 +1,1 @@
-export { default as ActionPanel } from "./ActionPanel";
+export { default as ActionPanel } from "./PrimaryActionPanel";
