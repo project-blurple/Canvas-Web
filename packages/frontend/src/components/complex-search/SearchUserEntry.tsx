@@ -38,7 +38,7 @@ const Heading = styled("h3")`
 
 const Paragraph = styled("p")`
   font: inherit;
-  font-variant-numeric: lining-nums slashed-zero tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
   grid-area: --entry-count;
 `;
 
