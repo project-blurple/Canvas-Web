@@ -90,7 +90,7 @@ export default function PlacePixelTab({
   const { coords, setCoords } = useCanvasViewContext();
   const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const [prevTimeLeft, setPrevTimeLeft] = useState(0);
 
   const { data: palette } = usePalette(eventId ?? undefined);
@@ -159,7 +159,7 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      if (cooldown) setTimeLeft(Math.ceil(cooldown / 1000));
+      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
     },
   });
 
@@ -174,21 +174,24 @@ export default function PlacePixelTab({
 
   useEffect(
     function tickCountdown() {
-      if (timeLeft > 0) {
-        const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
+      if (cooldownSeconds > 0) {
+        const timerId = setTimeout(
+          () => setCooldownSeconds(cooldownSeconds - 1),
+          1000,
+        );
         return () => clearTimeout(timerId);
       }
-      setTimeLeft(0);
+      setCooldownSeconds(0);
     },
-    [timeLeft],
+    [cooldownSeconds],
   );
 
   useEffect(
     function playJingleWhenCooldownExpires() {
-      if (prevTimeLeft > 0 && timeLeft === 0) playCooldownExpirySound();
-      setPrevTimeLeft(timeLeft);
+      if (prevTimeLeft > 0 && cooldownSeconds === 0) playCooldownExpirySound();
+      setPrevTimeLeft(cooldownSeconds);
     },
-    [playCooldownExpirySound, prevTimeLeft, timeLeft],
+    [playCooldownExpirySound, prevTimeLeft, cooldownSeconds],
   );
 
   return (
@@ -219,8 +222,9 @@ export default function PlacePixelTab({
           {canPlacePixel && (
             <PlacePixelButton
               aria-busy={isPlacing}
-              isVerbose={!isLarge}
+              cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
+              isVerbose={!isLarge}
               type="submit"
             />
           )}
