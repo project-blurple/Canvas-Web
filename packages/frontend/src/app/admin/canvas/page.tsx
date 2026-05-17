@@ -255,7 +255,7 @@ function AdminCanvasTab() {
   const [formValues, setFormValues] = useState({
     allColorsGlobal: activeCanvas?.allColorsGlobal ?? false,
     cooldownLength: activeCanvas?.cooldownLength ?? 0,
-    isLocked: activeCanvas?.isLocked ?? false,
+    isLocked: activeCanvas?.isLocked ?? true,
     name: activeCanvas?.name ?? "",
   });
 

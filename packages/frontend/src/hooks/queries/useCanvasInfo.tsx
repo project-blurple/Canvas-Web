@@ -44,3 +44,20 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
     },
   });
 }
+
+export function useCreateCanvas() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: Omit<CanvasInfo, "eventId">) => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas`;
+
+      return axios.post(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["canvas"] });
+    },
+  });
+}
