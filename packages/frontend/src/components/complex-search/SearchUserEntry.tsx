@@ -49,12 +49,9 @@ const UserId = styled(PrimitiveButton)`
   gap: 0.25rem;
   grid-area: --user-id;
   letter-spacing: 0.01em;
-  transition-duration: var(--transition-duration-fast);
-  transition-property: color;
-  transition-timing-function: ease;
+  margin-block-start: 0.5em;
   width: fit-content;
   word-break: break-all;
-  margin-block-start: 0.5em;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
