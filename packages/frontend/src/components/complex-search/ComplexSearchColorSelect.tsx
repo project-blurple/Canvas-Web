@@ -1,7 +1,7 @@
 "use client";
 
 import type { Palette } from "@blurple-canvas-web/types";
-import { Autocomplete, Chip, css, styled, TextField } from "@mui/material";
+import { Autocomplete, Chip, styled, TextField } from "@mui/material";
 import { SquareMinus, SquarePlus } from "lucide-react";
 import type React from "react";
 import DynamicButton from "@/components/button/DynamicButton";
