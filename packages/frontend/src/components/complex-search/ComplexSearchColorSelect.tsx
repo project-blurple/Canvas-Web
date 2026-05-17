@@ -20,10 +20,10 @@ const ListItem = styled("li")`
 
 const ColorPreview = styled("div")`
   background-color: currentColor;
-  border: 1px solid oklch(from white l c h / 15%);
+  border-radius: calc(infinity * 1px);
+  border: var(--card-border);
   height: 1em;
   width: 1em;
-  border-radius: calc(infinity * 1px);
 `;
 
 const Code = styled("code")`
