@@ -476,7 +476,10 @@ function AdminCanvasTab() {
             />
             {mode !== "create" && (
               <StyledButton
-                onClick={async () => await clearCanvasCache.mutateAsync()}
+                onClick={async () => {
+                  await clearCanvasCache.mutateAsync();
+                  window.location.reload();
+                }}
               >
                 Clear cached image
               </StyledButton>
