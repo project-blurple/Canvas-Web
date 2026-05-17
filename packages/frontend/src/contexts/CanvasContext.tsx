@@ -25,6 +25,7 @@ const CanvasContext = createContext<CanvasContextType>({
     eventId: null,
     webPlacingEnabled: false,
     allColorsGlobal: false,
+    cooldownLength: 0,
   },
   setCanvas: async () => {},
 });

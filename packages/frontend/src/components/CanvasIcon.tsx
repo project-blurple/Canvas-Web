@@ -43,7 +43,7 @@ const CanvasIcon = React.forwardRef<SVGSVGElement, LucideProps>(
         {...rest}
       >
         <title>Canvas</title>
-        {squares.map(({ x, y, tone }, i) => (
+        {squares.map(({ x, y, tone }) => (
           <rect
             key={`${x}-${y}`}
             x={x}
