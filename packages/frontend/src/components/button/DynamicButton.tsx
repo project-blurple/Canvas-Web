@@ -9,7 +9,7 @@ const StyledAnchor = styled("a")`
   display: contents;
 `;
 
-const StyledButton = styled(ButtonBase, {
+export const StyledButton = styled(ButtonBase, {
   shouldForwardProp: (prop) => prop !== "backgroundColorStr",
 })<{ backgroundColorStr?: string }>`
   :not(.${buttonClasses.disabled}) {

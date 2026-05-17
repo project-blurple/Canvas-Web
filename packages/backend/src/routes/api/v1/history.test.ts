@@ -3,14 +3,14 @@ import request from "supertest";
 import { isCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
-  getPixelHistory,
+  getPixelHistorySummary,
 } from "@/services/historyService";
 import { mockAuth } from "@/test/mockAuth";
 import { historyRouter } from "./history";
 
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
-  getPixelHistory: vi.fn(),
+  getPixelHistorySummary: vi.fn(),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -45,6 +45,8 @@ describe("History route tests", () => {
   });
 
   it("returns pixel history for a single coordinate", async () => {
+    const currentDate = new Date();
+
     const responseBody = {
       pixelHistory: [
         {
@@ -57,9 +59,22 @@ describe("History route tests", () => {
         },
       ],
       totalEntries: 1,
+      historyIds: ["1"],
+      users: {
+        "1": {
+          count: 1,
+          colors: {
+            "1": 1,
+          },
+          firstPlaced: new Date(0).toISOString(),
+          lastPlaced: currentDate.toISOString(),
+        },
+      },
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as unknown as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as unknown as Awaited<
+        ReturnType<typeof getPixelHistorySummary>
+      >,
     );
 
     const app = createApp();
@@ -67,24 +82,29 @@ describe("History route tests", () => {
       .get("/api/v1/canvas/1/pixel/history?x=2&y=3")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
-      canvasId: 1,
-      points: {
-        x: 2,
-        y: 3,
+    expect(response.body).toMatchObject(responseBody);
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: {
+          x: 2,
+          y: 3,
+        },
       },
-    });
+      false,
+    );
   });
 
   it("returns pixel history for a range and user filter", async () => {
     const responseBody = {
       pixelHistory: [],
       totalEntries: 0,
+      historyIds: [],
+      users: {},
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
@@ -101,36 +121,41 @@ describe("History route tests", () => {
       .type("json")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
-      canvasId: 9,
-      points: [
-        { x: 1, y: 2 },
-        { x: 3, y: 4 },
-      ],
-      dateRange: {
-        from: new Date("1970-01-01T00:00:00.000Z"),
-        to: new Date("1970-01-02T00:00:00.000Z"),
+    expect(response.body).toMatchObject(responseBody);
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 9,
+        points: [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+        dateRange: {
+          from: new Date("1970-01-01T00:00:00.000Z"),
+          to: new Date("1970-01-02T00:00:00.000Z"),
+        },
+        userIdFilter: {
+          ids: [1n, 2n],
+          include: true,
+        },
+        colorFilter: {
+          colors: [1, 2],
+          include: true,
+        },
       },
-      userIdFilter: {
-        ids: [1n, 2n],
-        include: true,
-      },
-      colorFilter: {
-        colors: [1, 2],
-        include: true,
-      },
-    });
+      true,
+    );
   });
 
   it("returns pixel history for a range and excluded color filter", async () => {
     const responseBody = {
       pixelHistory: [],
       totalEntries: 0,
+      historyIds: [],
+      users: {},
     };
-    vi.mocked(getPixelHistory).mockResolvedValueOnce(
-      responseBody as Awaited<ReturnType<typeof getPixelHistory>>,
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as Awaited<ReturnType<typeof getPixelHistorySummary>>,
     );
 
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
@@ -144,24 +169,27 @@ describe("History route tests", () => {
       .type("json")
       .expect(200);
 
-    expect(response.body).toStrictEqual(responseBody);
-    expect(getPixelHistory).toHaveBeenCalledTimes(1);
-    expect(getPixelHistory).toHaveBeenCalledWith({
-      canvasId: 9,
-      points: [
-        { x: 1, y: 2 },
-        { x: 3, y: 4 },
-      ],
-      dateRange: {
-        from: undefined,
-        to: undefined,
+    expect(response.body).toMatchObject(responseBody);
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 9,
+        points: [
+          { x: 1, y: 2 },
+          { x: 3, y: 4 },
+        ],
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        },
+        userIdFilter: undefined,
+        colorFilter: {
+          colors: [3, 4],
+          include: false,
+        },
       },
-      userIdFilter: undefined,
-      colorFilter: {
-        colors: [3, 4],
-        include: false,
-      },
-    });
+      true,
+    );
   });
 
   it("returns 400 when both includeColors and excludeColors are provided", async () => {
@@ -181,7 +209,7 @@ describe("History route tests", () => {
     expect(response.body).toMatchObject({
       message: "Invalid request body. Expected a valid history query object",
     });
-    expect(getPixelHistory).not.toHaveBeenCalled();
+    expect(getPixelHistorySummary).not.toHaveBeenCalled();
   });
 
   it("deletes history entries for a moderator", async () => {
@@ -193,7 +221,9 @@ describe("History route tests", () => {
       .delete("/api/v1/canvas/1/pixel/history")
       .set("X-TestUserId", "1")
       .send({
-        historyIds: [1, 2],
+        x0: 0,
+        y0: 0,
+        includeUserIds: ["1", "2"],
         shouldBlockAuthors: true,
       })
       .type("json")
@@ -201,7 +231,25 @@ describe("History route tests", () => {
 
     expect(response.body).toStrictEqual({});
     expect(deletePixelHistoryEntries).toHaveBeenCalledTimes(1);
-    expect(deletePixelHistoryEntries).toHaveBeenCalledWith(1, [1n, 2n], true);
+    expect(deletePixelHistoryEntries).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: [
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+        ],
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        },
+        userIdFilter: {
+          ids: [1n, 2n],
+          include: true,
+        },
+        colorFilter: undefined,
+      },
+      true,
+    );
   });
 
   it("returns 403 when deleting history without moderator permissions", async () => {

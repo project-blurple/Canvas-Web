@@ -12,7 +12,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { Heading } from "../action-panel/ActionPanel";
+import ActionPanelPrimitives from "../action-panel/primitives";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
 
@@ -103,7 +103,9 @@ export default function FrameList({ enabled = true }: FrameListProps) {
   return (
     <ActionPanelTabBody>
       <FramesWrapper>
-        <Heading>Your frames</Heading>
+        <ActionPanelPrimitives.SectionHeading>
+          Your frames
+        </ActionPanelPrimitives.SectionHeading>
         {user ?
           userFrames.length !== 0 ?
             <FramePreviewList
@@ -118,7 +120,9 @@ export default function FrameList({ enabled = true }: FrameListProps) {
         }
       </FramesWrapper>
       <FramesWrapper>
-        <Heading>Blurple Canvas</Heading>
+        <ActionPanelPrimitives.SectionHeading>
+          Blurple Canvas
+        </ActionPanelPrimitives.SectionHeading>
         <FramePreviewList
           items={[inbuiltFullCanvasFrame]}
           sourceImage={sourceImage}
@@ -133,7 +137,9 @@ export default function FrameList({ enabled = true }: FrameListProps) {
 
         return (
           <FramesWrapper key={ownerId}>
-            <Heading>{firstFrame.owner.guild.name}</Heading>
+            <ActionPanelPrimitives.SectionHeading>
+              {firstFrame.owner.guild.name}
+            </ActionPanelPrimitives.SectionHeading>
             <FramePreviewList
               items={frames.toSorted((a, b) => a.name.localeCompare(b.name))}
               sourceImage={sourceImage}

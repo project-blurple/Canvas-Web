@@ -4,7 +4,7 @@ import { ButtonSupplement } from "@/components/button";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import { usePixelHistory } from "@/hooks";
 import { createPixelUrl } from "@/util";
-import { Heading } from "../ActionPanel";
+import ActionPanelPrimitives from "../primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -29,7 +29,7 @@ interface PixelHistoryProps {
   history: PixelHistoryRecord[];
 }
 
-const PixelHistoryPast = ({ isLoading, history }: PixelHistoryProps) => {
+export function PixelHistoryPast({ isLoading, history }: PixelHistoryProps) {
   if (isLoading && history.length === 0) {
     return;
   }
@@ -39,7 +39,9 @@ const PixelHistoryPast = ({ isLoading, history }: PixelHistoryProps) => {
     <>
       {pastPixelHistory.length !== 0 && (
         <>
-          <Heading>Paint history</Heading>
+          <ActionPanelPrimitives.SectionHeading>
+            Paint history
+          </ActionPanelPrimitives.SectionHeading>
           <HistoryList>
             {pastPixelHistory.map((history: PixelHistoryRecord) => (
               <PixelHistoryListItem key={history.id} record={history} />
@@ -49,7 +51,7 @@ const PixelHistoryPast = ({ isLoading, history }: PixelHistoryProps) => {
       )}
     </>
   );
-};
+}
 
 const PixelHistoryCurrent = ({ isLoading, history }: PixelHistoryProps) => {
   if (isLoading) {

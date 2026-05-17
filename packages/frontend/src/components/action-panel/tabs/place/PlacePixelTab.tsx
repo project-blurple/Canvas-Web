@@ -13,7 +13,7 @@ import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
-import { Heading } from "../../ActionPanel";
+import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
 import { BotPlaceCommandCard } from "../BotCommandCard";
 import ColorInfoCard from "../SelectedColorInfoCard";
@@ -59,7 +59,7 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-function partitionPalette(palette: Palette): [Palette, Palette] {
+export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
   for (const color of palette) {
@@ -96,7 +96,7 @@ export default function PlacePixelTab({
   const { data: palette } = usePalette(eventId ?? undefined);
 
   const [mainColors, partnerColors] = useMemo(
-    () => (palette !== undefined ? partitionPalette(palette) : []),
+    () => (palette !== undefined ? partitionPaletteByOwner(palette) : []),
     [palette],
   );
   // Boolean to hide certain elements when the tab is too small
@@ -254,7 +254,9 @@ function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
   const isLoading = colors === undefined;
   return (
     <>
-      <Heading>{name}</Heading>
+      <ActionPanelPrimitives.SectionHeading>
+        {name}
+      </ActionPanelPrimitives.SectionHeading>
       <Fieldset disabled={disabled}>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (
