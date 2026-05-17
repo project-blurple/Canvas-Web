@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
+import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo } from "@/hooks";
@@ -36,6 +37,35 @@ const CanvasList = styled("div")`
   }
 `;
 
+const CanvasContents = styled("div")`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 40rem;
+  width: 100%;
+`;
+
+const CanvasHeader = styled("h1")`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  font-size: 1.5rem;
+  font-weight: 600;
+  gap: 0.25rem;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+`;
+
+const CanvasId = styled("code")`
+  opacity: 0.75;
+  font-size: 0.875rem;
+`;
+
 function AdminCanvasTab() {
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
@@ -51,16 +81,30 @@ function AdminCanvasTab() {
           <div>Loading...</div>
         : canvases.length === 0 ?
           <div>No canvases found.</div>
-        : <CanvasList>
-            {canvases.map((canvasItem) => (
-              <CanvasPreviewCard
-                canvas={canvasItem}
-                currentEventId={event?.id}
-                key={canvasItem.id}
-                onClick={() => setCanvas(canvasItem.id, false)}
-              />
-            ))}
-          </CanvasList>
+        : <>
+            <CanvasList>
+              {canvases.map((canvasItem) => (
+                <CanvasPreviewCard
+                  canvas={canvasItem}
+                  currentEventId={event?.id}
+                  key={canvasItem.id}
+                  onClick={() => setCanvas(canvasItem.id, false)}
+                />
+              ))}
+            </CanvasList>
+            <CanvasContents>
+              <CanvasHeader>
+                <span>
+                  <CanvasIcon size={20} />
+                  {activeCanvas.name}
+                </span>
+                <CanvasId>ID: {activeCanvas.id}</CanvasId>
+              </CanvasHeader>
+              {/* View: width and height */}
+              {/* View: start coordinates */}
+              {/* Toggle switch: isLocked, allColorsGlobal */}
+            </CanvasContents>
+          </>
         }
       </CanvasInfoWrapper>
     </AdminCanvasTabBlock>
