@@ -26,6 +26,14 @@ export const EventCanvasCard = styled("button")`
   &[aria-current="true"] {
     border-color: var(--discord-blurple);
   }
+
+  &:disabled {
+    cursor: not-allowed;
+
+    > img {
+      opacity: 0.5;
+    }
+  }
 `;
 
 const eventCanvasPreviewCss = css`

@@ -95,68 +95,63 @@ const StyledButton = styled(Button)`
 interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
   onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
+  isDirty: boolean;
+  formValues: {
+    allColorsGlobal: boolean;
+    cooldownLength: number;
+    isLocked: boolean;
+    name: string;
+  };
+  onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
 }
 
 function CanvasSettingsForm({
   activeCanvas,
   onSaved,
+  isDirty,
+  formValues,
+  onFormValuesChange,
 }: CanvasSettingsFormProps) {
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
 
-  const [formValues, setFormValues] = useState({
-    allColorsGlobal: activeCanvas.allColorsGlobal,
-    cooldownLength: activeCanvas.cooldownLength ?? 0,
-    isLocked: activeCanvas.isLocked,
-    name: activeCanvas.name,
-  });
-
   // Initialize form values when activeCanvas changes
   useEffect(() => {
-    setFormValues({
+    onFormValuesChange({
       allColorsGlobal: activeCanvas.allColorsGlobal,
       cooldownLength: activeCanvas.cooldownLength ?? 0,
       isLocked: activeCanvas.isLocked,
       name: activeCanvas.name,
     });
-  }, [activeCanvas]);
-
-  const isDirty = useMemo(() => {
-    return (
-      formValues.isLocked !== activeCanvas.isLocked ||
-      formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
-      formValues.cooldownLength !== activeCanvas.cooldownLength ||
-      formValues.name !== activeCanvas.name
-    );
-  }, [formValues, activeCanvas]);
+  }, [activeCanvas, onFormValuesChange]);
 
   function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFormValues((previousValues) => ({
-      ...previousValues,
+    onFormValuesChange({
+      ...formValues,
       isLocked: event.target.checked,
-    }));
+    });
   }
 
   function handleAllColorsGlobalChange(
     event: React.ChangeEvent<HTMLInputElement>,
   ) {
-    setFormValues((previousValues) => ({
-      ...previousValues,
+    onFormValuesChange({
+      ...formValues,
       allColorsGlobal: event.target.checked,
-    }));
+    });
   }
 
   function handleCooldownDurationChange(value: number | null) {
-    setFormValues((previousValues) => ({
-      ...previousValues,
+    onFormValuesChange({
+      ...formValues,
       cooldownLength: value ?? 0,
-    }));
+    });
   }
 
   function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setFormValues((previousValues) => ({
-      ...previousValues,
+    onFormValuesChange({
+      ...formValues,
       name: event.target.value,
-    }));
+    });
   }
 
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
@@ -257,6 +252,22 @@ function AdminCanvasTab() {
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<"create" | "edit">("edit");
+  const [formValues, setFormValues] = useState({
+    allColorsGlobal: activeCanvas?.allColorsGlobal ?? false,
+    cooldownLength: activeCanvas?.cooldownLength ?? 0,
+    isLocked: activeCanvas?.isLocked ?? false,
+    name: activeCanvas?.name ?? "",
+  });
+
+  const isDirty = useMemo(() => {
+    if (!activeCanvas) return false;
+    return (
+      formValues.isLocked !== activeCanvas.isLocked ||
+      formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
+      formValues.cooldownLength !== activeCanvas.cooldownLength ||
+      formValues.name !== activeCanvas.name
+    );
+  }, [formValues, activeCanvas]);
 
   const isLoading = canvasListIsLoading || eventIsLoading;
 
@@ -270,7 +281,7 @@ function AdminCanvasTab() {
         : <>
             <CanvasList>
               <AddCanvasCard
-                type="button"
+                disabled={isDirty}
                 onClick={() => setMode("create")}
                 aria-current={mode === "create"}
               >
@@ -281,6 +292,7 @@ function AdminCanvasTab() {
                   canvas={canvasItem}
                   currentEventId={event?.id}
                   key={canvasItem.id}
+                  disabled={isDirty}
                   onClick={() => {
                     setCanvas(canvasItem.id, false);
                     setMode("edit");
@@ -294,6 +306,9 @@ function AdminCanvasTab() {
             <CanvasSettingsForm
               activeCanvas={activeCanvas}
               onSaved={async (canvasId) => setCanvas(canvasId, false)}
+              isDirty={isDirty}
+              formValues={formValues}
+              onFormValuesChange={setFormValues}
             />
           </>
         }
