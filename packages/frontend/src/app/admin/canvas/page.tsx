@@ -172,21 +172,32 @@ function AdminCanvasTab() {
                 </span>
                 <CanvasId>ID: {activeCanvas.id}</CanvasId>
               </CanvasHeader>
-              {/* View: width and height */}
-              <CanvasDimensions>
-                {activeCanvas.width}
-                <X size={12} />
-                {activeCanvas.height}
-              </CanvasDimensions>
               <table>
                 <tbody>
                   <tr>
+                    <td>Name</td>
                     <td>
-                      <p>x</p>
+                      <p>{activeCanvas.name}</p>
                     </td>
-                    <td>Cooldown duration</td>
                   </tr>
                   <tr>
+                    <td>Dimensions</td>
+                    <td>
+                      <CanvasDimensions>
+                        {activeCanvas.width}
+                        <X size={12} />
+                        {activeCanvas.height}
+                      </CanvasDimensions>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Cooldown (s)</td>
+                    <td>
+                      <p>{activeCanvas.cooldownLength}</p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Locked</td>
                     <td>
                       <Switch
                         type="checkbox"
@@ -194,9 +205,9 @@ function AdminCanvasTab() {
                         onChange={handleIsLockedChange}
                       />
                     </td>
-                    <td>Locked</td>
                   </tr>
                   <tr>
+                    <td>Partner colors global</td>
                     <td>
                       <Switch
                         type="checkbox"
@@ -205,7 +216,6 @@ function AdminCanvasTab() {
                         disabled // currently controlled by env rather than db
                       />
                     </td>
-                    <td>All colors global</td>
                   </tr>
                 </tbody>
               </table>
