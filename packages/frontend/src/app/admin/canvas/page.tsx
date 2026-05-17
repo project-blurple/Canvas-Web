@@ -112,6 +112,7 @@ const createDefaults = {
   isLocked: true,
   name: "",
   width: 1,
+  startCoordinates: [1, 1] as [number, number],
 };
 
 type FormMode = "edit" | "create";
@@ -126,6 +127,7 @@ interface CanvasSettingsFormProps {
     isLocked: boolean;
     name: string;
     width: number;
+    startCoordinates: [number, number];
   };
   isDirty: boolean;
   mode: FormMode;
@@ -154,6 +156,7 @@ function CanvasSettingsForm({
       isLocked: activeCanvas.isLocked,
       name: activeCanvas.name,
       width: activeCanvas.width,
+      startCoordinates: activeCanvas.startCoordinates,
     });
   }, [activeCanvas, onFormValuesChange]);
 
@@ -220,6 +223,7 @@ function CanvasSettingsForm({
         isLocked: activeCanvas.isLocked,
         name: activeCanvas.name,
         width: activeCanvas.width,
+        startCoordinates: activeCanvas.startCoordinates,
       });
     }
   }
@@ -245,6 +249,7 @@ function CanvasSettingsForm({
           isLocked: formValues.isLocked,
           name: formValues.name,
           width: formValues.width,
+          startCoordinates: formValues.startCoordinates,
         });
         await onSaved(formValues.id);
       } else {
@@ -401,6 +406,8 @@ function AdminCanvasTab() {
     isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
     name: activeCanvas?.name ?? createDefaults.name,
     width: activeCanvas?.width ?? createDefaults.width,
+    startCoordinates:
+      activeCanvas?.startCoordinates ?? createDefaults.startCoordinates,
   });
 
   useEffect(() => {
@@ -417,6 +424,8 @@ function AdminCanvasTab() {
         isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
         name: activeCanvas.name ?? createDefaults.name,
         width: activeCanvas.width ?? createDefaults.width,
+        startCoordinates:
+          activeCanvas.startCoordinates ?? createDefaults.startCoordinates,
       });
     }
   }, [mode, activeCanvas]);
