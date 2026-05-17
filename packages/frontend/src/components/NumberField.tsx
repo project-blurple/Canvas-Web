@@ -77,6 +77,7 @@ export default function NumberField({
         onBlur={handleBlur}
         onChange={handleInputChange}
         type="number"
+        value={value}
         {...props}
       />
     </div>
