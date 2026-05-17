@@ -101,6 +101,49 @@ export async function validateUser(userId: bigint) {
 }
 
 /**
+ * Gets the remaining cooldown time in milliseconds for the given user on the given canvas.
+ *
+ * @param canvasId - The ID of the canvas
+ * @param userId - The ID of the user
+ *
+ * @remarks
+ *
+ * Returns `null` when the canvas exists but the user has no active cooldown
+ * (either because the canvas has no cooldown configured, the user has never placed
+ * a pixel on this canvas, or their previous cooldown has already elapsed).
+ *
+ * @returns The remaining cooldown time in milliseconds, or `null` if no active cooldown
+ */
+export async function getUserCanvasCooldown(
+  canvasId: number,
+  userId: bigint,
+): Promise<number | null> {
+  const canvas = await prisma.canvas.findFirst({
+    where: { id: canvasId },
+    select: { id: true },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  const cooldown = await prisma.cooldown.findFirst({
+    where: {
+      user_id: userId,
+      canvas_id: canvasId,
+    },
+    select: { cooldown_time: true },
+  });
+
+  if (!cooldown?.cooldown_time) {
+    return null;
+  }
+
+  const remaining = cooldown.cooldown_time.valueOf() - Date.now();
+  return remaining > 0 ? remaining : null;
+}
+
+/**
  * Gets the current and future (after pixel placement) cooldown time for the given canvas
  *
  * @param canvasId - The ID of the canvas
