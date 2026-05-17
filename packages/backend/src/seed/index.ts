@@ -39,6 +39,7 @@ const allSeedings = [
 type Seeding = (typeof allSeedings)[number];
 
 const { values: parametersValues } = parseArgs({
+  args: process.argv.slice(2).filter((arg) => arg !== "--"),
   options: {
     seedings: {
       type: "string",
