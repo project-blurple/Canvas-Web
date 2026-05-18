@@ -2,12 +2,13 @@ import cors from "cors";
 import express from "express";
 
 import config from "@/config";
+import { initializeAuth } from "@/middleware/discordAuth";
+import { errorHandler } from "@/middleware/errorHandler";
 import { apiRouter } from "@/routes";
+import { initializeCache } from "@/services/canvasService";
 import "@/utils";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
-import { initializeAuth } from "@/middleware/discordAuth";
-import { initializeCache } from "@/services/canvasService";
 import { SocketHandler } from "./SocketHandler";
 
 interface App {
@@ -29,6 +30,7 @@ export function createApp(): App {
 
   initializeAuth(app);
   app.use(apiRouter);
+  app.use(errorHandler);
 
   initializeCache();
 

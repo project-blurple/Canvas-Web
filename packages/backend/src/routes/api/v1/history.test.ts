@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import { isCanvasModerator } from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
@@ -36,6 +37,7 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
     next();
   });
   app.use("/api/v1/canvas/:canvasId/pixel/history", historyRouter);
+  app.use(errorHandler);
   return app;
 };
 
@@ -205,9 +207,9 @@ describe("History route tests", () => {
       })
       .type("json");
 
-    expect(response.status).toBe(406);
+    expect(response.status).toBe(400);
     expect(response.body).toMatchObject({
-      message: "Invalid request body. Expected a valid history query object",
+      message: "Invalid request data",
     });
     expect(getPixelHistorySummary).not.toHaveBeenCalled();
   });
