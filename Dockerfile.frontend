@@ -15,6 +15,10 @@ RUN pnpm ci --no-optional --ignore-scripts
 ENV NODE_ENV=production
 
 RUN pnpm --filter types build
+
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
 RUN pnpm --filter frontend build
 
 #
