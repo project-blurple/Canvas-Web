@@ -25,12 +25,12 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (
+    mutationFn: async (
       data: Partial<Pick<CanvasInfo, "name" | "isLocked" | "cooldownLength">>,
     ) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}`;
 
-      return axios.put(requestUrl, data, {
+      return await axios.put(requestUrl, data, {
         withCredentials: true,
       });
     },

@@ -148,17 +148,13 @@ export function CanvasPreviewCard({
       </EventCanvasMeta>
       {canvasStats && (
         <EventCanvasStats>
-          <EventCanvasStat
-            title={`${canvasStats.totalUsersInvolved.toLocaleString()} total ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"} involved`}
-          >
+          <EventCanvasStat>
             <Users size={16} />
-            <span>{`${canvasStats.totalUsersInvolved.toLocaleString()} ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"}`}</span>
+            {`${canvasStats.totalUsersInvolved.toLocaleString()} ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"}`}
           </EventCanvasStat>
-          <EventCanvasStat
-            title={`${canvasStats.totalPixelsPlaced.toLocaleString()} total ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"} placed`}
-          >
+          <EventCanvasStat>
             <Grip size={16} />
-            <span>{`${canvasStats.totalPixelsPlaced.toLocaleString()} ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"}`}</span>
+            {`${canvasStats.totalPixelsPlaced.toLocaleString()} ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"}`}
           </EventCanvasStat>
           <EventCanvasStat
             title={
@@ -178,11 +174,9 @@ export function CanvasPreviewCard({
             }
           >
             <History size={16} />
-            <span>
-              {canvasStats.lastPlacedAt ?
-                dateToRelativeTime(new Date(canvasStats.lastPlacedAt))
-              : "Never"}
-            </span>
+            {canvasStats.lastPlacedAt ?
+              dateToRelativeTime(new Date(canvasStats.lastPlacedAt))
+            : "Never"}
           </EventCanvasStat>
         </EventCanvasStats>
       )}
