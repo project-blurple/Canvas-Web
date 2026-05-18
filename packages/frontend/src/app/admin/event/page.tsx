@@ -63,6 +63,7 @@ const EventStatCard = styled("div")`
 
 const EventStatCardValue = styled("p")`
   font-size: 1.25rem;
+  font-stretch: 125%;
   font-weight: 600;
 `;
 
