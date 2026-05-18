@@ -271,7 +271,7 @@ function CanvasSettingsForm({
     try {
       if (mode === "create") {
         const response = await createCanvas.mutateAsync({
-          // allColorsGlobal: formValues.allColorsGlobal, currently controlled by env rather than db
+          allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
           height: formValues.height,
           isLocked: formValues.isLocked,
@@ -282,6 +282,7 @@ function CanvasSettingsForm({
         await onSaved(response.data.id);
       } else {
         await updateCanvasInfo.mutateAsync({
+          allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
           isLocked: formValues.isLocked,
           name: formValues.name,
@@ -365,7 +366,6 @@ function CanvasSettingsForm({
                 type="checkbox"
                 checked={formValues.allColorsGlobal}
                 onChange={handleAllColorsGlobalChange}
-                disabled // currently controlled by env rather than db
               />
             </td>
           </tr>
