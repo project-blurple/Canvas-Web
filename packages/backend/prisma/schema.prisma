@@ -29,6 +29,7 @@ model canvas {
   cooldown_length   Int?
   // The top-left coordinate from the user-perspective. For users, this is (1, 1)
   start_coordinates Int[]               @default([1, 1])
+  all_colors_global Boolean             @default(false)
   frames            frame[]
   pixels            pixel[]
   history           history[]
@@ -146,7 +147,6 @@ model info {
   host_server_id          BigInt
   event_role_id           BigInt?
   default_canvas_id       Int
-  all_colors_global       Boolean
 }
 
 model participation {

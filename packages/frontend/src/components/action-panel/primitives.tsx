@@ -1,6 +1,7 @@
 import { styled } from "@mui/material";
 import type React from "react";
 import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
+import { PrimitiveButton } from "../button";
 
 const Root = styled("div")`
   --padding-width: 1rem;
@@ -39,15 +40,7 @@ const TabBar = styled("div")`
   grid-template-columns: repeat(3, 1fr);
 `;
 
-const Tab = styled("button")`
-  appearance: none;
-  border: none;
-  color: inherit;
-  font-family: inherit;
-  font-size: inherit;
-  font-style: inherit;
-  line-height: inherit;
-
+const Tab = styled(PrimitiveButton)`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: inherit;
   cursor: pointer;
@@ -56,7 +49,6 @@ const Tab = styled("button")`
   padding: 0.5rem 1rem;
   place-items: center;
   text-align: center;
-  touch-action: manipulation;
   transition-duration: var(--transition-duration-fast);
   transition-property: background, color, outline;
   transition-timing-function: ease;
