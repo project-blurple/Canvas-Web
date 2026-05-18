@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import { CalendarRange, Radio } from "lucide-react";
-import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
+import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import {
@@ -104,10 +104,12 @@ function AdminEventTab() {
     <AdminEventTabBlock>
       <EventInfoWrapper>
         {isLoading ?
-          <CanvasAnimatedIcon
+          <CanvasIcon
+            loading
+            size={64}
             style={{
               color: "var(--discord-blurple)",
-              height: "64px",
+              margin: "auto",
               opacity: 0.5,
             }}
           />

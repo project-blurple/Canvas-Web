@@ -3,7 +3,7 @@ import { css, styled } from "@mui/material";
 import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
 import { dateToRelativeTime } from "@/util/text";
-import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
+import CanvasIcon from "../CanvasIcon";
 
 export const EventCanvasCard = styled("button")`
   align-items: flex-start;
@@ -125,10 +125,11 @@ export function CanvasPreviewCard({
       {sourceImage ?
         <EventCanvasPreview alt={canvas.name} src={sourceImage.src} />
       : <EventCanvasPreviewPlaceholder>
-          <CanvasAnimatedIcon
+          <CanvasIcon
+            loading
+            size={48}
             style={{
               color: "var(--discord-blurple)",
-              height: "24px",
               opacity: 0.5,
             }}
           />
