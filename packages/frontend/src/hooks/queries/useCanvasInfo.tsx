@@ -67,19 +67,12 @@ export function useCreateCanvas() {
 }
 
 export function useClearCanvasCache(canvasId: CanvasInfo["id"]) {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/cache`;
 
-      return axios.delete(requestUrl, {
+      return await axios.delete(requestUrl, {
         withCredentials: true,
-      });
-    },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: ["canvasInfo", canvasId],
       });
     },
   });
