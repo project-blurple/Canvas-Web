@@ -58,6 +58,7 @@ describe("Canvas admin route tests", () => {
       locked: true,
       event_id: 1,
       cooldown_length: 30,
+      all_colors_global: true,
     });
 
     const response = await request(app)
@@ -81,12 +82,14 @@ describe("Canvas admin route tests", () => {
       locked: true,
       event_id: 1,
       cooldown_length: 30,
+      all_colors_global: true,
     });
     expect(vi.mocked(createCanvas)).toHaveBeenCalledWith({
       name: "New Canvas",
       width: 16,
       height: 16,
       startCoordinates: [1, 1],
+      allColorsGlobal: true,
       cooldownLength: 30,
     });
   });
@@ -103,6 +106,7 @@ describe("Canvas admin route tests", () => {
       locked: true,
       event_id: 1,
       cooldown_length: 45,
+      all_colors_global: false,
     });
 
     const response = await request(app).put("/api/v1/canvas/7").send({
@@ -122,12 +126,14 @@ describe("Canvas admin route tests", () => {
       locked: true,
       event_id: 1,
       cooldown_length: 45,
+      all_colors_global: false,
     });
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,
       name: "Updated Canvas",
       cooldownLength: 45,
       isLocked: true,
+      allColorsGlobal: false,
     });
   });
 });
