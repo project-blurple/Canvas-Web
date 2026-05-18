@@ -133,7 +133,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     isLocked: canvas.locked,
     width: canvas.width,
     height: canvas.height,
-    cooldownLength: canvas.cooldown_length,
+    cooldownDuration: canvas.cooldown_length,
   }));
 }
 
@@ -195,7 +195,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
     allColorsGlobal: config.allColorsGlobal,
-    cooldownLength: canvas.cooldown_length,
+    cooldownDuration: canvas.cooldown_length,
   };
 }
 
@@ -382,7 +382,7 @@ interface CreateCanvasParams {
   height: number;
   startCoordinates?: [number, number];
   allColorsGlobal?: boolean;
-  cooldownLength?: number;
+  cooldownDuration?: number;
 }
 
 export async function createCanvas({
@@ -390,7 +390,7 @@ export async function createCanvas({
   width,
   height,
   startCoordinates = [1, 1],
-  cooldownLength = 15,
+  cooldownDuration = 15,
 }: CreateCanvasParams) {
   const currentEventId = await getCurrentEvent();
 
@@ -402,7 +402,7 @@ export async function createCanvas({
       event_id: currentEventId.id,
       start_coordinates: startCoordinates,
       locked: true,
-      cooldown_length: cooldownLength,
+      cooldown_length: cooldownDuration,
     },
   });
 
@@ -450,14 +450,14 @@ interface EditCanvasParams {
   name?: string;
   isLocked?: boolean;
   allColorsGlobal?: boolean;
-  cooldownLength?: number;
+  cooldownDuration?: number;
 }
 
 export async function editCanvas({
   canvasId,
   name,
   isLocked,
-  cooldownLength,
+  cooldownDuration,
 }: EditCanvasParams) {
   const canvas = await prisma.canvas.update({
     where: {
@@ -466,7 +466,7 @@ export async function editCanvas({
     data: {
       name,
       locked: isLocked,
-      cooldown_length: cooldownLength,
+      cooldown_length: cooldownDuration,
     },
   });
 

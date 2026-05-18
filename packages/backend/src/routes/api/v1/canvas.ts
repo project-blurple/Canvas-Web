@@ -85,7 +85,7 @@ canvasRouter.post("/", requireCanvasAdmin, async (req, res) => {
       width: canvasData.data.width,
       height: canvasData.data.height,
       startCoordinates: canvasData.data.startCoordinates,
-      cooldownLength: canvasData.data.cooldownLength,
+      cooldownDuration: canvasData.data.cooldownDuration,
     });
 
     res.status(201).json(canvas);
@@ -109,7 +109,7 @@ canvasRouter.put<CanvasIdParam>(
       const canvas = await editCanvas({
         canvasId,
         name: canvasData.data.name,
-        cooldownLength: canvasData.data.cooldownLength,
+        cooldownDuration: canvasData.data.cooldownDuration,
         isLocked: canvasData.data.isLocked,
       });
 

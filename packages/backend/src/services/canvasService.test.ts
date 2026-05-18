@@ -161,7 +161,7 @@ describe("Edit Canvas Tests", () => {
       name: "Edited Canvas",
       isLocked: true,
       allColorsGlobal: true,
-      cooldownLength: 45,
+      cooldownDuration: 45,
     });
 
     const canvas = await getCanvasInfo(1);

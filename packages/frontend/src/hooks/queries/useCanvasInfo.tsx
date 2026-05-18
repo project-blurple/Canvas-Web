@@ -26,7 +26,7 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
 
   return useMutation({
     mutationFn: async (
-      data: Partial<Pick<CanvasInfo, "name" | "isLocked" | "cooldownLength">>,
+      data: Partial<Pick<CanvasInfo, "name" | "isLocked" | "cooldownDuration">>,
     ) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}`;
 

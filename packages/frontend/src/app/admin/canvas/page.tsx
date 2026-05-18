@@ -106,7 +106,7 @@ const StyledButton = styled(Button)`
 
 const createDefaults = {
   allColorsGlobal: false,
-  cooldownLength: 0,
+  cooldownDuration: 0,
   height: 1,
   isLocked: true,
   name: "",
@@ -120,7 +120,7 @@ interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
   formValues: {
     allColorsGlobal: boolean;
-    cooldownLength: number;
+    cooldownDuration: number;
     height: number;
     isLocked: boolean;
     name: string;
@@ -148,7 +148,7 @@ function CanvasSettingsForm({
   useEffect(() => {
     onFormValuesChange({
       allColorsGlobal: activeCanvas.allColorsGlobal,
-      cooldownLength: activeCanvas.cooldownLength ?? 0,
+      cooldownDuration: activeCanvas.cooldownDuration ?? 0,
       height: activeCanvas.height,
       isLocked: activeCanvas.isLocked,
       name: activeCanvas.name,
@@ -176,7 +176,7 @@ function CanvasSettingsForm({
   function handleCooldownDurationChange(value: number | null) {
     onFormValuesChange({
       ...formValues,
-      cooldownLength: value ?? 0,
+      cooldownDuration: value ?? 0,
     });
   }
 
@@ -207,7 +207,7 @@ function CanvasSettingsForm({
     } else {
       onFormValuesChange({
         allColorsGlobal: activeCanvas.allColorsGlobal,
-        cooldownLength: activeCanvas.cooldownLength ?? 0,
+        cooldownDuration: activeCanvas.cooldownDuration ?? 0,
         height: activeCanvas.height,
         isLocked: activeCanvas.isLocked,
         name: activeCanvas.name,
@@ -232,7 +232,7 @@ function CanvasSettingsForm({
       if (mode === "create") {
         const response = await createCanvas.mutateAsync({
           // allColorsGlobal: formValues.allColorsGlobal, currently controlled by env rather than db
-          cooldownLength: formValues.cooldownLength,
+          cooldownDuration: formValues.cooldownDuration,
           height: formValues.height,
           isLocked: formValues.isLocked,
           name: formValues.name,
@@ -242,7 +242,7 @@ function CanvasSettingsForm({
         await onSaved(response.data.id);
       } else {
         await updateCanvasInfo.mutateAsync({
-          cooldownLength: formValues.cooldownLength,
+          cooldownDuration: formValues.cooldownDuration,
           isLocked: formValues.isLocked,
           name: formValues.name,
         });
@@ -302,7 +302,7 @@ function CanvasSettingsForm({
               <NumberField
                 min={0}
                 onValueChange={handleCooldownDurationChange}
-                value={formValues.cooldownLength}
+                value={formValues.cooldownDuration}
               />
             </td>
           </tr>
@@ -375,8 +375,8 @@ function AdminCanvasTab() {
   const [formValues, setFormValues] = useState({
     allColorsGlobal:
       activeCanvas?.allColorsGlobal ?? createDefaults.allColorsGlobal,
-    cooldownLength:
-      activeCanvas?.cooldownLength ?? createDefaults.cooldownLength,
+    cooldownDuration:
+      activeCanvas?.cooldownDuration ?? createDefaults.cooldownDuration,
     height: activeCanvas?.height ?? createDefaults.height,
     isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
     name: activeCanvas?.name ?? createDefaults.name,
@@ -392,8 +392,8 @@ function AdminCanvasTab() {
       setFormValues({
         allColorsGlobal:
           activeCanvas.allColorsGlobal ?? createDefaults.allColorsGlobal,
-        cooldownLength:
-          activeCanvas.cooldownLength ?? createDefaults.cooldownLength,
+        cooldownDuration:
+          activeCanvas.cooldownDuration ?? createDefaults.cooldownDuration,
         height: activeCanvas.height ?? createDefaults.height,
         isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
         name: activeCanvas.name ?? createDefaults.name,
@@ -409,7 +409,7 @@ function AdminCanvasTab() {
       return (
         formValues.isLocked !== createDefaults.isLocked ||
         formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
-        formValues.cooldownLength !== createDefaults.cooldownLength ||
+        formValues.cooldownDuration !== createDefaults.cooldownDuration ||
         formValues.name !== createDefaults.name ||
         formValues.width !== createDefaults.width ||
         formValues.height !== createDefaults.height
@@ -419,8 +419,8 @@ function AdminCanvasTab() {
     return (
       formValues.isLocked !== activeCanvas.isLocked ||
       formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
-      (formValues.cooldownLength !== activeCanvas.cooldownLength &&
-        activeCanvas.cooldownLength !== null) ||
+      (formValues.cooldownDuration !== activeCanvas.cooldownDuration &&
+        activeCanvas.cooldownDuration !== null) ||
       formValues.name !== activeCanvas.name ||
       formValues.width !== activeCanvas.width ||
       formValues.height !== activeCanvas.height
