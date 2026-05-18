@@ -36,7 +36,6 @@ import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
-import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
@@ -483,7 +482,6 @@ interface CanvasViewProps {
   >;
   canvasLabel?: string;
   showInvite?: boolean;
-  showNotices?: boolean;
   showReticle?: boolean;
 }
 
@@ -491,7 +489,6 @@ export default function CanvasView({
   actionPanel,
   canvasLabel,
   showInvite = true,
-  showNotices = true,
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
@@ -1177,7 +1174,6 @@ export default function CanvasView({
       ref={containerRef}
       onPointerDown={handlePointerDown}
     >
-      {showNotices && <Notices />}
       {canUseFullscreen && (
         <FullscreenButton
           $isFullscreen={isFullscreen}
