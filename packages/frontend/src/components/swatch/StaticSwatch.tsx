@@ -16,6 +16,7 @@ export interface StaticSwatchProps extends React.ComponentPropsWithRef<
 export function StaticSwatch({
   paletteColor,
   style,
+  children,
   ...props
 }: StaticSwatchProps) {
   const { name, rgba } = paletteColor;
@@ -30,6 +31,7 @@ export function StaticSwatch({
       {...props}
     >
       <VisuallyHidden>{name}</VisuallyHidden>
+      {children}
     </SwatchBase>
   );
 }
