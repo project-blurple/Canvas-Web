@@ -6,6 +6,7 @@ import {
   partitionPaletteByOwner,
   partitionPaletteByParticipation,
 } from "@/components/action-panel/tabs/place/PlacePixelTab";
+import CanvasIcon from "@/components/CanvasIcon";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
@@ -87,27 +88,43 @@ function ColorListWrapper({
 
 function AdminColorTab() {
   const { canvas } = useCanvasContext();
-  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, true);
-  const [mainColors, partnerColors] = partitionPaletteByOwner(palette);
+  const { data: palette, isLoading } = usePalette(
+    canvas.eventId ?? undefined,
+    true,
+  );
+  const [mainColors, partnerColors] =
+    palette ? partitionPaletteByOwner(palette) : [[], []];
   const [participatingColors, nonParticipatingColors] =
     partitionPaletteByParticipation(partnerColors);
 
   return (
     <AdminColorTabBlock>
-      {palette.length === 0 ?
-        "No colors found."
-      : <ColorTabWrapper>
-          <ColorListWrapper colors={mainColors} header="Global colors" />
-          <ColorListWrapper
-            colors={participatingColors}
-            header="Participating partner colors"
+      <ColorTabWrapper>
+        {isLoading || palette === undefined ?
+          <CanvasIcon
+            loading
+            size={64}
+            style={{
+              color: "var(--discord-blurple)",
+              margin: "auto",
+              opacity: 0.5,
+            }}
           />
-          <ColorListWrapper
-            colors={nonParticipatingColors}
-            header="Non-participating partner colors"
-          />
-        </ColorTabWrapper>
-      }
+        : palette.length === 0 ?
+          "No colors found."
+        : <>
+            <ColorListWrapper colors={mainColors} header="Global colors" />
+            <ColorListWrapper
+              colors={participatingColors}
+              header="Participating partner colors"
+            />
+            <ColorListWrapper
+              colors={nonParticipatingColors}
+              header="Non-participating partner colors"
+            />
+          </>
+        }
+      </ColorTabWrapper>
     </AdminColorTabBlock>
   );
 }

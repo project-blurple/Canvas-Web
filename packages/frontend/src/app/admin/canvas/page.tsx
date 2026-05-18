@@ -433,7 +433,15 @@ function AdminCanvasTab() {
     <AdminCanvasTabBlock>
       <CanvasInfoWrapper>
         {isLoading ?
-          <div>Loading...</div>
+          <CanvasIcon
+            loading
+            size={64}
+            style={{
+              color: "var(--discord-blurple)",
+              margin: "auto",
+              opacity: 0.5,
+            }}
+          />
         : canvases.length === 0 ?
           <div>No canvases found.</div>
         : <>
