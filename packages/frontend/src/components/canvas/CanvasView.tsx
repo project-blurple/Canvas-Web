@@ -743,10 +743,6 @@ export default function CanvasView({
       return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
     const onConnect = () => {
       console.debug("[Live Updating]: Connected to server");
       console.debug(
@@ -822,7 +818,6 @@ export default function CanvasView({
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off(pixelPlaceEvent, onPixelPlaced);
-      socket.disconnect();
     };
   }, [canvas]);
 
