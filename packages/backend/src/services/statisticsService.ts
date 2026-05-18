@@ -133,9 +133,7 @@ export async function getCanvasStatisticsSummary(
 export async function getEventStatisticsSummary(
   eventId: BlurpleEvent["id"],
 ): Promise<EventStatisticsSummary> {
-  const canvases = (await getCanvases()).filter(
-    (canvas) => canvas.eventId === eventId,
-  );
+  const canvases = await getCanvases(eventId);
 
   const leaderboardRows = await prisma.leaderboard.findMany({
     where: {
