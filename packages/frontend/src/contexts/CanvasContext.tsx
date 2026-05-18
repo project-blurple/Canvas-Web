@@ -67,10 +67,8 @@ export const CanvasProvider = ({
 
   useEffect(() => {
     const onCanvasUpdate = (canvas: CanvasInfo) => {
-      void Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["canvas"] }),
-        queryClient.invalidateQueries({ queryKey: ["canvasInfo"] }),
-      ]);
+      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
+      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
 
       if (canvas.id === activeCanvas.id) {
         setActiveCanvas(canvas);

@@ -83,13 +83,16 @@ export class SocketHandler {
   }
 
   public broadcastPixelPlacement(
-    canvasId: number,
+    canvasId: CanvasInfo["id"],
     payload: PlacePixelSocket.Payload,
   ) {
     this.io.emit(`place pixel ${canvasId}`, payload);
   }
 
-  public broadcastCanvasUpdate(canvasId: number, payload: CanvasInfo) {
+  public broadcastCanvasUpdate(
+    canvasId: CanvasInfo["id"],
+    payload: CanvasInfo,
+  ) {
     this.io.emit("canvas update", payload);
     this.io.emit(`canvas update ${canvasId}`, payload);
   }
