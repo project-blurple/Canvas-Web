@@ -7,11 +7,11 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
   border-style: solid;
   border-width: 3px;
   transition: var(--transition-duration-fast) ease;
-  transition-property: border-color, outline-width, padding, scale;
+  transition-property: border-color, outline-width, opacity, padding, scale;
   will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover:not(:disabled, [aria-selected="true"]) {
+    &:hover:not(:disabled, [aria-disabled="true"], [aria-selected="true"]) {
       opacity: 85%;
     }
   }
@@ -26,12 +26,19 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
     padding: 3px;
   }
 
-  &:active {
+  &:active:not([aria-disabled="true"]) {
     scale: 97%;
   }
 
   &:disabled {
     cursor: not-allowed;
+  }
+
+  /* aria-disabled keeps the swatch clickable (so the user can select it to see
+   * why it can't be placed yet) while making it visually distinct. */
+  &[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 45%;
   }
 `;
 
