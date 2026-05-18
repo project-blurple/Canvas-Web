@@ -90,8 +90,8 @@ export default function ColorInfoCard({
             You can use {colorName} in {guildNameNode}
           </Subtitle>
         : <Subtitle>
-            Join {guildNameNode} to use {colorName}. Joined already? Refresh
-            your server list <RecheckMembershipsLink controller={recheck} />.
+            Exclusive to {guildNameNode}. Already joined? Refresh{" "}
+            <RecheckMembershipsLink controller={recheck} />.
           </Subtitle>)}
       {partnerGated && <RecheckStatusLine controller={recheck} />}
     </Wrapper>
