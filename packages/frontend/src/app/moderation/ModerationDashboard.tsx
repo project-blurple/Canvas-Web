@@ -29,7 +29,6 @@ export default function ModerationDashboard() {
         actionPanel={<ModerationDashboardActionPanel />}
         canvasLabel="Moderation dashboard"
         showInvite={false}
-        showNotices={false}
         showReticle={false}
       />
       <SlideableDrawer>
