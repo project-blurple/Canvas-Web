@@ -30,7 +30,7 @@ const InlineTrigger = styled("button")`
   padding: 0;
   text-decoration: underline;
 
-  &:disabled {
+  &[aria-busy="true"] {
     cursor: progress;
   }
 `;
@@ -48,7 +48,7 @@ function getErrorText(error: unknown): string | null {
   if (error instanceof AxiosError && error.response?.status === 429) {
     return "Slow down — try again in a minute.";
   }
-  return "Couldn't reach Discord. Try again shortly.";
+  return "Couldn’t reach Discord. Try again shortly.";
 }
 
 export type RecheckMembershipsController = RefreshMutation & {
@@ -61,13 +61,13 @@ export function useRecheckMemberships(): RecheckMembershipsController {
   const { user } = useAuthContext();
   const mutation = useRefreshGuildMemberships(user?.id);
   const { isPending, isSuccess, error, reset } = mutation;
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [didJustSucceed, setDidJustSucceed] = useState(false);
 
   useEffect(() => {
     if (!isSuccess) return;
-    setShowSuccess(true);
+    setDidJustSucceed(true);
     const timer = setTimeout(() => {
-      setShowSuccess(false);
+      setDidJustSucceed(false);
       reset();
     }, SUCCESS_TEXT_RESET_MS);
     return () => clearTimeout(timer);
@@ -77,9 +77,9 @@ export function useRecheckMemberships(): RecheckMembershipsController {
   const statusText =
     isPending ?
       "Checking with Discord…"
-    : (errorText ?? (showSuccess ? "Server list updated." : null));
+    : (errorText ?? (didJustSucceed ? "Server list updated" : null));
 
-  return { ...mutation, showSuccess, errorText, statusText };
+  return { ...mutation, showSuccess: didJustSucceed, errorText, statusText };
 }
 
 export default function RecheckMembershipsButton() {
@@ -93,7 +93,7 @@ export default function RecheckMembershipsButton() {
       <Button
         variant="contained"
         onClick={() => mutate()}
-        disabled={isPending}
+        aria-busy={isPending}
         startIcon={
           isPending ?
             <CircularProgress color="inherit" size="1em" />
@@ -103,7 +103,7 @@ export default function RecheckMembershipsButton() {
         {isPending ? "Rechecking…" : "Recheck your Discord servers"}
       </Button>
       {showSuccess && !errorText && (
-        <StatusText>Server list updated.</StatusText>
+        <StatusText>Server list updated</StatusText>
       )}
       {errorText && <StatusText role="alert">{errorText}</StatusText>}
     </Wrapper>
@@ -111,12 +111,12 @@ export default function RecheckMembershipsButton() {
 }
 
 interface RecheckMembershipsLinkProps {
-  children?: ReactNode;
+  children: ReactNode;
   controller: RecheckMembershipsController;
 }
 
 export function RecheckMembershipsLink({
-  children = "here",
+  children,
   controller,
 }: RecheckMembershipsLinkProps) {
   const { user } = useAuthContext();
@@ -129,7 +129,6 @@ export function RecheckMembershipsLink({
       type="button"
       onClick={() => mutate()}
       disabled={isPending}
-      aria-label="Refresh your Discord server list"
     >
       {children}
     </InlineTrigger>

@@ -223,14 +223,9 @@ export default function PlacePixelTab({
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette
-              colors={mainColors}
-              disabled={isPlacing}
-              name="Main colors"
-            />
+            <NamedPalette colors={mainColors} name="Main colors" />
             <NamedPalette
               colors={partnerColors}
-              disabled={isPlacing}
               isColorDisabled={isColorDisabled}
               name="Partner colors"
             />
@@ -274,14 +269,12 @@ export default function PlacePixelTab({
 
 interface NamedPaletteProps {
   colors: Palette | undefined;
-  disabled?: boolean | undefined;
   isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
 }
 
 function NamedPalette({
   colors,
-  disabled,
   isColorDisabled,
   name,
 }: NamedPaletteProps) {
@@ -295,7 +288,7 @@ function NamedPalette({
       <ActionPanelPrimitives.SectionHeading>
         {name}
       </ActionPanelPrimitives.SectionHeading>
-      <Fieldset disabled={disabled}>
+      <Fieldset>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change

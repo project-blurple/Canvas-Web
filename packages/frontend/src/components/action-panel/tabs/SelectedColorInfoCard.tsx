@@ -68,7 +68,7 @@ export default function ColorInfoCard({
   const guildName = color.guildName ?? "a partnered server";
   const guildNameNode =
     invite ?
-      <a href={invite} target="_blank" rel="noreferrer">
+      <a href={invite} target="_blank" rel="external noreferrer">
         {guildName}
       </a>
     : guildName;
@@ -90,8 +90,11 @@ export default function ColorInfoCard({
             You can use {colorName} in {guildNameNode}
           </Subtitle>
         : <Subtitle>
-            Exclusive to {guildNameNode}. Already joined? Refresh{" "}
-            <RecheckMembershipsLink controller={recheck} />.
+            Exclusive to {guildNameNode}. Already joined?{" "}
+            <RecheckMembershipsLink controller={recheck}>
+              Refresh here
+            </RecheckMembershipsLink>
+            .
           </Subtitle>)}
       {partnerGated && <RecheckStatusLine controller={recheck} />}
     </Wrapper>
