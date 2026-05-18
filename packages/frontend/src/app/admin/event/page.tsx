@@ -108,7 +108,7 @@ function AdminEventTab() {
             style={{
               color: "var(--discord-blurple)",
               height: "64px",
-              opacity: 0.5,
+              opacity: 0.55,
             }}
           />
         : !selectedEvent ?

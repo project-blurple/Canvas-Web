@@ -37,7 +37,8 @@ const NavLink = styled(Link)`
   border-radius: 0.5rem;
   color: inherit;
   cursor: pointer;
-  padding: 0.5rem 0.75rem;
+  padding-block: 0.5rem
+  padding-inline: 0.75rem;
   text-align: center;
   text-decoration: none;
   transition: background-color 0.2s;
