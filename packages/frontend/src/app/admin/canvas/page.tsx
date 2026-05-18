@@ -91,6 +91,12 @@ const ErrorText = styled("div")`
   margin-top: 4px;
 `;
 
+const SaveStatusText = styled("p")`
+  font-size: 0.9rem;
+  font-weight: 600;
+  min-height: 1.25rem;
+`;
+
 const ButtonWrapper = styled("div")`
   display: flex;
   gap: 0.5rem;
@@ -116,19 +122,43 @@ const createDefaults = {
 
 type FormMode = "edit" | "create";
 
+interface CanvasSettingsFormValues {
+  allColorsGlobal: boolean;
+  cooldownDuration: number;
+  height: number;
+  isLocked: boolean;
+  name: string;
+  width: number;
+  startCoordinates: [number, number];
+}
+
+function areCanvasSettingsEqual(
+  left: CanvasSettingsFormValues,
+  right: CanvasSettingsFormValues,
+) {
+  return (
+    left.allColorsGlobal === right.allColorsGlobal &&
+    left.cooldownDuration === right.cooldownDuration &&
+    left.height === right.height &&
+    left.isLocked === right.isLocked &&
+    left.name === right.name &&
+    left.width === right.width &&
+    left.startCoordinates[0] === right.startCoordinates[0] &&
+    left.startCoordinates[1] === right.startCoordinates[1]
+  );
+}
+
 interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
-  formValues: {
-    allColorsGlobal: boolean;
-    cooldownDuration: number;
-    height: number;
-    isLocked: boolean;
-    name: string;
-    width: number;
-    startCoordinates: [number, number];
-  };
+  formValues: CanvasSettingsFormValues;
   isDirty: boolean;
   mode: FormMode;
+  saveConfirmation: {
+    canvasId: CanvasInfo["id"];
+    values: CanvasSettingsFormValues;
+  } | null;
+  isSaving: boolean;
+  onSavingChange: (isSaving: boolean) => void;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
   onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
@@ -138,11 +168,19 @@ function CanvasSettingsForm({
   formValues,
   isDirty,
   mode,
+  saveConfirmation,
+  isSaving,
+  onSavingChange,
   onFormValuesChange,
   onSaved,
 }: CanvasSettingsFormProps) {
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
   const createCanvas = useCreateCanvas();
+
+  const showSaveConfirmation =
+    saveConfirmation !== null &&
+    saveConfirmation.canvasId === activeCanvas.id &&
+    areCanvasSettingsEqual(formValues, saveConfirmation.values);
 
   // Initialize form values when activeCanvas changes
   useEffect(() => {
@@ -228,6 +266,8 @@ function CanvasSettingsForm({
       return;
     }
 
+    onSavingChange(true);
+
     try {
       if (mode === "create") {
         const response = await createCanvas.mutateAsync({
@@ -250,6 +290,8 @@ function CanvasSettingsForm({
       }
     } catch {
       alert("Failed to update canvas info. Please try again.");
+    } finally {
+      onSavingChange(false);
     }
   }
 
@@ -329,26 +371,19 @@ function CanvasSettingsForm({
           </tr>
         </tbody>
       </Table>
+      {showSaveConfirmation && (
+        // temporary, will be replaced with toast notification in the future
+        <SaveStatusText aria-live="polite">Saved</SaveStatusText>
+      )}
       <ButtonWrapper>
         <StyledButton
-          disabled={
-            !isDirty ||
-            isFormInvalid() ||
-            (mode === "create" ?
-              createCanvas.isPending
-            : updateCanvasInfo.isPending)
-          }
+          disabled={!isDirty || isFormInvalid() || isSaving}
           type="submit"
         >
           {mode === "create" ? "Create canvas" : "Save changes"}
         </StyledButton>
         <StyledButton
-          disabled={
-            !isDirty ||
-            (mode === "create" ?
-              createCanvas.isPending
-            : updateCanvasInfo.isPending)
-          }
+          disabled={!isDirty || isSaving}
           type="reset"
           onClick={resetForm}
         >
@@ -365,6 +400,11 @@ function AdminCanvasTab() {
   const { canvas: activeCanvas, setCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<FormMode>("edit");
+  const [saveConfirmation, setSaveConfirmation] = useState<{
+    canvasId: CanvasInfo["id"];
+    values: CanvasSettingsFormValues;
+  } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   canvases.sort((a, b) =>
     a.eventId === event?.id ? -1
@@ -404,6 +444,15 @@ function AdminCanvasTab() {
     }
   }, [mode, activeCanvas]);
 
+  useEffect(() => {
+    if (
+      saveConfirmation !== null &&
+      activeCanvas &&
+      saveConfirmation.canvasId !== activeCanvas.id
+    ) {
+      setSaveConfirmation(null);
+    }
+  }, [activeCanvas, saveConfirmation]);
   const isDirty = useMemo(() => {
     if (mode === "create") {
       return (
@@ -428,6 +477,7 @@ function AdminCanvasTab() {
   }, [formValues, activeCanvas, mode]);
 
   const isLoading = canvasListIsLoading || eventIsLoading;
+  const isCanvasSelectionDisabled = isDirty || isSaving;
 
   return (
     <AdminCanvasTabBlock>
@@ -447,7 +497,7 @@ function AdminCanvasTab() {
         : <>
             <CanvasList>
               <AddCanvasCard
-                disabled={isDirty}
+                disabled={isCanvasSelectionDisabled}
                 onClick={() => setMode("create")}
                 aria-current={mode === "create"}
               >
@@ -458,7 +508,7 @@ function AdminCanvasTab() {
                   canvas={canvasItem}
                   currentEventId={event?.id}
                   key={canvasItem.id}
-                  disabled={isDirty}
+                  disabled={isCanvasSelectionDisabled}
                   onClick={() => {
                     setCanvas(canvasItem.id, false);
                     setMode("edit");
@@ -474,8 +524,17 @@ function AdminCanvasTab() {
               formValues={formValues}
               isDirty={isDirty}
               mode={mode}
+              saveConfirmation={saveConfirmation}
+              isSaving={isSaving}
+              onSavingChange={setIsSaving}
               onFormValuesChange={setFormValues}
-              onSaved={async (canvasId) => setCanvas(canvasId, false)}
+              onSaved={async (canvasId) => {
+                setSaveConfirmation({
+                  canvasId,
+                  values: formValues,
+                });
+                await setCanvas(canvasId, false);
+              }}
             />
           </>
         }
