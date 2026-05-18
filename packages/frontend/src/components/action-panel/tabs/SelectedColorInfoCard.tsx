@@ -34,15 +34,21 @@ const Code = styled("code")`
   line-height: 1.1;
 `;
 
+interface ColorInfoCardProps extends Omit<
+  React.ComponentPropsWithRef<typeof Wrapper>,
+  "color"
+> {
+  color?: PaletteColor | null;
+  invite?: string;
+  isUserInServer?: boolean;
+}
+
 export default function ColorInfoCard({
   color,
   invite,
   isUserInServer: userInServer = false,
-}: {
-  color?: PaletteColor | null;
-  invite?: string;
-  isUserInServer?: boolean;
-}) {
+  ...props
+}: ColorInfoCardProps) {
   const { canvas } = useCanvasContext();
 
   if (!color) return <Wrapper>No color selected</Wrapper>;
@@ -57,7 +63,7 @@ export default function ColorInfoCard({
     : `You can use ${colorName} in`;
 
   return (
-    <Wrapper>
+    <Wrapper {...props}>
       <Heading>{colorName}</Heading>
       <Code>{colorCode}</Code>
       {!color.global && (

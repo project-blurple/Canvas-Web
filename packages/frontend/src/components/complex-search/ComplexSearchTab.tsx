@@ -14,7 +14,6 @@ import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
-import { usePalette } from "@/hooks";
 import {
   type ComplexPixelHistoryQuery,
   useComplexPixelHistory,
@@ -44,20 +43,9 @@ const Form = styled("form")`
   }
 `;
 
-const SummaryGrid = styled("div")`
-  display: grid;
-  gap: 0.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-`;
-
-const SummaryCard = styled("div")`
-  border: var(--card-border);
-  border-radius: 0.75rem;
-  padding: 0.75rem;
-  background: var(--discord-legacy-not-quite-black);
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+const Summary = styled("p")`
+  opacity: 60%;
+  margin-block: 1em;
 `;
 
 const EraseWrapper = styled("div")`
@@ -93,7 +81,6 @@ export default function ComplexSearchTab({
   } = useSelectedBoundsContext();
   const { containerRef } = useCanvasViewContext();
   const { canvas } = useCanvasContext();
-  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
   const [selectedColorIds, setSelectedColorIds] = useState<number[]>([]);
   const [colorFilterMode, setColorFilterMode] =
@@ -221,38 +208,26 @@ export default function ComplexSearchTab({
             <ActionPanelPrimitives.SectionHeading>
               Search results
             </ActionPanelPrimitives.SectionHeading>
-            <SummaryGrid>
-              <SummaryCard>
-                <strong>Total entries</strong>
-                <span>{entriesCount.toLocaleString()}</span>
-              </SummaryCard>
-              <SummaryCard>
-                <strong>Query duration</strong>
-                <span>
-                  {durationFormatNarrow?.format({
-                    milliseconds: Math.max(
-                      0,
-                      Math.floor(historyQuery.data?.executionDurationMs ?? 0),
-                    ),
-                  })}
-                </span>
-              </SummaryCard>
-              <SummaryCard>
-                <strong>Users</strong>
-                <span>{usersLength.toLocaleString()}</span>
-              </SummaryCard>
-            </SummaryGrid>
-            {usersLength > 0 && (
-              <>
-                <ActionPanelPrimitives.SectionHeading>
-                  User summary
-                </ActionPanelPrimitives.SectionHeading>
-                <SearchUserEntries
-                  users={historyData.users}
-                  palette={palette}
-                />
-              </>
-            )}
+            <Summary>
+              <strong>
+                {entriesCount.toLocaleString()}&nbsp;
+                {entriesCount === 1 ? "entry" : "entries"}
+              </strong>
+              {" from "}
+              <strong>
+                {usersLength.toLocaleString()}&nbsp;
+                {usersLength === 1 ? "user" : "users"}{" "}
+              </strong>
+              (
+              {durationFormatNarrow?.format({
+                milliseconds: Math.max(
+                  0,
+                  historyQuery.data?.executionDurationMs ?? 0,
+                ),
+              })}
+              )
+            </Summary>
+            <SearchUserEntries users={historyData.users} />
           </div>
         </ActionPanelTabBody>
       );
@@ -266,10 +241,10 @@ export default function ComplexSearchTab({
       <FullWidthScrollView>
         <ActionPanelTabBody>
           <search>
+            <ActionPanelPrimitives.SectionHeading>
+              History search
+            </ActionPanelPrimitives.SectionHeading>
             <Form onSubmit={handleSearchSubmit}>
-              <ActionPanelPrimitives.SectionHeading>
-                History search
-              </ActionPanelPrimitives.SectionHeading>
               <ComplexSearchBoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}

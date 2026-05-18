@@ -229,23 +229,56 @@
     color: var(--discord-white);
     color-scheme: only dark;
     font-family: var(--font-body);
+  }
 
-    code,
-    kbd,
-    pre,
-    samp {
-      font-family: var(--font-monospace);
-    }
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: var(--font-monospace);
+  }
 
-    h1 {
-      font-stretch: 125%;
-      font-weight: 900;
-    }
+  h1 {
+    font-stretch: 125%;
+    font-weight: 900;
+  }
 
-    h2 {
-      color: oklch(from var(--discord-white) l c h / 55%);
-      font-weight: 400;
-    }
+  h2 {
+    color: oklch(from var(--discord-white) l c h / 55%);
+    font-weight: 400;
+  }
+
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="email"],
+  input[type="month"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="text"],
+  input[type="url"],
+  input[type="week"] {
+    border-radius: 8px;
+    border-style: solid;
+    border-width: 1px;
+  }
+
+  input:where(
+      [type="date"],
+      [type="datetime-local"],
+      [type="email"],
+      [type="month"],
+      [type="number"],
+      [type="password"],
+      [type="search"],
+      [type="tel"],
+      [type="text"],
+      [type="url"],
+      [type="week"]
+    ):user-invalid {
+    border: 1px solid var(--discord-red);
+    background-color: oklch(from var(--discord-red) l c h / 3%);
   }
 
   /*

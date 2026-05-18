@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ApiError, BadRequestError } from "@/errors";
+import { ApiError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { ModifyNoticeBodyModel, parseNoticeId } from "@/models/notice.models";
 import {

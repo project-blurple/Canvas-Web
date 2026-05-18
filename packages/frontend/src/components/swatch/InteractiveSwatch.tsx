@@ -38,5 +38,13 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
 export function InteractiveSwatch(
   props: React.ComponentPropsWithRef<typeof StaticSwatch>,
 ) {
-  return <StyledSwatch as={PrimitiveButton} role="option" {...props} />;
+  return (
+    <StyledSwatch
+      as={PrimitiveButton}
+      role="option"
+      // @ts-expect-error `styled` generic typing can’t handle `as` prop
+      type="button"
+      {...props}
+    />
+  );
 }
