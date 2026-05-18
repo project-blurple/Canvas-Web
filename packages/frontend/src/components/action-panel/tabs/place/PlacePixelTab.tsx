@@ -273,11 +273,7 @@ interface NamedPaletteProps {
   name: React.ReactNode;
 }
 
-function NamedPalette({
-  colors,
-  isColorDisabled,
-  name,
-}: NamedPaletteProps) {
+function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
   const playSound = usePlaySound("pick_color");
 

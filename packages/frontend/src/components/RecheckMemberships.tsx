@@ -125,11 +125,7 @@ export function RecheckMembershipsLink({
   if (!user) return <>{children}</>;
 
   return (
-    <InlineTrigger
-      type="button"
-      onClick={() => mutate()}
-      disabled={isPending}
-    >
+    <InlineTrigger type="button" onClick={() => mutate()} disabled={isPending}>
       {children}
     </InlineTrigger>
   );
