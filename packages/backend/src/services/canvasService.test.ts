@@ -1,5 +1,6 @@
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
+import { socketHandler } from "@/index";
 import { seedCanvases, seedColors, seedEvents, seedPixels } from "@/test";
 import {
   createCanvas,
@@ -8,6 +9,13 @@ import {
   getCanvasInfo,
   getCanvasPixels,
 } from "./canvasService";
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
 
 describe("Canvas Info Tests", () => {
   beforeEach(async () => {
@@ -108,7 +116,8 @@ describe("Create Canvas Tests", () => {
   });
 
   it("Creates a canvas and seeds its pixels", async () => {
-    const canvasName = `Generated Canvas ${Date.now()}`;
+    const now = Date.now();
+    const canvasName = `Generated Canvas ${now}`;
 
     await createCanvas({
       name: canvasName,
@@ -145,6 +154,19 @@ describe("Create Canvas Tests", () => {
       [88, 101, 242, 127],
       [88, 101, 242, 127],
     ]);
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      createdCanvas.id,
+      expect.objectContaining({
+        id: createdCanvas.id,
+        name: canvasName,
+        width: 3,
+        height: 2,
+        isLocked: true,
+        allColorsGlobal: false,
+        cooldownDuration: 15,
+      }),
+    );
   });
 });
 
@@ -183,6 +205,17 @@ describe("Edit Canvas Tests", () => {
       cooldown_length: 45,
       all_colors_global: true,
     });
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      1,
+      expect.objectContaining({
+        id: 1,
+        name: "Edited Canvas",
+        isLocked: true,
+        allColorsGlobal: true,
+        cooldownDuration: 45,
+      }),
+    );
   });
 });
 

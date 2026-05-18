@@ -9,6 +9,7 @@ import { PNG } from "pngjs";
 import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
+import { socketHandler } from "@/index";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
 
@@ -183,21 +184,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
 
-  return {
-    id: canvas.id,
-    name: canvas.name,
-    width: canvas.width,
-    height: canvas.height,
-    startCoordinates: [
-      canvas.start_coordinates[0],
-      canvas.start_coordinates[1],
-    ],
-    isLocked: canvas.locked,
-    eventId: canvas.event_id,
-    webPlacingEnabled: config.webPlacingEnabled,
-    allColorsGlobal: canvas.all_colors_global,
-    cooldownDuration: canvas.cooldown_length,
-  };
+  return canvasToCanvasInfo(canvas);
 }
 
 /**
@@ -411,6 +398,8 @@ export async function createCanvas({
 
   await createCanvasPixelEntries(canvas.id, width, height);
 
+  socketHandler.broadcastCanvasUpdate(canvas.id, canvasToCanvasInfo(canvas));
+
   return canvas;
 }
 
@@ -478,5 +467,26 @@ export async function editCanvas({
   if (!canvas) {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
+
+  socketHandler.broadcastCanvasUpdate(canvas.id, canvasToCanvasInfo(canvas));
+
   return canvas;
+}
+
+function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
+  return {
+    id: canvas.id,
+    name: canvas.name,
+    width: canvas.width,
+    height: canvas.height,
+    startCoordinates: [
+      canvas.start_coordinates[0],
+      canvas.start_coordinates[1],
+    ],
+    isLocked: canvas.locked,
+    eventId: canvas.event_id,
+    webPlacingEnabled: config.webPlacingEnabled,
+    allColorsGlobal: canvas.all_colors_global,
+    cooldownDuration: canvas.cooldown_length,
+  };
 }
