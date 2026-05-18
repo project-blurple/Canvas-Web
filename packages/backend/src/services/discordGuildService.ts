@@ -9,7 +9,7 @@ import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 import fetchWithRetries from "@/utils/fetchWithRetries";
 
-const GUILD_FLAGS_CACHE_TTL_MS = 15 * 60 * 1000;
+const GUILD_FLAGS_CACHE_TTL_MS = 900_000; // 15 min
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
@@ -237,7 +237,7 @@ export async function getCachedUserGuildFlags(
     return cached;
   }
 
-  return refreshCachedUserGuildFlags(session, accessToken);
+  return await refreshCachedUserGuildFlags(session, accessToken);
 }
 
 export async function refreshCachedUserGuildFlags(

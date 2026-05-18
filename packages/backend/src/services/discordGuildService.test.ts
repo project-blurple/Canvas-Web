@@ -16,16 +16,13 @@ function mockGuildsResponse(
     approximate_member_count?: number;
   }>,
 ) {
-  mockFetch.mockResolvedValueOnce({
-    status: 200,
-    ok: true,
-    headers: {
-      get: (key: string) =>
-        key === "content-type" ? "application/json; charset=utf-8" : null,
-      entries: () => [][Symbol.iterator](),
-    } as unknown as Headers,
-    json: async () => guilds,
-  } as unknown as Response);
+  mockFetch.mockResolvedValueOnce(
+    new Response(JSON.stringify(guilds), {
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    }),
+  );
 }
 
 function makeSession(overrides: Partial<SessionData> = {}): SessionData {
