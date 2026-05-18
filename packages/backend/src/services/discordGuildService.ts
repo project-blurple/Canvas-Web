@@ -1,4 +1,5 @@
 import type { GuildData } from "@blurple-canvas-web/types";
+import type { SessionData } from "express-session";
 import { prisma } from "@/client";
 import config from "@/config";
 import { ApiError } from "@/errors";
@@ -7,6 +8,8 @@ import NotFoundError from "@/errors/NotFoundError";
 import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
 import fetchWithRetries from "@/utils/fetchWithRetries";
+
+const GUILD_FLAGS_CACHE_TTL_MS = 15 * 60 * 1000;
 
 const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
@@ -217,6 +220,34 @@ export async function getCurrentUserGuildFlags(
       ];
     }),
   );
+}
+
+export async function getCachedUserGuildFlags(
+  session: SessionData,
+  accessToken: string,
+): Promise<Record<string, GuildData>> {
+  const cached = session.discordGuildFlags;
+  const fetchedAt = session.discordGuildFlagsFetchedAt;
+  const isFresh =
+    cached !== undefined &&
+    typeof fetchedAt === "number" &&
+    Date.now() - fetchedAt < GUILD_FLAGS_CACHE_TTL_MS;
+
+  if (isFresh) {
+    return cached;
+  }
+
+  return refreshCachedUserGuildFlags(session, accessToken);
+}
+
+export async function refreshCachedUserGuildFlags(
+  session: SessionData,
+  accessToken: string,
+): Promise<Record<string, GuildData>> {
+  const guildFlags = await getCurrentUserGuildFlags(accessToken);
+  session.discordGuildFlags = guildFlags;
+  session.discordGuildFlagsFetchedAt = Date.now();
+  return guildFlags;
 }
 
 function getPermissions(permissions: bigint): GuildPermissionsSummary {

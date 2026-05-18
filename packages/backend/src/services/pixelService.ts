@@ -55,16 +55,23 @@ export async function validatePixel(
 /**
  * Ensures that the given color exists in the DB and it is allowed to be used in the given canvas.
  *
- * Partnered (non-global) colors are only allowed when the target canvas has
- * `all_colors_global` enabled.
+ * Partnered (non-global) colors are gated by two conditions, either of which is sufficient:
+ *
+ * 1. The canvas has `all_colors_global` enabled (admin override).
+ * 2. The color is registered as a participation in the canvas's event and the
+ *    user is a member of that participation's guild (verified via the supplied
+ *    `userGuildIds` set, which the caller is expected to source from the cached
+ *    Discord guild flags).
  *
  * @param colorId - The ID of the color
  * @param canvasId - The ID of the canvas the color is being used on
+ * @param userGuildIds - Discord guild IDs the user is a member of (as decimal strings)
  * @returns The corresponding color object
  */
 export async function validateColor(
   colorId: number,
   canvasId: number,
+  userGuildIds: ReadonlySet<string>,
 ): Promise<color & { rgba: PixelColor }> {
   const [color, canvas] = await Promise.all([
     prisma.color.findFirst({
@@ -74,7 +81,7 @@ export async function validateColor(
     }) as Promise<(color & { rgba: PixelColor }) | null>,
     prisma.canvas.findFirst({
       where: { id: canvasId },
-      select: { all_colors_global: true },
+      select: { all_colors_global: true, event_id: true },
     }),
   ]);
 
@@ -83,9 +90,28 @@ export async function validateColor(
   }
 
   if (!color.global && !canvas?.all_colors_global) {
-    throw new ForbiddenError(
-      `Partnered color with ID ${colorId} is not allowed from web client`,
-    );
+    if (canvas?.event_id == null) {
+      throw new ForbiddenError(
+        `Partnered color with ID ${colorId} cannot be placed on this canvas`,
+      );
+    }
+
+    const participation = await prisma.participation.findFirst({
+      where: { color_id: colorId, event_id: canvas.event_id },
+      select: { guild_id: true },
+    });
+
+    if (!participation) {
+      throw new ForbiddenError(
+        `Partnered color with ID ${colorId} is not part of this canvas's event`,
+      );
+    }
+
+    if (!userGuildIds.has(participation.guild_id.toString())) {
+      throw new ForbiddenError(
+        `You must be a member of the partner server to use color with ID ${colorId}`,
+      );
+    }
   }
 
   return color;
