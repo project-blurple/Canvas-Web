@@ -20,7 +20,6 @@ async function seedCurrentEventInfo(): Promise<void> {
       current_emoji_server_id: BigInt(1),
       host_server_id: BigInt(1),
       default_canvas_id: 1,
-      all_colors_global: false,
     },
     update: {
       current_event_id: 1,
@@ -29,7 +28,6 @@ async function seedCurrentEventInfo(): Promise<void> {
       current_emoji_server_id: BigInt(1),
       host_server_id: BigInt(1),
       default_canvas_id: 1,
-      all_colors_global: false,
     },
   });
 }

@@ -85,6 +85,7 @@ canvasRouter.post("/", requireCanvasAdmin, async (req, res) => {
       width: canvasData.data.width,
       height: canvasData.data.height,
       startCoordinates: canvasData.data.startCoordinates,
+      allColorsGlobal: canvasData.data.allColorsGlobal,
       cooldownDuration: canvasData.data.cooldownDuration,
     });
 
@@ -111,6 +112,7 @@ canvasRouter.put<CanvasIdParam>(
         name: canvasData.data.name,
         cooldownDuration: canvasData.data.cooldownDuration,
         isLocked: canvasData.data.isLocked,
+        allColorsGlobal: canvasData.data.allColorsGlobal,
       });
 
       res.status(200).json(canvas);

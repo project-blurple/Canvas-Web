@@ -1,6 +1,5 @@
 import { fail } from "node:assert";
 import { prisma } from "@/client";
-import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
   seedBlacklist,
@@ -91,23 +90,30 @@ describe("Pixel Validation Tests", () => {
 
 describe("Color Validation Tests", () => {
   beforeEach(async () => {
+    await seedEvents();
+    await seedCanvases();
     await seedColors();
   });
 
   it("Resolves valid color", async () => {
-    return expect(validateColor(1)).resolves.not.toThrow();
+    return expect(validateColor(1, 1)).resolves.not.toThrow();
   });
 
-  it("Rejects color that is not global", async () => {
-    if (config.allColorsGlobal) {
-      return expect(validateColor(3)).resolves.toMatchObject({ id: 3 });
-    }
+  it("Rejects a non-global color when the canvas has all_colors_global=false", async () => {
+    return expect(validateColor(3, 1)).rejects.toThrow(ForbiddenError);
+  });
 
-    return expect(validateColor(3)).rejects.toThrow(ForbiddenError);
+  it("Resolves a non-global color when the canvas has all_colors_global=true", async () => {
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { all_colors_global: true },
+    });
+
+    return expect(validateColor(3, 1)).resolves.toMatchObject({ id: 3 });
   });
 
   it("Rejects invalid color", async () => {
-    return expect(validateColor(99)).rejects.toThrow(NotFoundError);
+    return expect(validateColor(99, 1)).rejects.toThrow(NotFoundError);
   });
 });
 
