@@ -1,11 +1,11 @@
 import type { Notice } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { css, styled } from "@mui/material";
 import Markdown from "markdown-to-jsx";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/button";
 import { resolveSpecialText } from "@/util/text";
 
-const NoticeWrapper = styled("div")`
+const noticeCss = css`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: 1rem;
   border: var(--card-border);
@@ -14,6 +14,14 @@ const NoticeWrapper = styled("div")`
   gap: 0.5rem;
   padding: 1rem;
   width: 100%;
+`;
+
+const NoticeWrapper = styled("div")`
+  ${noticeCss}
+`;
+
+const NoticeForm = styled("form")`
+  ${noticeCss}
 `;
 
 const ChipWrapper = styled("div")`
@@ -55,6 +63,26 @@ const ButtonWrapper = styled("div")`
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
+`;
+
+const StyledTextarea = styled("textarea")`
+  background-color: var(--discord-legacy-dark-but-not-black);
+  border: var(--card-border);
+  color: var(--discord-white);
+  padding: 0.5rem;
+  resize: vertical;
+`;
+
+const StyledHeaderTextarea = styled(StyledTextarea)`
+  font-size: 1.25rem;
+  font-weight: 600;
+  height: 2.5rem;
+`;
+
+const StyledContentTextarea = styled(StyledTextarea)`
+  font-size: 1rem;
+  line-height: 1.5;
+  height: 10rem;
 `;
 
 const Divider = styled("hr")`
@@ -125,6 +153,10 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 }
 
 function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
+  const headerRef = useRef<HTMLTextAreaElement | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  const [, setPreviewTick] = useState(0);
+
   function saveChanges() {
     // TODO: Implement saving changes to the notice
     setIsEditMode(false);
@@ -134,18 +166,49 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
     setIsEditMode(false);
   }
 
+  function handleInput() {
+    // Force re-render to update the markdown preview as the user types
+    setPreviewTick((t) => t + 1);
+  }
+
+  const currentHeader = headerRef.current?.value ?? notice.header ?? null;
+  const currentContent = contentRef.current?.value ?? notice.content ?? null;
+
   return (
-    <NoticeWrapper>
+    <NoticeForm
+      onSubmit={(e) => {
+        e.preventDefault();
+        saveChanges();
+      }}
+    >
+      <StyledHeaderTextarea
+        name="header"
+        aria-label="Notice header"
+        defaultValue={notice.header ?? ""}
+        ref={headerRef}
+        onInput={handleInput}
+      />
+      <StyledContentTextarea
+        name="content"
+        aria-label="Notice content"
+        defaultValue={notice.content ?? ""}
+        ref={contentRef}
+        onInput={handleInput}
+      />
+
       <Divider />
       <ContentWrapper>
-        <HeaderAsMarkdown header={notice.header} />
-        <ContentAsMarkdown content={notice.content} />
+        <HeaderAsMarkdown header={currentHeader} />
+        <ContentAsMarkdown content={currentContent} />
       </ContentWrapper>
+
       <ButtonWrapper>
-        <StyledButton onClick={saveChanges}>Save</StyledButton>
-        <StyledButton onClick={cancelChanges}>Cancel</StyledButton>
+        <StyledButton type="submit">Save</StyledButton>
+        <StyledButton type="button" onClick={cancelChanges}>
+          Cancel
+        </StyledButton>
       </ButtonWrapper>
-    </NoticeWrapper>
+    </NoticeForm>
   );
 }
 
