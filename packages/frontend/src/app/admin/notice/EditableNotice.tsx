@@ -1,5 +1,6 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
+import { X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
 import { Button } from "@/components/button";
@@ -157,6 +158,47 @@ const PersistedCheckboxWrapper = styled("div")`
   }
 `;
 
+const DateInputWrapper = styled("div")`
+  align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem 0.25rem;
+
+  label {
+    color: var(--discord-white);
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-block-end: 0.5em;
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  input {
+    background-color: var(--discord-legacy-but-not-black);
+    border-radius: 0.25rem;
+    border: none;
+    color: var(--discord-white);
+    font-size: 0.875rem;
+    padding: 0.25rem;
+  }
+
+  button {
+    background-color: transparent;
+    border-radius: 0.25rem;
+    border: none;
+    color: var(--discord-white);
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+  }
+`;
+
 function isNoticeActive(notice: Notice): boolean {
   const now = new Date();
   const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : true;
@@ -224,6 +266,8 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const [type, setType] = useState(notice.type);
   const [isPersisted, setIsPersisted] = useState(notice.persisted);
   const [priority, setPriority] = useState(notice.priority);
+  const [startAt, setStartAt] = useState(notice.startAt);
+  const [endAt, setEndAt] = useState(notice.endAt);
   const [, setPreviewTick] = useState(0);
 
   function saveChanges() {
@@ -280,6 +324,36 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
           value={priority}
           onValueChange={(value) => setPriority(value ?? 0)}
         />
+        <DateInputWrapper>
+          <label htmlFor="startAt">Start</label>
+          <input
+            type="datetime-local"
+            id="startAt"
+            name="startAt"
+            value={startAt ? new Date(startAt).toISOString().slice(0, 16) : ""}
+            onChange={(e) =>
+              setStartAt(e.target.value ? new Date(e.target.value) : null)
+            }
+          />
+          <button type="button" onClick={() => setStartAt(null)}>
+            <X size={16} />
+          </button>
+        </DateInputWrapper>
+        <DateInputWrapper>
+          <label htmlFor="endAt">End</label>
+          <input
+            type="datetime-local"
+            id="endAt"
+            name="endAt"
+            value={endAt ? new Date(endAt).toISOString().slice(0, 16) : ""}
+            onChange={(e) =>
+              setEndAt(e.target.value ? new Date(e.target.value) : null)
+            }
+          />
+          <button type="button" onClick={() => setEndAt(null)}>
+            <X size={16} />
+          </button>
+        </DateInputWrapper>
       </EditHeaderWrapper>
       <StyledHeaderTextarea
         name="header"
