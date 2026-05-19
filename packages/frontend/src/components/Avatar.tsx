@@ -51,13 +51,12 @@ export default function Avatar({
       <AvatarImage
         alt={`${username}’s avatar`}
         src={`https://cdn.discordapp.com/embed/avatars/${hash}.png`}
-        width={size}
-        height={size}
+        width="100%"
+        height="auto"
         style={{
-          minHeight: size,
-          minWidth: size,
-          height: size,
-          width: size,
+          width: "100%",
+          height: "auto",
+          objectFit: "cover",
         }}
       />
     </StyledObject>

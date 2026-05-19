@@ -26,7 +26,7 @@ const TableRow = styled("li")`
 
 const Rank = styled("div")`
   color: oklch(from currentColor l c h / 45%);
-  display: grid;
+  display: block;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
   grid-row: 1 / -1;
