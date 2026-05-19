@@ -241,7 +241,7 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
   return (
     <NoticeWrapper>
       <ChipWrapper>
-        {isActive && <NoticeChip>Active</NoticeChip>}
+        <NoticeChip>{isActive ? "Active" : "Inactive"}</NoticeChip>
         <NoticeChip>{notice.type}</NoticeChip>
         <NoticeChip>{notice.persisted ? "Persisted" : "Transient"}</NoticeChip>
         <NoticeChip>Priority : {notice.priority}</NoticeChip>

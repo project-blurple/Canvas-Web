@@ -21,7 +21,7 @@ const NoticeWrapper = styled("div")`
 `;
 
 function AdminNoticeTab() {
-  const { data: notices, isLoading } = useNotices();
+  const { data: notices, isLoading } = useNotices(true);
 
   return (
     <AdminNoticeTabBlock>

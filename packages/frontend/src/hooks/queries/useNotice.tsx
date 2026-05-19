@@ -26,7 +26,9 @@ export function useNotices(fetchAll: boolean = false) {
         `${config.apiUrl}/api/v1/notice`
       : `${config.apiUrl}/api/v1/notice/all`;
 
-    const response = await axios.get<NoticeRequest.NoticeResBody>(url);
+    const response = await axios.get<NoticeRequest.NoticeResBody>(url, {
+      withCredentials: fetchAll,
+    });
     return response.data;
   };
 
