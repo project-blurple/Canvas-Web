@@ -1,10 +1,24 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { monochromeContrastColor } from "@/util/color";
 import VisuallyHidden from "../VisuallyHidden";
 
 const SwatchBase = styled("div")`
   aspect-ratio: 1;
   border-radius: 0.5rem;
+  position: relative;
+
+  // Makes the VisuallyHidden label smaller and positioned higher so they do not overlap the lock icon (or less chance to overlap the name label). Color is inherited from the swatch's contrast color.
+  & [data-vh-debug] {
+    font-size: 0.5rem;
+    inset-block-start: 2px;
+    inset-inline: 2px;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+    pointer-events: none;
+    position: absolute;
+    text-align: center;
+  }
 `;
 
 export interface StaticSwatchProps extends React.ComponentPropsWithRef<
@@ -27,7 +41,12 @@ export function StaticSwatch({
 
   return (
     <SwatchBase
-      style={{ ...style, backgroundColor: `rgb(${rgb} / ${alphaFloat})` }}
+      style={{
+        ...style,
+        backgroundColor: `rgb(${rgb} / ${alphaFloat})`,
+        // This ensures the swatch text color is legible on both light and dark swatches
+        color: monochromeContrastColor(rgba),
+      }}
       {...props}
     >
       <VisuallyHidden>{name}</VisuallyHidden>

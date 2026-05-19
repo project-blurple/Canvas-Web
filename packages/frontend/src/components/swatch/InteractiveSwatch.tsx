@@ -34,32 +34,23 @@ const StyledSwatch = styled(StaticSwatch, { shouldForwardProp: () => true })`
 
   /* aria-disabled keeps the swatch clickable (so the user can select it to see
    * why it can't be placed yet) while making it visually distinct. The lock
-   * badge handles the disabled-state cue so we don't have to dim the swatch
+   * overlay handles the disabled-state cue so we don't have to dim the swatch
    * colors. */
   &[aria-disabled="true"] {
     cursor: not-allowed;
   }
 `;
 
-const DisabledLockBadge = styled("span")`
-  background-color: oklch(from var(--discord-black) l c h / 72%);
-  block-size: 1rem;
-  border: 1px solid oklch(from var(--discord-white) l c h / 28%);
-  border-radius: 999px;
-  bottom: 4px;
-  color: var(--discord-white);
+const DisabledLockOverlay = styled("span")`
   display: grid;
-  inline-size: 1rem;
-  inset-inline-end: 4px;
+  inset: 0;
   place-items: center;
   pointer-events: none;
   position: absolute;
 
   & > svg {
-    block-size: 0.625rem;
-    inline-size: 0.625rem;
-    /* Putting it up a little bit to make it feel more in the center in the badge. */
-    transform: translateY(-0.5px);
+    block-size: 50%;
+    inline-size: 50%;
   }
 `;
 
@@ -78,9 +69,9 @@ export function InteractiveSwatch(
       {...props}
     >
       {isDisabled && (
-        <DisabledLockBadge aria-hidden>
+        <DisabledLockOverlay aria-hidden>
           <LockIcon />
-        </DisabledLockBadge>
+        </DisabledLockOverlay>
       )}
     </StyledSwatch>
   );

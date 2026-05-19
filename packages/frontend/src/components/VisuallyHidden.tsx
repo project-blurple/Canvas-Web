@@ -50,5 +50,5 @@ export default function VisuallyHidden(
   }, []);
 
   const Component = forceShow ? Forced : Root;
-  return <Component {...props} />;
+  return <Component data-vh-debug={forceShow || undefined} {...props} />;
 }
