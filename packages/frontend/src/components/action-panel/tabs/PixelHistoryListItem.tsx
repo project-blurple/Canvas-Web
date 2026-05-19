@@ -36,13 +36,15 @@ const ColorName = styled("p")`
 
 export default function PixelHistoryListItem({
   record,
+  id,
 }: {
   record?: PixelHistoryRecord;
+  id?: string;
 }) {
   const { color, userProfile } = record ?? {};
 
   return (
-    <Wrapper>
+    <Wrapper id={id}>
       {color ?
         <StyledSwatch key={color.code} paletteColor={color} />
       : <SwatchSkeleton variant="rectangular" />}

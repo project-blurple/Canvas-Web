@@ -26,9 +26,9 @@ describe.skip("historyService", () => {
         points: { x: 0, y: 0 },
       });
 
-      expect(history.totalEntries).toBe(4);
-      expect(history.pixelHistory).toHaveLength(4);
-      expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
+      expect(history.total).toBe(4);
+      expect(history.entries).toHaveLength(4);
+      expect(history.entries.map((entry) => entry.timestamp)).toEqual([
         new Date(7),
         new Date(3),
         new Date(2),
@@ -44,7 +44,7 @@ describe.skip("historyService", () => {
           lastPlaced: new Date(7),
         },
       });
-      expect(history.pixelHistory[0]).toMatchObject({
+      expect(history.entries[0]).toMatchObject({
         color: {
           id: 1,
           code: "blank",
@@ -78,9 +78,9 @@ describe.skip("historyService", () => {
         },
       });
 
-      expect(history.totalEntries).toBe(2);
-      expect(history.pixelHistory).toHaveLength(2);
-      expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
+      expect(history.total).toBe(2);
+      expect(history.entries).toHaveLength(2);
+      expect(history.entries.map((entry) => entry.timestamp)).toEqual([
         new Date(9),
         new Date(8),
       ]);
@@ -95,7 +95,7 @@ describe.skip("historyService", () => {
           lastPlaced: new Date(9),
         },
       });
-      expect(history.pixelHistory[0]).toMatchObject({
+      expect(history.entries[0]).toMatchObject({
         color: {
           id: 3,
           code: "red",

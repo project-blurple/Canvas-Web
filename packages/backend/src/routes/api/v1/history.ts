@@ -28,7 +28,9 @@ historyRouter.get(
     const pixelHistory = await getPixelHistorySummary(
       {
         canvasId: req.params.canvasId,
-        points: req.query,
+        points: { x: req.query.x, y: req.query.y },
+        page: req.query.page,
+        size: req.query.size,
       },
       false,
     );
@@ -89,6 +91,8 @@ historyRouter.post(
       {
         canvasId: req.params.canvasId,
         points,
+        page: req.query.page,
+        size: req.query.size,
         dateRange,
         userIdFilter,
         colorFilter,

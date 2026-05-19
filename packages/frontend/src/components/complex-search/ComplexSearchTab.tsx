@@ -168,7 +168,7 @@ export default function ComplexSearchTab({
   const boundsValid = areBoundsValid(selectedBounds);
   const isLoading = historyQuery.isLoading;
 
-  const entriesCount = historyData?.totalEntries ?? 0;
+  const entriesCount = historyData?.total ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
   const Results: React.FC = () => {

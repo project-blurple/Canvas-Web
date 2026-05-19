@@ -5,51 +5,74 @@ import type {
   HistoryRequest,
   Point,
 } from "@blurple-canvas-web/types";
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryOptions,
+  useQuery,
+} from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
-  pixelHistory: [],
-  totalEntries: 0,
-  users: {},
+  total: 0,
+  page: 1,
+  size: 20,
+  entries: [],
+  executionDurationMs: -1,
 });
+
+export interface PixelHistoryQuery {
+  point: Point;
+  page?: number;
+  size?: number;
+}
 
 export function usePixelHistory(
   canvasId: CanvasInfo["id"],
-  coordinates: Point | null,
+  query: PixelHistoryQuery | null,
   options?: Omit<
     UseQueryOptions<HistoryRequest.ResBody>,
     "queryKey" | "queryFn"
   >,
 ) {
   const fetchHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!coordinates) return emptyHistoryResult();
+    if (!query) return emptyHistoryResult();
 
-    const { x, y } = coordinates;
     const response = await axios.get<HistoryRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
       {
-        params: { x, y },
+        params: {
+          x: query.point.x,
+          y: query.point.y,
+          page: query.page ?? 1,
+          size: query.size ?? 20,
+        },
         signal,
       },
     );
+
     return response.data;
   };
 
-  return useQuery({
+  const queryResult = useQuery({
     ...options,
-    queryKey: ["pixelHistory", canvasId, coordinates],
+    queryKey: ["pixelHistory", canvasId, query],
     queryFn: fetchHistory,
-    enabled: Boolean(coordinates) && (options?.enabled ?? true),
+    placeholderData: keepPreviousData,
+    enabled: Boolean(query) && (options?.enabled ?? true),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    staleTime: 30_000, // 30 seconds
   });
+
+  return queryResult;
 }
 
 export interface ComplexPixelHistoryQuery {
   point0: Point;
   point1?: Point;
+  page?: number;
+  size?: number;
   fromDateTime?: string;
   toDateTime?: string;
   includeUserIds?: string[];
@@ -81,6 +104,8 @@ export function useComplexPixelHistory(
           y0: query.point0.y,
           x1: query.point1?.x,
           y1: query.point1?.y,
+          page: query.page,
+          size: query.size,
         },
         signal,
         withCredentials: true,
