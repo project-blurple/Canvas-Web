@@ -413,9 +413,9 @@ function EditModeNotice({
           value={type}
           onChange={(e) => setType(e.target.value as NoticeType)}
         >
-          <option value={"info" as NoticeType}>Info</option>
-          <option value={"warning" as NoticeType}>Warning</option>
-          <option value={"error" as NoticeType}>Error</option>
+          <option value="info">Info</option>
+          <option value="warning">Warning</option>
+          <option value="error">Error</option>
         </Select>
         <PersistedCheckboxWrapper>
           <input
@@ -438,7 +438,7 @@ function EditModeNotice({
             type="datetime-local"
             id="startAt"
             name="startAt"
-            value={startAt ? new Date(startAt).toISOString().slice(0, 16) : ""}
+            value={startAt ? startAt.toISOString().slice(0, 16) : ""}
             onChange={(e) =>
               setStartAt(e.target.value ? new Date(e.target.value) : null)
             }
@@ -453,7 +453,7 @@ function EditModeNotice({
             type="datetime-local"
             id="endAt"
             name="endAt"
-            value={endAt ? new Date(endAt).toISOString().slice(0, 16) : ""}
+            value={endAt ? endAt.toISOString().slice(0, 16) : ""}
             onChange={(e) =>
               setEndAt(e.target.value ? new Date(e.target.value) : null)
             }
