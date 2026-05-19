@@ -189,9 +189,13 @@ type FormMode = "edit" | "create";
 
 function isNoticeActive(notice: Notice): boolean {
   const now = new Date();
-  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : true;
-  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : false;
-  return hasStarted && !hasEnded;
+  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : null;
+  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : null;
+  return (
+    (hasStarted === true && hasEnded === false) ||
+    (hasStarted === true && hasEnded === null) ||
+    (hasStarted === null && hasEnded === false) // this case should theoretically never exist
+  );
 }
 
 function ContentAsMarkdown({ content }: { content: string | null }) {
