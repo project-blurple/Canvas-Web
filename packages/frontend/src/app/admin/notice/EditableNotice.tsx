@@ -5,6 +5,7 @@ import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
 import { Button } from "@/components/button";
 import NumberField from "@/components/NumberField";
+import { useCanvasList } from "@/hooks";
 import { resolveSpecialText } from "@/util/text";
 
 const noticeCss = css`
@@ -208,6 +209,10 @@ interface NoticeProps {
 }
 
 function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
+  const { data: canvases } = useCanvasList();
+  const canvas =
+    canvases ? canvases.find((c) => c.id === notice.canvasId) : null;
+
   const isActive = isNoticeActive(notice);
 
   return (
@@ -216,14 +221,19 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         {isActive && <NoticeChip>Active</NoticeChip>}
         <NoticeChip>{notice.type}</NoticeChip>
         <NoticeChip>{notice.persisted ? "Persisted" : "Transient"}</NoticeChip>
-        <NoticeChip>Priority {notice.priority}</NoticeChip>
+        <NoticeChip>Priority : {notice.priority}</NoticeChip>
         {notice.startAt && (
           <NoticeChip>
-            Start {new Date(notice.startAt).toLocaleString()}
+            Start : {new Date(notice.startAt).toLocaleString()}
           </NoticeChip>
         )}
         {notice.endAt && (
-          <NoticeChip>End {new Date(notice.endAt).toLocaleString()}</NoticeChip>
+          <NoticeChip>
+            End : {new Date(notice.endAt).toLocaleString()}
+          </NoticeChip>
+        )}
+        {notice.canvasId && (
+          <NoticeChip>Canvas : {canvas?.name || notice.canvasId}</NoticeChip>
         )}
       </ChipWrapper>
       <ContentWrapper>
@@ -241,6 +251,8 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 }
 
 function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
+  const { data: canvases } = useCanvasList();
+
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const [type, setType] = useState(notice.type);
@@ -248,6 +260,9 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const [priority, setPriority] = useState(notice.priority);
   const [startAt, setStartAt] = useState(notice.startAt);
   const [endAt, setEndAt] = useState(notice.endAt);
+  const [selectedCanvasId, setSelectedCanvasId] = useState<number | null>(
+    notice.canvasId,
+  );
   const [, setPreviewTick] = useState(0);
 
   function saveChanges() {
@@ -335,6 +350,25 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
             <X size={16} />
           </ClearIconButton>
         </DateInputWrapper>
+        <Select
+          value={selectedCanvasId ?? ""}
+          onChange={(e) =>
+            setSelectedCanvasId(
+              e.target.value ? Number.parseInt(e.target.value, 10) : null,
+            )
+          }
+        >
+          <option value="">No Canvas</option>
+          {canvases?.map((canvas) => (
+            <option
+              key={canvas.id}
+              value={canvas.id}
+              selected={canvas.id === notice.canvasId}
+            >
+              {canvas.name}
+            </option>
+          ))}
+        </Select>
       </EditHeaderWrapper>
 
       <StyledHeaderTextarea
