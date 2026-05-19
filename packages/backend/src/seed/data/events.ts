@@ -33,6 +33,7 @@ export const canvasSeedData = [
     height: 700,
     cooldown_length: 30,
     start_coordinates: [1, 1],
+    all_colors_global: false,
   },
   {
     id: 2034,
@@ -43,5 +44,6 @@ export const canvasSeedData = [
     height: 100,
     cooldown_length: 15,
     start_coordinates: [1, 1],
+    all_colors_global: true,
   },
 ] as const satisfies readonly Prisma.canvasCreateManyInput[];
