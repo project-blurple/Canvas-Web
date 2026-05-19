@@ -30,11 +30,11 @@ function validateNoticeWindow(
   }
 }
 
-export const ModifyNoticeBodyModel =
+export const CreateNoticeBodyModel =
   NoticeBodyFieldsModel.superRefine(validateNoticeWindow);
 
-export type CreateNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;
+export type CreateNoticeBody = z.infer<typeof CreateNoticeBodyModel>;
 
-export const UpdateNoticeBodyModel =
+export const ModifyNoticeBodyModel =
   NoticeBodyFieldsModel.partial().superRefine(validateNoticeWindow);
-export type UpdateNoticeBody = z.infer<typeof UpdateNoticeBodyModel>;
+export type ModifyNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;

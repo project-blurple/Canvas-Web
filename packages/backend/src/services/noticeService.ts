@@ -3,7 +3,7 @@ import { type notice as NoticeDbModel, prisma } from "@/client";
 import { BadRequestError } from "@/errors";
 import type {
   CreateNoticeBody,
-  UpdateNoticeBody,
+  ModifyNoticeBody,
 } from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
@@ -126,7 +126,7 @@ export async function createNotice({
 
 interface UpdateNoticeInput {
   noticeId: number;
-  data: UpdateNoticeBody;
+  data: ModifyNoticeBody;
 }
 
 export async function updateNotice({

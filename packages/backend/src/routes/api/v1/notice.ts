@@ -3,9 +3,9 @@ import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import {
+  CreateNoticeBodyModel,
   ModifyNoticeBodyModel,
   NoticeIdParamModel,
-  UpdateNoticeBodyModel,
 } from "@/models/notice.models";
 import {
   createNotice,
@@ -29,7 +29,7 @@ noticeRouter.get("/all", requireCanvasAdmin, async (_req, res) => {
 noticeRouter.post(
   "/",
   requireCanvasAdmin,
-  validate({ body: ModifyNoticeBodyModel }),
+  validate({ body: CreateNoticeBodyModel }),
   async (req, res) => {
     const notice = await createNotice(req.body);
     res.status(201).json(notice);
@@ -39,7 +39,7 @@ noticeRouter.post(
 noticeRouter.put(
   "/:noticeId",
   requireCanvasAdmin,
-  validate({ params: NoticeIdParamModel, body: UpdateNoticeBodyModel }),
+  validate({ params: NoticeIdParamModel, body: ModifyNoticeBodyModel }),
   async (req, res) => {
     const notice = await updateNotice({
       noticeId: req.params.noticeId,
