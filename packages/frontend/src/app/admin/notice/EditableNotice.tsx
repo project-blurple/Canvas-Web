@@ -336,6 +336,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
           </ClearIconButton>
         </DateInputWrapper>
       </EditHeaderWrapper>
+
       <StyledHeaderTextarea
         name="header"
         aria-label="Notice header"
@@ -350,7 +351,9 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         ref={contentRef}
         onInput={handleInput}
       />
+
       <Divider />
+
       <ContentWrapper>
         <HeaderAsMarkdown header={currentHeader} />
         <ContentAsMarkdown content={currentContent} />
