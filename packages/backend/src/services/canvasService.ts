@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import type {
+  BlurpleEvent,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
@@ -103,9 +104,12 @@ interface CanvasSummaryRow {
 /**
  * Retrieves canvas summary info for all canvases.
  *
+ * @param eventId If provided, only canvases for the specified event will be returned
  * @returns The canvas summary info of all canvases
  */
-export async function getCanvases(): Promise<CanvasSummary[]> {
+export async function getCanvases(
+  eventId?: BlurpleEvent["id"],
+): Promise<CanvasSummary[]> {
   const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
     SELECT
       c.id,
@@ -124,6 +128,9 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
       c.id DESC
+    where: {
+      event_id: eventId,
+    },
   `;
 
   return canvases.map((canvas) => ({

@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import { createCanvas, editCanvas } from "@/services/canvasService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { canvasRouter } from "./canvas";
@@ -38,6 +39,7 @@ const createApp = () => {
     next();
   });
   app.use("/api/v1/canvas", canvasRouter);
+  app.use(errorHandler);
   return app;
 };
 
