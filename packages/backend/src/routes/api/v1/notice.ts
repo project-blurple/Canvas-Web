@@ -5,6 +5,7 @@ import { validate } from "@/middleware/validate";
 import {
   ModifyNoticeBodyModel,
   NoticeIdParamModel,
+  UpdateNoticeBodyModel,
 } from "@/models/notice.models";
 import {
   createNotice,
@@ -38,7 +39,7 @@ noticeRouter.post(
 noticeRouter.put(
   "/:noticeId",
   requireCanvasAdmin,
-  validate({ params: NoticeIdParamModel, body: ModifyNoticeBodyModel }),
+  validate({ params: NoticeIdParamModel, body: UpdateNoticeBodyModel }),
   async (req, res) => {
     const notice = await updateNotice({
       noticeId: req.params.noticeId,

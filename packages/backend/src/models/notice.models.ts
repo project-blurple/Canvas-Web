@@ -26,3 +26,6 @@ export const ModifyNoticeBodyModel = z
   });
 
 export type CreateNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;
+
+export const UpdateNoticeBodyModel = ModifyNoticeBodyModel.partial();
+export type UpdateNoticeBody = z.infer<typeof UpdateNoticeBodyModel>;

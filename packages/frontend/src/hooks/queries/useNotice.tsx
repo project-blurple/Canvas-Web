@@ -62,11 +62,11 @@ export function useCreateNotice(): UseMutationResult<
 
 export function useModifyNotice(
   noticeId: number,
-): UseMutationResult<AxiosResponse<Notice>, AxiosError, NoticeInput> {
+): UseMutationResult<AxiosResponse<Notice>, AxiosError, Partial<NoticeInput>> {
   const queryClient = useQueryClient();
 
-  return useMutation<AxiosResponse<Notice>, AxiosError, NoticeInput>({
-    mutationFn: async (data: NoticeInput) => {
+  return useMutation<AxiosResponse<Notice>, AxiosError, Partial<NoticeInput>>({
+    mutationFn: async (data: Partial<NoticeInput>) => {
       const requestUrl = `${config.apiUrl}/api/v1/notice/${encodeURIComponent(
         noticeId,
       )}`;
