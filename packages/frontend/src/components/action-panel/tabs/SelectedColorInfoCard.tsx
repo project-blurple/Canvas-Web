@@ -59,7 +59,7 @@ export default function ColorInfoCard({
   ...props
 }: ColorInfoCardProps) {
   const { canvas } = useCanvasContext();
-  const recheck = useRecheckMemberships();
+  const recheckMutation = useRecheckMemberships();
 
   if (!color) return <Wrapper>No color selected</Wrapper>;
 
@@ -91,12 +91,12 @@ export default function ColorInfoCard({
           </Subtitle>
         : <Subtitle>
             Exclusive to {guildNameNode}. Already joined?{" "}
-            <RecheckMembershipsLink controller={recheck}>
+            <RecheckMembershipsLink controller={recheckMutation}>
               Refresh here
             </RecheckMembershipsLink>
             .
           </Subtitle>)}
-      {partnerGated && <RecheckStatusLine controller={recheck} />}
+      {partnerGated && <RecheckStatusLine controller={recheckMutation} />}
     </Wrapper>
   );
 }
