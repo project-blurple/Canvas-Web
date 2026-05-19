@@ -218,24 +218,41 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 
   const isActive = isNoticeActive(notice);
 
-  async function activateNotice() {
-    const now = new Date();
-    const endAt = notice.endAt && notice.endAt > now ? notice.endAt : null;
+  const [isTogglingActivate, setIsTogglingActivate] = useState(false);
 
-    await modifyNoticeMutation.mutateAsync({
-      endAt,
-      startAt: now,
-    });
+  async function activateNotice() {
+    setIsTogglingActivate(true);
+    try {
+      const now = new Date();
+      const endAt = notice.endAt && notice.endAt > now ? notice.endAt : null;
+
+      await modifyNoticeMutation.mutateAsync({
+        endAt,
+        startAt: now,
+      });
+    } catch (err) {
+      console.error("Failed to activate notice", err);
+    } finally {
+      setIsTogglingActivate(false);
+    }
   }
 
   async function deactivateNotice() {
-    const now = new Date();
-    const startAt = notice.startAt && notice.startAt > now ? null : undefined;
+    setIsTogglingActivate(true);
+    try {
+      const now = new Date();
+      const startAt =
+        notice.startAt && notice.startAt > now ? null : notice.startAt;
 
-    await modifyNoticeMutation.mutateAsync({
-      endAt: new Date(),
-      startAt,
-    });
+      await modifyNoticeMutation.mutateAsync({
+        endAt: now,
+        startAt,
+      });
+    } catch (err) {
+      console.error("Failed to deactivate notice", err);
+    } finally {
+      setIsTogglingActivate(false);
+    }
   }
 
   return (
@@ -264,10 +281,23 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         <ContentAsMarkdown content={notice.content} />
       </ContentWrapper>
       <ButtonWrapper>
-        <StyledButton onClick={() => setIsEditMode(true)}>Edit</StyledButton>
+        <StyledButton
+          onClick={() => setIsEditMode(true)}
+          disabled={isTogglingActivate}
+        >
+          Edit
+        </StyledButton>
         {isActive ?
-          <StyledButton onClick={deactivateNotice}>Deactivate</StyledButton>
-        : <StyledButton onClick={activateNotice}>Activate</StyledButton>}
+          <StyledButton
+            onClick={deactivateNotice}
+            disabled={isTogglingActivate}
+          >
+            Deactivate
+          </StyledButton>
+        : <StyledButton onClick={activateNotice} disabled={isTogglingActivate}>
+            Activate
+          </StyledButton>
+        }
       </ButtonWrapper>
     </NoticeWrapper>
   );
