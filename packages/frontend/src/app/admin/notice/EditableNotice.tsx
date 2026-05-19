@@ -3,6 +3,7 @@ import { css, styled } from "@mui/material";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
 import { Button } from "@/components/button";
+import NumberField from "@/components/NumberField";
 import { resolveSpecialText } from "@/util/text";
 
 const noticeCss = css`
@@ -91,12 +92,40 @@ const Divider = styled("hr")`
   margin: 0.5rem 0;
 `;
 
+const EditHeaderWrapper = styled("div")`
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1rem;
+`;
+
 const Select = styled("select")`
   background-color: var(--discord-legacy-not-quite-black);
   border: var(--card-border);
   color: var(--discord-white);
   padding: 0.25rem;
   width: fit-content;
+`;
+
+const PriorityField = styled(NumberField)`
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+
+  label {
+    color: var(--discord-white);
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  input {
+    background-color: var(--discord-legacy-not-quite-black);
+    border: var(--card-border);
+    color: var(--discord-white);
+    padding: 0.25rem;
+    width: 3rem;
+  }
 `;
 
 function isNoticeActive(notice: Notice): boolean {
@@ -164,6 +193,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const [type, setType] = useState(notice.type);
+  const [priority, setPriority] = useState(notice.priority);
   const [, setPreviewTick] = useState(0);
 
   function saveChanges() {
@@ -190,20 +220,27 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         saveChanges();
       }}
     >
-      <Select
-        value={type}
-        onChange={(e) => setType(e.target.value as NoticeType)}
-      >
-        <option value={"info" as NoticeType} selected={type === "info"}>
-          Info
-        </option>
-        <option value={"warning" as NoticeType} selected={type === "warning"}>
-          Warning
-        </option>
-        <option value={"error" as NoticeType} selected={type === "error"}>
-          Error
-        </option>
-      </Select>
+      <EditHeaderWrapper>
+        <Select
+          value={type}
+          onChange={(e) => setType(e.target.value as NoticeType)}
+        >
+          <option value={"info" as NoticeType} selected={type === "info"}>
+            Info
+          </option>
+          <option value={"warning" as NoticeType} selected={type === "warning"}>
+            Warning
+          </option>
+          <option value={"error" as NoticeType} selected={type === "error"}>
+            Error
+          </option>
+        </Select>
+        <PriorityField
+          label="Priority:"
+          value={priority}
+          onValueChange={(value) => setPriority(value ?? 0)}
+        />
+      </EditHeaderWrapper>
       <StyledHeaderTextarea
         name="header"
         aria-label="Notice header"
