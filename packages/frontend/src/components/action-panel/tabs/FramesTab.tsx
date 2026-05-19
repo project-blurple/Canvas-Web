@@ -49,5 +49,9 @@ export default function FramesTab({
     ),
   } as const satisfies Record<FramePanelMode, ReactNode>;
 
-  return <FramesTabBlock {...props}>{panelByMode[activePanel]}</FramesTabBlock>;
+  return (
+    <FramesTabBlock active={active} {...props}>
+      {panelByMode[activePanel]}
+    </FramesTabBlock>
+  );
 }
