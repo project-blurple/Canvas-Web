@@ -74,10 +74,7 @@ export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
           OR: [{ end_at: null }, { end_at: { gt: now } }],
         }
       : undefined,
-    orderBy: {
-      priority: "asc",
-      created_at: "desc",
-    },
+    orderBy: [{ priority: "asc" }, { created_at: "desc" }],
   });
 
   const mappedNotices = notices.map(noticeFromDb);
