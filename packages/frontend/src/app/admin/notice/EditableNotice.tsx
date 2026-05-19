@@ -1,4 +1,4 @@
-import type { Notice } from "@blurple-canvas-web/types";
+import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
@@ -91,6 +91,14 @@ const Divider = styled("hr")`
   margin: 0.5rem 0;
 `;
 
+const Select = styled("select")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border: var(--card-border);
+  color: var(--discord-white);
+  padding: 0.25rem;
+  width: fit-content;
+`;
+
 function isNoticeActive(notice: Notice): boolean {
   const now = new Date();
   const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : true;
@@ -155,6 +163,7 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
+  const [type, setType] = useState(notice.type);
   const [, setPreviewTick] = useState(0);
 
   function saveChanges() {
@@ -181,6 +190,20 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         saveChanges();
       }}
     >
+      <Select
+        value={type}
+        onChange={(e) => setType(e.target.value as NoticeType)}
+      >
+        <option value={"info" as NoticeType} selected={type === "info"}>
+          Info
+        </option>
+        <option value={"warning" as NoticeType} selected={type === "warning"}>
+          Warning
+        </option>
+        <option value={"error" as NoticeType} selected={type === "error"}>
+          Error
+        </option>
+      </Select>
       <StyledHeaderTextarea
         name="header"
         aria-label="Notice header"
