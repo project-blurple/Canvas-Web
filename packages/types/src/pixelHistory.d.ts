@@ -1,4 +1,5 @@
 import type { DiscordUserProfile } from "./discordUserProfile";
+import type { Paginated } from "./pagination";
 import type { PaletteColorSummary } from "./palette";
 
 export interface PixelHistoryRecord {
@@ -18,11 +19,9 @@ export interface PixelHistoryUserSummary {
   userProfile: DiscordUserProfile | null;
 }
 
-export interface PixelHistoryWrapper {
-  pixelHistory: PixelHistoryRecord[];
-  totalEntries: number;
+export type PixelHistoryWrapper = Paginated<PixelHistoryRecord> & {
   users?: Record<string, PixelHistoryUserSummary>;
   executionDurationMs?: number;
-}
+};
 
 export type PixelHistory = PixelHistoryWrapper;

@@ -25,7 +25,10 @@ statisticsRouter.get("/leaderboard/:canvasId", async (req, res) => {
       LeaderboardQueryModel.safeParseAsync(req.query),
     ]);
 
-    assertZodSuccess(queryParams);
+    assertZodSuccess(
+      queryParams,
+      "Invalid query parameters. Expected optionally page and size as positive integers",
+    );
 
     const { page, size } = queryParams.data;
     const leaderboard = await getLeaderboard(canvasId, page, size);

@@ -48,7 +48,7 @@ describe("History route tests", () => {
     const currentDate = new Date();
 
     const responseBody = {
-      pixelHistory: [
+      entries: [
         {
           id: "1",
           color: { id: 1, name: "Red", code: "FF00" },
@@ -58,7 +58,9 @@ describe("History route tests", () => {
           userProfile: null,
         },
       ],
-      totalEntries: 1,
+      total: 1,
+      page: 1,
+      size: 20,
       historyIds: ["1"],
       users: {
         "1": {
@@ -98,8 +100,10 @@ describe("History route tests", () => {
 
   it("returns pixel history for a range and user filter", async () => {
     const responseBody = {
-      pixelHistory: [],
-      totalEntries: 0,
+      entries: [],
+      total: 0,
+      page: 1,
+      size: 20,
       historyIds: [],
       users: {},
     };
@@ -149,8 +153,10 @@ describe("History route tests", () => {
 
   it("returns pixel history for a range and excluded color filter", async () => {
     const responseBody = {
-      pixelHistory: [],
-      totalEntries: 0,
+      entries: [],
+      total: 0,
+      page: 1,
+      size: 20,
       historyIds: [],
       users: {},
     };

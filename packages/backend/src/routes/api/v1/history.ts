@@ -27,7 +27,7 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
     const queryResult = await PixelHistoryParamModel.safeParseAsync(req.query);
     assertZodSuccess(
       queryResult,
-      "Invalid query parameters. Expected x, and y as positive integers",
+      "Invalid query parameters. Expected x, and y as positive integers and optional page and size as positive integers",
     );
 
     const coordinates = queryResult.data;
@@ -36,6 +36,8 @@ historyRouter.get<CanvasIdParam>("/", async (req, res) => {
       {
         canvasId,
         points: coordinates,
+        page: queryResult.data.page,
+        size: queryResult.data.size,
       },
       false,
     );
@@ -68,7 +70,9 @@ historyRouter.post<CanvasIdParam>(
       ]);
       assertZodSuccess(
         queryResult,
-        "Invalid query parameters. Expected x0, y0, x1, and y1 as positive integers, with x1 and y1 being optional",
+        "Invalid query parameters. Expected x0 and y0 as positive integers, " +
+          "optionally together x1 and y1 as positive integers, " +
+          "optionally page and size as positive integers",
       );
       assertZodSuccess(
         bodyResult,
@@ -109,6 +113,8 @@ historyRouter.post<CanvasIdParam>(
         {
           canvasId,
           points,
+          page: queryResult.data.page,
+          size: queryResult.data.size,
           dateRange,
           userIdFilter,
           colorFilter,
