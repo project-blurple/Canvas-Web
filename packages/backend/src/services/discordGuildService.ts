@@ -1,6 +1,7 @@
 import type { GuildData } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import config from "@/config";
+import { discordApi } from "@/discord-api";
 import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
 import NotFoundError from "@/errors/NotFoundError";
@@ -61,7 +62,7 @@ async function discordRequest<T>({
   endpoint,
   authorization,
 }: DiscordRequestOptions): Promise<T> {
-  const response = await fetchWithRetries(
+  const response = await discordApi.fetch(
     `${DISCORD_API_BASE_URL}${endpoint}`,
     {
       headers: {
