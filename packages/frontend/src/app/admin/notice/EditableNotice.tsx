@@ -9,7 +9,7 @@ import { useCanvasList } from "@/hooks";
 import { useDeleteNotice, useModifyNotice } from "@/hooks/queries/useNotice";
 import { resolveSpecialText } from "@/util/text";
 
-const noticeCss = css`
+export const adminNoticeCss = css`
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: 1rem;
   border: var(--card-border);
@@ -21,11 +21,11 @@ const noticeCss = css`
 `;
 
 const NoticeWrapper = styled("div")`
-  ${noticeCss}
+  ${adminNoticeCss}
 `;
 
 const NoticeForm = styled("form")`
-  ${noticeCss}
+  ${adminNoticeCss}
 `;
 
 const ChipWrapper = styled("div")`
@@ -180,6 +180,8 @@ const PersistedCheckboxWrapper = styled("div")`
 const DateInputWrapper = styled("div")`
   ${inlineControlWrapperCss}
 `;
+
+type FormMode = "edit" | "create";
 
 function isNoticeActive(notice: Notice): boolean {
   const now = new Date();

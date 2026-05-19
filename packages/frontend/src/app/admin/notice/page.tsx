@@ -1,10 +1,12 @@
 "use client";
 
 import { styled } from "@mui/material";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { useNotices } from "@/hooks/queries/useNotice";
 import AdminDashboard from "../AdminDashboard";
-import { EditableNotice } from "./EditableNotice";
+import { adminNoticeCss, EditableNotice } from "./EditableNotice";
 
 const AdminNoticeTabBlock = styled("section")`
   display: block;
@@ -18,6 +20,32 @@ const NoticeWrapper = styled("div")`
   flex-direction: column;
   gap: 1rem;
   width: 100%;
+`;
+
+const CreateNoticeButton = styled(Button)`
+  ${adminNoticeCss}
+  align-items: center;
+  color: var(--discord-white);
+  height: 5rem;
+  justify-content: center;
+  transition: border-color var(--transition-duration-fast) ease;
+
+  &:hover {
+    border-color: oklch(from var(--discord-white) l c h / 20%);
+  }
+
+  &:active {
+    border-color: oklch(from var(--discord-white) l c h / 40%);
+    scale: inherit;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+
+    > img {
+      opacity: 0.5;
+    }
+  }
 `;
 
 function AdminNoticeTab() {
@@ -36,9 +64,14 @@ function AdminNoticeTab() {
               opacity: 0.5,
             }}
           />
-        : notices.map((notice) => (
-            <EditableNotice key={notice.id} notice={notice} />
-          ))
+        : <>
+            {notices.map((notice) => (
+              <EditableNotice key={notice.id} notice={notice} />
+            ))}
+            <CreateNoticeButton>
+              <Plus />
+            </CreateNoticeButton>
+          </>
         }
       </NoticeWrapper>
     </AdminNoticeTabBlock>
