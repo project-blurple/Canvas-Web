@@ -1,4 +1,8 @@
-import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import type {
+  DiscordUserProfile,
+  Palette,
+  PaletteColor,
+} from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
@@ -74,6 +78,16 @@ function isUserInServer(user: DiscordUserProfile, serverId: string) {
   return guildIds.includes(serverId);
 }
 
+function isColorUnavailable(
+  color: PaletteColor,
+  allColorsGlobal: boolean,
+  user: DiscordUserProfile | null | undefined,
+): boolean {
+  if (color.global || allColorsGlobal) return false;
+  if (!color.guildId) return true;
+  return !user || !isUserInServer(user, color.guildId);
+}
+
 interface PlacePixelTabProps extends React.ComponentPropsWithRef<
   typeof PlacePixelTabBlock
 > {
@@ -136,20 +150,30 @@ export default function PlacePixelTab({
   const serverInvite =
     hasInvite ? `https://discord.gg/${inviteSlug}` : undefined;
 
+  const userInServer = Boolean(
+    user &&
+    selectedColor &&
+    !selectedColor.global &&
+    selectedColor.guildId &&
+    isUserInServer(user, selectedColor.guildId),
+  );
+
+  const partnerServerJoinRequired = Boolean(
+    selectedColor && !selectedColor.global && !allColorsGlobal && !userInServer,
+  );
+
   const canPlacePixel =
     webPlacingEnabled &&
-    (!selectedColor || selectedColor.global || allColorsGlobal);
+    (!selectedColor || selectedColor.global || allColorsGlobal || userInServer);
 
   const isJoinServerShown =
     (!(canPlacePixel && user) || readOnly) &&
     !selectedColor?.global &&
     serverInvite;
 
-  const userInServer = Boolean(
-    user &&
-    selectedColor &&
-    !selectedColor.global &&
-    isUserInServer(user, selectedColor?.guildId),
+  const isColorDisabled = useCallback(
+    (color: PaletteColor) => isColorUnavailable(color, allColorsGlobal, user),
+    [allColorsGlobal, user],
   );
 
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
@@ -199,14 +223,10 @@ export default function PlacePixelTab({
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette
-              colors={mainColors}
-              disabled={isPlacing}
-              name="Main colors"
-            />
+            <NamedPalette colors={mainColors} name="Main colors" />
             <NamedPalette
               colors={partnerColors}
-              disabled={isPlacing}
+              isColorDisabled={isColorDisabled}
               name="Partner colors"
             />
           </div>
@@ -219,12 +239,15 @@ export default function PlacePixelTab({
               isUserInServer={userInServer}
             />
           )}
-          {canPlacePixel && (
+          {(canPlacePixel ||
+            (partnerServerJoinRequired && !isJoinServerShown)) && (
             <PlacePixelButton
               aria-busy={isPlacing}
               cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
               isVerbose={!isLarge}
+              partnerServerJoinRequired={partnerServerJoinRequired}
+              partnerServerName={selectedColor?.guildName ?? null}
               type="submit"
             />
           )}
@@ -246,11 +269,11 @@ export default function PlacePixelTab({
 
 interface NamedPaletteProps {
   colors: Palette | undefined;
-  disabled?: boolean | undefined;
+  isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
 }
 
-function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
+function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
   const playSound = usePlaySound("pick_color");
 
@@ -261,7 +284,7 @@ function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
       <ActionPanelPrimitives.SectionHeading>
         {name}
       </ActionPanelPrimitives.SectionHeading>
-      <Fieldset disabled={disabled}>
+      <Fieldset>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
@@ -269,6 +292,7 @@ function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
           ))
         : colors.map((color) => (
             <InteractiveSwatch
+              aria-disabled={isColorDisabled?.(color) || undefined}
               aria-selected={color === selectedColor}
               key={color.code}
               onClick={() => {

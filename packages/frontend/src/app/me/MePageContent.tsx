@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Avatar from "@/components/Avatar";
 import { Button } from "@/components/button";
+import RecheckMembershipsButton from "@/components/RecheckMemberships";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import { useUserStats } from "@/hooks";
 import StatsTable from "./StatsTable";
@@ -27,6 +28,16 @@ const Container = styled("main")`
 const SignOutButton = styled(Link)`
   /* Otherwise the height of the link doesn't include the button padding */
   display: inline-block;
+`;
+
+const ButtonRow = styled("div")`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  /* Keep buttons top-aligned so the recheck status text grows downward
+   * without nudging the Sign out button. */
+  align-items: flex-start;
+  justify-content: center;
 `;
 
 const StatsCard = styled("div")`
@@ -66,11 +77,14 @@ export default function MePageContent() {
         size={96}
       />
       <h1>{username}</h1>
-      <SignOutButton href="/">
-        <Button variant="contained" onClick={signOut}>
-          Sign out
-        </Button>
-      </SignOutButton>
+      <ButtonRow>
+        <SignOutButton href="/">
+          <Button variant="contained" onClick={signOut}>
+            Sign out
+          </Button>
+        </SignOutButton>
+        <RecheckMembershipsButton />
+      </ButtonRow>
       <StatsCard>
         <h2>{activeCanvas.name}</h2>
         <StatsTable
