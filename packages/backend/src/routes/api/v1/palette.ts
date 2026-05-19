@@ -6,9 +6,9 @@ import {
   AssignColorParamModel,
   ColorBodyModel,
   ColorIdParamModel,
+  PaletteQueryModel,
 } from "@/models/color.models";
 import { EventIdParamModel } from "@/models/event.models";
-import { PaletteQueryModel } from "@/models/frame.models";
 import {
   assignColorToEvent,
   createColor,
@@ -21,25 +21,23 @@ import {
 
 export const paletteRouter = typedRouter(Router());
 
-paletteRouter.get("/current", async (req, res) => {
-  const queryResult = await PaletteQueryModel.safeParseAsync(req.query);
-  assertZodSuccess(queryResult);
-
-  const { allColors } = queryResult.data;
-  const palette = await getCurrentEventPalette(allColors);
-
-  res.status(200).json(palette);
-});
+paletteRouter.get(
+  "/current",
+  validate({ query: PaletteQueryModel }),
+  async (req, res) => {
+    const palette = await getCurrentEventPalette(req.query.allColors);
+    res.status(200).json(palette);
+  },
+);
 
 paletteRouter.get(
   "/:eventId",
-  validate({ params: EventIdParamModel }),
+  validate({ params: EventIdParamModel, query: PaletteQueryModel }),
   async (req, res) => {
-    const queryResult = await PaletteQueryModel.safeParseAsync(req.query);
-    assertZodSuccess(queryResult);
-
-    const { allColors } = queryResult.data;
-    const palette = await getEventPalette(req.params.eventId, allColors);
+    const palette = await getEventPalette(
+      req.params.eventId,
+      req.query.allColors,
+    );
     res.status(200).json(palette);
   },
 );

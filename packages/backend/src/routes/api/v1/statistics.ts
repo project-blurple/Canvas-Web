@@ -2,7 +2,7 @@ import { Router } from "express";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { CanvasIdParamModel } from "@/models/canvas.models";
-import { parseEventId } from "@/models/event.models";
+import { EventIdParamModel } from "@/models/event.models";
 import {
   LeaderboardQueryModel,
   UserCanvasParamModel,
@@ -38,24 +38,20 @@ statisticsRouter.get(
   },
 );
 
-statisticsRouter.get("/summary/canvas/:canvasId", async (req, res) => {
-  try {
-    const canvasId = await parseCanvasId(req.params);
-    const summary = await getCanvasStatisticsSummary(canvasId);
-
+statisticsRouter.get(
+  "/summary/canvas/:canvasId",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const summary = await getCanvasStatisticsSummary(req.params.canvasId);
     res.status(200).json(summary);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-statisticsRouter.get("/summary/event/:eventId", async (req, res) => {
-  try {
-    const eventId = await parseEventId(req.params);
-    const summary = await getEventStatisticsSummary(eventId);
-
+statisticsRouter.get(
+  "/summary/event/:eventId",
+  validate({ params: EventIdParamModel }),
+  async (req, res) => {
+    const summary = await getEventStatisticsSummary(req.params.eventId);
     res.status(200).json(summary);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
