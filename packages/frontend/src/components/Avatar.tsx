@@ -14,17 +14,14 @@ interface AvatarProps
 const StyledObject = styled("object")`
   aspect-ratio: 1;
   border-radius: calc(infinity * 1px);
-  border: oklch(from var(--discord-white) l c h / 12%) 1px solid;
-  object-fit: cover;
-  overflow: hidden;
+  border: var(--card-border);
 `;
 
 const AvatarImage = styled("img")`
-  border-radius: inherit;
-  outline: inherit;
-  outline-offset: inherit;
-  aspect-ratio: 1;
+  height: 100%;
   object-fit: cover;
+  object-position: center;
+  width: 100%;
 `;
 
 export default function Avatar({
@@ -40,24 +37,13 @@ export default function Avatar({
       role="img"
       width={size}
       height={size}
-      style={{
-        minHeight: size,
-        minWidth: size,
-        height: size,
-        width: size,
-      }}
       {...props}
     >
       <AvatarImage
         alt={`${username}’s avatar`}
         src={`https://cdn.discordapp.com/embed/avatars/${hash}.png`}
-        width="100%"
-        height="auto"
-        style={{
-          width: "100%",
-          height: "auto",
-          objectFit: "cover",
-        }}
+        width={size}
+        height={size}
       />
     </StyledObject>
   );
