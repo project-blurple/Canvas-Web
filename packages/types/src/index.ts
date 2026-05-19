@@ -12,5 +12,6 @@ export type * from "./palette";
 export type * from "./pixelHistory";
 export type * from "./pixelInfo";
 export type * from "./point";
+export * from "./socket";
 export type * from "./statistics";
 export type * from "./util";

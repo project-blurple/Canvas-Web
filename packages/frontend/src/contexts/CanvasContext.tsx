@@ -1,6 +1,10 @@
 "use client";
 
-import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
+import {
+  type CanvasInfo,
+  type CanvasInfoRequest,
+  SocketEvents,
+} from "@blurple-canvas-web/types";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
@@ -75,10 +79,10 @@ export const CanvasProvider = ({
       }
     };
 
-    socket.on("canvas update", onCanvasUpdate);
+    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
 
     return () => {
-      socket.off("canvas update", onCanvasUpdate);
+      socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
     };
   }, [activeCanvas.id, queryClient]);
 
