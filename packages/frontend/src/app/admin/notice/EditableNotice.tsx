@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/button";
 import NumberField from "@/components/NumberField";
 import { useCanvasList } from "@/hooks";
+import { useDeleteNotice, useModifyNotice } from "@/hooks/queries/useNotice";
 import { resolveSpecialText } from "@/util/text";
 
 const noticeCss = css`
@@ -253,6 +254,9 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const { data: canvases } = useCanvasList();
 
+  const modifyNoticeMutation = useModifyNotice(notice.id);
+  const deleteNoticeMutation = useDeleteNotice(notice.id);
+
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const [type, setType] = useState(notice.type);
@@ -266,12 +270,21 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const [, setPreviewTick] = useState(0);
 
   function saveChanges() {
-    // TODO: Implement saving changes to the notice
+    modifyNoticeMutation.mutate({
+      type,
+      header: headerRef.current?.value ?? null,
+      content: contentRef.current?.value ?? null,
+      persisted: isPersisted,
+      priority,
+      startAt,
+      endAt,
+      canvasId: selectedCanvasId,
+    });
     setIsEditMode(false);
   }
 
   function deleteNotice() {
-    // TODO: Implement notice deletion logic
+    deleteNoticeMutation.mutate();
     setIsEditMode(false);
   }
 
@@ -295,15 +308,9 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
           value={type}
           onChange={(e) => setType(e.target.value as NoticeType)}
         >
-          <option value={"info" as NoticeType} selected={type === "info"}>
-            Info
-          </option>
-          <option value={"warning" as NoticeType} selected={type === "warning"}>
-            Warning
-          </option>
-          <option value={"error" as NoticeType} selected={type === "error"}>
-            Error
-          </option>
+          <option value={"info" as NoticeType}>Info</option>
+          <option value={"warning" as NoticeType}>Warning</option>
+          <option value={"error" as NoticeType}>Error</option>
         </Select>
         <PersistedCheckboxWrapper>
           <input
@@ -360,11 +367,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         >
           <option value="">No Canvas</option>
           {canvases?.map((canvas) => (
-            <option
-              key={canvas.id}
-              value={canvas.id}
-              selected={canvas.id === notice.canvasId}
-            >
+            <option key={canvas.id} value={canvas.id}>
               {canvas.name}
             </option>
           ))}
