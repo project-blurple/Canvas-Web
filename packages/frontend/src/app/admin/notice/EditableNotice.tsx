@@ -101,16 +101,16 @@ const EditHeaderWrapper = styled("div")`
 `;
 
 const Select = styled("select")`
-  background-color: var(--discord-legacy-not-quite-black);
+  background-color: var(--discord-legacy-dark-but-not-black);
   border: var(--card-border);
   color: var(--discord-white);
   padding: 0.25rem;
   width: fit-content;
 `;
 
-const PriorityField = styled(NumberField)`
+const inlineControlWrapperCss = css`
   align-items: center;
-  background-color: var(--discord-legacy-not-quite-black);
+  background-color: var(--discord-legacy-dark-but-not-black);
   border-radius: 0.5rem;
   border: var(--card-border);
   display: flex;
@@ -118,19 +118,52 @@ const PriorityField = styled(NumberField)`
   gap: 0.25rem;
   padding-block: 0.25rem;
   padding-inline: 0.5rem 0.25rem;
+`;
+
+const inlineControlLabelCss = css`
+  color: var(--discord-white);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  white-space: nowrap;
+`;
+
+const inlineControlInputCss = css`
+  background-color: var(--discord-legacy-but-not-black);
+  border-radius: 0.25rem;
+  border: none;
+  color: var(--discord-white);
+  font-size: 0.875rem;
+`;
+
+const InlineFieldLabel = styled("label")`
+  ${inlineControlLabelCss}
+`;
+
+const InlineDateInput = styled("input")`
+  ${inlineControlInputCss}
+  padding: 0.25rem;
+`;
+
+const ClearIconButton = styled("button")`
+  background-color: transparent;
+  border-radius: 0.25rem;
+  border: none;
+  color: var(--discord-white);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+`;
+
+const PriorityField = styled(NumberField)`
+  ${inlineControlWrapperCss}
 
   label {
-    color: var(--discord-white);
-    margin: 0;
-    white-space: nowrap;
+    ${inlineControlLabelCss}
   }
 
   input {
-    background-color: var(--discord-legacy-but-not-black);
-    border-radius: 0.25rem;
-    border: none;
-    color: var(--discord-white);
-    font-size: 0.875rem;
+    ${inlineControlInputCss}
     padding-block: 0;
     padding-inline: 0.25rem;
     width: 3rem;
@@ -138,65 +171,12 @@ const PriorityField = styled(NumberField)`
 `;
 
 const PersistedCheckboxWrapper = styled("div")`
-  align-items: center;
-  background-color: var(--discord-legacy-not-quite-black);
-  border-radius: 0.5rem;
-  border: var(--card-border);
-  display: flex;
-  flex-direction: row;
-  gap: 0.25rem;
+  ${inlineControlWrapperCss}
   padding: 0.25rem 0.5rem;
-
-  label {
-    color: var(--discord-white);
-    display: block;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin-block-end: 0.5em;
-    margin: 0;
-    white-space: nowrap;
-  }
 `;
 
 const DateInputWrapper = styled("div")`
-  align-items: center;
-  background-color: var(--discord-legacy-not-quite-black);
-  border-radius: 0.5rem;
-  border: var(--card-border);
-  display: flex;
-  flex-direction: row;
-  gap: 0.25rem;
-  padding-block: 0.25rem;
-  padding-inline: 0.5rem 0.25rem;
-
-  label {
-    color: var(--discord-white);
-    display: block;
-    font-size: 0.875rem;
-    line-height: 1.5;
-    margin-block-end: 0.5em;
-    margin: 0;
-    white-space: nowrap;
-  }
-
-  input {
-    background-color: var(--discord-legacy-but-not-black);
-    border-radius: 0.25rem;
-    border: none;
-    color: var(--discord-white);
-    font-size: 0.875rem;
-    padding: 0.25rem;
-  }
-
-  button {
-    background-color: transparent;
-    border-radius: 0.25rem;
-    border: none;
-    color: var(--discord-white);
-    cursor: pointer;
-    font-size: 0.75rem;
-    padding: 0;
-  }
+  ${inlineControlWrapperCss}
 `;
 
 function isNoticeActive(notice: Notice): boolean {
@@ -317,7 +297,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
             checked={isPersisted}
             onChange={(e) => setIsPersisted(e.target.checked)}
           />
-          <label htmlFor="persisted">Persisted</label>
+          <InlineFieldLabel htmlFor="persisted">Persisted</InlineFieldLabel>
         </PersistedCheckboxWrapper>
         <PriorityField
           label="Priority"
@@ -325,8 +305,8 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
           onValueChange={(value) => setPriority(value ?? 0)}
         />
         <DateInputWrapper>
-          <label htmlFor="startAt">Start</label>
-          <input
+          <InlineFieldLabel htmlFor="startAt">Start</InlineFieldLabel>
+          <InlineDateInput
             type="datetime-local"
             id="startAt"
             name="startAt"
@@ -335,13 +315,13 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
               setStartAt(e.target.value ? new Date(e.target.value) : null)
             }
           />
-          <button type="button" onClick={() => setStartAt(null)}>
+          <ClearIconButton type="button" onClick={() => setStartAt(null)}>
             <X size={16} />
-          </button>
+          </ClearIconButton>
         </DateInputWrapper>
         <DateInputWrapper>
-          <label htmlFor="endAt">End</label>
-          <input
+          <InlineFieldLabel htmlFor="endAt">End</InlineFieldLabel>
+          <InlineDateInput
             type="datetime-local"
             id="endAt"
             name="endAt"
@@ -350,9 +330,9 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
               setEndAt(e.target.value ? new Date(e.target.value) : null)
             }
           />
-          <button type="button" onClick={() => setEndAt(null)}>
+          <ClearIconButton type="button" onClick={() => setEndAt(null)}>
             <X size={16} />
-          </button>
+          </ClearIconButton>
         </DateInputWrapper>
       </EditHeaderWrapper>
       <StyledHeaderTextarea
@@ -369,7 +349,6 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         ref={contentRef}
         onInput={handleInput}
       />
-
       <Divider />
       <ContentWrapper>
         <HeaderAsMarkdown header={currentHeader} />
