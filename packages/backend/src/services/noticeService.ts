@@ -21,6 +21,17 @@ function noticeFromDb(notice: NoticeDbModel): Notice {
   };
 }
 
+function isNoticeActive(notice: Notice): boolean {
+  const now = new Date();
+  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : null;
+  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : null;
+  return (
+    (hasStarted === true && hasEnded === false) ||
+    (hasStarted === true && hasEnded === null) ||
+    (hasStarted === null && hasEnded === false) // this case should theoretically never exist
+  );
+}
+
 function normalizeNoticeWindow({
   startAt,
   endAt,
@@ -65,10 +76,27 @@ export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
       : undefined,
     orderBy: {
       priority: "asc",
+      created_at: "desc",
     },
   });
 
-  return notices.map(noticeFromDb);
+  const mappedNotices = notices.map(noticeFromDb);
+  if (!activeOnly) {
+    mappedNotices.sort((a, b) => {
+      // Active notices should be sorted above inactive ones, regardless of priority
+      const aIsActive = isNoticeActive(a);
+      const bIsActive = isNoticeActive(b);
+
+      if (aIsActive && !bIsActive) {
+        return -1;
+      } else if (!aIsActive && bIsActive) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+  }
+  return mappedNotices;
 }
 
 export async function createNotice({
