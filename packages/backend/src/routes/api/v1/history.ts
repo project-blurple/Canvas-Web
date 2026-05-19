@@ -1,3 +1,5 @@
+import type { Point } from "@blurple-canvas-web/types";
+import { Router } from "express";
 import cacheGets from "@/middleware/cache";
 import {
   assertLoggedIn,
@@ -16,8 +18,6 @@ import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
 } from "@/services/historyService";
-import type { Point } from "@blurple-canvas-web/types";
-import { Router } from "express";
 
 export const historyRouter = typedRouter(Router({ mergeParams: true }));
 
