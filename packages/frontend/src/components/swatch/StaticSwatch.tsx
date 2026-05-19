@@ -1,5 +1,6 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { rgbaToCssColor } from "@/util/color";
 import VisuallyHidden from "../VisuallyHidden";
 
 const SwatchBase = styled("div")`
@@ -13,14 +14,6 @@ export interface StaticSwatchProps extends React.ComponentPropsWithRef<
   paletteColor: Pick<PaletteColor, "name" | "rgba">;
 }
 
-function rgbaToCssString(
-  rgba: [number, number, number, number],
-): `rgb(${string} ${string} ${string} / ${string})` {
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const alphaFloat = rgba[3] / 0xff;
-  return `rgb(${rgba[0]} ${rgba[1]} ${rgba[2]} / ${alphaFloat})`;
-}
-
 export function StaticSwatch({
   paletteColor,
   style,
@@ -30,7 +23,7 @@ export function StaticSwatch({
 
   return (
     <SwatchBase
-      style={{ ...style, backgroundColor: rgbaToCssString(rgba) }}
+      style={{ ...style, backgroundColor: rgbaToCssColor(rgba) }}
       {...props}
     >
       <VisuallyHidden>{name}</VisuallyHidden>

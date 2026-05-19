@@ -4,7 +4,6 @@ import passport from "passport";
 
 import config from "@/config";
 import { UnauthorizedError } from "@/errors";
-import ApiError from "@/errors/ApiError";
 import {
   getCurrentUserGuildFlags,
   getGuildPermissionsForUser,
@@ -19,48 +18,39 @@ export const discordRouter = Router();
 discordRouter.get("/", passport.authenticate("discord"));
 
 discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
-  try {
-    const { guildId } = req.params;
-    const profile = req.user as DiscordUserProfile;
+  const { guildId } = req.params;
+  const profile = req.user as DiscordUserProfile;
 
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
-
-    assertIsSnowflake(guildId, "guildId");
-    const permissions = await withDiscordAccessToken(
-      req.session,
-      (accessToken) => getGuildPermissionsForUser(guildId, accessToken),
-    );
-
-    res.status(200).json(permissions);
-  } catch (error) {
-    ApiError.sendError(res, error);
+  if (!profile?.id) {
+    throw new UnauthorizedError("User is not authenticated");
   }
+
+  assertIsSnowflake(guildId, "guildId");
+  const permissions = await withDiscordAccessToken(req.session, (accessToken) =>
+    getGuildPermissionsForUser(guildId, accessToken),
+  );
+
+  res.status(200).json(permissions);
 });
 
 discordRouter.get("/guilds/permissions-map", async (req, res) => {
-  try {
-    const profile = req.user as DiscordUserProfile;
+  const profile = req.user as DiscordUserProfile;
 
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
-
-    const guildFlags =
-      req.session.discordGuildFlags ??
-      (await withDiscordAccessToken(req.session, (accessToken) =>
-        getCurrentUserGuildFlags(accessToken),
-      ));
-
-    req.session.discordGuildFlags = guildFlags;
-
-    res.status(200).json({
-      guilds: guildFlags,
-    });
-  } catch (error) {
-    ApiError.sendError(res, error);
+  if (!profile?.id) {
+    throw new UnauthorizedError("User is not authenticated");
   }
+
+  const guildFlags =
+    req.session.discordGuildFlags ??
+    (await withDiscordAccessToken(req.session, (accessToken) =>
+      getCurrentUserGuildFlags(accessToken),
+    ));
+
+  req.session.discordGuildFlags = guildFlags;
+
+  res.status(200).json({
+    guilds: guildFlags,
+  });
 });
 
 /**

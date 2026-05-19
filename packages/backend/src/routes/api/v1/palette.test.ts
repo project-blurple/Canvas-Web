@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import {
   assignColorToEvent,
@@ -36,6 +37,7 @@ const createPaletteApp = () => {
     next();
   });
   app.use("/api/v1/palette", paletteRouter);
+  app.use(errorHandler);
   return app;
 };
 

@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import type {
+  BlurpleEvent,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
-import { type canvas, prisma } from "@/client";
+import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -104,9 +105,17 @@ interface CanvasSummaryRow {
 /**
  * Retrieves canvas summary info for all canvases.
  *
+ * @param eventId If provided, only canvases for the specified event will be returned
  * @returns The canvas summary info of all canvases
  */
-export async function getCanvases(): Promise<CanvasSummary[]> {
+export async function getCanvases(
+  eventId?: BlurpleEvent["id"],
+): Promise<CanvasSummary[]> {
+  const whereSQL =
+    eventId === undefined ?
+      Prisma.sql`TRUE`
+    : Prisma.sql`c.event_id = ${eventId}`;
+
   const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
     SELECT
       c.id,
@@ -121,6 +130,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     LEFT JOIN history h
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
+    WHERE ${whereSQL}
     GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,

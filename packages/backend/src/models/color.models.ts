@@ -1,23 +1,10 @@
-import type { PaletteColor } from "@blurple-canvas-web/types";
 import z from "zod";
-import { assertZodSuccess } from "@/utils/models";
+import { EventIdParamModel } from "./event.models";
+import { GuildIdParamModel } from "./guild.models";
 
-const ColorIdParamModel = z.object({
+export const ColorIdParamModel = z.object({
   colorId: z.coerce.number().int().positive(),
 });
-
-export interface ColorIdParam {
-  colorId: string;
-  [key: string]: string;
-}
-
-export async function parseColorId(
-  params: ColorIdParam,
-): Promise<PaletteColor["id"]> {
-  const result = await ColorIdParamModel.safeParseAsync(params);
-  assertZodSuccess(result, `${params.colorId} is not a valid color ID`);
-  return result.data.colorId;
-}
 
 export const ColorBodyModel = z.object({
   code: z.string().length(4),
@@ -29,4 +16,17 @@ export const ColorBodyModel = z.object({
     z.number().int().nonnegative().max(255),
     z.number().int().nonnegative().max(255),
   ]),
+});
+
+export const AssignColorParamModel = z.object({
+  ...ColorIdParamModel.shape,
+  ...EventIdParamModel.shape,
+  ...GuildIdParamModel.shape,
+});
+
+export const PaletteQueryModel = z.object({
+  allColors: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "true"),
 });
