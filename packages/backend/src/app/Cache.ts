@@ -39,7 +39,7 @@ export default class Cache {
     let deleted = 0;
     for (const key of this.cache.keys()) {
       if (key.startsWith(scope)) {
-        this.delete(key);
+        void this.delete(key);
         deleted++;
       }
     }
