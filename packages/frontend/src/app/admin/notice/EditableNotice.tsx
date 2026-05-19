@@ -255,7 +255,8 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
     setIsEditMode(false);
   }
 
-  function cancelChanges() {
+  function deleteNotice() {
+    // TODO: Implement notice deletion logic
     setIsEditMode(false);
   }
 
@@ -357,8 +358,11 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
 
       <ButtonWrapper>
         <StyledButton type="submit">Save</StyledButton>
-        <StyledButton type="button" onClick={cancelChanges}>
+        <StyledButton type="button" onClick={() => setIsEditMode(false)}>
           Cancel
+        </StyledButton>
+        <StyledButton type="button" onClick={deleteNotice}>
+          Delete
         </StyledButton>
       </ButtonWrapper>
     </NoticeForm>
