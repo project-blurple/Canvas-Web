@@ -438,7 +438,7 @@ function EditModeNotice({
             type="datetime-local"
             id="startAt"
             name="startAt"
-            value={startAt ? startAt.toISOString().slice(0, 16) : ""}
+            value={startAt ? new Date(startAt).toISOString().slice(0, 16) : ""}
             onChange={(e) =>
               setStartAt(e.target.value ? new Date(e.target.value) : null)
             }
@@ -453,7 +453,7 @@ function EditModeNotice({
             type="datetime-local"
             id="endAt"
             name="endAt"
-            value={endAt ? endAt.toISOString().slice(0, 16) : ""}
+            value={endAt ? new Date(endAt).toISOString().slice(0, 16) : ""}
             onChange={(e) =>
               setEndAt(e.target.value ? new Date(e.target.value) : null)
             }
