@@ -1,5 +1,6 @@
 import type { Point } from "@blurple-canvas-web/types";
 import { Router } from "express";
+import cacheGets from "@/middleware/cache";
 import {
   assertLoggedIn,
   requireCanvasModerator,
@@ -23,6 +24,7 @@ export const historyRouter = typedRouter(Router({ mergeParams: true }));
 historyRouter.get(
   "/",
   validate({ params: CanvasIdParamModel, query: PixelHistoryParamModel }),
+  cacheGets(),
   async (req, res) => {
     const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
