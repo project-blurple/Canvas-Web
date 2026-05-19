@@ -96,7 +96,7 @@ const EditHeaderWrapper = styled("div")`
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 0.5rem;
 `;
 
 const Select = styled("select")`
@@ -109,9 +109,14 @@ const Select = styled("select")`
 
 const PriorityField = styled(NumberField)`
   align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
   display: flex;
   flex-direction: row;
   gap: 0.25rem;
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem 0.25rem;
 
   label {
     color: var(--discord-white);
@@ -120,11 +125,35 @@ const PriorityField = styled(NumberField)`
   }
 
   input {
-    background-color: var(--discord-legacy-not-quite-black);
-    border: var(--card-border);
+    background-color: var(--discord-legacy-but-not-black);
+    border-radius: 0.25rem;
+    border: none;
     color: var(--discord-white);
-    padding: 0.25rem;
+    font-size: 0.875rem;
+    padding-block: 0;
+    padding-inline: 0.25rem;
     width: 3rem;
+  }
+`;
+
+const PersistedCheckboxWrapper = styled("div")`
+  align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+
+  label {
+    color: var(--discord-white);
+    display: block;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    margin-block-end: 0.5em;
+    margin: 0;
+    white-space: nowrap;
   }
 `;
 
@@ -193,6 +222,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
   const [type, setType] = useState(notice.type);
+  const [isPersisted, setIsPersisted] = useState(notice.persisted);
   const [priority, setPriority] = useState(notice.priority);
   const [, setPreviewTick] = useState(0);
 
@@ -235,8 +265,18 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
             Error
           </option>
         </Select>
+        <PersistedCheckboxWrapper>
+          <input
+            type="checkbox"
+            id="persisted"
+            name="persisted"
+            checked={isPersisted}
+            onChange={(e) => setIsPersisted(e.target.checked)}
+          />
+          <label htmlFor="persisted">Persisted</label>
+        </PersistedCheckboxWrapper>
         <PriorityField
-          label="Priority:"
+          label="Priority"
           value={priority}
           onValueChange={(value) => setPriority(value ?? 0)}
         />
