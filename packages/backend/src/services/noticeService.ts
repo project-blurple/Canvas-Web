@@ -1,7 +1,10 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { type notice as NoticeDbModel, prisma } from "@/client";
 import { BadRequestError } from "@/errors";
-import type { CreateNoticeBody } from "@/models/notice.models";
+import type {
+  CreateNoticeBody,
+  UpdateNoticeBody,
+} from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
   return {
@@ -96,9 +99,9 @@ export async function createNotice({
   return noticeFromDb(notice);
 }
 
-interface UpdateNoticeBody {
+interface UpdateNoticeInput {
   noticeId: number;
-  data: Partial<CreateNoticeBody>;
+  data: UpdateNoticeBody;
 }
 
 export async function updateNotice({
@@ -113,7 +116,7 @@ export async function updateNotice({
     persisted,
     canvasId,
   },
-}: UpdateNoticeBody): Promise<Notice> {
+}: UpdateNoticeInput): Promise<Notice> {
   const existingTimestamps = await getNoticeTimestamps(noticeId);
 
   const updatedStartAt =

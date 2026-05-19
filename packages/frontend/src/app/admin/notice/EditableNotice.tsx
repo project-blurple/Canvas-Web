@@ -210,11 +210,33 @@ interface NoticeProps {
 }
 
 function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
+  const modifyNoticeMutation = useModifyNotice(notice.id);
+
   const { data: canvases } = useCanvasList();
   const canvas =
     canvases ? canvases.find((c) => c.id === notice.canvasId) : null;
 
   const isActive = isNoticeActive(notice);
+
+  async function activateNotice() {
+    const now = new Date();
+    const endAt = notice.endAt && notice.endAt > now ? notice.endAt : null;
+
+    await modifyNoticeMutation.mutateAsync({
+      endAt,
+      startAt: now,
+    });
+  }
+
+  async function deactivateNotice() {
+    const now = new Date();
+    const startAt = notice.startAt && notice.startAt > now ? null : undefined;
+
+    await modifyNoticeMutation.mutateAsync({
+      endAt: new Date(),
+      startAt,
+    });
+  }
 
   return (
     <NoticeWrapper>
@@ -244,8 +266,8 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
       <ButtonWrapper>
         <StyledButton onClick={() => setIsEditMode(true)}>Edit</StyledButton>
         {isActive ?
-          <StyledButton>Deactivate</StyledButton>
-        : <StyledButton>Activate</StyledButton>}
+          <StyledButton onClick={deactivateNotice}>Deactivate</StyledButton>
+        : <StyledButton onClick={activateNotice}>Activate</StyledButton>}
       </ButtonWrapper>
     </NoticeWrapper>
   );
