@@ -1,6 +1,8 @@
 import type { Notice } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Markdown from "markdown-to-jsx";
+import { useState } from "react";
+import { Button } from "@/components/button";
 import { resolveSpecialText } from "@/util/text";
 
 const NoticeWrapper = styled("div")`
@@ -9,7 +11,7 @@ const NoticeWrapper = styled("div")`
   border: var(--card-border);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
   padding: 1rem;
   width: 100%;
 `;
@@ -33,21 +35,64 @@ const NoticeChip = styled("div")`
   text-transform: uppercase;
 `;
 
+const ContentWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
 const NoticeContent = styled("span")`
   font-size: 1rem;
   line-height: 1.5;
 `;
 
-function StaticNotice({ notice }: { notice: Notice }) {
-  const headerText =
-    notice.header ? `### ${resolveSpecialText(notice.header)}` : "";
-  const contentText = notice.content ? resolveSpecialText(notice.content) : "";
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
+  color: var(--discord-white);
+`;
 
-  const hasStarted =
-    notice.startAt ? new Date() >= new Date(notice.startAt) : null;
-  const hasEnded = notice.endAt ? new Date() >= new Date(notice.endAt) : null;
+const ButtonWrapper = styled("div")`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+`;
 
-  const isActive = hasStarted !== false && hasEnded !== true;
+const Divider = styled("hr")`
+  border: none;
+  border-top: var(--card-border);
+  margin: 0.5rem 0;
+`;
+
+function isNoticeActive(notice: Notice): boolean {
+  const now = new Date();
+  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : true;
+  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : false;
+  return hasStarted && !hasEnded;
+}
+
+function ContentAsMarkdown({ content }: { content: string | null }) {
+  if (!content) return null;
+
+  const resolvedContent = resolveSpecialText(content);
+
+  return (
+    <NoticeContent>
+      <Markdown>{resolvedContent}</Markdown>
+    </NoticeContent>
+  );
+}
+
+function HeaderAsMarkdown({ header }: { header: string | null }) {
+  return <ContentAsMarkdown content={header ? `### ${header}` : null} />;
+}
+
+interface NoticeProps {
+  notice: Notice;
+  setIsEditMode: (isEditMode: boolean) => void;
+}
+
+function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
+  const isActive = isNoticeActive(notice);
 
   return (
     <NoticeWrapper>
@@ -58,31 +103,56 @@ function StaticNotice({ notice }: { notice: Notice }) {
         <NoticeChip>Priority {notice.priority}</NoticeChip>
         {notice.startAt && (
           <NoticeChip>
-            {hasStarted ? "Started" : "Starting"}{" "}
-            {new Date(notice.startAt).toLocaleString()}
+            Start {new Date(notice.startAt).toLocaleString()}
           </NoticeChip>
         )}
         {notice.endAt && (
-          <NoticeChip>
-            {hasEnded ? "Ended" : "Ending"}{" "}
-            {new Date(notice.endAt).toLocaleString()}
-          </NoticeChip>
+          <NoticeChip>End {new Date(notice.endAt).toLocaleString()}</NoticeChip>
         )}
       </ChipWrapper>
-      {headerText && (
-        <NoticeContent>
-          <Markdown>{headerText}</Markdown>
-        </NoticeContent>
-      )}
-      {contentText && (
-        <NoticeContent>
-          <Markdown>{contentText}</Markdown>
-        </NoticeContent>
-      )}
+      <ContentWrapper>
+        <HeaderAsMarkdown header={notice.header} />
+        <ContentAsMarkdown content={notice.content} />
+      </ContentWrapper>
+      <ButtonWrapper>
+        <StyledButton onClick={() => setIsEditMode(true)}>Edit</StyledButton>
+        {isActive ?
+          <StyledButton>Deactivate</StyledButton>
+        : <StyledButton>Activate</StyledButton>}
+      </ButtonWrapper>
+    </NoticeWrapper>
+  );
+}
+
+function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
+  function saveChanges() {
+    // TODO: Implement saving changes to the notice
+    setIsEditMode(false);
+  }
+
+  function cancelChanges() {
+    setIsEditMode(false);
+  }
+
+  return (
+    <NoticeWrapper>
+      <Divider />
+      <ContentWrapper>
+        <HeaderAsMarkdown header={notice.header} />
+        <ContentAsMarkdown content={notice.content} />
+      </ContentWrapper>
+      <ButtonWrapper>
+        <StyledButton onClick={saveChanges}>Save</StyledButton>
+        <StyledButton onClick={cancelChanges}>Cancel</StyledButton>
+      </ButtonWrapper>
     </NoticeWrapper>
   );
 }
 
 export function EditableNotice({ notice }: { notice: Notice }) {
-  return <StaticNotice notice={notice} />;
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  return isEditMode ?
+      <EditModeNotice notice={notice} setIsEditMode={setIsEditMode} />
+    : <StaticNotice notice={notice} setIsEditMode={setIsEditMode} />;
 }
