@@ -47,12 +47,12 @@ export default class ApiError extends Error {
       return true;
     }
 
-    if (!(error instanceof Error)) {
-      return false;
+    if (error instanceof Error) {
+      return /can't reach database server|database server is not reachable|ECONNREFUSED/i.test(
+        error.message,
+      );
     }
 
-    return /can't reach database server|database server is not reachable|ECONNREFUSED/i.test(
-      error.message,
-    );
+    return false;
   }
 }
