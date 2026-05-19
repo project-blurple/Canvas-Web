@@ -268,24 +268,41 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
     notice.canvasId,
   );
   const [, setPreviewTick] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  function saveChanges() {
-    modifyNoticeMutation.mutate({
-      type,
-      header: headerRef.current?.value ?? null,
-      content: contentRef.current?.value ?? null,
-      persisted: isPersisted,
-      priority,
-      startAt,
-      endAt,
-      canvasId: selectedCanvasId,
-    });
-    setIsEditMode(false);
+  async function saveChanges() {
+    setIsSaving(true);
+    try {
+      await modifyNoticeMutation.mutateAsync({
+        type,
+        header: headerRef.current?.value ?? null,
+        content: contentRef.current?.value ?? null,
+        persisted: isPersisted,
+        priority,
+        startAt,
+        endAt,
+        canvasId: selectedCanvasId,
+      });
+
+      setIsEditMode(false);
+    } catch (err) {
+      console.error("Failed to save notice", err);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
-  function deleteNotice() {
-    deleteNoticeMutation.mutate();
-    setIsEditMode(false);
+  async function deleteNotice() {
+    setIsDeleting(true);
+    try {
+      await deleteNoticeMutation.mutateAsync();
+      setIsEditMode(false);
+    } catch (err) {
+      console.error("Failed to delete notice", err);
+    } finally {
+      setIsDeleting(false);
+    }
   }
 
   function handleInput() {
@@ -298,9 +315,9 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
 
   return (
     <NoticeForm
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
-        saveChanges();
+        await saveChanges();
       }}
     >
       <EditHeaderWrapper>
@@ -397,11 +414,21 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
       </ContentWrapper>
 
       <ButtonWrapper>
-        <StyledButton type="submit">Save</StyledButton>
-        <StyledButton type="button" onClick={() => setIsEditMode(false)}>
+        <StyledButton type="submit" disabled={isSaving || isDeleting}>
+          Save
+        </StyledButton>
+        <StyledButton
+          type="button"
+          onClick={() => setIsEditMode(false)}
+          disabled={isSaving || isDeleting}
+        >
           Cancel
         </StyledButton>
-        <StyledButton type="button" onClick={deleteNotice}>
+        <StyledButton
+          type="button"
+          onClick={deleteNotice}
+          disabled={isSaving || isDeleting}
+        >
           Delete
         </StyledButton>
       </ButtonWrapper>
