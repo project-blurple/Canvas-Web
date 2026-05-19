@@ -2,6 +2,7 @@
 
 import { styled } from "@mui/material";
 import { Plus } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { useNotices } from "@/hooks/queries/useNotice";
@@ -41,15 +42,12 @@ const CreateNoticeButton = styled(Button)`
 
   &:disabled {
     cursor: not-allowed;
-
-    > img {
-      opacity: 0.5;
-    }
   }
 `;
 
 function AdminNoticeTab() {
   const { data: notices, isLoading } = useNotices(true);
+  const [isCreateMode, setIsCreateMode] = useState(false);
 
   return (
     <AdminNoticeTabBlock>
@@ -65,12 +63,21 @@ function AdminNoticeTab() {
             }}
           />
         : <>
+            {isCreateMode ?
+              <EditableNotice
+                mode="create"
+                onComplete={() => setIsCreateMode(false)}
+              />
+            : <CreateNoticeButton
+                onClick={() => setIsCreateMode(true)}
+                disabled={isCreateMode}
+              >
+                <Plus />
+              </CreateNoticeButton>
+            }
             {notices.map((notice) => (
               <EditableNotice key={notice.id} notice={notice} />
             ))}
-            <CreateNoticeButton>
-              <Plus />
-            </CreateNoticeButton>
           </>
         }
       </NoticeWrapper>

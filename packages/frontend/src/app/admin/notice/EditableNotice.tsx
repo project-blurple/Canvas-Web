@@ -6,7 +6,11 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/button";
 import NumberField from "@/components/NumberField";
 import { useCanvasList } from "@/hooks";
-import { useDeleteNotice, useModifyNotice } from "@/hooks/queries/useNotice";
+import {
+  useCreateNotice,
+  useDeleteNotice,
+  useModifyNotice,
+} from "@/hooks/queries/useNotice";
 import { resolveSpecialText } from "@/util/text";
 
 export const adminNoticeCss = css`
@@ -211,6 +215,13 @@ interface NoticeProps {
   setIsEditMode: (isEditMode: boolean) => void;
 }
 
+interface EditModeNoticeProps {
+  mode: FormMode;
+  notice?: Notice;
+  onComplete?: () => void;
+  setIsEditMode: (isEditMode: boolean) => void;
+}
+
 function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
   const modifyNoticeMutation = useModifyNotice(notice.id);
 
@@ -305,21 +316,27 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
   );
 }
 
-function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
+function EditModeNotice({
+  mode,
+  notice,
+  onComplete,
+  setIsEditMode,
+}: EditModeNoticeProps) {
   const { data: canvases } = useCanvasList();
 
-  const modifyNoticeMutation = useModifyNotice(notice.id);
-  const deleteNoticeMutation = useDeleteNotice(notice.id);
+  const modifyNoticeMutation = useModifyNotice(notice?.id ?? 0);
+  const createNoticeMutation = useCreateNotice();
+  const deleteNoticeMutation = useDeleteNotice(notice?.id ?? 0);
 
   const headerRef = useRef<HTMLTextAreaElement | null>(null);
   const contentRef = useRef<HTMLTextAreaElement | null>(null);
-  const [type, setType] = useState(notice.type);
-  const [isPersisted, setIsPersisted] = useState(notice.persisted);
-  const [priority, setPriority] = useState(notice.priority);
-  const [startAt, setStartAt] = useState(notice.startAt);
-  const [endAt, setEndAt] = useState(notice.endAt);
+  const [type, setType] = useState<NoticeType>(notice?.type ?? "info");
+  const [isPersisted, setIsPersisted] = useState(notice?.persisted ?? false);
+  const [priority, setPriority] = useState(notice?.priority ?? 0);
+  const [startAt, setStartAt] = useState(notice?.startAt ?? null);
+  const [endAt, setEndAt] = useState(notice?.endAt ?? null);
   const [selectedCanvasId, setSelectedCanvasId] = useState<number | null>(
-    notice.canvasId,
+    notice?.canvasId ?? null,
   );
   const [, setPreviewTick] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -328,7 +345,7 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
   async function saveChanges() {
     setIsSaving(true);
     try {
-      await modifyNoticeMutation.mutateAsync({
+      const data = {
         type,
         header: headerRef.current?.value ?? null,
         content: contentRef.current?.value ?? null,
@@ -337,21 +354,34 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
         startAt,
         endAt,
         canvasId: selectedCanvasId,
-      });
+      };
+
+      if (mode === "create") {
+        await createNoticeMutation.mutateAsync(data);
+      } else {
+        await modifyNoticeMutation.mutateAsync(data);
+      }
 
       setIsEditMode(false);
+      onComplete?.();
     } catch (err) {
-      console.error("Failed to save notice", err);
+      console.error(
+        mode === "create" ? "Failed to create notice" : "Failed to save notice",
+        err,
+      );
     } finally {
       setIsSaving(false);
     }
   }
 
   async function deleteNotice() {
+    if (mode === "create") return;
+
     setIsDeleting(true);
     try {
       await deleteNoticeMutation.mutateAsync();
       setIsEditMode(false);
+      onComplete?.();
     } catch (err) {
       console.error("Failed to delete notice", err);
     } finally {
@@ -364,8 +394,8 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
     setPreviewTick((t) => t + 1);
   }
 
-  const currentHeader = headerRef.current?.value ?? notice.header ?? null;
-  const currentContent = contentRef.current?.value ?? notice.content ?? null;
+  const currentHeader = headerRef.current?.value ?? notice?.header ?? null;
+  const currentContent = contentRef.current?.value ?? notice?.content ?? null;
 
   return (
     <NoticeForm
@@ -448,14 +478,14 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
       <StyledHeaderTextarea
         name="header"
         aria-label="Notice header"
-        defaultValue={notice.header ?? ""}
+        defaultValue={notice?.header ?? ""}
         ref={headerRef}
         onInput={handleInput}
       />
       <StyledContentTextarea
         name="content"
         aria-label="Notice content"
-        defaultValue={notice.content ?? ""}
+        defaultValue={notice?.content ?? ""}
         ref={contentRef}
         onInput={handleInput}
       />
@@ -469,31 +499,56 @@ function EditModeNotice({ notice, setIsEditMode }: NoticeProps) {
 
       <ButtonWrapper>
         <StyledButton type="submit" disabled={isSaving || isDeleting}>
-          Save
+          {mode === "create" ? "Create" : "Save"}
         </StyledButton>
         <StyledButton
           type="button"
-          onClick={() => setIsEditMode(false)}
+          onClick={() => {
+            setIsEditMode(false);
+            if (mode === "create") onComplete?.();
+          }}
           disabled={isSaving || isDeleting}
         >
           Cancel
         </StyledButton>
-        <StyledButton
-          type="button"
-          onClick={deleteNotice}
-          disabled={isSaving || isDeleting}
-        >
-          Delete
-        </StyledButton>
+        {mode === "edit" && (
+          <StyledButton
+            type="button"
+            onClick={deleteNotice}
+            disabled={isSaving || isDeleting}
+          >
+            Delete
+          </StyledButton>
+        )}
       </ButtonWrapper>
     </NoticeForm>
   );
 }
 
-export function EditableNotice({ notice }: { notice: Notice }) {
-  const [isEditMode, setIsEditMode] = useState(false);
+interface EditableNoticeProps {
+  mode?: FormMode;
+  notice?: Notice;
+  onComplete?: () => void;
+}
 
-  return isEditMode ?
-      <EditModeNotice notice={notice} setIsEditMode={setIsEditMode} />
-    : <StaticNotice notice={notice} setIsEditMode={setIsEditMode} />;
+export function EditableNotice({
+  mode = "edit",
+  notice,
+  onComplete,
+}: EditableNoticeProps) {
+  const [isEditMode, setIsEditMode] = useState(mode === "create");
+
+  if (mode === "edit" && !notice) return null;
+
+  return (
+    isEditMode ?
+      <EditModeNotice
+        mode={mode}
+        notice={notice}
+        onComplete={onComplete}
+        setIsEditMode={setIsEditMode}
+      />
+    : notice ? <StaticNotice notice={notice} setIsEditMode={setIsEditMode} />
+    : null
+  );
 }
