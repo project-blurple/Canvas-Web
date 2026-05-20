@@ -44,7 +44,7 @@ describe("Place Pixel Tests", () => {
         colorId: 1,
       })
       .type("json")
-      .set("X-TestUserId", "1");
+      .set("Test-User-Id", "1");
 
     expect(response.body).toStrictEqual({
       cooldownEndTime: 30 * 1000,
@@ -64,7 +64,7 @@ describe("Place Pixel Tests", () => {
           colorId: 1,
         })
         .type("json")
-        .set("X-TestUserId", "1");
+        .set("Test-User-Id", "1");
     };
 
     const firstResponse = await endpointRequest();
