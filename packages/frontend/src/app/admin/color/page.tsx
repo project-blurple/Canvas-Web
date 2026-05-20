@@ -32,28 +32,26 @@ const StyledColorListWrapper = styled("div")`
 
 const ColorList = styled("ul")`
   display: grid;
+  font-size: 0.875rem;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
 `;
 
 const ColorCard = styled("li")`
-  --min-swatch-width: 3rem;
-
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-  height: var(--min-swatch-width);
+  column-gap: 1rem;
+  display: grid;
+  grid-template-columns: 3rem auto;
 `;
 
 const ColorCardText = styled("div")`
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-size: 0.875rem;
+  * + * {
+    margin-block-start: 0.5em;
+  }
 `;
 
 const GuildId = styled("code")`
   color: var(--discord-legacy-muted);
+  display: block;
   font-size: 0.75rem;
 `;
 
@@ -67,21 +65,21 @@ function ColorListWrapper({
   return (
     <StyledColorListWrapper>
       <h2>{header}</h2>
-      <ColorList role="list">
-        {colors.length === 0 ?
-          "No colors found"
-        : colors.map((color) => (
+      {colors.length === 0 ?
+        <p>No colors found</p>
+      : <ColorList role="list">
+          {colors.map((color) => (
             <ColorCard key={color.id}>
               <StaticSwatch aria-hidden paletteColor={color} />
               <ColorCardText>
-                <span>{color.name}</span>
+                <p style={{ textBoxTrim: "trim-start" }}>{color.name}</p>
                 <code>{color.code}</code>
                 {color.guildId && <GuildId>{color.guildId}</GuildId>}
               </ColorCardText>
             </ColorCard>
-          ))
-        }
-      </ColorList>
+          ))}
+        </ColorList>
+      }
     </StyledColorListWrapper>
   );
 }
@@ -96,7 +94,7 @@ function AdminColorTab() {
   return (
     <AdminColorTabBlock>
       {palette.length === 0 ?
-        "No colors found"
+        <p>No colors found</p>
       : <ColorTabWrapper>
           <ColorListWrapper colors={mainColors} header="Global colors" />
           <ColorListWrapper
