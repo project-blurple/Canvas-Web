@@ -37,7 +37,6 @@
     "clean": "rm -rf -- .next/ && pnpm purge"
   },
   "dependencies": {
-    "@base-ui/react": "^1.4.1",
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
