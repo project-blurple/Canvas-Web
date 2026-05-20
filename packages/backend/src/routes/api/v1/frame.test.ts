@@ -36,6 +36,8 @@ vi.mock("@/services/discordGuildService", () => ({
   isCanvasAdmin: vi.fn(),
 }));
 
+const TEST_USER_SNOWFLAKE = "123456789012345678";
+
 const endpointCases = [
   {
     name: "create",
@@ -44,8 +46,7 @@ const endpointCases = [
     body: {
       canvasId: 1,
       name: "Frame name",
-      ownerId: "1",
-      isGuildOwned: false,
+      owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
       x0: 0,
       y0: 0,
       x1: 10,
@@ -180,8 +181,7 @@ describe("Frame mutation route tests", () => {
       body: {
         canvasId: 1,
         name: "Frame name",
-        ownerId: "1",
-        isGuildOwned: false,
+        owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,
@@ -297,8 +297,7 @@ describe("Frame mutation route tests", () => {
       const requestBody = {
         canvasId: 1,
         name: "Frame name",
-        ownerId: "1",
-        isGuildOwned: false,
+        owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,

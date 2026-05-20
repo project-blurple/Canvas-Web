@@ -351,11 +351,15 @@ export default function FrameEditPanel({
     mutationFn: async () => {
       const requestUrl = `${config.apiUrl}/api/v1/frame`;
 
+      const owner =
+        selectedOwner === "guild" ?
+          { type: "guild" as const, guildId: selectedGuildId }
+        : { type: "user" as const, userId: user?.id ?? "" };
+
       const body = {
         canvasId: canvas.id,
         name: frameName,
-        ownerId: selectedOwner === "user" ? user?.id : selectedGuildId,
-        isGuildOwned: selectedOwner === "guild",
+        owner,
         x0: frameBounds?.left ?? 0,
         y0: frameBounds?.top ?? 0,
         x1: frameBounds ? frameBounds.right : canvas.width,

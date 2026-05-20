@@ -1,5 +1,11 @@
 import z from "zod";
+import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
 import { CanvasIdParamModel } from "./canvas.models";
+
+export enum FrameOwnerType {
+  User = "user",
+  Guild = "guild",
+}
 
 export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
@@ -40,17 +46,25 @@ export const FrameDataParamModel = z
   })
   .superRefine(frameBoundsRefiner);
 
-export const FrameOwnerParamModel = z.object({
-  ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
-  isGuildOwned: z.boolean(),
-});
+export const FrameOwnerParamModel = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal(FrameOwnerType.User),
+    userId: DiscordSnowflakeSchema,
+  }),
+  z.object({
+    type: z.literal(FrameOwnerType.Guild),
+    guildId: DiscordSnowflakeSchema,
+  }),
+]);
+
+export type FrameOwnerInput = z.infer<typeof FrameOwnerParamModel>;
 
 export const CreateFrameBodyModel = z
   .object({
     name: z.string().min(1).max(100),
     ...FrameBoundsModel.shape,
-    ...FrameOwnerParamModel.shape,
     ...CanvasIdParamModel.shape,
+    owner: FrameOwnerParamModel,
   })
   .superRefine(frameBoundsRefiner);
 
