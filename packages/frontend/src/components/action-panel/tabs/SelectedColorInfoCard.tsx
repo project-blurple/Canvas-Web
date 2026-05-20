@@ -9,6 +9,7 @@ import {
 
 const Wrapper = styled("div")`
   align-items: baseline;
+  border-radius: 8px;
   color: oklch(from var(--discord-white) l c h / 60%);
   display: grid;
   font-size: 1.125rem;
