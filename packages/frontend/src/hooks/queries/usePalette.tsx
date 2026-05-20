@@ -24,21 +24,23 @@ function sortByOklchHue(a: PaletteColor, b: PaletteColor) {
 
 export function usePalette(
   eventId?: BlurpleEvent["id"],
+  allColors = false,
   useQueryOptions?: Omit<
     UseQueryOptions<PaletteRequest.ResBody>,
     "queryKey" | "queryFn"
   >,
 ) {
   const getPalette = async () => {
-    const response = await axios.get<PaletteRequest.ResBody>(
-      `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`,
-    );
+    const url = `${config.apiUrl}/api/v1/palette/${eventId ? encodeURIComponent(eventId) : "current"}`;
+    const params: PaletteRequest.ReqQuery | undefined =
+      allColors ? { allColors: true } : undefined;
+    const response = await axios.get<PaletteRequest.ResBody>(url, { params });
     return response.data.sort(sortByOklchHue);
   };
 
   return useQuery<PaletteRequest.ResBody>({
     ...useQueryOptions,
-    queryKey: ["palette", eventId],
+    queryKey: ["palette", eventId, allColors],
     queryFn: getPalette,
     enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,

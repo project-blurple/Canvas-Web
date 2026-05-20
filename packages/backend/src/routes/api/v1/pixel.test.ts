@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 
+import { errorHandler } from "@/middleware/errorHandler";
 import seedAll from "@/test";
 import { mockAuth } from "@/test/mockAuth";
 
@@ -17,12 +18,17 @@ let app: express.Express;
 describe("Place Pixel Tests", () => {
   beforeEach(async () => {
     await seedAll();
-    vi.useFakeTimers();
+    // We only mock Date, not timers. `router` from Express uses setImmediate to
+    // hand control back to a parent router when no more layers match, so
+    // faking setImmediate would deadlock requests whose errors propagate
+    // out of pixelRouter into the global errorHandler.
+    vi.useFakeTimers({ toFake: ["Date"] });
 
     app = express();
     app.use(express.json());
     app.use(mockAuth);
     app.use("/api/v1/canvas/:canvasId/pixel", pixelRouter);
+    app.use(errorHandler);
   });
   afterEach(() => {
     vi.useRealTimers();

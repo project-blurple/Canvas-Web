@@ -25,11 +25,11 @@ const Links = styled("ul")`
 export const NavLink = styled(Link)`
   border-radius: 0.5rem;
   color: var(--discord-white);
-  padding-inline: 0.66666667em;
-  padding-block: 0.25em;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
   text-decoration: none;
-  transition: var(--transition-duration-fast) ease;
   transition-property: background-color, outline-width;
+  transition-timing-function: var(--transition-duration-fast);
 
   :hover {
     opacity: 55%;
@@ -73,10 +73,12 @@ export default function Nav() {
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const isOpen = anchorElement !== null;
 
+  const isAdmin = user?.isCanvasAdmin;
   const isModerator = user?.isCanvasModerator;
 
   const links: LinkInfo[] = [
     { href: "/leaderboard", label: "Leaderboard" },
+    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
     ...(isModerator ? [{ href: "/moderation", label: "Moderation" }] : []),
     { href: "/settings", label: "Settings" },
     user ?

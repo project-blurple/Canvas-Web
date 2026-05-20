@@ -1,6 +1,4 @@
-import "@/utils";
-import express, { type RequestHandler } from "express";
-import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import {
   addUsersToBlocklist,
   getBlocklist,
@@ -8,6 +6,9 @@ import {
 } from "@/services/blocklistService";
 import { isCanvasModerator } from "@/services/discordGuildService";
 import { mockAuth } from "@/test/mockAuth";
+import "@/utils";
+import express, { type RequestHandler } from "express";
+import request from "supertest";
 import { blocklistRouter } from "./blocklist";
 
 vi.mock("@/services/blocklistService", () => ({
@@ -41,6 +42,7 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
 
   app.use(setTestRequestState);
   app.use("/api/v1/blocklist", blocklistRouter);
+  app.use(errorHandler);
   return app;
 };
 

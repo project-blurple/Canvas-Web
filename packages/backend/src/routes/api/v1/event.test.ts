@@ -1,5 +1,6 @@
 import express from "express";
 import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { createEvent, editEvent } from "@/services/eventService";
 import { eventRouter } from "./event";
@@ -27,6 +28,7 @@ const createApp = () => {
     next();
   });
   app.use("/api/v1/event", eventRouter);
+  app.use(errorHandler);
   return app;
 };
 

@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import type {
+  BlurpleEvent,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
@@ -92,9 +93,12 @@ export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
 /**
  * Retrieves canvas summary info for all canvases.
  *
+ * @param eventId If provided, only canvases for the specified event will be returned
  * @returns The canvas summary info of all canvases
  */
-export async function getCanvases(): Promise<CanvasSummary[]> {
+export async function getCanvases(
+  eventId?: BlurpleEvent["id"],
+): Promise<CanvasSummary[]> {
   const canvases = await prisma.canvas.findMany({
     orderBy: {
       id: "desc",
@@ -103,6 +107,10 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
       id: true,
       name: true,
       event_id: true,
+      locked: true,
+    },
+    where: {
+      event_id: eventId,
     },
   });
 
@@ -110,6 +118,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     id: canvas.id,
     name: canvas.name,
     eventId: canvas.event_id,
+    isLocked: canvas.locked,
   }));
 }
 

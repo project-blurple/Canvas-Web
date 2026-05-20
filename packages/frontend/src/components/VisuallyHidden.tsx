@@ -16,6 +16,16 @@ const Root = styled("span")`
   }
 `;
 
+const Forced =
+  process.env.NODE_ENV === "production" ?
+    Root
+  : styled("span")`
+      font-size: 0.75em;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-shadow: 0 0 2px contrast-color(currentColor);
+    `;
+
 /** @see https://www.joshwcomeau.com/snippets/react-components/visually-hidden */
 export default function VisuallyHidden(
   props: React.ComponentPropsWithRef<typeof Root>,
@@ -39,5 +49,6 @@ export default function VisuallyHidden(
     };
   }, []);
 
-  return forceShow ? props.children : <Root {...props} />;
+  const Component = forceShow ? Forced : Root;
+  return <Component data-vh-debug={forceShow || undefined} {...props} />;
 }

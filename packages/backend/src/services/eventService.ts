@@ -4,6 +4,21 @@ import { NotFoundError } from "@/errors";
 import ConflictError from "@/errors/ConflictError";
 import { PrismaErrorCode } from "@/utils";
 
+async function assignIsCurrentEvent(
+  event: Omit<BlurpleEvent, "isCurrentEvent">,
+): Promise<BlurpleEvent> {
+  const info = await prisma.info.findFirst({
+    select: {
+      current_event_id: true,
+    },
+  });
+
+  return {
+    ...event,
+    isCurrentEvent: info?.current_event_id === event.id,
+  };
+}
+
 export async function getEventById(
   eventId: BlurpleEvent["id"],
 ): Promise<BlurpleEvent> {
@@ -17,7 +32,7 @@ export async function getEventById(
     throw new NotFoundError(`There is no event with ID ${eventId}`);
   }
 
-  return event;
+  return await assignIsCurrentEvent(event);
 }
 
 export async function getCurrentEvent(): Promise<BlurpleEvent> {
@@ -38,7 +53,7 @@ export async function getCurrentEvent(): Promise<BlurpleEvent> {
     throw new NotFoundError("Can’t find the current event");
   }
 
-  return currentEvent;
+  return await assignIsCurrentEvent(currentEvent);
 }
 
 export async function createEvent(
@@ -49,7 +64,7 @@ export async function createEvent(
     const event = await prisma.event.create({
       data: { name, id },
     });
-    return event;
+    return await assignIsCurrentEvent(event);
   } catch (err) {
     if (
       err instanceof Prisma.PrismaClientKnownRequestError &&
@@ -73,5 +88,5 @@ export async function editEvent(
       name: newName,
     },
   });
-  return event;
+  return await assignIsCurrentEvent(event);
 }

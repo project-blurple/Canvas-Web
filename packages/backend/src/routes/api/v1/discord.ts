@@ -1,13 +1,16 @@
-import type { DiscordUserProfile, GuildData } from "@blurple-canvas-web/types";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Router } from "express";
+import type { SessionData } from "express-session";
 import passport from "passport";
 
 import config from "@/config";
 import { UnauthorizedError } from "@/errors";
 import ApiError from "@/errors/ApiError";
+import { guildRefreshLimiter } from "@/middleware/ratelimit";
 import {
-  getCurrentUserGuildFlags,
+  getCachedUserGuildFlags,
   getGuildPermissionsForUser,
+  refreshCachedUserGuildFlags,
   syncDiscordGuildRecords,
 } from "@/services/discordGuildService";
 import { saveDiscordProfile } from "@/services/discordProfileService";
@@ -19,27 +22,40 @@ export const discordRouter = Router();
 discordRouter.get("/", passport.authenticate("discord"));
 
 discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
-  try {
-    const { guildId } = req.params;
-    const profile = req.user as DiscordUserProfile;
+  const { guildId } = req.params;
+  const profile = req.user as DiscordUserProfile;
 
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
-
-    assertIsSnowflake(guildId, "guildId");
-    const permissions = await withDiscordAccessToken(
-      req.session,
-      (accessToken) => getGuildPermissionsForUser(guildId, accessToken),
-    );
-
-    res.status(200).json(permissions);
-  } catch (error) {
-    ApiError.sendError(res, error);
+  if (!profile?.id) {
+    throw new UnauthorizedError("User is not authenticated");
   }
+
+  assertIsSnowflake(guildId, "guildId");
+  const permissions = await withDiscordAccessToken(req.session, (accessToken) =>
+    getGuildPermissionsForUser(guildId, accessToken),
+  );
+
+  res.status(200).json(permissions);
 });
 
 discordRouter.get("/guilds/permissions-map", async (req, res) => {
+  const profile = req.user as DiscordUserProfile;
+
+  if (!profile?.id) {
+    throw new UnauthorizedError("User is not authenticated");
+  }
+
+  const guildFlags = await withDiscordAccessToken(req.session, (accessToken) =>
+    getCachedUserGuildFlags(req.session, accessToken),
+  );
+
+  req.session.discordGuildFlags = guildFlags;
+
+  res.status(200).json({
+    guilds: guildFlags,
+  });
+});
+
+discordRouter.post("/guilds/refresh", guildRefreshLimiter, async (req, res) => {
   try {
     const profile = req.user as DiscordUserProfile;
 
@@ -47,17 +63,16 @@ discordRouter.get("/guilds/permissions-map", async (req, res) => {
       throw new UnauthorizedError("User is not authenticated");
     }
 
-    const guildFlags =
-      req.session.discordGuildFlags ??
-      (await withDiscordAccessToken(req.session, (accessToken) =>
-        getCurrentUserGuildFlags(accessToken),
-      ));
-
-    req.session.discordGuildFlags = guildFlags;
+    const guildFlags = await withDiscordAccessToken(
+      req.session,
+      (accessToken) => refreshCachedUserGuildFlags(req.session, accessToken),
+    );
 
     res.status(200).json({
       guilds: guildFlags,
     });
+
+    await syncDiscordGuildRecords(guildFlags);
   } catch (error) {
     ApiError.sendError(res, error);
   }
@@ -83,15 +98,7 @@ discordRouter.get(
   }),
   async (req, res) => {
     const discordProfile = req.user as DiscordUserProfile;
-    const authInfo = req.authInfo as
-      | {
-          discordAccessToken?: string;
-          discordRefreshToken?: string;
-          discordTokenExpiresAt?: number;
-          discordTokenLifetimeMs?: number;
-          discordGuildFlags?: Record<string, GuildData>;
-        }
-      | undefined;
+    const authInfo = req.authInfo as Partial<SessionData> | undefined;
 
     if (authInfo?.discordAccessToken) {
       req.session.discordAccessToken = authInfo.discordAccessToken;
@@ -99,6 +106,8 @@ discordRouter.get(
       req.session.discordTokenExpiresAt = authInfo.discordTokenExpiresAt;
       req.session.discordTokenLifetimeMs = authInfo.discordTokenLifetimeMs;
       req.session.discordGuildFlags = authInfo.discordGuildFlags;
+      req.session.discordGuildFlagsFetchedAt =
+        authInfo.discordGuildFlagsFetchedAt ?? Date.now();
     }
 
     res.cookie("profile", JSON.stringify(discordProfile), {
