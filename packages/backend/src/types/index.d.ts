@@ -13,5 +13,6 @@ declare module "express-session" {
     discordTokenExpiresAt?: number;
     discordTokenLifetimeMs?: number;
     discordGuildFlags?: Record<string, GuildData>;
+    discordGuildFlagsFetchedAt?: number;
   }
 }

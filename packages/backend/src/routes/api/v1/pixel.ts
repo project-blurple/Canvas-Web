@@ -12,6 +12,8 @@ import {
   PlacePixelBodyModel,
 } from "@/models/pixel.models";
 import { updateManyCachedPixels } from "@/services/canvasService";
+import { getCachedUserGuildFlags } from "@/services/discordGuildService";
+import { withDiscordAccessToken } from "@/services/discordTokenService";
 import {
   placePixel,
   validateColor,
@@ -74,8 +76,14 @@ pixelRouter.post(
     }
 
     const coordinates: Point = { x, y };
+    const guildFlags = await withDiscordAccessToken(
+      req.session,
+      (accessToken) => getCachedUserGuildFlags(req.session, accessToken),
+    );
+    const userGuildIds = new Set(Object.keys(guildFlags));
+
     const [color] = await Promise.all([
-      validateColor(colorId, req.params.canvasId),
+      validateColor(colorId, req.params.canvasId, userGuildIds),
       validatePixel(req.params.canvasId, coordinates, true),
       validateUser(BigInt(profile.id)),
     ]);
