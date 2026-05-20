@@ -1,5 +1,6 @@
 import type {
   BlurpleEvent,
+  BlurpleEvent,
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
