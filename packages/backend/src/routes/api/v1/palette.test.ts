@@ -124,10 +124,7 @@ describe("Palette admin route tests", () => {
 
     const response = await request(app).delete("/api/v1/palette/5");
 
-    expect(response.status).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "Color deleted",
-    });
+    expect(response.status).toBe(204);
     expect(vi.mocked(deleteColor)).toHaveBeenCalledWith(5);
   });
 
@@ -160,10 +157,7 @@ describe("Palette admin route tests", () => {
       "/api/v1/palette/8/assign/13/123456789012345678",
     );
 
-    expect(response.status).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "Color unassigned from event",
-    });
+    expect(response.status).toBe(204);
     expect(vi.mocked(unassignColorFromEvent)).toHaveBeenCalledWith({
       eventId: 13,
       guildId: 123456789012345678n,
