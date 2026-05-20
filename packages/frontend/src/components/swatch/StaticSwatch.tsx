@@ -31,7 +31,7 @@ const SwatchBase = styled("div")`
   }
 `;
 
-export interface StaticSwatchProps extends React.ComponentPropsWithRef<
+interface StaticSwatchProps extends React.ComponentPropsWithRef<
   typeof SwatchBase
 > {
   paletteColor: Pick<PaletteColor, "name" | "rgba">;
