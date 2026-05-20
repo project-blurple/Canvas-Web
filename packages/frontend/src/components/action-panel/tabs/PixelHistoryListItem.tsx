@@ -12,7 +12,6 @@ const Wrapper = styled("div")`
 `;
 
 const StyledSwatch = styled(StaticSwatch)`
-  border: 0.125rem solid var(--discord-white);
   width: 3rem;
 `;
 

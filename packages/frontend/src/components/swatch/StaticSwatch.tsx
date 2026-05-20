@@ -6,6 +6,7 @@ import VisuallyHidden from "../VisuallyHidden";
 const SwatchBase = styled("div")`
   aspect-ratio: 1;
   border-radius: 0.5rem;
+  border: var(--card-border);
 `;
 
 export interface StaticSwatchProps extends React.ComponentPropsWithRef<

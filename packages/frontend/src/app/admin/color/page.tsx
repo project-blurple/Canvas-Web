@@ -6,6 +6,7 @@ import {
   partitionPaletteByOwner,
   partitionPaletteByParticipation,
 } from "@/components/action-panel/tabs/place/PlacePixelTab";
+import { StaticSwatch } from "@/components/swatch";
 import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
@@ -68,10 +69,11 @@ function ColorListWrapper({
     <StyledColorListWrapper>
       <h2>{header}</h2>
       <ColorList role="list">
-        {colors.length > 0 ?
-          colors.map((color) => (
+        {colors.length === 0 ?
+          "No colors found"
+        : colors.map((color) => (
             <ColorCard key={color.id}>
-              <StyledSwatch paletteColor={color} />
+              <StaticSwatch paletteColor={color} />
               <ColorCardText>
                 <span>{color.name}</span>
                 <code>{color.code}</code>
@@ -79,7 +81,7 @@ function ColorListWrapper({
               </ColorCardText>
             </ColorCard>
           ))
-        : "No colors found."}
+        }
       </ColorList>
     </StyledColorListWrapper>
   );
@@ -95,7 +97,7 @@ function AdminColorTab() {
   return (
     <AdminColorTabBlock>
       {palette.length === 0 ?
-        "No colors found."
+        "No colors found"
       : <ColorTabWrapper>
           <ColorListWrapper colors={mainColors} header="Global colors" />
           <ColorListWrapper
