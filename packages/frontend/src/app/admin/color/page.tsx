@@ -33,12 +33,12 @@ const StyledColorListWrapper = styled("div")`
 const ColorList = styled("ul")`
   display: grid;
   font-size: 0.875rem;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
 `;
 
 const ColorCard = styled("li")`
-  column-gap: 1rem;
+  column-gap: 1em;
   display: grid;
   grid-template-columns: 3rem auto;
 `;
