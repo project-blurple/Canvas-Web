@@ -1,7 +1,7 @@
-import type {
+import {
   FrameOwnerType,
-  GuildData,
-  GuildOwnedFrame,
+  type GuildData,
+  type GuildOwnedFrame,
 } from "@blurple-canvas-web/types";
 import {
   Autocomplete,
@@ -153,10 +153,10 @@ export default function FrameEditPanel({
 
   const initialFrameNameRef = useRef(selectedFrame?.name ?? "");
   const initialOwnerRef = useRef<FrameOwnerType>(
-    selectedFrame ? selectedFrame.owner.type : "user",
+    selectedFrame ? selectedFrame.owner.type : FrameOwnerType.User,
   );
   const initialGuildIdRef = useRef(
-    selectedFrame && selectedFrame.owner.type === "guild" ?
+    selectedFrame && selectedFrame.owner.type === FrameOwnerType.Guild ?
       selectedFrame.owner.guild.guild_id
     : "",
   );
@@ -189,11 +189,11 @@ export default function FrameEditPanel({
   );
 
   const [selectedOwner, setSelectedOwner] = useState<FrameOwnerType>(
-    selectedFrame?.owner.type ?? "user",
+    selectedFrame?.owner.type ?? FrameOwnerType.User,
   );
 
   const [selectedGuildId, setSelectedGuildId] = useState<string>(
-    selectedFrame?.owner.type === "guild" ?
+    selectedFrame?.owner.type === FrameOwnerType.Guild ?
       selectedFrame.owner.guild.guild_id
     : "",
   );
@@ -349,12 +349,16 @@ export default function FrameEditPanel({
 
   const createFrameMutation = useMutation({
     mutationFn: async () => {
+      if (!user) {
+        throw new Error("Must be logged in to create a frame");
+      }
+
       const requestUrl = `${config.apiUrl}/api/v1/frame`;
 
       const owner =
-        selectedOwner === "guild" ?
-          { type: "guild" as const, guildId: selectedGuildId }
-        : { type: "user" as const, userId: user?.id ?? "" };
+        selectedOwner === FrameOwnerType.Guild ?
+          { type: FrameOwnerType.Guild, id: selectedGuildId }
+        : { type: FrameOwnerType.User, id: user.id };
 
       const body = {
         canvasId: canvas.id,
@@ -488,7 +492,7 @@ export default function FrameEditPanel({
   }, [user, setActivePanel, resetSelectedBounds]);
 
   const isAtMaxFrames =
-    selectedOwner === "user" ?
+    selectedOwner === FrameOwnerType.User ?
       userHasReachedMaxFrames
     : guildHasReachedMaxFrames?.[selectedGuildId];
 
@@ -519,10 +523,10 @@ export default function FrameEditPanel({
               }}
               disabled={!isCreateMode} // Can't change owner after frame is created
             >
-              <ToggleButton value="user">You</ToggleButton>
-              <ToggleButton value="guild">Server</ToggleButton>
+              <ToggleButton value={FrameOwnerType.User}>You</ToggleButton>
+              <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
             </ToggleButtonGroup>
-            {selectedOwner === "guild" && (
+            {selectedOwner === FrameOwnerType.Guild && (
               <Autocomplete
                 options={guildOptions}
                 value={selectedGuildOption}
@@ -600,7 +604,7 @@ export default function FrameEditPanel({
               disabled={
                 !frameName ||
                 !frameBounds ||
-                (!selectedGuildId && selectedOwner === "guild") ||
+                (!selectedGuildId && selectedOwner === FrameOwnerType.Guild) ||
                 isAtMaxFrames // Only restrict when creating, not when editing
               }
             >

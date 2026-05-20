@@ -95,6 +95,7 @@ model frame {
   id             String  @id
   canvas_id      Int
   canvas         canvas  @relation(fields: [canvas_id], references: [id])
+  // There is a database check that requires one of them to be set
   owner_user_id  BigInt?
   owner_guild_id BigInt?
   name           String

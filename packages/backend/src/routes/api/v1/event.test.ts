@@ -43,6 +43,7 @@ describe("Event admin route tests", () => {
     vi.mocked(createEvent).mockResolvedValueOnce({
       id: 42,
       name: "Spring Event",
+      isCurrentEvent: false,
     });
 
     const response = await request(app).post("/api/v1/event/").send({
@@ -54,6 +55,7 @@ describe("Event admin route tests", () => {
     expect(response.body).toStrictEqual({
       id: 42,
       name: "Spring Event",
+      isCurrentEvent: false,
     });
     expect(vi.mocked(createEvent)).toHaveBeenCalledWith("Spring Event", 42);
   });
@@ -64,6 +66,7 @@ describe("Event admin route tests", () => {
     vi.mocked(editEvent).mockResolvedValueOnce({
       id: 42,
       name: "Updated Event",
+      isCurrentEvent: false,
     });
 
     const response = await request(app).put("/api/v1/event/42").send({
@@ -74,6 +77,7 @@ describe("Event admin route tests", () => {
     expect(response.body).toStrictEqual({
       id: 42,
       name: "Updated Event",
+      isCurrentEvent: false,
     });
     expect(vi.mocked(editEvent)).toHaveBeenCalledWith(42, "Updated Event");
   });

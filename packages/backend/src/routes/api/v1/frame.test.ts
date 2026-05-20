@@ -46,7 +46,7 @@ const endpointCases = [
     body: {
       canvasId: 1,
       name: "Frame name",
-      owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
+      owner: { type: "user", id: TEST_USER_SNOWFLAKE },
       x0: 0,
       y0: 0,
       x1: 10,
@@ -181,7 +181,7 @@ describe("Frame mutation route tests", () => {
       body: {
         canvasId: 1,
         name: "Frame name",
-        owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
+        owner: { type: "user", id: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,
@@ -233,6 +233,34 @@ describe("Frame mutation route tests", () => {
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("returns 400 when the owner type is system", async () => {
+    const app = createApp(true);
+    const response = await sendMutationRequest("/api/v1/frame", {
+      app,
+      method: "post",
+      body: {
+        canvasId: 1,
+        name: "Frame name",
+        owner: { type: "system", id: TEST_USER_SNOWFLAKE },
+        x0: 0,
+        y0: 0,
+        x1: 10,
+        y1: 10,
+      },
+    }).set(getRateLimitHeaders("30"));
+    expect(response.status).toBe(400);
+    expect(response.body).toStrictEqual({
+      errors: [
+        {
+          code: "custom",
+          path: ["owner", "type"],
+          message: "System-owned frames are not allowed",
+        },
+      ],
+      message: "Invalid request data",
+    });
+  });
 
   describe("rate limit", () => {
     beforeEach(() => {
@@ -297,7 +325,7 @@ describe("Frame mutation route tests", () => {
       const requestBody = {
         canvasId: 1,
         name: "Frame name",
-        owner: { type: "user", userId: TEST_USER_SNOWFLAKE },
+        owner: { type: "user", id: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,

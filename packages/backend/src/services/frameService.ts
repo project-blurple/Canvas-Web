@@ -1,8 +1,9 @@
-import type {
-  DiscordUserProfile,
-  Frame,
-  GuildOwnedFrame,
-  UserOwnedFrame,
+import {
+  type DiscordUserProfile,
+  type Frame,
+  FrameOwnerType,
+  type GuildOwnedFrame,
+  type UserOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
@@ -12,7 +13,7 @@ import {
   NotFoundError,
   UnprocessableError,
 } from "@/errors";
-import { type FrameOwnerInput, FrameOwnerType } from "@/models/frame.models";
+import type { FrameOwnerInput } from "@/models/frame.models";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
@@ -139,7 +140,7 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
     return {
       ...baseFrame,
       owner: {
-        type: "guild",
+        type: FrameOwnerType.Guild,
         guild: {
           guild_id: guildData.guild_id.toString(),
           name: guildData.name,
@@ -163,7 +164,7 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
   return {
     ...baseFrame,
     owner: {
-      type: "user",
+      type: FrameOwnerType.User,
       user: {
         id: userData.user_id.toString(),
         username: userData.username,
@@ -174,13 +175,13 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
 }
 
 function asUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
-  if (frame.owner.type !== "user") {
+  if (frame.owner.type !== FrameOwnerType.User) {
     throw new Error(`Expected user-owned frame, got ${frame.owner.type}`);
   }
 }
 
 function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
-  if (frame.owner.type !== "guild") {
+  if (frame.owner.type !== FrameOwnerType.Guild) {
     throw new Error(`Expected guild-owned frame, got ${frame.owner.type}`);
   }
 }
@@ -251,10 +252,7 @@ async function assertUserHasPermissionsForFrame(
   owner: FrameOwnerInput,
 ) {
   if (owner.type === FrameOwnerType.Guild) {
-    const permissions = await getGuildPermissionsForUser(
-      owner.guildId,
-      accessToken,
-    );
+    const permissions = await getGuildPermissionsForUser(owner.id, accessToken);
 
     if (!permissions.administrator && !permissions.manage_guild) {
       throw new ForbiddenError(
@@ -264,7 +262,7 @@ async function assertUserHasPermissionsForFrame(
     return;
   }
 
-  if (owner.userId !== user.id) {
+  if (owner.id !== user.id) {
     throw new ForbiddenError("You are not the owner of this frame");
   }
 }
@@ -274,14 +272,14 @@ async function assertUserHasPermissionsForFrameObject(
   accessToken: string,
   frame: Frame,
 ) {
-  if (frame.owner.type === "system") {
+  if (frame.owner.type === FrameOwnerType.System) {
     throw new ForbiddenError("System-owned frames cannot be edited");
   }
 
   const owner: FrameOwnerInput =
-    frame.owner.type === "guild" ?
-      { type: FrameOwnerType.Guild, guildId: frame.owner.guild.guild_id }
-    : { type: FrameOwnerType.User, userId: frame.owner.user.id };
+    frame.owner.type === FrameOwnerType.Guild ?
+      { type: FrameOwnerType.Guild, id: frame.owner.guild.guild_id }
+    : { type: FrameOwnerType.User, id: frame.owner.user.id };
 
   return assertUserHasPermissionsForFrame(user, accessToken, owner);
 }
@@ -379,8 +377,8 @@ export async function createFrame(
 
   const ownerColumns =
     owner.type === FrameOwnerType.Guild ?
-      { owner_guild_id: BigInt(owner.guildId), owner_user_id: null }
-    : { owner_user_id: BigInt(owner.userId), owner_guild_id: null };
+      { owner_guild_id: BigInt(owner.id), owner_user_id: null }
+    : { owner_user_id: BigInt(owner.id), owner_guild_id: null };
 
   while (true) {
     // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
@@ -428,8 +426,8 @@ async function getFrameCountForOwner({
     where: {
       canvas_id: canvasId,
       ...(owner.type === FrameOwnerType.Guild ?
-        { owner_guild_id: BigInt(owner.guildId) }
-      : { owner_user_id: BigInt(owner.userId) }),
+        { owner_guild_id: BigInt(owner.id) }
+      : { owner_user_id: BigInt(owner.id) }),
     },
   });
 }

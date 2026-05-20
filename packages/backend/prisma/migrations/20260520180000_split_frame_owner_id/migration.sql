@@ -13,3 +13,10 @@ WHERE "is_guild_owned" = TRUE;
 ALTER TABLE "frame"
 DROP COLUMN "owner_id",
 DROP COLUMN "is_guild_owned";
+
+ALTER TABLE "frame"
+ADD CONSTRAINT "frame_owner_exactly_one_set" CHECK (
+  ("owner_user_id" IS NOT NULL AND "owner_guild_id" IS NULL)
+  OR
+  ("owner_user_id" IS NULL AND "owner_guild_id" IS NOT NULL)
+);
