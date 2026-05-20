@@ -93,11 +93,7 @@ export class SocketHandler {
     this.io.emit(SocketEvents.placePixel(canvasId), payload);
   }
 
-  public broadcastCanvasUpdate(
-    canvasId: CanvasInfo["id"],
-    payload: CanvasInfo,
-  ) {
+  public broadcastCanvasUpdate(payload: CanvasInfo) {
     this.io.emit(SocketEvents.canvasUpdate, payload);
-    this.io.emit(SocketEvents.canvasUpdateForCanvas(canvasId), payload);
   }
 }

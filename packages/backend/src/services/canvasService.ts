@@ -408,7 +408,7 @@ export async function createCanvas({
 
   await createCanvasPixelEntries(canvas.id, width, height);
 
-  socketHandler.broadcastCanvasUpdate(canvas.id, canvasToCanvasInfo(canvas));
+  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
   return canvas;
 }
@@ -478,7 +478,7 @@ export async function editCanvas({
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
 
-  socketHandler.broadcastCanvasUpdate(canvas.id, canvasToCanvasInfo(canvas));
+  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
   return canvas;
 }
