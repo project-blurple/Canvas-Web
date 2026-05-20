@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  InputLabel,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -55,6 +54,24 @@ const EditContainer = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+`;
+
+const InputWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const InputLabel = styled("label")`
+  opacity: 0.75;
+  font-size: 0.875rem;
+`;
+
+const TextInput = styled("input")`
+  border: var(--card-border);
+  padding-block: 6px;
+  padding-inline: 8px;
+  background-color: var(--discord-legacy-not-quite-black);
 `;
 
 const PreviewContainer = styled("div")`
@@ -528,48 +545,53 @@ export default function FrameEditPanel({
               <ActionPanelPrimitives.SectionHeading>
                 {isCreateMode ? "Create frame" : "Edit frame"}
               </ActionPanelPrimitives.SectionHeading>
-              <TextField
-                label="Name"
-                onChange={(e) => setFrameName(e.target.value)}
-                required
-                defaultValue={frameName}
-                name="frameName"
-                variant="outlined"
-              />
-              <InputLabel>Owned by</InputLabel>
-              <ToggleButtonGroup
-                color="primary"
-                defaultValue={selectedOwner}
-                exclusive
-                onChange={(_, value) => {
-                  if (value) {
-                    setSelectedOwner(value);
-                  }
-                }}
-                disabled={!isCreateMode} // Can't change owner after frame is created
-              >
-                <ToggleButton value="user">You</ToggleButton>
-                <ToggleButton value="guild">Server</ToggleButton>
-              </ToggleButtonGroup>
-              {selectedOwner === "guild" && (
-                <Autocomplete
-                  options={guildOptions}
-                  value={selectedGuildOption}
-                  groupBy={(option) => option.group}
-                  getOptionLabel={(option) => option.guild.name}
-                  isOptionEqualToValue={(option, value) =>
-                    option.guildId === value.guildId
-                  }
-                  onChange={(_, value) =>
-                    setSelectedGuildId(value?.guildId ?? "")
-                  }
-                  disabled={!isCreateMode} // Can't change owner after frame is created
-                  fullWidth
-                  renderInput={(params) => (
-                    <TextField {...params} label="Server" />
-                  )}
+              <InputWrapper>
+                <InputLabel htmlFor="frameName">Name</InputLabel>
+                <TextInput
+                  type="text"
+                  onChange={(e) => setFrameName(e.target.value)}
+                  required
+                  defaultValue={frameName}
+                  name="frameName"
                 />
-              )}
+              </InputWrapper>
+
+              <InputWrapper>
+                <InputLabel>Owned by</InputLabel>
+                <ToggleButtonGroup
+                  color="primary"
+                  defaultValue={selectedOwner}
+                  exclusive
+                  onChange={(_, value) => {
+                    if (value) {
+                      setSelectedOwner(value);
+                    }
+                  }}
+                  disabled={!isCreateMode} // Can't change owner after frame is created
+                >
+                  <ToggleButton value="user">You</ToggleButton>
+                  <ToggleButton value="guild">Server</ToggleButton>
+                </ToggleButtonGroup>
+                {selectedOwner === "guild" && (
+                  <Autocomplete
+                    options={guildOptions}
+                    value={selectedGuildOption}
+                    groupBy={(option) => option.group}
+                    getOptionLabel={(option) => option.guild.name}
+                    isOptionEqualToValue={(option, value) =>
+                      option.guildId === value.guildId
+                    }
+                    onChange={(_, value) =>
+                      setSelectedGuildId(value?.guildId ?? "")
+                    }
+                    disabled={!isCreateMode} // Can't change owner after frame is created
+                    fullWidth
+                    renderInput={(params) => (
+                      <TextField {...params} label="Server" />
+                    )}
+                  />
+                )}
+              </InputWrapper>
               {frameBounds && (
                 <>
                   <CoordinatesCard
