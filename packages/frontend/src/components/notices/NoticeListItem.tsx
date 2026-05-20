@@ -13,10 +13,12 @@ const icons = {
 const IconWrapper = styled("div")`
   background-color: oklch(from var(--notice-tint) l c h / 15%);
   border-radius: calc(infinity * 1px);
+  color: var(--notice-tint);
   display: grid;
+  height: 2rem;
+  opacity: 94%;
   place-items: center;
   width: 2rem;
-  height: 2rem;
 `;
 
 const BannerRoot = styled("li")`
@@ -44,11 +46,6 @@ const BannerRoot = styled("li")`
   }
   &[data-severity="error"] {
     --notice-tint: var(--discord-red);
-  }
-
-  ${IconWrapper} {
-    opacity: 94%;
-    color: var(--notice-tint);
   }
 `;
 

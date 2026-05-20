@@ -25,6 +25,8 @@ const Links = styled("ul")`
 export const NavLink = styled(Link)`
   border-radius: 0.5rem;
   color: var(--discord-white);
+  font-weight: 450;
+  letter-spacing: 0.01em;
   padding-block: 0.5rem;
   padding-inline: 0.75rem;
   text-decoration: none;
