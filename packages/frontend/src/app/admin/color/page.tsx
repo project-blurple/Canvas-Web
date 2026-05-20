@@ -7,7 +7,6 @@ import {
   partitionPaletteByParticipation,
 } from "@/components/action-panel/tabs/place/PlacePixelTab";
 import { StaticSwatch } from "@/components/swatch";
-import { StyledSwatch } from "@/components/swatch/InteractiveSwatch";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import AdminDashboard from "../AdminDashboard";
