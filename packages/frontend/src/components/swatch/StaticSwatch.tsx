@@ -1,15 +1,14 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import type { CSSProperties } from "react";
+import { rgbaToCssColor } from "@/util/color";
 import VisuallyHidden from "../VisuallyHidden";
 
-const SwatchBase = styled("div", {
-  shouldForwardProp: (prop) => prop !== "swatchColor",
-})<{ swatchColor: string }>`
-  --swatch-color: ${({ swatchColor }) => swatchColor};
-
+const SwatchBase = styled("div")`
   aspect-ratio: 1;
   background-color: var(--swatch-color);
   border-radius: 0.5rem;
+  border: var(--card-border);
   color: contrast-color(var(--swatch-color));
   position: relative;
 
@@ -32,26 +31,24 @@ const SwatchBase = styled("div", {
   }
 `;
 
-export interface StaticSwatchProps extends Omit<
-  React.ComponentPropsWithRef<typeof SwatchBase>,
-  "swatchColor"
+export interface StaticSwatchProps extends React.ComponentPropsWithRef<
+  typeof SwatchBase
 > {
   paletteColor: Pick<PaletteColor, "name" | "rgba">;
 }
 
 export function StaticSwatch({
-  paletteColor,
   children,
+  paletteColor,
   ...props
 }: StaticSwatchProps) {
   const { name, rgba } = paletteColor;
 
-  // Convert [255, 255, 255, 255] to rgb(255 255 255 / 1.0)
-  const rgb = rgba.slice(0, 3).join(" ");
-  const alphaFloat = rgba[3] / 255;
-
   return (
-    <SwatchBase swatchColor={`rgb(${rgb} / ${alphaFloat})`} {...props}>
+    <SwatchBase
+      style={{ "--swatch-color": rgbaToCssColor(rgba) } as CSSProperties}
+      {...props}
+    >
       <VisuallyHidden>{name}</VisuallyHidden>
       {children}
     </SwatchBase>

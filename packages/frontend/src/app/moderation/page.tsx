@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import { useAuthContext } from "@/contexts";
 import ModerationDashboard from "./ModerationDashboard";
 
@@ -19,5 +19,9 @@ export default function ModerationPage() {
     return null;
   }
 
-  return <LayoutWithHeader content={<ModerationDashboard />} />;
+  return (
+    <LayoutWithHeader>
+      <ModerationDashboard />
+    </LayoutWithHeader>
+  );
 }

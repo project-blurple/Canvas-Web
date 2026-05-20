@@ -6,6 +6,7 @@ import {
   AssignColorParamModel,
   ColorBodyModel,
   ColorIdParamModel,
+  PaletteQueryModel,
 } from "@/models/color.models";
 import { EventIdParamModel } from "@/models/event.models";
 import {
@@ -20,16 +21,23 @@ import {
 
 export const paletteRouter = typedRouter(Router());
 
-paletteRouter.get("/current", async (_req, res) => {
-  const palette = await getCurrentEventPalette();
-  res.status(200).json(palette);
-});
+paletteRouter.get(
+  "/current",
+  validate({ query: PaletteQueryModel }),
+  async (req, res) => {
+    const palette = await getCurrentEventPalette(req.query.allColors);
+    res.status(200).json(palette);
+  },
+);
 
 paletteRouter.get(
   "/:eventId",
-  validate({ params: EventIdParamModel }),
+  validate({ params: EventIdParamModel, query: PaletteQueryModel }),
   async (req, res) => {
-    const palette = await getEventPalette(req.params.eventId);
+    const palette = await getEventPalette(
+      req.params.eventId,
+      req.query.allColors,
+    );
     res.status(200).json(palette);
   },
 );

@@ -73,7 +73,20 @@ export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
   return [mainColors, partnerColors];
 }
 
-function isUserInServer(user: DiscordUserProfile, serverId: string) {
+export function partitionPaletteByParticipation(
+  palette: Palette,
+): [Palette, Palette] {
+  const participatingColors: Palette = [];
+  const nonParticipatingColors: Palette = [];
+  for (const color of palette) {
+    (color.guildId ? participatingColors : nonParticipatingColors).push(color);
+  }
+
+  return [participatingColors, nonParticipatingColors];
+}
+
+function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
+  if (!serverId) return false;
   const guildIds = getUserGuildIds(user);
   return guildIds.includes(serverId);
 }

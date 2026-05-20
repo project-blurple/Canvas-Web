@@ -2,11 +2,17 @@ import { Router } from "express";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { CanvasIdParamModel } from "@/models/canvas.models";
+import { EventIdParamModel } from "@/models/event.models";
 import {
   LeaderboardQueryModel,
   UserCanvasParamModel,
 } from "@/models/pixel.models";
-import { getLeaderboard, getUserStats } from "@/services/statisticsService";
+import {
+  getCanvasStatisticsSummary,
+  getEventStatisticsSummary,
+  getLeaderboard,
+  getUserStats,
+} from "@/services/statisticsService";
 
 export const statisticsRouter = typedRouter(Router());
 
@@ -29,5 +35,23 @@ statisticsRouter.get(
       req.query.size,
     );
     res.status(200).json(leaderboard);
+  },
+);
+
+statisticsRouter.get(
+  "/summary/canvas/:canvasId",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const summary = await getCanvasStatisticsSummary(req.params.canvasId);
+    res.status(200).json(summary);
+  },
+);
+
+statisticsRouter.get(
+  "/summary/event/:eventId",
+  validate({ params: EventIdParamModel }),
+  async (req, res) => {
+    const summary = await getEventStatisticsSummary(req.params.eventId);
+    res.status(200).json(summary);
   },
 );
