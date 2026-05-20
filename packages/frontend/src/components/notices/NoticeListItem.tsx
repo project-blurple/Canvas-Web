@@ -47,6 +47,14 @@ const BannerRoot = styled("li")`
   &[data-severity="error"] {
     --notice-tint: var(--discord-red);
   }
+
+  /*
+   * Pseudoelement disrupts the grid flow. Notices not being declared as a list in WebKit not end of
+   * world. Sorta newsfeedy semantics anyway.
+   */
+  &::before {
+    content: unset;
+  }
 `;
 
 const BannerBody = styled("div")`
