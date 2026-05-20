@@ -67,6 +67,7 @@
     "@types/express-session": "^1.19.0",
     "@types/node": "^24.1.0",
     "@types/passport": "^1.0.17",
+    "@types/passport-oauth2": "^1.8.0",
     "@types/pngjs": "^6.0.5",
     "@types/supertest": "^7.2.0",
     "nodemon": "^3.1.14",
