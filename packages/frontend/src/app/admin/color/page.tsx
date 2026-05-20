@@ -72,7 +72,7 @@ function ColorListWrapper({
           "No colors found"
         : colors.map((color) => (
             <ColorCard key={color.id}>
-              <StaticSwatch paletteColor={color} />
+              <StaticSwatch aria-hidden paletteColor={color} />
               <ColorCardText>
                 <span>{color.name}</span>
                 <code>{color.code}</code>
