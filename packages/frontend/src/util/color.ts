@@ -1,5 +1,7 @@
 import type { PixelColor } from "@blurple-canvas-web/types";
 
+const CHANNEL_MAX = 0xff;
+
 /** `PixelColor` in, CSS `<color>` out */
 export function rgbaToCssColor([
   r,
@@ -7,6 +9,5 @@ export function rgbaToCssColor([
   b,
   a,
 ]: PixelColor): `rgb(${string} ${string} ${string} / ${string})` {
-  const alphaFloat = a / 0xff;
-  return `rgb(${r} ${g} ${b} / ${alphaFloat})`;
+  return `rgb(${r} ${g} ${b} / ${a / CHANNEL_MAX})`;
 }

@@ -180,6 +180,19 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
       if (!(currentTarget instanceof HTMLElement)) {
         return;
       }
+      // Don't capture pointers that start on an interactive control. Without
+      // this, `setPointerCapture` redirects the eventual `pointerup` to the
+      // drawer instead of the control, and the browser never synthesizes a
+      // `click` — so swatches/buttons feel unresponsive whenever the action
+      // panel content fits the drawer without scrolling.
+      if (
+        elemTarget instanceof Element &&
+        elemTarget.closest(
+          'button, a, input, select, textarea, label, summary, [role="button"], [role="link"], [role="option"], [role="tab"], [role="menuitem"], [role="switch"], [role="checkbox"]',
+        )
+      ) {
+        return;
+      }
       // Loop through all parents of the target until until current target to find if target is scrollable
       while (currentTarget !== elemTarget) {
         if (!(elemTarget instanceof HTMLElement)) return;
