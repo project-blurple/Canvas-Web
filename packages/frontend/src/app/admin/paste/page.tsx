@@ -15,6 +15,11 @@ import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useCanvasContext } from "@/contexts";
 import AdminDashboard from "../AdminDashboard";
+import {
+  getImageDimensions,
+  imageFileToData,
+  type UploadedImage,
+} from "./ImageTools";
 
 const AdminPasteTabBlock = styled("section")`
   display: block;
@@ -72,29 +77,6 @@ const Info = styled("div")`
   width: 100%;
 `;
 
-type UploadedImage = {
-  file: File;
-  src: string;
-  width: number;
-  height: number;
-};
-
-function getImageDimensions(src: string) {
-  return new Promise<{ width: number; height: number }>((resolve, reject) => {
-    const image = new Image();
-
-    image.onload = () => {
-      resolve({
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      });
-    };
-
-    image.onerror = () => reject(new Error("Unable to load image"));
-    image.src = src;
-  });
-}
-
 interface AdminDashboardPasteActionPanelProps {
   canvas: ReturnType<typeof useCanvasContext>["canvas"];
   uploadedImage: UploadedImage | null;
@@ -144,11 +126,14 @@ function AdminDashboardPasteActionPanel({
         return;
       }
 
+      const imageData = await imageFileToData(file);
+
       setUploadedImage({
         file,
         src,
         width,
         height,
+        data: imageData,
       });
       setUploadError(null);
     } catch {
@@ -157,6 +142,8 @@ function AdminDashboardPasteActionPanel({
       setUploadError("Could not read the selected image.");
     }
   }
+
+  const entryCount = uploadedImage?.data.length ?? 0;
 
   return (
     <ActionPanelPrimitives.Root>
@@ -197,6 +184,12 @@ function AdminDashboardPasteActionPanel({
                   <code>{uploadedImage.width}</code>
                   <X size={16} />
                   <code>{uploadedImage.height}</code>
+                </Info>
+                <Info>
+                  <span>
+                    {entryCount.toLocaleString()}{" "}
+                    {entryCount === 1 ? "pixel" : "pixels"}
+                  </span>
                 </Info>
               </InfoWrapper>
             </UploadedImageWrapper>
