@@ -17,10 +17,16 @@ export function useCanvasPaste() {
     }) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/paste`;
 
-      await axios.post(requestUrl, {
-        data,
-        authorId,
-      });
+      await axios.post(
+        requestUrl,
+        {
+          data,
+          authorId,
+        },
+        {
+          withCredentials: true,
+        },
+      );
     },
   });
 }
