@@ -124,12 +124,11 @@ frameRouter.post(
   async (req, res) => {
     assertLoggedIn(req);
 
-    const { canvasId, ownerId, isGuildOwned, name } = req.body;
+    const { canvasId, owner, name } = req.body;
 
     await assertMaxOwnerFramesNotExceeded({
       canvasId,
-      ownerId,
-      isGuildOwned,
+      owner,
     });
 
     const { x0, y0, x1, y1 } = normalizeBounds(req.body);
@@ -142,8 +141,7 @@ frameRouter.post(
           accessToken,
           canvasId,
           name,
-          ownerId,
-          isGuildOwned,
+          owner,
           x0,
           y0,
           x1,
