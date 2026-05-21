@@ -125,7 +125,7 @@ const sendMutationRequest = (
 const FRAME_MUTATION_LIMIT = 10;
 
 const getRateLimitHeaders = (ipSuffix: string) => ({
-  "X-TestUserId": "1",
+  "Test-User-Id": "1",
   "X-Forwarded-For": `203.0.113.${ipSuffix}`,
 });
 
@@ -160,7 +160,7 @@ describe("Frame mutation route tests", () => {
         app,
         method,
         body,
-      }).set("X-TestUserId", "1");
+      }).set("Test-User-Id", "1");
 
       expect(response.status).toBe(successStatus);
       expect(response.body).toStrictEqual(successBody);
@@ -187,7 +187,7 @@ describe("Frame mutation route tests", () => {
         x1: 10,
         y1: 10,
       },
-    }).set("X-TestUserId", "1");
+    }).set("Test-User-Id", "1");
 
     expect(response.status).toBe(422);
     expect(response.body).toStrictEqual({ message: "Frame limit reached" });
@@ -226,7 +226,7 @@ describe("Frame mutation route tests", () => {
         app,
         method,
         body,
-      }).set("X-TestUserId", "1");
+      }).set("Test-User-Id", "1");
 
       expect(response.status).toBe(403);
       expect(response.body).toStrictEqual({ message: "Forbidden" });

@@ -2,11 +2,11 @@ import type { NextFunction, Request, Response } from "express";
 
 /* This function should be used as a middleware in testing to bypass the need to mock a passport strategy.
  *
- * Guild memberships can be injected via the `X-TestGuildIds` header
- * (comma-separateddecimal IDs).
+ * Guild memberships can be injected via the `Test-Guild-Ids` header
+ * (comma-separated decimal IDs).
  */
 export const mockAuth = (req: Request, _res: Response, next: NextFunction) => {
-  const userId = req.header("x-TestUserId");
+  const userId = req.header("test-user-id");
   if (userId) {
     req.user = {
       id: userId,
@@ -14,7 +14,7 @@ export const mockAuth = (req: Request, _res: Response, next: NextFunction) => {
       profilePictureUrl: "test",
     };
 
-    const guildIdsHeader = req.header("x-TestGuildIds") ?? "";
+    const guildIdsHeader = req.header("test-guild-ids") ?? "";
     const guildIds = guildIdsHeader
       .split(",")
       .map((id) => id.trim())
