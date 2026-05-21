@@ -3,6 +3,7 @@ import {
   type Frame,
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 import {
   useAuthContext,
   useCanvasContext,
@@ -20,6 +21,28 @@ import { DynamicButton } from "../button";
 import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
+
+const FrameInfoPanelBodyShell = styled("div")`
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  overflow: hidden;
+  transform: translateY(0);
+  transition-duration: 280ms;
+  transition-property: grid-template-rows, transform;
+  transition-timing-function: ease;
+
+  &[aria-hidden="true"] {
+    grid-template-rows: 0fr;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(0.75rem);
+  }
+
+  > * {
+    min-height: 0;
+  }
+`;
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
@@ -66,10 +89,7 @@ function FrameInfoPanelBody({
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
-
-  if (slideableDrawerState?.isMiddleSnap) {
-    return null;
-  }
+  const shouldCollapse = slideableDrawerState?.isMiddleSnap;
 
   const frameUrl =
     selectedFrame ?
@@ -84,46 +104,50 @@ function FrameInfoPanelBody({
 
   if (selectedFrame) {
     return (
-      <ActionPanelTabBody>
-        <FrameInfoCard frame={selectedFrame} />
-        {userHasPermsToEditSelectedFrame && (
-          <DynamicButton
-            color={null}
-            onAction={() => {
-              setActivePanel(FramePanelMode.Edit);
-            }}
-          >
-            Edit frame
-          </DynamicButton>
-        )}
-        {selectedFrame.owner.type !== FrameOwnerType.System && (
-          <TooltipDynamicButton
-            color={hexStringToPixelColor(selectedFrame.id)}
-            tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(frameUrl);
-            }}
-          >
-            Copy frame link
-          </TooltipDynamicButton>
-        )}
-      </ActionPanelTabBody>
+      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+        <ActionPanelTabBody>
+          <FrameInfoCard frame={selectedFrame} />
+          {userHasPermsToEditSelectedFrame && (
+            <DynamicButton
+              color={null}
+              onAction={() => {
+                setActivePanel(FramePanelMode.Edit);
+              }}
+            >
+              Edit frame
+            </DynamicButton>
+          )}
+          {selectedFrame.owner.type !== FrameOwnerType.System && (
+            <TooltipDynamicButton
+              color={hexStringToPixelColor(selectedFrame.id)}
+              tooltipTitle="Copied"
+              onAction={() => {
+                navigator.clipboard.writeText(frameUrl);
+              }}
+            >
+              Copy frame link
+            </TooltipDynamicButton>
+          )}
+        </ActionPanelTabBody>
+      </FrameInfoPanelBodyShell>
     );
   }
 
   if (user) {
     return (
-      <ActionPanelTabBody>
-        <BotCommandCard command="/frame create" />
-        <DynamicButton
-          color={null}
-          onAction={() => {
-            setActivePanel(FramePanelMode.Create);
-          }}
-        >
-          New frame
-        </DynamicButton>
-      </ActionPanelTabBody>
+      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+        <ActionPanelTabBody>
+          <BotCommandCard command="/frame create" />
+          <DynamicButton
+            color={null}
+            onAction={() => {
+              setActivePanel(FramePanelMode.Create);
+            }}
+          >
+            New frame
+          </DynamicButton>
+        </ActionPanelTabBody>
+      </FrameInfoPanelBodyShell>
     );
   }
 

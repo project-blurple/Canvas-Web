@@ -152,9 +152,8 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
 
   const isMiddleSnap = useMemo(() => {
     if (boundsPixels.length < 3) return false;
-    const snappedHeight = snapToBounds(drawerHeight);
-    return snappedHeight === boundsPixels[1];
-  }, [boundsPixels, drawerHeight, snapToBounds]);
+    return Math.abs(drawerHeight - boundsPixels[1]) < 1;
+  }, [boundsPixels, drawerHeight]);
 
   // Set the initial height
   useEffect(() => {
