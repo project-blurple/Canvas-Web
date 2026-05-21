@@ -6,6 +6,7 @@ import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import {
   CanvasIdParamModel,
+  CanvasPasteBodyModel,
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
 } from "@/models/canvas.models";
@@ -19,6 +20,7 @@ import {
   getCanvasPng,
   getCurrentCanvas,
   getCurrentCanvasInfo,
+  pasteCanvasData,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
@@ -102,6 +104,23 @@ canvasRouter.put(
       ...req.body,
     });
     res.status(200).json(canvas);
+  },
+);
+
+canvasRouter.post(
+  "/:canvasId/paste",
+  requireCanvasAdmin,
+  validate({ params: CanvasIdParamModel, body: CanvasPasteBodyModel }),
+  async (req, res) => {
+    const { canvasId } = req.params;
+    const { authorId, data } = req.body;
+
+    await pasteCanvasData(canvasId, BigInt(authorId), data);
+
+    res.status(200).json({
+      message: "Canvas data pasted",
+      count: data.length,
+    });
   },
 );
 

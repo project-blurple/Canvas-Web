@@ -13,6 +13,11 @@ import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
+import {
+  type BulkHistoryEntry,
+  createBulkHistoryEntries,
+} from "./historyService";
+import { getEventPalette } from "./paletteService";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -487,6 +492,78 @@ export async function editCanvas({
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
   return canvas;
+}
+
+export async function pasteCanvasData(
+  canvasId: number,
+  authorId: bigint,
+  data: [number, number, number][],
+): Promise<void> {
+  const canvas = await prisma.canvas.findFirst({
+    where: { id: canvasId },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  if (!canvas.event_id) {
+    throw new Error(
+      `Canvas with ID ${canvasId} is not associated with an event`,
+    );
+  }
+
+  const colors = await getEventPalette(canvas.event_id, false);
+
+  // ~~~ Validation ~~~
+
+  const entries = data.map(
+    ([x, y, colorId]) =>
+      ({
+        x,
+        y,
+        colorId,
+      }) as BulkHistoryEntry,
+  );
+
+  const lowestX = Math.min(...entries.map(({ x }) => x));
+  const lowestY = Math.min(...entries.map(({ y }) => y));
+  const highestX = Math.max(...entries.map(({ x }) => x));
+  const highestY = Math.max(...entries.map(({ y }) => y));
+
+  if (
+    lowestX < 0 ||
+    lowestY < 0 ||
+    highestX >= canvas.width ||
+    highestY >= canvas.height
+  ) {
+    throw new Error(
+      `Data contains coordinates that are out of bounds for canvas with ID ${canvasId}`,
+    );
+  }
+
+  const uniqueColors = Array.from(
+    new Set(entries.map(({ colorId }) => colorId)),
+  );
+  const invalidColorIds = uniqueColors.filter(
+    (colorId) => !colors.some((color) => color.id === colorId),
+  );
+
+  if (invalidColorIds.length > 0) {
+    throw new Error(
+      `Data contains color IDs that are not in the event palette: ${invalidColorIds.join(
+        ", ",
+      )}`,
+    );
+  }
+
+  // ~~~ Execution ~~~
+
+  await createBulkHistoryEntries({
+    canvasId,
+    userId: authorId,
+    entries,
+  });
 }
 
 function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
