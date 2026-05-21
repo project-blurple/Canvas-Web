@@ -1,6 +1,6 @@
 "use client";
 
-import { Checkbox, FormControlLabel, styled } from "@mui/material";
+import { styled } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRef, useState } from "react";
@@ -44,6 +44,19 @@ const DialogButtons = styled("div")`
   gap: 0.5rem;
   justify-content: flex-end;
   margin-top: 1rem;
+`;
+
+const StyledLabel = styled("label")`
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 1;
+
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
 interface ComplexSearchEraseHistoryProps {
@@ -147,21 +160,18 @@ export default function ComplexSearchEraseHistory({
           Delete {entriesCount.toLocaleString()} history&nbsp;
           {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
         </p>
-        <FormControlLabel
-          control={
-            <Checkbox
-              size="small"
-              defaultChecked={false}
-              slotProps={{
-                input: {
-                  ref: blockWhileEraseRef,
-                },
-              }}
-            />
-          }
-          label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
-          disabled={entriesCount === 0}
-        />
+        <StyledLabel aria-disabled={entriesCount === 0}>
+          <input
+            type="checkbox"
+            ref={blockWhileEraseRef}
+            defaultChecked={false}
+            disabled={entriesCount === 0}
+            aria-disabled={entriesCount === 0}
+          />
+          <span>
+            {`Add ${usersLength.toLocaleString()} ${usersLength !== 1 ? "users" : "user"} to blocklist`}
+          </span>
+        </StyledLabel>
         <DialogButtons>
           <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
           <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
