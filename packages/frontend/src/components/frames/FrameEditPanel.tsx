@@ -3,13 +3,6 @@ import {
   type GuildData,
   type GuildOwnedFrame,
 } from "@blurple-canvas-web/types";
-import {
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -43,6 +36,7 @@ import {
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import BoundsSelect from "../BoundsSelect/BoundsSelect";
 import { DynamicButton } from "../button";
+import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const EditContainer = styled("div")`
@@ -123,6 +117,15 @@ const ButtonRow = styled("div")`
     flex: 1 1 0;
     min-width: 0;
   }
+`;
+
+const StyledDialog = styled(Dialog)`
+  gap: 0.5rem;
+`;
+
+const DialogButtons = styled("div")`
+  display: flex;
+  gap: 0.5rem;
 `;
 
 type GuildEntry = [string, GuildData];
@@ -743,30 +746,28 @@ export default function FrameEditPanel({
           </DynamicButton>
         </ActionPanelTabBody>
       </form>
-      <Dialog
+      <StyledDialog
         open={isBackConfirmOpen}
-        onClose={() => setIsBackConfirmOpen(false)}
+        onRequestClose={() => setIsBackConfirmOpen(false)}
         aria-labelledby="frame-edit-discard-dialog-title"
         aria-describedby="frame-edit-discard-dialog-description"
       >
-        <DialogTitle id="frame-edit-discard-dialog-title">
-          Discard changes?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="frame-edit-discard-dialog-description">
-            You have unsaved changes to this frame. Are you sure you want to go
-            back and discard them?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
+        <h2 id="frame-edit-discard-dialog-title">Discard changes?</h2>
+        <p id="frame-edit-discard-dialog-description">
+          You have unsaved changes to this frame. Are you sure you want to go
+          back and discard them?
+        </p>
+        <DialogButtons>
           <DynamicButton
             color={null}
+            type="button"
             onAction={() => setIsBackConfirmOpen(false)}
           >
             Keep editing
           </DynamicButton>
           <DynamicButton
             color={null}
+            type="button"
             onAction={() => {
               setIsBackConfirmOpen(false);
               closeEditor();
@@ -774,38 +775,36 @@ export default function FrameEditPanel({
           >
             Discard
           </DynamicButton>
-        </DialogActions>
-      </Dialog>
-      <Dialog
+        </DialogButtons>
+      </StyledDialog>
+      <StyledDialog
         open={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onRequestClose={() => setIsDeleteConfirmOpen(false)}
         aria-labelledby="frame-edit-delete-dialog-title"
         aria-describedby="frame-edit-delete-dialog-description"
       >
-        <DialogTitle id="frame-edit-delete-dialog-title">
-          Delete frame?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="frame-edit-delete-dialog-description">
-            This will permanently delete this frame. Are you sure you want to
-            continue?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
+        <h2 id="frame-edit-delete-dialog-title">Delete frame?</h2>
+        <p id="frame-edit-delete-dialog-description">
+          This will permanently delete this frame. Are you sure you want to
+          continue?
+        </p>
+        <DialogButtons>
           <DynamicButton
             color={null}
+            type="button"
             onAction={() => setIsDeleteConfirmOpen(false)}
           >
             Cancel
           </DynamicButton>
           <DynamicButton
             color={hexStringToPixelColor(frameId)}
+            type="button"
             onAction={handleDeleteAction}
           >
             Delete
           </DynamicButton>
-        </DialogActions>
-      </Dialog>
+        </DialogButtons>
+      </StyledDialog>
     </>
   );
 }
