@@ -14,7 +14,7 @@ import { createDefaultAvatarUrl } from "./discordProfileService";
 import {
   getCooldown,
   placePixel,
-  restorePixelsAfterHistoryDeletion,
+  restorePixelsAfterHistoryModification,
   validateColor,
   validatePixel,
   validateUser,
@@ -473,7 +473,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -496,7 +496,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore without any history entries
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -540,7 +540,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(
+    await restorePixelsAfterHistoryModification(
       1,
       coords.map(({ x, y }) => ({ x, y })),
     );
@@ -567,7 +567,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
 
     // Restore with empty list - should be a no-op
     await expect(
-      restorePixelsAfterHistoryDeletion(1, []),
+      restorePixelsAfterHistoryModification(1, []),
     ).resolves.not.toThrow();
 
     // Pixel should be unchanged
@@ -615,7 +615,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -663,7 +663,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -716,7 +716,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -769,7 +769,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -822,7 +822,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should chunk internally
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -856,7 +856,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore with duplicate coordinates
-    await restorePixelsAfterHistoryDeletion(1, [
+    await restorePixelsAfterHistoryModification(1, [
       { x: 0, y: 0 },
       { x: 0, y: 0 },
       { x: 0, y: 0 },

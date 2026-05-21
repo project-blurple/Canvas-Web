@@ -324,7 +324,7 @@ export async function placePixel(
 const COORDINATE_CHUNK_SIZE = 500;
 
 /**
- * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ * Rebuilds the current pixel state for the given coordinates after bulk history operations.
  *
  * @param canvasId - The ID of the canvas
  * @param coordinates - The coordinates that need to be refreshed
@@ -334,7 +334,7 @@ const COORDINATE_CHUNK_SIZE = 500;
  * Coordinates are processed in chunks to avoid hitting query size limits
  * and ensure predictable performance for large erasures.
  */
-export async function restorePixelsAfterHistoryDeletion(
+export async function restorePixelsAfterHistoryModification(
   canvasId: number,
   coordinates: Point[],
 ): Promise<void> {
@@ -498,6 +498,8 @@ export async function createBulkPlaceEntries({
       data,
     });
   }
+
+  await restorePixelsAfterHistoryModification(canvasId, entries);
 
   socketHandler.broadcastPixelBulkPlacement(canvasId, {
     pixels: entries
