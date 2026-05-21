@@ -37,14 +37,16 @@ const ColorName = styled("p")`
 export default function PixelHistoryListItem({
   record,
   id,
+  props,
 }: {
   record?: PixelHistoryRecord;
   id?: string;
+  props?: React.ComponentPropsWithoutRef<typeof Wrapper>;
 }) {
   const { color, userProfile } = record ?? {};
 
   return (
-    <Wrapper id={id}>
+    <Wrapper id={id} {...props}>
       {color ?
         <StyledSwatch key={color.code} paletteColor={color} />
       : <SwatchSkeleton variant="rectangular" />}

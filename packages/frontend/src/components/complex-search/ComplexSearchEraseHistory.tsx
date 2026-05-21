@@ -15,7 +15,7 @@ import axios from "axios";
 import { useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
-import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
+import type { ComplexPixelHistoryParams } from "@/hooks/queries/usePixelHistory";
 import { StyledButton } from "../button/DynamicButton";
 
 const StyledDialog = styled(Dialog)`
@@ -39,14 +39,14 @@ const RedButton = styled(Button)`
 interface ComplexSearchEraseHistoryProps {
   entriesCount: number;
   usersLength: number;
-  query: ComplexPixelHistoryQuery;
+  params: ComplexPixelHistoryParams;
   resetResults: () => void;
 }
 
 export default function ComplexSearchEraseHistory({
   entriesCount,
   usersLength,
-  query,
+  params,
   resetResults,
 }: ComplexSearchEraseHistoryProps) {
   const { canvas } = useCanvasContext();
@@ -60,18 +60,18 @@ export default function ComplexSearchEraseHistory({
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/pixel/history`;
 
       const body = {
-        x0: query.point0.x,
-        y0: query.point0.y,
-        ...(query.point1 !== undefined && {
-          x1: query.point1.x,
-          y1: query.point1.y,
+        x0: params.point0.x,
+        y0: params.point0.y,
+        ...(params.point1 !== undefined && {
+          x1: params.point1.x,
+          y1: params.point1.y,
         }),
-        ...(query.fromDateTime && { fromDateTime: query.fromDateTime }),
-        ...(query.toDateTime && { toDateTime: query.toDateTime }),
-        ...(query.includeUserIds && { includeUserIds: query.includeUserIds }),
-        ...(query.excludeUserIds && { excludeUserIds: query.excludeUserIds }),
-        ...(query.includeColors && { includeColors: query.includeColors }),
-        ...(query.excludeColors && { excludeColors: query.excludeColors }),
+        ...(params.fromDateTime && { fromDateTime: params.fromDateTime }),
+        ...(params.toDateTime && { toDateTime: params.toDateTime }),
+        ...(params.includeUserIds && { includeUserIds: params.includeUserIds }),
+        ...(params.excludeUserIds && { excludeUserIds: params.excludeUserIds }),
+        ...(params.includeColors && { includeColors: params.includeColors }),
+        ...(params.excludeColors && { excludeColors: params.excludeColors }),
         shouldBlockAuthors,
       };
 
