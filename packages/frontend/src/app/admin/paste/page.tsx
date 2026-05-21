@@ -7,6 +7,7 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { Button } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import AdminDashboard from "../AdminDashboard";
@@ -26,11 +27,28 @@ const PasteWrapper = styled(CanvasWrapper)`
   }
 `;
 
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
+  color: var(--discord-white);
+`;
+
+const FullWidthStyledButton = styled(StyledButton)`
+  width: 100%;
+`;
+
 function AdminDashboardPasteActionPanel() {
   return (
     <ActionPanelPrimitives.Root>
       <FullWidthScrollView>
-        <ActionPanelTabBody>hi</ActionPanelTabBody>
+        <ActionPanelTabBody>
+          <div>
+            <ActionPanelPrimitives.SectionHeading>
+              Upload image to paste
+            </ActionPanelPrimitives.SectionHeading>
+            <span>Image must be 1:1 size</span>
+            <FullWidthStyledButton>Upload</FullWidthStyledButton>
+          </div>
+        </ActionPanelTabBody>
       </FullWidthScrollView>
     </ActionPanelPrimitives.Root>
   );
