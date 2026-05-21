@@ -15,6 +15,7 @@ import axios from "axios";
 import { useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
+import { useEventInfo } from "@/hooks";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
 import { StyledButton } from "../button/DynamicButton";
 
@@ -50,6 +51,7 @@ export default function ComplexSearchEraseHistory({
   resetResults,
 }: ComplexSearchEraseHistoryProps) {
   const { canvas } = useCanvasContext();
+  const { data: currentEvent } = useEventInfo();
   const queryClient = useQueryClient();
 
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
@@ -117,9 +119,11 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
   }
 
+  const isDisabled = entriesCount === 0 || currentEvent?.id !== canvas.eventId;
+
   return (
     <>
-      <RedButton disabled={entriesCount === 0} onClick={handleEraseHistory}>
+      <RedButton disabled={isDisabled} onClick={handleEraseHistory}>
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
       </RedButton>

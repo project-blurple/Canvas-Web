@@ -456,3 +456,19 @@ export async function editCanvas({
   }
   return canvas;
 }
+
+export async function isCanvasInCurrentEvent(
+  canvasId: number,
+): Promise<boolean> {
+  const canvas = await prisma.canvas.findUnique({
+    where: { id: canvasId },
+    select: { event_id: true },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  const currentEvent = await getCurrentEvent();
+  return canvas.event_id === currentEvent.id;
+}
