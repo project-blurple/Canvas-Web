@@ -559,6 +559,12 @@ export async function pasteCanvasData(
 
   // ~~~ Execution ~~~
 
+  prisma.user.upsert({
+    where: { id: authorId },
+    create: { id: authorId },
+    update: {},
+  });
+
   await createBulkHistoryEntries({
     canvasId,
     userId: authorId,

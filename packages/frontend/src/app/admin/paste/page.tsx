@@ -1,5 +1,6 @@
 "use client";
 
+import type { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { CircleAlert, X } from "lucide-react";
 import NextImage from "next/image";
@@ -12,6 +13,7 @@ import {
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
 import { Button } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
+import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
@@ -60,7 +62,7 @@ const ErrorText = styled("span")`
   width: 100%;
 `;
 
-const UploadedImageWrapper = styled("div")`
+const ContentWrapper = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -92,18 +94,60 @@ const Info = styled("div")`
   width: 100%;
 `;
 
+const CoordsWrapper = styled("div")`
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const StyledNumberField = styled(NumberField)`
+  input {
+    background-color: var(--discord-legacy-not-quite-black);
+    border: var(--card-border);
+  }
+`;
+
+const InputWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const InputLabel = styled("label")`
+  opacity: 0.75;
+  font-size: 0.875rem;
+`;
+
+const AuthorIdInput = styled("input")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
+  color: var(--discord-white);
+  padding: 0.5rem;
+  width: 100%;
+
+  &:invalid {
+    border-color: var(--discord-red);
+  }
+`;
+
 interface AdminDashboardPasteActionPanelProps {
   uploadedImage: UploadedImage | null;
   uploadError: string | null;
+  topLeftCoordinates: Point;
   setUploadedImage: (image: UploadedImage | null) => void;
   setUploadError: (error: string | null) => void;
+  setTopLeftCoordinates: (coordinates: Point) => void;
 }
 
 function AdminDashboardPasteActionPanel({
   uploadedImage,
   uploadError,
+  topLeftCoordinates,
   setUploadedImage,
   setUploadError,
+  setTopLeftCoordinates,
 }: AdminDashboardPasteActionPanelProps) {
   const { canvas } = useCanvasContext();
   const { data: palette, isLoading: paletteIsLoading } = usePalette();
@@ -112,6 +156,7 @@ function AdminDashboardPasteActionPanel({
   const [mappedData, setMappedData] = useState<MappedImageDataEntry[] | null>(
     null,
   );
+  const authorIdRef = useRef<HTMLInputElement | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -182,77 +227,149 @@ function AdminDashboardPasteActionPanel({
     }
   }, [uploadedImage, palette]);
 
+  const [startX, startY] = canvas.startCoordinates;
+
   return (
     <ActionPanelPrimitives.Root>
-      <FullWidthScrollView>
-        <ActionPanelTabBody>
-          <div>
-            <ActionPanelPrimitives.SectionHeading>
-              Upload image to paste
-            </ActionPanelPrimitives.SectionHeading>
-            <FullWidthStyledButton
-              onClick={onUploadClick}
-              disabled={paletteIsLoading || !palette}
-            >
-              Upload
-            </FullWidthStyledButton>
-            <input
-              ref={fileInputRef}
-              hidden
-              type="file"
-              accept="image/*"
-              onChange={onUploadChange}
-            />
-            {uploadError && <ErrorText role="alert">{uploadError}</ErrorText>}
-          </div>
-          {uploadedImage && (
+      <ActionPanelTabBody>
+        <div>
+          <ActionPanelPrimitives.SectionHeading>
+            Upload image to paste
+          </ActionPanelPrimitives.SectionHeading>
+          <FullWidthStyledButton
+            onClick={onUploadClick}
+            disabled={paletteIsLoading || !palette}
+          >
+            Upload
+          </FullWidthStyledButton>
+          <input
+            ref={fileInputRef}
+            hidden
+            type="file"
+            accept="image/*"
+            onChange={onUploadChange}
+          />
+          {uploadError && <ErrorText role="alert">{uploadError}</ErrorText>}
+        </div>
+      </ActionPanelTabBody>
+      {uploadedImage && (
+        <>
+          <FullWidthScrollView>
+            <ActionPanelTabBody>
+              <div>
+                <ActionPanelPrimitives.SectionHeading>
+                  Uploaded image
+                </ActionPanelPrimitives.SectionHeading>
+                <ContentWrapper>
+                  <InfoWrapper>
+                    <Info>
+                      <code>{uploadedImage.file.name}</code>
+                    </Info>
+                    <Info>
+                      <code>{uploadedImage.width}</code>
+                      <X size={16} />
+                      <code>{uploadedImage.height}</code>
+                    </Info>
+                    <Info>
+                      <span>
+                        {entryCount.toLocaleString()}{" "}
+                        {entryCount === 1 ? "pixel" : "pixels"}
+                      </span>
+                    </Info>
+                  </InfoWrapper>
+                  {!areColorsValid && (
+                    <ErrorText role="alert">
+                      <CircleAlert />
+                      This image contains colors that are not in the palette.
+                    </ErrorText>
+                  )}
+                  <StyledImage
+                    src={uploadedImage.src}
+                    alt={`Uploaded file: ${uploadedImage.file.name}`}
+                    width={uploadedImage.width}
+                    height={uploadedImage.height}
+                  />
+                </ContentWrapper>
+              </div>
+            </ActionPanelTabBody>
+          </FullWidthScrollView>
+          <ActionPanelTabBody>
             <div>
               <ActionPanelPrimitives.SectionHeading>
-                Uploaded image
+                Paste image
               </ActionPanelPrimitives.SectionHeading>
-              <UploadedImageWrapper>
-                <InfoWrapper>
-                  <Info>
-                    <code>{uploadedImage.file.name}</code>
-                  </Info>
-                  <Info>
-                    <code>{uploadedImage.width}</code>
-                    <X size={16} />
-                    <code>{uploadedImage.height}</code>
-                  </Info>
-                  <Info>
-                    <span>
-                      {entryCount.toLocaleString()}{" "}
-                      {entryCount === 1 ? "pixel" : "pixels"}
-                    </span>
-                  </Info>
-                </InfoWrapper>
-                {!areColorsValid && (
-                  <ErrorText role="alert">
-                    <CircleAlert />
-                    This image contains colors that are not in the palette.
-                  </ErrorText>
-                )}
-                <StyledImage
-                  src={uploadedImage.src}
-                  alt={`Uploaded file: ${uploadedImage.file.name}`}
-                  width={uploadedImage.width}
-                  height={uploadedImage.height}
-                />
-              </UploadedImageWrapper>
+              <ContentWrapper>
+                <CoordsWrapper>
+                  <StyledNumberField
+                    label={
+                      <>
+                        Left (<var>x</var>)
+                      </>
+                    }
+                    value={topLeftCoordinates.x}
+                    onValueChange={(value) =>
+                      setTopLeftCoordinates({
+                        ...topLeftCoordinates,
+                        x: value ?? startX,
+                      })
+                    }
+                    min={startX}
+                    max={canvas.width + startX - (uploadedImage.width ?? 0)}
+                  />
+                  <StyledNumberField
+                    label={
+                      <>
+                        Top (<var>y</var>)
+                      </>
+                    }
+                    value={topLeftCoordinates.y}
+                    onValueChange={(value) =>
+                      setTopLeftCoordinates({
+                        ...topLeftCoordinates,
+                        y: value ?? startX,
+                      })
+                    }
+                    min={startY}
+                    max={canvas.height + startY - (uploadedImage.height ?? 0)}
+                  />
+                </CoordsWrapper>
+                <InputWrapper>
+                  <InputLabel htmlFor="author-id-input">Author ID</InputLabel>
+                  <AuthorIdInput
+                    inputMode="numeric"
+                    pattern="^[0-9]{16,20}$"
+                    placeholder="Author ID"
+                    ref={authorIdRef}
+                    type="text"
+                  />
+                </InputWrapper>
+                <FullWidthStyledButton
+                  disabled={
+                    !areColorsValid || !authorIdRef.current?.checkValidity()
+                  }
+                >
+                  Paste image
+                </FullWidthStyledButton>
+              </ContentWrapper>
             </div>
-          )}
-        </ActionPanelTabBody>
-      </FullWidthScrollView>
+          </ActionPanelTabBody>
+        </>
+      )}
     </ActionPanelPrimitives.Root>
   );
 }
 
 function AdminPasteTab() {
+  const { canvas } = useCanvasContext();
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null,
   );
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [topLeftCoordinates, setTopLeftCoordinates] = useState<Point>({
+    x: canvas.startCoordinates[0],
+    y: canvas.startCoordinates[1],
+  });
 
   useEffect(
     () => () => {
@@ -267,8 +384,10 @@ function AdminPasteTab() {
     <AdminDashboardPasteActionPanel
       uploadedImage={uploadedImage}
       uploadError={uploadError}
+      topLeftCoordinates={topLeftCoordinates}
       setUploadedImage={setUploadedImage}
       setUploadError={setUploadError}
+      setTopLeftCoordinates={setTopLeftCoordinates}
     />
   );
 
