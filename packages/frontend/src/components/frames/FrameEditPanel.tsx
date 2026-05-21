@@ -4,13 +4,11 @@ import type {
   GuildOwnedFrame,
 } from "@blurple-canvas-web/types";
 import {
-  Autocomplete,
   Dialog,
   DialogActions,
   DialogContent,
   DialogContentText,
   DialogTitle,
-  TextField,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -78,6 +76,7 @@ const OwnerTypeOption = styled("label")`
   border: var(--card-border);
   cursor: pointer;
   display: inline-flex;
+  font-size: 0.875rem;
   gap: 0.5rem;
   padding-block: 0.5rem;
   padding-inline: 0.75rem;
@@ -93,6 +92,16 @@ const TextInput = styled("input")`
   padding-block: 6px;
   padding-inline: 8px;
   background-color: var(--discord-legacy-not-quite-black);
+`;
+
+const Select = styled("select")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 8px;
+  border: var(--card-border);
+  color: inherit;
+  padding-block: 6px;
+  padding-inline: 8px;
+  width: 100%;
 `;
 
 const PreviewContainer = styled("div")`
@@ -307,8 +316,20 @@ export default function FrameEditPanel({
     return [...withFrames, ...withoutFrames];
   }, [managedGuildEntries, guildFrames]);
 
-  const selectedGuildOption =
-    guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
+  const groupedGuildOptions = useMemo(() => {
+    return guildOptions.reduce<
+      Array<{ group: string; options: GuildOption[] }>
+    >((groups, option) => {
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup?.group === option.group) {
+        lastGroup.options.push(option);
+        return groups;
+      }
+
+      groups.push({ group: option.group, options: [option] });
+      return groups;
+    }, []);
+  }, [guildOptions]);
 
   const isDirty = useMemo(() => {
     if (!isDirtyTrackingReady) return false;
@@ -606,23 +627,27 @@ export default function FrameEditPanel({
                   </OwnerTypeOption>
                 </OwnerTypeOptions>
                 {selectedOwner === "guild" && (
-                  <Autocomplete
-                    options={guildOptions}
-                    value={selectedGuildOption}
-                    groupBy={(option) => option.group}
-                    getOptionLabel={(option) => option.guild.name}
-                    isOptionEqualToValue={(option, value) =>
-                      option.guildId === value.guildId
-                    }
-                    onChange={(_, value) =>
-                      setSelectedGuildId(value?.guildId ?? "")
-                    }
+                  <Select
+                    id="guildId"
+                    name="guildId"
+                    value={selectedGuildId}
+                    onChange={(event) => setSelectedGuildId(event.target.value)}
                     disabled={!isCreateMode} // Can't change owner after frame is created
-                    fullWidth
-                    renderInput={(params) => (
-                      <TextField {...params} label="Server" />
-                    )}
-                  />
+                    required
+                  >
+                    <option value="" disabled>
+                      Select a server
+                    </option>
+                    {groupedGuildOptions.map((group) => (
+                      <optgroup key={group.group} label={group.group}>
+                        {group.options.map((option) => (
+                          <option key={option.guildId} value={option.guildId}>
+                            {option.guild.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </Select>
                 )}
               </InputWrapper>
               {frameBounds && (
