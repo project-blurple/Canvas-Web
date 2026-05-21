@@ -19,8 +19,8 @@ vi.mock("./paletteService", () => ({
   getEventPalette: vi.fn(),
 }));
 
-import { createBulkHistoryEntries } from "./historyService";
 import { getEventPalette } from "./paletteService";
+import { createBulkPlaceEntries } from "./pixelService";
 
 vi.mock("@/index", () => ({
   socketHandler: {
@@ -273,7 +273,7 @@ describe("Paste Canvas Data Tests", () => {
     ]);
 
     expect(vi.mocked(getEventPalette)).toHaveBeenCalledWith(1, false);
-    expect(vi.mocked(createBulkHistoryEntries)).toHaveBeenCalledWith({
+    expect(vi.mocked(createBulkPlaceEntries)).toHaveBeenCalledWith({
       canvasId: 1,
       userId: authorId,
       entries: [

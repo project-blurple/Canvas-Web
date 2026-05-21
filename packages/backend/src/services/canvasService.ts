@@ -13,11 +13,8 @@ import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
-import {
-  type BulkHistoryEntry,
-  createBulkHistoryEntries,
-} from "./historyService";
 import { getEventPalette } from "./paletteService";
+import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -523,7 +520,7 @@ export async function pasteCanvasData(
         x,
         y,
         colorId,
-      }) as BulkHistoryEntry,
+      }) as BulkPlaceEntry,
   );
 
   const lowestX = Math.min(...entries.map(({ x }) => x));
@@ -565,10 +562,11 @@ export async function pasteCanvasData(
     update: {},
   });
 
-  await createBulkHistoryEntries({
+  await createBulkPlaceEntries({
     canvasId,
     userId: authorId,
     entries,
+    palette: colors,
   });
 }
 

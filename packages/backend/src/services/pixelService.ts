@@ -1,10 +1,11 @@
 import type {
+  Palette,
   PaletteColor,
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
 
-import { type color, prisma } from "@/client";
+import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -447,4 +448,68 @@ export async function restorePixelsAfterHistoryDeletion(
 
     updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
   }
+}
+
+export interface BulkPlaceEntry {
+  colorId: number;
+  x: number;
+  y: number;
+}
+
+export async function createBulkPlaceEntries({
+  canvasId,
+  userId,
+  guildId,
+  timestamp,
+  entries,
+  palette,
+}: {
+  canvasId: number;
+  userId: bigint;
+  guildId?: bigint;
+  timestamp?: Date;
+  entries: BulkPlaceEntry[];
+  palette?: Palette;
+}) {
+  console.log(
+    `Creating ${entries.length} history entries for canvas ${canvasId}`,
+  );
+
+  const batchSize = 10000;
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const batch = entries.slice(i, i + batchSize);
+    console.log(
+      `Inserting batch ${i / batchSize + 1} (${batch.length} entries)`,
+    );
+
+    const data = batch.map(
+      (entry) =>
+        ({
+          canvas_id: canvasId,
+          user_id: userId,
+          guild_id: guildId,
+          color_id: entry.colorId,
+          x: entry.x,
+          y: entry.y,
+          timestamp: timestamp ?? new Date(),
+        }) as Prisma.historyCreateManyInput,
+    );
+    await prisma.history.createMany({
+      data,
+    });
+  }
+
+  socketHandler.broadcastPixelBulkPlacement(canvasId, {
+    pixels: entries
+      .map((entry) => {
+        const color = palette?.find((c) => c.id === entry.colorId);
+        if (!color) return null;
+        return {
+          x: entry.x,
+          y: entry.y,
+          rgba: color.rgba as PixelColor,
+        };
+      })
+      .filter((v): v is NonNullable<typeof v> => !!v),
+  });
 }

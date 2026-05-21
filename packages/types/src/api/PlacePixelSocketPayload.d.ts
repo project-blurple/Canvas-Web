@@ -3,3 +3,7 @@ export interface Payload {
   y: number;
   rgba: number[]; // [r, g, b, a];
 }
+
+export interface BulkPayload {
+  pixels: Payload[];
+}
