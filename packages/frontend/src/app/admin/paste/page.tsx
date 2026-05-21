@@ -17,6 +17,7 @@ import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
+import { useCanvasPaste } from "@/hooks/queries/usePaste";
 import AdminDashboard from "../AdminDashboard";
 import {
   getImageDimensions,
@@ -152,6 +153,8 @@ function AdminDashboardPasteActionPanel({
   const { canvas } = useCanvasContext();
   const { data: palette, isLoading: paletteIsLoading } = usePalette();
 
+  const doCanvasPaste = useCanvasPaste();
+
   const [areColorsValid, setAreColorsValid] = useState(true);
   const [mappedData, setMappedData] = useState<MappedImageDataEntry[] | null>(
     null,
@@ -226,6 +229,20 @@ function AdminDashboardPasteActionPanel({
       setAreColorsValid(false);
     }
   }, [uploadedImage, palette]);
+
+  async function onPasteClick() {
+    if (!uploadedImage || !mappedData || !palette || !authorIdRef.current)
+      return;
+
+    await doCanvasPaste.mutateAsync({
+      authorId: authorIdRef.current?.value,
+      data: mappedData.map((entry) => [
+        entry.x + topLeftCoordinates.x - canvas.startCoordinates[0],
+        entry.y + topLeftCoordinates.y - canvas.startCoordinates[1],
+        entry.colorIndex,
+      ]),
+    });
+  }
 
   const [startX, startY] = canvas.startCoordinates;
 
@@ -347,6 +364,7 @@ function AdminDashboardPasteActionPanel({
                   disabled={
                     !areColorsValid || !authorIdRef.current?.checkValidity()
                   }
+                  onClick={onPasteClick}
                 >
                   Paste image
                 </FullWidthStyledButton>
