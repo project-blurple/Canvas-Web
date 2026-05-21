@@ -1,8 +1,15 @@
 import type { DiscordGuildRecord } from "./discordGuildRecord";
 import type { DiscordUserProfile } from "./discordUserProfile";
-import type { Satisfies } from "./util";
 
-export type FrameOwnerType = "guild" | "system" | "user";
+/**
+ * Enum-like map of valid frame owner types. Available both as runtime values
+ * (e.g. `FrameOwnerType.User`) and as a type (the union of its string values).
+ */
+export enum FrameOwnerType {
+  User = "user",
+  Guild = "guild",
+  System = "system",
+}
 
 export interface BaseFrame {
   id: string;
@@ -16,21 +23,21 @@ export interface BaseFrame {
 
 export interface UserOwnedFrame extends BaseFrame {
   owner: {
-    type: Satisfies<"user", FrameOwnerType>;
+    type: FrameOwnerType.User;
     user: DiscordUserProfile;
   };
 }
 
 export interface GuildOwnedFrame extends BaseFrame {
   owner: {
-    type: Satisfies<"guild", FrameOwnerType>;
+    type: FrameOwnerType.Guild;
     guild: DiscordGuildRecord;
   };
 }
 
 export interface SystemOwnedFrame extends BaseFrame {
   owner: {
-    type: Satisfies<"system", FrameOwnerType>;
+    type: FrameOwnerType.System;
     name: "Blurple Canvas";
   };
 }

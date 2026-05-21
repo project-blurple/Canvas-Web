@@ -6,8 +6,7 @@ export const frameSeedData = [
   {
     id: "08D565",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "5665",
     x_0: 0,
     x_1: 63,
@@ -18,8 +17,7 @@ export const frameSeedData = [
   {
     id: "1CA85F",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "HOT7",
     x_0: 50,
     x_1: 200,
@@ -30,8 +28,7 @@ export const frameSeedData = [
   {
     id: "46F08A",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "Grogu",
     x_0: 385,
     x_1: 427,
@@ -42,8 +39,7 @@ export const frameSeedData = [
   {
     id: "8F0AB8",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "Cherrys",
     x_0: 249,
     x_1: 360,
@@ -54,8 +50,7 @@ export const frameSeedData = [
   {
     id: "97F04B",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "Paintbrush",
     x_0: 332,
     x_1: 367,
@@ -66,8 +61,7 @@ export const frameSeedData = [
   {
     id: "E98975",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "Kiwi Heart",
     x_0: 370,
     x_1: 392,
@@ -78,8 +72,7 @@ export const frameSeedData = [
   {
     id: "F5E7AF",
     canvas_id: 2024,
-    owner_id: 412754940885467146n,
-    is_guild_owned: true,
+    owner_guild_id: 412754940885467146n,
     name: "Temp's Community",
     x_0: 99,
     x_1: 697,

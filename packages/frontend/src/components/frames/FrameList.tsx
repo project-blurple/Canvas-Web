@@ -1,7 +1,8 @@
-import type {
-  FrameRequest,
-  GuildOwnedFrame,
-  SystemOwnedFrame,
+import {
+  FrameOwnerType,
+  type FrameRequest,
+  type GuildOwnedFrame,
+  type SystemOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
@@ -95,7 +96,7 @@ export default function FrameList({ enabled = true }: FrameListProps) {
     x1: canvas.width,
     y1: canvas.height,
     owner: {
-      type: "system",
+      type: FrameOwnerType.System,
       name: "Blurple Canvas",
     },
   } as const satisfies SystemOwnedFrame;

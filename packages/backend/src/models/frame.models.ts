@@ -1,4 +1,6 @@
+import { FrameOwnerType } from "@blurple-canvas-web/types";
 import z from "zod";
+import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
 import { CanvasIdParamModel } from "./canvas.models";
 
 export const FrameIdParamModel = z.object({
@@ -40,17 +42,29 @@ export const FrameDataParamModel = z
   })
   .superRefine(frameBoundsRefiner);
 
-export const FrameOwnerParamModel = z.object({
-  ownerId: z.string().regex(/^\d+$/, "ownerId must be a numeric string"),
-  isGuildOwned: z.boolean(),
-});
+export const FrameOwnerParamModel = z
+  .object({
+    type: z.enum(FrameOwnerType),
+    id: DiscordSnowflakeSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === FrameOwnerType.System) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["type"],
+        message: "System-owned frames are not allowed",
+      });
+    }
+  });
+
+export type FrameOwnerInput = z.infer<typeof FrameOwnerParamModel>;
 
 export const CreateFrameBodyModel = z
   .object({
     name: z.string().min(1).max(100),
     ...FrameBoundsModel.shape,
-    ...FrameOwnerParamModel.shape,
     ...CanvasIdParamModel.shape,
+    owner: FrameOwnerParamModel,
   })
   .superRefine(frameBoundsRefiner);
 
