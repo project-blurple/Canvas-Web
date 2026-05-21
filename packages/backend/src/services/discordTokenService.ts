@@ -5,7 +5,7 @@ import { UnauthorizedError } from "@/errors";
 const DISCORD_STRATEGY_NAME = "discord";
 const DISCORD_TOKEN_REFRESH_BUFFER_MS = 30_000;
 
-export interface DiscordTokenSession {
+interface DiscordTokenSession {
   discordAccessToken?: string;
   discordRefreshToken?: string;
   discordTokenExpiresAt?: number;

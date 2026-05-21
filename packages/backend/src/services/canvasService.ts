@@ -317,9 +317,15 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE[canvasId];
 
-  if (cachedCanvas?.isLocked) {
-    await fs.promises.rm(cachedCanvas.canvasPath);
-    console.debug(`Cleared canvas ${canvasId} from file system`);
+  try {
+    if (cachedCanvas?.isLocked) {
+      await fs.promises.rm(cachedCanvas.canvasPath);
+      console.debug(`Cleared canvas ${canvasId} from file system`);
+    }
+  } catch {
+    console.warn(
+      `Failed to clear canvas ${canvasId} from file system. It may have already been removed.`,
+    );
   }
 }
 

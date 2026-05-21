@@ -51,7 +51,7 @@ function getErrorText(error: unknown): string | null {
   return "Couldn’t reach Discord. Try again shortly.";
 }
 
-export type RecheckMembershipsController = RefreshMutation & {
+type RecheckMembershipsController = RefreshMutation & {
   showSuccess: boolean;
   errorText: string | null;
   statusText: string | null;

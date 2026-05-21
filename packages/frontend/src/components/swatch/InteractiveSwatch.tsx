@@ -3,11 +3,9 @@ import { Lock as LockIcon } from "lucide-react";
 import { PrimitiveButton } from "../button";
 import { StaticSwatch } from "./StaticSwatch";
 
-export const StyledSwatch = styled(StaticSwatch, {
+const StyledSwatch = styled(StaticSwatch, {
   shouldForwardProp: () => true,
 })`
-  border-color: oklch(from var(--discord-white) l c h / 15%);
-  border-style: solid;
   border-width: 3px;
   position: relative;
   transition: var(--transition-duration-fast) ease;
