@@ -1,16 +1,13 @@
 import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
-import { Pagination, PaginationItem, styled } from "@mui/material";
-import {
-  ChevronFirst,
-  ChevronLast,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { styled } from "@mui/material";
 import { useId, useState } from "react";
 import { ButtonSupplement } from "@/components/button";
+import StyledPagination from "@/components/Pagination";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
-import { usePixelHistory } from "@/hooks";
-import type { PixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
+import {
+  type PixelHistoryParams,
+  usePixelHistory,
+} from "@/hooks/queries/usePixelHistory";
 import { createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../primitives";
 import {
@@ -31,17 +28,6 @@ const HistoryList = styled("div")`
   flex-direction: column;
   gap: 0.5rem;
 `;
-
-const StyledPaginationItem = styled(PaginationItem)`
-  font-variant-numeric: tabular-nums;
-`;
-
-const customIconSlots = {
-  first: ChevronFirst,
-  previous: ChevronLeft,
-  next: ChevronRight,
-  last: ChevronLast,
-};
 
 interface PixelHistoryProps {
   isLoading: boolean;
@@ -116,23 +102,23 @@ export default function PixelInfoTab({
     zoom,
   } = useCanvasViewContext();
   const [page, setPage] = useState(1);
-  const [historyQuery, setHistoryQuery] = useState<PixelHistoryQuery | null>(
+  const [historyParams, setHistoryParams] = useState<PixelHistoryParams | null>(
     point ? { point, page } : null,
   );
-  const { data, isLoading } = usePixelHistory(canvasId, historyQuery, {
+  const { data, isLoading } = usePixelHistory(canvasId, historyParams, {
     enabled: active,
   });
 
   if (
     point &&
-    (historyQuery?.point.x !== point.x || historyQuery?.point.y !== point.y)
+    (historyParams?.point.x !== point.x || historyParams?.point.y !== point.y)
   ) {
-    setHistoryQuery({ point, page: 1 });
+    setHistoryParams({ point, page: 1 });
     setPage(1);
   }
 
-  if (historyQuery !== null && historyQuery?.page !== page)
-    setHistoryQuery((prev) => (prev ? { ...prev, page } : null));
+  if (historyParams !== null && historyParams?.page !== page)
+    setHistoryParams((prev) => (prev ? { ...prev, page } : null));
 
   const pixelHistory = data?.entries ?? [];
   const truePage = data?.page ?? 1;
@@ -174,44 +160,36 @@ export default function PixelInfoTab({
           </div>
         : <p>No selected pixel</p>}
       </ActionPanelTabBody>
-      {adjustedCoords && pixelHistory.length > 1 && (
+      {(truePage > 1 || pixelHistory.length > 1) && (
         <FullWidthScrollView>
+          {pixelHistory.length > 0 && (
+            <ActionPanelTabBody>
+              <div>
+                <PixelHistoryPast
+                  history={pixelHistory}
+                  isLoading={isLoading}
+                  page={truePage}
+                  currentId={currentId}
+                  pastId={pastId}
+                />
+              </div>
+            </ActionPanelTabBody>
+          )}
           <ActionPanelTabBody>
             <div>
-              <PixelHistoryPast
-                history={pixelHistory}
-                isLoading={isLoading}
+              <StyledPagination
+                aria-controls={listId}
+                count={
+                  data?.total ? Math.ceil(data.total / data.size) : truePage
+                }
+                onChange={(_, value) => setPage(value)}
                 page={truePage}
-                currentId={currentId}
-                pastId={pastId}
+                size="small"
+                siblingCount={0}
               />
             </div>
           </ActionPanelTabBody>
         </FullWidthScrollView>
-      )}
-      {(truePage > 1 || pixelHistory.length > 1) && (
-        <ActionPanelTabBody>
-          <Pagination
-            aria-controls={listId}
-            color="primary"
-            count={data?.total ? Math.ceil(data.total / data.size) : truePage}
-            onChange={(_, value) => setPage(value)}
-            page={truePage}
-            renderItem={(item) => (
-              <StyledPaginationItem slots={customIconSlots} {...item} />
-            )}
-            sx={{
-              "& .MuiPagination-ul": {
-                justifyContent: "center",
-              },
-            }}
-            shape="rounded"
-            size="small"
-            showFirstButton
-            showLastButton
-            siblingCount={0}
-          />
-        </ActionPanelTabBody>
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (
