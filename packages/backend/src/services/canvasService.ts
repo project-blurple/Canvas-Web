@@ -556,7 +556,7 @@ export async function pasteCanvasData(
 
   // ~~~ Execution ~~~
 
-  prisma.user.upsert({
+  await prisma.user.upsert({
     where: { id: authorId },
     create: { id: authorId },
     update: {},

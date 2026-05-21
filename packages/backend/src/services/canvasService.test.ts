@@ -1,7 +1,14 @@
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
-import { seedCanvases, seedColors, seedEvents, seedPixels } from "@/test";
+import {
+  seedCanvases,
+  seedColors,
+  seedDiscordProfiles,
+  seedEvents,
+  seedPixels,
+  seedUsers,
+} from "@/test";
 import {
   createCanvas,
   editCanvas,
@@ -19,6 +26,10 @@ vi.mock("./paletteService", () => ({
   getEventPalette: vi.fn(),
 }));
 
+vi.mock("./pixelService", () => ({
+  createBulkPlaceEntries: vi.fn(),
+}));
+
 import { getEventPalette } from "./paletteService";
 import { createBulkPlaceEntries } from "./pixelService";
 
@@ -26,6 +37,7 @@ vi.mock("@/index", () => ({
   socketHandler: {
     broadcastCanvasUpdate: vi.fn(),
     broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
   },
 }));
 
@@ -235,13 +247,25 @@ describe("Edit Canvas Tests", () => {
 });
 
 describe("Paste Canvas Data Tests", () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     vi.clearAllMocks();
-    await seedEvents();
-    await seedCanvases();
   });
 
   it("validates paste data and creates bulk history entries", async () => {
+    vi.spyOn(prisma.canvas, "findFirst").mockResolvedValueOnce({
+      id: 1,
+      name: "Unlocked Canvas",
+      locked: false,
+      event_id: 1,
+      width: 2,
+      height: 2,
+      cooldown_length: 15,
+      start_coordinates: [1, 1],
+      all_colors_global: false,
+    } as never);
+
+    vi.spyOn(prisma.user, "upsert").mockResolvedValueOnce({} as never);
+
     vi.mocked(getEventPalette).mockResolvedValueOnce([
       {
         id: 1,
@@ -265,7 +289,7 @@ describe("Paste Canvas Data Tests", () => {
       },
     ]);
 
-    const authorId = 123456789012345678n;
+    const authorId = 1n;
 
     await pasteCanvasData(1, authorId, [
       [0, 0, 1],

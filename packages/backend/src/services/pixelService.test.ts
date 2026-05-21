@@ -23,6 +23,7 @@ import {
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
   },
 }));
 
