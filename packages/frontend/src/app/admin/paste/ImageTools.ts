@@ -52,6 +52,12 @@ export interface ImageRawDataEntry {
   color: PixelColor;
 }
 
+export interface MappedImageDataEntry {
+  x: number;
+  y: number;
+  colorIndex: number;
+}
+
 export async function imageFileToData(file: File) {
   const src = await readFileAsDataURL(file);
   const image = await loadImage(src);
@@ -91,18 +97,23 @@ export async function imageFileToData(file: File) {
   return dataEntries;
 }
 
-export function validateColorsAgainstPalette(
+export function mapImageDataToPaletteIndices(
   imageData: ImageRawDataEntry[],
   palette: Palette,
 ) {
-  const paletteColors = new Set(palette.map((color) => color.rgba));
-  const imageColors = new Set(imageData.map((entry) => entry.color));
+  const colorToIndexMap = new Map(
+    palette.map((color, index) => [color.rgba, index] as const),
+  );
 
-  for (const color of imageColors) {
-    if (!paletteColors.has(color)) {
-      return false;
+  return imageData.map((entry) => {
+    const colorIndex = colorToIndexMap.get(entry.color);
+    if (colorIndex === undefined) {
+      throw new Error();
     }
-  }
-
-  return true;
+    return {
+      x: entry.x,
+      y: entry.y,
+      colorIndex,
+    } as MappedImageDataEntry;
+  });
 }

@@ -3,7 +3,7 @@
 import { styled } from "@mui/material";
 import { CircleAlert, X } from "lucide-react";
 import NextImage from "next/image";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { CanvasWrapper } from "@/app/Main";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
@@ -19,8 +19,9 @@ import AdminDashboard from "../AdminDashboard";
 import {
   getImageDimensions,
   imageFileToData,
+  type MappedImageDataEntry,
+  mapImageDataToPaletteIndices,
   type UploadedImage,
-  validateColorsAgainstPalette,
 } from "./ImageTools";
 
 const AdminPasteTabBlock = styled("section")`
@@ -107,6 +108,11 @@ function AdminDashboardPasteActionPanel({
   const { canvas } = useCanvasContext();
   const { data: palette, isLoading: paletteIsLoading } = usePalette();
 
+  const [areColorsValid, setAreColorsValid] = useState(true);
+  const [mappedData, setMappedData] = useState<MappedImageDataEntry[] | null>(
+    null,
+  );
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function onUploadClick() {
@@ -160,11 +166,21 @@ function AdminDashboardPasteActionPanel({
 
   const entryCount = uploadedImage?.data.length ?? 0;
 
-  const areColorsValid = useMemo(
-    () =>
-      validateColorsAgainstPalette(uploadedImage?.data ?? [], palette ?? []),
-    [uploadedImage?.data, palette],
-  );
+  useEffect(() => {
+    if (!uploadedImage || !palette) {
+      setAreColorsValid(true);
+      setMappedData(null);
+      return;
+    }
+
+    try {
+      setMappedData(mapImageDataToPaletteIndices(uploadedImage.data, palette));
+      setAreColorsValid(true);
+    } catch {
+      setMappedData(null);
+      setAreColorsValid(false);
+    }
+  }, [uploadedImage, palette]);
 
   return (
     <ActionPanelPrimitives.Root>
