@@ -475,7 +475,7 @@ export async function createBulkPlaceEntries({
     `Creating ${entries.length} history entries for canvas ${canvasId}`,
   );
 
-  const batchSize = 10000;
+  const batchSize = 10_000;
   for (let i = 0; i < entries.length; i += batchSize) {
     const batch = entries.slice(i, i + batchSize);
     console.log(
