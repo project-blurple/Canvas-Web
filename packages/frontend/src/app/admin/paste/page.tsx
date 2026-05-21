@@ -239,7 +239,7 @@ function AdminDashboardPasteActionPanel({
       data: mappedData.map((entry) => [
         entry.x + topLeftCoordinates.x - canvas.startCoordinates[0],
         entry.y + topLeftCoordinates.y - canvas.startCoordinates[1],
-        entry.colorIndex,
+        entry.colorId,
       ]),
     });
   }

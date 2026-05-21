@@ -55,7 +55,7 @@ export interface ImageRawDataEntry {
 export interface MappedImageDataEntry {
   x: number;
   y: number;
-  colorIndex: number;
+  colorId: number;
 }
 
 export async function imageFileToData(file: File) {
@@ -109,16 +109,21 @@ export function mapImageDataToPaletteIndices(
     palette.map((color, index) => [colorKey(color.rgba), index] as const),
   );
 
+  const indexToColorMap = new Map(
+    palette.map((color, index) => [index, color.id] as const),
+  );
+
   return imageData.map((entry) => {
     const colorIndex = colorToIndexMap.get(colorKey(entry.color));
     if (colorIndex === undefined) {
-      console.log("Color not found in palette:", entry.color, colorToIndexMap);
-      throw new Error();
+      throw new Error("Color not found in palette", {
+        cause: { color: entry.color },
+      });
     }
     return {
       x: entry.x,
       y: entry.y,
-      colorIndex,
+      colorId: indexToColorMap.get(colorIndex),
     } as MappedImageDataEntry;
   });
 }
