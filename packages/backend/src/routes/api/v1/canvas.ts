@@ -1,4 +1,6 @@
+import type { Cooldown, DiscordUserProfile } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
+import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
@@ -19,6 +21,7 @@ import {
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
+import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = typedRouter(Router());
@@ -55,6 +58,27 @@ canvasRouter.get(
   async (req, res) => {
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+  },
+);
+
+canvasRouter.get(
+  "/:canvasId/cooldown/@me",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const profile = req.user as DiscordUserProfile;
+
+    if (!profile?.id) {
+      throw new UnauthorizedError("User is not authenticated");
+    }
+
+    const cooldownEndTime = await getUserCanvasCooldown(
+      req.params.canvasId,
+      BigInt(profile.id),
+    );
+
+    res.status(200).json({
+      cooldownEndTime: cooldownEndTime ?? undefined,
+    } satisfies Cooldown);
   },
 );
 

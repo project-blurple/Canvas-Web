@@ -23,3 +23,10 @@ export const AssignColorParamModel = z.object({
   ...EventIdParamModel.shape,
   ...GuildIdParamModel.shape,
 });
+
+export const PaletteQueryModel = z.object({
+  allColors: z
+    .union([z.literal("true"), z.literal("false"), z.boolean()])
+    .optional()
+    .transform((v) => v === true || v === "true"),
+});

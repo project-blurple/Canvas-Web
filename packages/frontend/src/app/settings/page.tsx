@@ -1,6 +1,10 @@
-import LayoutWithHeader from "@/components/LayoutWithNavbar";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import Settings from "./Settings";
 
 export default function SettingsPage() {
-  return <LayoutWithHeader content={<Settings />} />;
+  return (
+    <LayoutWithHeader>
+      <Settings />
+    </LayoutWithHeader>
+  );
 }

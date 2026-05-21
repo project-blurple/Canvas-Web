@@ -36,11 +36,14 @@ export function AuthProvider({ children, profile }: AuthProviderProps) {
   const [user, setUser] = useState(profile);
   const { data: userData } = useUserData(user);
 
+  // Prefer freshly fetched guild flags whenever they exist so that the manual
+  // "recheck server memberships" refresh (which updates the query cache) takes
+  // effect immediately, not just on the initial load.
   const resolvedUser =
-    user && !user.guilds && userData?.guilds ?
+    user ?
       {
         ...user,
-        guilds: userData.guilds,
+        guilds: userData?.guilds ?? user.guilds,
       }
     : user;
 
