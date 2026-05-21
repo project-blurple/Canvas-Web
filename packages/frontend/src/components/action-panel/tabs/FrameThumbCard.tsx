@@ -46,7 +46,6 @@ const MobileThumbnailCanvas = styled(PreviewCanvas)`
 const FrameTitle = styled("h3")`
   margin: 0;
   padding: 0.25rem 0.5rem;
-  white-space: nowrap;
 `;
 
 interface FrameThumbCardProps {
