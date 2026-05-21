@@ -8,7 +8,19 @@ import {
   getCanvases,
   getCanvasInfo,
   getCanvasPixels,
+  pasteCanvasData,
 } from "./canvasService";
+
+vi.mock("./historyService", () => ({
+  createBulkHistoryEntries: vi.fn(),
+}));
+
+vi.mock("./paletteService", () => ({
+  getEventPalette: vi.fn(),
+}));
+
+import { createBulkHistoryEntries } from "./historyService";
+import { getEventPalette } from "./paletteService";
 
 vi.mock("@/index", () => ({
   socketHandler: {
@@ -219,6 +231,56 @@ describe("Edit Canvas Tests", () => {
         cooldownDuration: 45,
       }),
     );
+  });
+});
+
+describe("Paste Canvas Data Tests", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await seedEvents();
+    await seedCanvases();
+  });
+
+  it("validates paste data and creates bulk history entries", async () => {
+    vi.mocked(getEventPalette).mockResolvedValueOnce([
+      {
+        id: 1,
+        code: "5872f2ff",
+        name: "Blurple",
+        rgba: [88, 101, 242, 255],
+        global: true,
+        invite: null,
+        guildName: null,
+        guildId: null,
+      },
+      {
+        id: 2,
+        code: "ea2328ff",
+        name: "Red",
+        rgba: [234, 35, 40, 255],
+        global: true,
+        invite: null,
+        guildName: null,
+        guildId: null,
+      },
+    ]);
+
+    const authorId = 123456789012345678n;
+
+    await pasteCanvasData(1, authorId, [
+      [0, 0, 1],
+      [1, 1, 2],
+    ]);
+
+    expect(vi.mocked(getEventPalette)).toHaveBeenCalledWith(1, false);
+    expect(vi.mocked(createBulkHistoryEntries)).toHaveBeenCalledWith({
+      canvasId: 1,
+      userId: authorId,
+      entries: [
+        { x: 0, y: 0, colorId: 1 },
+        { x: 1, y: 1, colorId: 2 },
+      ],
+    });
   });
 });
 
