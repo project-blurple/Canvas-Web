@@ -255,7 +255,7 @@ function AdminDashboardPasteActionPanel({
           </ActionPanelPrimitives.SectionHeading>
           <FullWidthStyledButton
             onClick={onUploadClick}
-            disabled={paletteIsLoading || !palette}
+            disabled={paletteIsLoading || !palette || doCanvasPaste.isPending}
           >
             Upload
           </FullWidthStyledButton>
@@ -362,7 +362,9 @@ function AdminDashboardPasteActionPanel({
                 </InputWrapper>
                 <FullWidthStyledButton
                   disabled={
-                    !areColorsValid || !authorIdRef.current?.checkValidity()
+                    !areColorsValid ||
+                    !authorIdRef.current?.checkValidity() ||
+                    doCanvasPaste.isPending
                   }
                   onClick={onPasteClick}
                 >
