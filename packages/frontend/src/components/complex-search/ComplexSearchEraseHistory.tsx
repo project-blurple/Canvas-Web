@@ -1,39 +1,49 @@
 "use client";
 
-import {
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormControlLabel,
-  styled,
-} from "@mui/material";
+import { Checkbox, FormControlLabel, styled } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
-import { StyledButton } from "../button/DynamicButton";
+import { Button } from "../button";
+import Dialog from "../Dialog";
 
 const StyledDialog = styled(Dialog)`
-  & .MuiDialog-paper {
-    box-shadow: none;
-    background-image: none;
+  gap: 0.75rem;
+
+  h2 {
+    color: var(--discord-white);
+    font-size: 1.5rem;
+    font-weight: 600;
   }
 `;
 
-const Button = styled(StyledButton)`
-  color: white;
+const StyledButton = styled(Button)`
+  background-color: var(--discord-legacy-dark-but-not-black);
+  color: var(--discord-white);
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: var(--discord-blurple);
+    }
+  }
 `;
 
-const RedButton = styled(Button)`
-  &:hover,
-  &:focus-visible {
-    background-color: rgb(255, 0, 0);
+const RedStyledButton = styled(StyledButton)`
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: rgb(255, 0, 0);
+    }
   }
+`;
+
+const DialogButtons = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
 `;
 
 interface ComplexSearchEraseHistoryProps {
@@ -119,45 +129,43 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <RedButton disabled={entriesCount === 0} onClick={handleEraseHistory}>
+      <RedStyledButton
+        disabled={entriesCount === 0}
+        onClick={handleEraseHistory}
+      >
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </RedButton>
+      </RedStyledButton>
       <StyledDialog
         open={isEraseConfirmOpen}
-        onClose={handleCancelErase}
+        onRequestClose={handleCancelErase}
         aria-labelledby="erase-history-dialog-title"
         aria-describedby="erase-history-dialog-description"
       >
-        <DialogTitle id="erase-history-dialog-title">
-          Erase history?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="erase-history-dialog-description">
-            Delete
-            {entriesCount.toLocaleString()} history&nbsp;
-            {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
-          </DialogContentText>
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                defaultChecked={false}
-                slotProps={{
-                  input: {
-                    ref: blockWhileEraseRef,
-                  },
-                }}
-              />
-            }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
-            disabled={entriesCount === 0}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelErase}>Cancel</Button>
-          <RedButton onClick={handleConfirmErase}>Erase</RedButton>
-        </DialogActions>
+        <h2 id="erase-history-dialog-title">Erase history?</h2>
+        <p id="erase-history-dialog-description">
+          Delete {entriesCount.toLocaleString()} history&nbsp;
+          {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
+        </p>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size="small"
+              defaultChecked={false}
+              slotProps={{
+                input: {
+                  ref: blockWhileEraseRef,
+                },
+              }}
+            />
+          }
+          label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
+          disabled={entriesCount === 0}
+        />
+        <DialogButtons>
+          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
+          <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
+        </DialogButtons>
       </StyledDialog>
     </>
   );

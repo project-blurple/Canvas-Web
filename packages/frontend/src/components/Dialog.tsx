@@ -8,6 +8,7 @@ const StyledDialog = styled("dialog")`
   margin: auto;
   max-width: calc(100vw - 2rem);
   padding: 1rem;
+  border-radius: 8px;
 
   &::backdrop {
     backdrop-filter: blur(4px);
