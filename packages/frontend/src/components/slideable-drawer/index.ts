@@ -1,1 +1,4 @@
-export { default as SlideableDrawer } from "./SlideableDrawer";
+export {
+  default as SlideableDrawer,
+  useSlideableDrawerContext,
+} from "./SlideableDrawer";

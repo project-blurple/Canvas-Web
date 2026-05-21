@@ -17,6 +17,7 @@ import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
+import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -61,9 +62,14 @@ function FrameInfoPanelBody({
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
+  const slideableDrawerState = useSlideableDrawerContext();
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
+
+  if (slideableDrawerState?.isMiddleSnap) {
+    return null;
+  }
 
   const frameUrl =
     selectedFrame ?
