@@ -21,7 +21,7 @@ import {
 import type { ViewBounds } from "@/util";
 import { durationFormatNarrow } from "@/util/intl";
 import {
-  ComplexSearchBoundsSelect,
+  BoundsSelect,
   ComplexSearchColorSelect,
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
@@ -245,11 +245,12 @@ export default function ComplexSearchTab({
               History search
             </ActionPanelPrimitives.SectionHeading>
             <Form onSubmit={handleSearchSubmit}>
-              <ComplexSearchBoundsSelect
+              <BoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}
                 setSelectedBounds={setSelectedBounds}
                 disabled={isLoading}
+                style={{ marginBlock: "1em" }}
               />
               <ComplexSearchColorSelect
                 value={selectedColorIds}

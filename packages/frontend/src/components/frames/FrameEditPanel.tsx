@@ -42,6 +42,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
+import BoundsSelect from "../BoundsSelect/BoundsSelect";
 import { DynamicButton } from "../button";
 import { addPoints, tupleToPoint } from "../canvas/point";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
@@ -579,7 +580,6 @@ export default function FrameEditPanel({
   return (
     <>
       <form onSubmit={handleFormSubmit}>
-        <input type="hidden" name="guildId" value={selectedGuildId} />
         <FullWidthScrollView>
           <ActionPanelTabBody>
             <EditContainer>
@@ -651,20 +651,15 @@ export default function FrameEditPanel({
                 )}
               </InputWrapper>
               {frameBounds && (
-                <>
-                  <CoordinatesCard
-                    coordinates={addPoints(
-                      { x: frameBounds.left, y: frameBounds.top },
-                      tupleToPoint(canvas.startCoordinates),
-                    )}
+                <InputWrapper>
+                  <InputLabel as="div">Frame bounds</InputLabel>
+                  <BoundsSelect
+                    canvas={canvas}
+                    selectedBounds={frameBounds}
+                    setSelectedBounds={setFrameBounds}
+                    showFrameButton={false}
                   />
-                  <CoordinatesCard
-                    coordinates={addPoints(
-                      { x: frameBounds.right - 1, y: frameBounds.bottom - 1 },
-                      tupleToPoint(canvas.startCoordinates),
-                    )}
-                  />
-                </>
+                </InputWrapper>
               )}
             </EditContainer>
             <PreviewContainer>
