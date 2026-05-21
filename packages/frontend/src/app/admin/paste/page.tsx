@@ -1,6 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
+import { X } from "lucide-react";
 import NextImage from "next/image";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { CanvasWrapper } from "@/app/Main";
@@ -36,6 +37,38 @@ const StyledButton = styled(Button)`
 `;
 
 const FullWidthStyledButton = styled(StyledButton)`
+  width: 100%;
+`;
+
+const UploadedImageWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const StyledImage = styled(NextImage)`
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+`;
+
+const InfoWrapper = styled("div")`
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  justify-items: center;
+`;
+
+const Info = styled("div")`
+  align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
   width: 100%;
 `;
 
@@ -146,22 +179,27 @@ function AdminDashboardPasteActionPanel({
             {uploadError && <p role="alert">{uploadError}</p>}
           </div>
           {uploadedImage && (
-            <div>
+            <UploadedImageWrapper>
               <ActionPanelPrimitives.SectionHeading>
                 Uploaded image
-              </ActionPanelPrimitives.SectionHeading>{" "}
-              <NextImage
+              </ActionPanelPrimitives.SectionHeading>
+              <StyledImage
                 src={uploadedImage.src}
                 alt={`Uploaded file: ${uploadedImage.file.name}`}
                 width={uploadedImage.width}
                 height={uploadedImage.height}
-                style={{ maxWidth: "100%", height: "auto" }}
               />
-              <p>
-                Selected {uploadedImage.file.name} ({uploadedImage.width}x
-                {uploadedImage.height})
-              </p>
-            </div>
+              <InfoWrapper>
+                <Info>
+                  <code>{uploadedImage.file.name}</code>
+                </Info>
+                <Info>
+                  <code>{uploadedImage.width}</code>
+                  <X size={16} />
+                  <code>{uploadedImage.height}</code>
+                </Info>
+              </InfoWrapper>
+            </UploadedImageWrapper>
           )}
         </ActionPanelTabBody>
       </FullWidthScrollView>
