@@ -693,7 +693,13 @@ export default function FrameEditPanel({
                 <DynamicButton
                   color={hexStringToPixelColor(frameId)}
                   type="submit"
-                  disabled={!frameName || !frameBounds || !isDirty}
+                  disabled={
+                    !frameName ||
+                    !frameBounds ||
+                    !isDirty ||
+                    saveFrameMutation.isPending ||
+                    deleteFrameMutation.isPending
+                  }
                 >
                   Save
                 </DynamicButton>
@@ -701,6 +707,9 @@ export default function FrameEditPanel({
                   color={hexStringToPixelColor(frameId)}
                   onAction={handleDeleteButtonAction}
                   type="button"
+                  disabled={
+                    deleteFrameMutation.isPending || saveFrameMutation.isPending
+                  }
                 >
                   Delete
                 </DynamicButton>
@@ -712,14 +721,24 @@ export default function FrameEditPanel({
                   !frameName ||
                   !frameBounds ||
                   (!selectedGuildId && selectedOwner === "guild") ||
-                  isAtMaxFrames // Only restrict when creating, not when editing
+                  isAtMaxFrames || // Only restrict when creating, not when editing
+                  createFrameMutation.isPending
                 }
               >
                 {isAtMaxFrames ? "Maximum frames created" : "Create"}
               </DynamicButton>
             }
           </ButtonRow>
-          <DynamicButton color={null} onAction={handleBackAction} type="button">
+          <DynamicButton
+            color={null}
+            onAction={handleBackAction}
+            type="button"
+            disabled={
+              saveFrameMutation.isPending ||
+              deleteFrameMutation.isPending ||
+              createFrameMutation.isPending
+            }
+          >
             Back
           </DynamicButton>
         </ActionPanelTabBody>
