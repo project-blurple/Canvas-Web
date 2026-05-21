@@ -97,17 +97,22 @@ export async function imageFileToData(file: File) {
   return dataEntries;
 }
 
+function colorKey([r, g, b, a]: PixelColor) {
+  return `${r},${g},${b},${a}`;
+}
+
 export function mapImageDataToPaletteIndices(
   imageData: ImageRawDataEntry[],
   palette: Palette,
 ) {
   const colorToIndexMap = new Map(
-    palette.map((color, index) => [color.rgba, index] as const),
+    palette.map((color, index) => [colorKey(color.rgba), index] as const),
   );
 
   return imageData.map((entry) => {
-    const colorIndex = colorToIndexMap.get(entry.color);
+    const colorIndex = colorToIndexMap.get(colorKey(entry.color));
     if (colorIndex === undefined) {
+      console.log("Color not found in palette:", entry.color, colorToIndexMap);
       throw new Error();
     }
     return {
