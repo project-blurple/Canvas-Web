@@ -19,6 +19,7 @@ vi.mock("@/index", () => ({
 
 describe("Canvas Info Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -60,6 +61,7 @@ describe("Canvas Info Tests", () => {
 
 describe("Canvas Validation Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -75,6 +77,7 @@ describe("Canvas Validation Tests", () => {
 
 describe("Canvas Pixels Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -95,6 +98,7 @@ describe("Canvas Pixels Tests", () => {
 
 describe("Create Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -156,7 +160,6 @@ describe("Create Canvas Tests", () => {
     ]);
 
     expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
-      createdCanvas.id,
       expect.objectContaining({
         id: createdCanvas.id,
         name: canvasName,
@@ -172,6 +175,7 @@ describe("Create Canvas Tests", () => {
 
 describe("Edit Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -207,7 +211,6 @@ describe("Edit Canvas Tests", () => {
     });
 
     expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
-      1,
       expect.objectContaining({
         id: 1,
         name: "Edited Canvas",
