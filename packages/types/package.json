@@ -2,7 +2,14 @@
   "name": "@blurple-canvas-web/types",
   "description": "Types package Blurple Canvas Web",
   "version": "0.1.0",
-  "main": "src/index.ts",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./build/index.js"
+    }
+  },
   "private": true,
   "contributors": [
     "Aaron Guo <aaronjoshguo@gmail.com>",
