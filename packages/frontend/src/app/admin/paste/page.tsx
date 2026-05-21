@@ -1,9 +1,9 @@
 "use client";
 
 import { styled } from "@mui/material";
-import { X } from "lucide-react";
+import { CircleAlert, X } from "lucide-react";
 import NextImage from "next/image";
-import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { CanvasWrapper } from "@/app/Main";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
@@ -14,11 +14,13 @@ import { Button } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useCanvasContext } from "@/contexts";
+import { usePalette } from "@/hooks";
 import AdminDashboard from "../AdminDashboard";
 import {
   getImageDimensions,
   imageFileToData,
   type UploadedImage,
+  validateColorsAgainstPalette,
 } from "./ImageTools";
 
 const AdminPasteTabBlock = styled("section")`
@@ -42,6 +44,18 @@ const StyledButton = styled(Button)`
 `;
 
 const FullWidthStyledButton = styled(StyledButton)`
+  width: 100%;
+`;
+
+const ErrorText = styled("span")`
+  align-items: center;
+  background-color: oklch(from var(--discord-red) l c h / 75%);
+  border-radius: 0.5rem;
+  color: var(--discord-white);
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  padding: 0.5rem;
   width: 100%;
 `;
 
@@ -78,7 +92,6 @@ const Info = styled("div")`
 `;
 
 interface AdminDashboardPasteActionPanelProps {
-  canvas: ReturnType<typeof useCanvasContext>["canvas"];
   uploadedImage: UploadedImage | null;
   uploadError: string | null;
   setUploadedImage: (image: UploadedImage | null) => void;
@@ -86,12 +99,14 @@ interface AdminDashboardPasteActionPanelProps {
 }
 
 function AdminDashboardPasteActionPanel({
-  canvas,
   uploadedImage,
   uploadError,
   setUploadedImage,
   setUploadError,
 }: AdminDashboardPasteActionPanelProps) {
+  const { canvas } = useCanvasContext();
+  const { data: palette, isLoading: paletteIsLoading } = usePalette();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   function onUploadClick() {
@@ -145,6 +160,12 @@ function AdminDashboardPasteActionPanel({
 
   const entryCount = uploadedImage?.data.length ?? 0;
 
+  const areColorsValid = useMemo(
+    () =>
+      validateColorsAgainstPalette(uploadedImage?.data ?? [], palette ?? []),
+    [uploadedImage?.data, palette],
+  );
+
   return (
     <ActionPanelPrimitives.Root>
       <FullWidthScrollView>
@@ -153,7 +174,10 @@ function AdminDashboardPasteActionPanel({
             <ActionPanelPrimitives.SectionHeading>
               Upload image to paste
             </ActionPanelPrimitives.SectionHeading>
-            <FullWidthStyledButton onClick={onUploadClick}>
+            <FullWidthStyledButton
+              onClick={onUploadClick}
+              disabled={paletteIsLoading || !palette}
+            >
               Upload
             </FullWidthStyledButton>
             <input
@@ -163,36 +187,44 @@ function AdminDashboardPasteActionPanel({
               accept="image/*"
               onChange={onUploadChange}
             />
-            {uploadError && <p role="alert">{uploadError}</p>}
+            {uploadError && <ErrorText role="alert">{uploadError}</ErrorText>}
           </div>
           {uploadedImage && (
-            <UploadedImageWrapper>
+            <div>
               <ActionPanelPrimitives.SectionHeading>
                 Uploaded image
               </ActionPanelPrimitives.SectionHeading>
-              <StyledImage
-                src={uploadedImage.src}
-                alt={`Uploaded file: ${uploadedImage.file.name}`}
-                width={uploadedImage.width}
-                height={uploadedImage.height}
-              />
-              <InfoWrapper>
-                <Info>
-                  <code>{uploadedImage.file.name}</code>
-                </Info>
-                <Info>
-                  <code>{uploadedImage.width}</code>
-                  <X size={16} />
-                  <code>{uploadedImage.height}</code>
-                </Info>
-                <Info>
-                  <span>
-                    {entryCount.toLocaleString()}{" "}
-                    {entryCount === 1 ? "pixel" : "pixels"}
-                  </span>
-                </Info>
-              </InfoWrapper>
-            </UploadedImageWrapper>
+              <UploadedImageWrapper>
+                <InfoWrapper>
+                  <Info>
+                    <code>{uploadedImage.file.name}</code>
+                  </Info>
+                  <Info>
+                    <code>{uploadedImage.width}</code>
+                    <X size={16} />
+                    <code>{uploadedImage.height}</code>
+                  </Info>
+                  <Info>
+                    <span>
+                      {entryCount.toLocaleString()}{" "}
+                      {entryCount === 1 ? "pixel" : "pixels"}
+                    </span>
+                  </Info>
+                </InfoWrapper>
+                {!areColorsValid && (
+                  <ErrorText role="alert">
+                    <CircleAlert />
+                    This image contains colors that are not in the palette.
+                  </ErrorText>
+                )}
+                <StyledImage
+                  src={uploadedImage.src}
+                  alt={`Uploaded file: ${uploadedImage.file.name}`}
+                  width={uploadedImage.width}
+                  height={uploadedImage.height}
+                />
+              </UploadedImageWrapper>
+            </div>
           )}
         </ActionPanelTabBody>
       </FullWidthScrollView>
@@ -201,7 +233,6 @@ function AdminDashboardPasteActionPanel({
 }
 
 function AdminPasteTab() {
-  const { canvas } = useCanvasContext();
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null,
   );
@@ -218,7 +249,6 @@ function AdminPasteTab() {
 
   const actionPanel = (
     <AdminDashboardPasteActionPanel
-      canvas={canvas}
       uploadedImage={uploadedImage}
       uploadError={uploadError}
       setUploadedImage={setUploadedImage}

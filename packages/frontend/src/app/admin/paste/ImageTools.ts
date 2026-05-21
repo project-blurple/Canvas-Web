@@ -1,3 +1,5 @@
+import type { Palette, PixelColor } from "@blurple-canvas-web/types";
+
 export type UploadedImage = {
   file: File;
   src: string;
@@ -47,7 +49,7 @@ function loadImage(src: string) {
 export interface ImageRawDataEntry {
   x: number;
   y: number;
-  color: number; // number representation of the color, e.g. 0xRRGGBBAA
+  color: PixelColor;
 }
 
 export async function imageFileToData(file: File) {
@@ -72,11 +74,12 @@ export async function imageFileToData(file: File) {
     const alpha = imageData.data[i + 3];
     if (alpha === 0) continue; // Skip fully transparent pixels
 
-    const color =
-      (imageData.data[i] << 24) | // Red
-      (imageData.data[i + 1] << 16) | // Green
-      (imageData.data[i + 2] << 8) | // Blue
-      alpha; // Alpha
+    const color = [
+      imageData.data[i], // Red
+      imageData.data[i + 1], // Green
+      imageData.data[i + 2], // Blue
+      alpha, // Alpha
+    ] as PixelColor;
 
     dataEntries.push({
       x: (i / 4) % canvas.width,
@@ -86,4 +89,20 @@ export async function imageFileToData(file: File) {
   }
 
   return dataEntries;
+}
+
+export function validateColorsAgainstPalette(
+  imageData: ImageRawDataEntry[],
+  palette: Palette,
+) {
+  const paletteColors = new Set(palette.map((color) => color.rgba));
+  const imageColors = new Set(imageData.map((entry) => entry.color));
+
+  for (const color of imageColors) {
+    if (!paletteColors.has(color)) {
+      return false;
+    }
+  }
+
+  return true;
 }
