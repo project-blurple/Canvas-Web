@@ -159,7 +159,7 @@ function AdminDashboardPasteActionPanel({
   const [mappedData, setMappedData] = useState<MappedImageDataEntry[] | null>(
     null,
   );
-  const authorIdRef = useRef<HTMLInputElement | null>(null);
+  const [authorId, setAuthorId] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -231,11 +231,10 @@ function AdminDashboardPasteActionPanel({
   }, [uploadedImage, palette]);
 
   async function onPasteClick() {
-    if (!uploadedImage || !mappedData || !palette || !authorIdRef.current)
-      return;
+    if (!uploadedImage || !mappedData || !palette || !authorId) return;
 
     await doCanvasPaste.mutateAsync({
-      authorId: authorIdRef.current?.value,
+      authorId,
       data: mappedData.map((entry) => [
         entry.x + topLeftCoordinates.x - canvas.startCoordinates[0],
         entry.y + topLeftCoordinates.y - canvas.startCoordinates[1],
@@ -353,17 +352,20 @@ function AdminDashboardPasteActionPanel({
                 <InputWrapper>
                   <InputLabel htmlFor="author-id-input">Author ID</InputLabel>
                   <AuthorIdInput
+                    id="author-id-input"
                     inputMode="numeric"
                     pattern="^[0-9]{16,20}$"
                     placeholder="Author ID"
-                    ref={authorIdRef}
+                    onChange={(event) => setAuthorId(event.currentTarget.value)}
+                    value={authorId}
                     type="text"
                   />
                 </InputWrapper>
                 <FullWidthStyledButton
                   disabled={
                     !areColorsValid ||
-                    !authorIdRef.current?.checkValidity() ||
+                    authorId === "" ||
+                    !/^\d{16,20}$/.test(authorId) ||
                     doCanvasPaste.isPending
                   }
                   onClick={onPasteClick}
