@@ -433,20 +433,21 @@ export async function restorePixelsAfterHistoryModification(
     }
   }
 
-  // Broadcast and cache per-pixel
+  // Build bulk payload and update cache per-pixel
+  const pixels: { x: number; y: number; rgba: PixelColor }[] = [];
   for (const coordinate of uniqueCoordinates.values()) {
     const key = `${coordinate.x}:${coordinate.y}`;
     const latestEntry = latestByCoord.get(key);
     const pixelColor =
       (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
 
-    socketHandler.broadcastPixelPlacement(canvasId, {
-      x: coordinate.x,
-      y: coordinate.y,
-      rgba: pixelColor,
-    });
+    pixels.push({ x: coordinate.x, y: coordinate.y, rgba: pixelColor });
 
     updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
+  }
+
+  if (pixels.length > 0) {
+    socketHandler.broadcastPixelBulkPlacement(canvasId, { pixels });
   }
 }
 
@@ -462,14 +463,12 @@ export async function createBulkPlaceEntries({
   guildId,
   timestamp,
   entries,
-  palette,
 }: {
   canvasId: number;
   userId: bigint;
   guildId?: bigint;
   timestamp?: Date;
   entries: BulkPlaceEntry[];
-  palette?: Palette;
 }) {
   console.log(
     `Creating ${entries.length} history entries for canvas ${canvasId}`,
@@ -500,18 +499,4 @@ export async function createBulkPlaceEntries({
   }
 
   await restorePixelsAfterHistoryModification(canvasId, entries);
-
-  socketHandler.broadcastPixelBulkPlacement(canvasId, {
-    pixels: entries
-      .map((entry) => {
-        const color = palette?.find((c) => c.id === entry.colorId);
-        if (!color) return null;
-        return {
-          x: entry.x,
-          y: entry.y,
-          rgba: color.rgba as PixelColor,
-        };
-      })
-      .filter((v): v is NonNullable<typeof v> => !!v),
-  });
 }

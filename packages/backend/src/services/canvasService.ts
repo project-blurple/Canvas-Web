@@ -566,7 +566,6 @@ export async function pasteCanvasData(
     canvasId,
     userId: authorId,
     entries,
-    palette: colors,
   });
 }
 
