@@ -2,12 +2,12 @@
   "name": "@blurple-canvas-web/types",
   "description": "Types package Blurple Canvas Web",
   "version": "0.1.0",
-  "main": "build/index.js",
-  "types": "build/index.d.ts",
+  "main": "src/index.ts",
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "default": "./build/index.js"
+      "import": "./src/index.ts",
+      "require": "./build/index.js"
     }
   },
   "private": true,
