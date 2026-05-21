@@ -40,11 +40,9 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import BoundsSelect from "../BoundsSelect/BoundsSelect";
 import { DynamicButton } from "../button";
-import { addPoints, tupleToPoint } from "../canvas/point";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const EditContainer = styled("div")`
@@ -411,7 +409,15 @@ export default function FrameEditPanel({
   });
 
   const createFrameMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      name,
+      ownerType,
+      guildId,
+    }: {
+      name: string;
+      ownerType: FrameOwnerType;
+      guildId: string;
+    }) => {
       if (!user) {
         throw new Error("Must be logged in to create a frame");
       }
@@ -419,13 +425,13 @@ export default function FrameEditPanel({
       const requestUrl = `${config.apiUrl}/api/v1/frame`;
 
       const owner =
-        selectedOwner === FrameOwnerType.Guild ?
-          { type: FrameOwnerType.Guild, id: selectedGuildId }
+        ownerType === FrameOwnerType.Guild ?
+          { type: FrameOwnerType.Guild, id: guildId }
         : { type: FrameOwnerType.User, id: user.id };
 
       const body = {
         canvasId: canvas.id,
-        name: frameName,
+        name,
         owner,
         x0: frameBounds?.left ?? 0,
         y0: frameBounds?.top ?? 0,
