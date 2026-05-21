@@ -1,4 +1,4 @@
-import type { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ForbiddenError, UnauthorizedError } from "@/errors";

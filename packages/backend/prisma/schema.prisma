@@ -95,8 +95,9 @@ model frame {
   id             String  @id
   canvas_id      Int
   canvas         canvas  @relation(fields: [canvas_id], references: [id])
-  owner_id       BigInt
-  is_guild_owned Boolean
+  // There is a database check that requires one of them to be set
+  owner_user_id  BigInt?
+  owner_guild_id BigInt?
   name           String
   x_0            Int
   x_1            Int

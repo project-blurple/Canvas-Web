@@ -51,7 +51,9 @@ const StyledAvatar = styled(Avatar)`
   align-self: center;
 `;
 
-export interface LeaderboardRowProps {
+interface LeaderboardRowProps extends React.ComponentPropsWithRef<
+  typeof TableRow
+> {
   entry: LeaderboardEntry;
 }
 
@@ -73,9 +75,12 @@ export function LeaderboardRowSkeleton() {
   );
 }
 
-export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
+export default function LeaderboardRow({
+  entry,
+  ...props
+}: LeaderboardRowProps) {
   return (
-    <TableRow>
+    <TableRow {...props}>
       <Rank>{entry.rank.toLocaleString()}</Rank>
       <div>
         <Username>{entry.username ?? entry.userId}</Username>
