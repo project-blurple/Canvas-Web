@@ -11,8 +11,6 @@ import {
   DialogContentText,
   DialogTitle,
   TextField,
-  ToggleButton,
-  ToggleButtonGroup,
 } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,6 +63,29 @@ const InputWrapper = styled("div")`
 const InputLabel = styled("label")`
   opacity: 0.75;
   font-size: 0.875rem;
+`;
+
+const OwnerTypeOptions = styled("div")`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const OwnerTypeOption = styled("label")`
+  align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 8px;
+  border: var(--card-border);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  user-select: none;
+
+  input {
+    margin: 0;
+  }
 `;
 
 const TextInput = styled("input")`
@@ -537,7 +558,6 @@ export default function FrameEditPanel({
   return (
     <>
       <form onSubmit={handleFormSubmit}>
-        <input type="hidden" name="ownerType" value={selectedOwner} />
         <input type="hidden" name="guildId" value={selectedGuildId} />
         <FullWidthScrollView>
           <ActionPanelTabBody>
@@ -548,6 +568,7 @@ export default function FrameEditPanel({
               <InputWrapper>
                 <InputLabel htmlFor="frameName">Name</InputLabel>
                 <TextInput
+                  id="frameName"
                   type="text"
                   onChange={(e) => setFrameName(e.target.value)}
                   required
@@ -557,21 +578,33 @@ export default function FrameEditPanel({
               </InputWrapper>
 
               <InputWrapper>
-                <InputLabel>Owned by</InputLabel>
-                <ToggleButtonGroup
-                  color="primary"
-                  defaultValue={selectedOwner}
-                  exclusive
-                  onChange={(_, value) => {
-                    if (value) {
-                      setSelectedOwner(value);
-                    }
-                  }}
-                  disabled={!isCreateMode} // Can't change owner after frame is created
-                >
-                  <ToggleButton value="user">You</ToggleButton>
-                  <ToggleButton value="guild">Server</ToggleButton>
-                </ToggleButtonGroup>
+                <InputLabel as="div">Owned by</InputLabel>
+                <OwnerTypeOptions role="radiogroup" aria-label="Owned by">
+                  <OwnerTypeOption htmlFor="owner-user">
+                    <input
+                      type="radio"
+                      id="owner-user"
+                      name="ownerType"
+                      value="user"
+                      checked={selectedOwner === "user"}
+                      onChange={() => setSelectedOwner("user")}
+                      disabled={!isCreateMode} // Can't change owner after frame is created
+                    />
+                    <span>You</span>
+                  </OwnerTypeOption>
+                  <OwnerTypeOption htmlFor="owner-guild">
+                    <input
+                      type="radio"
+                      id="owner-guild"
+                      name="ownerType"
+                      value="guild"
+                      checked={selectedOwner === "guild"}
+                      onChange={() => setSelectedOwner("guild")}
+                      disabled={!isCreateMode} // Can't change owner after frame is created
+                    />
+                    <span>Server</span>
+                  </OwnerTypeOption>
+                </OwnerTypeOptions>
                 {selectedOwner === "guild" && (
                   <Autocomplete
                     options={guildOptions}
