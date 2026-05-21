@@ -35,7 +35,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import BoundsSelect from "../BoundsSelect/BoundsSelect";
-import { DynamicButton } from "../button";
+import { Button, DynamicButton } from "../button";
 import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
@@ -121,11 +121,38 @@ const ButtonRow = styled("div")`
 
 const StyledDialog = styled(Dialog)`
   gap: 0.5rem;
+
+  h2 {
+    color: var(--discord-white);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
 `;
 
 const DialogButtons = styled("div")`
   display: flex;
   gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+`;
+
+const StyledButton = styled(Button)`
+  background-color: var(--discord-legacy-dark-but-not-black);
+  color: var(--discord-white);
+
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: var(--discord-blurple);
+    }
+  }
+`;
+
+const RedStyledButton = styled(StyledButton)`
+  @media (hover: hover) and (pointer: fine) {
+    :hover {
+      background-color: rgb(255, 0, 0);
+    }
+  }
 `;
 
 type GuildEntry = [string, GuildData];
@@ -706,19 +733,17 @@ export default function FrameEditPanel({
                 >
                   Save
                 </DynamicButton>
-                <DynamicButton
-                  color={hexStringToPixelColor(frameId)}
-                  onAction={handleDeleteButtonAction}
+                <RedStyledButton
+                  onClick={handleDeleteButtonAction}
                   type="button"
                   disabled={
                     deleteFrameMutation.isPending || saveFrameMutation.isPending
                   }
                 >
                   Delete
-                </DynamicButton>
+                </RedStyledButton>
               </>
-            : <DynamicButton
-                color={hexStringToPixelColor(frameId)}
+            : <StyledButton
                 type="submit"
                 disabled={
                   !frameName ||
@@ -729,12 +754,11 @@ export default function FrameEditPanel({
                 }
               >
                 {isAtMaxFrames ? "Maximum frames created" : "Create"}
-              </DynamicButton>
+              </StyledButton>
             }
           </ButtonRow>
-          <DynamicButton
-            color={null}
-            onAction={handleBackAction}
+          <StyledButton
+            onClick={handleBackAction}
             type="button"
             disabled={
               saveFrameMutation.isPending ||
@@ -743,7 +767,7 @@ export default function FrameEditPanel({
             }
           >
             Back
-          </DynamicButton>
+          </StyledButton>
         </ActionPanelTabBody>
       </form>
       <StyledDialog
@@ -758,23 +782,21 @@ export default function FrameEditPanel({
           back and discard them?
         </p>
         <DialogButtons>
-          <DynamicButton
-            color={null}
+          <StyledButton
             type="button"
-            onAction={() => setIsBackConfirmOpen(false)}
+            onClick={() => setIsBackConfirmOpen(false)}
           >
             Keep editing
-          </DynamicButton>
-          <DynamicButton
-            color={null}
+          </StyledButton>
+          <RedStyledButton
             type="button"
-            onAction={() => {
+            onClick={() => {
               setIsBackConfirmOpen(false);
               closeEditor();
             }}
           >
             Discard
-          </DynamicButton>
+          </RedStyledButton>
         </DialogButtons>
       </StyledDialog>
       <StyledDialog
@@ -789,20 +811,15 @@ export default function FrameEditPanel({
           continue?
         </p>
         <DialogButtons>
-          <DynamicButton
-            color={null}
+          <StyledButton
             type="button"
-            onAction={() => setIsDeleteConfirmOpen(false)}
+            onClick={() => setIsDeleteConfirmOpen(false)}
           >
             Cancel
-          </DynamicButton>
-          <DynamicButton
-            color={hexStringToPixelColor(frameId)}
-            type="button"
-            onAction={handleDeleteAction}
-          >
+          </StyledButton>
+          <RedStyledButton type="button" onClick={handleDeleteAction}>
             Delete
-          </DynamicButton>
+          </RedStyledButton>
         </DialogButtons>
       </StyledDialog>
     </>

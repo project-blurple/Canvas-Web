@@ -59,11 +59,17 @@ export default function Dialog({
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDialogElement>) {
-    if (event.target === event.currentTarget) {
+    const rect = event.currentTarget.getBoundingClientRect();
+
+    const clickedOutside =
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom;
+
+    if (clickedOutside) {
       onRequestClose();
     }
-
-    onPointerDown?.(event);
   }
 
   return (
