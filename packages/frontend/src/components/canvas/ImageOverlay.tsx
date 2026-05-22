@@ -4,10 +4,16 @@ import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
 import { RenderOverlayShades } from "./SelectedBoundsOverlay";
 
-const OverlayImage = styled("img")`
-  image-rendering: pixelated;
+const OverlayWrapper = styled("div")`
   position: absolute;
   z-index: 2;
+`;
+
+const OverlayImage = styled("img")`
+  display: block;
+  image-rendering: pixelated;
+  max-width: none;
+  transform-origin: top left;
 `;
 
 interface ImageOverlayProps {
@@ -17,6 +23,8 @@ interface ImageOverlayProps {
   file: File | null;
   left: number;
   top: number;
+  width: number;
+  height: number;
 }
 
 export default function ImageOverlay({
@@ -26,6 +34,8 @@ export default function ImageOverlay({
   file,
   left,
   top,
+  width,
+  height,
 }: ImageOverlayProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -51,11 +61,22 @@ export default function ImageOverlay({
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
       />
-      <OverlayImage
-        alt={alt}
-        src={imageUrl}
-        style={{ transform: `translate(${left}px, ${top}px)` }}
-      />
+      <OverlayWrapper
+        style={{
+          transform: `translate(${left}px, ${top}px)`,
+        }}
+      >
+        <OverlayImage
+          alt={alt}
+          src={imageUrl}
+          width={width}
+          height={height}
+          style={{
+            height,
+            width,
+          }}
+        />
+      </OverlayWrapper>
     </>
   );
 }

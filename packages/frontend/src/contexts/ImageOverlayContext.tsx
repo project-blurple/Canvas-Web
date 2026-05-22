@@ -6,6 +6,8 @@ import { createContext, useContext, useState } from "react";
 interface ImageOverlayState {
   alt: string;
   file: File | null;
+  height: number;
+  width: number;
 }
 
 interface ImageOverlayContextType {

@@ -63,6 +63,8 @@ export default function CanvasOverlays() {
           file={imageOverlay.file}
           left={topLeftCoordinates.x - canvas.startCoordinates[0]}
           top={topLeftCoordinates.y - canvas.startCoordinates[1]}
+          width={imageOverlay.width}
+          height={imageOverlay.height}
         />
       )}
     </div>

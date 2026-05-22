@@ -422,6 +422,8 @@ function AdminPasteTab() {
     setImageOverlay({
       alt: "Preview of uploaded image",
       file: uploadedImage.file,
+      height: uploadedImage.height,
+      width: uploadedImage.width,
     });
     setContextTopLeftCoordinates(topLeftCoordinates);
     setShowOverlay(true);
