@@ -19,7 +19,6 @@ const Wrapper = styled("header")`
   background-color: var(--discord-legacy-dark-but-not-black);
   border-block-end: var(--card-border);
   display: grid;
-  font-size: 1.2rem;
   gap: 0.5rem;
   grid-template-columns: auto 1fr auto;
   justify-content: flex-end;

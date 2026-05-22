@@ -1,12 +1,13 @@
 import fs from "node:fs";
 import type {
+  BlurpleEvent,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
-import { type canvas, prisma } from "@/client";
+import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import type { PlacePixelArray } from "@/models/pixel.models";
@@ -103,9 +104,17 @@ interface CanvasSummaryRow {
 /**
  * Retrieves canvas summary info for all canvases.
  *
+ * @param eventId If provided, only canvases for the specified event will be returned
  * @returns The canvas summary info of all canvases
  */
-export async function getCanvases(): Promise<CanvasSummary[]> {
+export async function getCanvases(
+  eventId?: BlurpleEvent["id"],
+): Promise<CanvasSummary[]> {
+  const whereSQL =
+    eventId === undefined ?
+      Prisma.sql`TRUE`
+    : Prisma.sql`c.event_id = ${eventId}`;
+
   const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
     SELECT
       c.id,
@@ -120,6 +129,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     LEFT JOIN history h
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
+    WHERE ${whereSQL}
     GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
@@ -133,7 +143,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     isLocked: canvas.locked,
     width: canvas.width,
     height: canvas.height,
-    cooldownLength: canvas.cooldown_length,
+    cooldownDuration: canvas.cooldown_length,
   }));
 }
 
@@ -144,7 +154,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
  */
 export async function getCurrentCanvasInfo(): Promise<CanvasInfo> {
   const info = await prisma.info.findFirst({
-    select: { default_canvas_id: true, all_colors_global: true },
+    select: { default_canvas_id: true },
   });
 
   // To get rid of the nullable type from info. This should never happen
@@ -172,6 +182,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
       locked: true,
       event_id: true,
       cooldown_length: true,
+      all_colors_global: true,
     },
     where: {
       id: canvasId,
@@ -194,8 +205,8 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
     isLocked: canvas.locked,
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
-    allColorsGlobal: config.allColorsGlobal,
-    cooldownLength: canvas.cooldown_length,
+    allColorsGlobal: canvas.all_colors_global,
+    cooldownDuration: canvas.cooldown_length,
   };
 }
 
@@ -331,9 +342,15 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE[canvasId];
 
-  if (cachedCanvas?.isLocked) {
-    await fs.promises.rm(cachedCanvas.canvasPath);
-    console.debug(`Cleared canvas ${canvasId} from file system`);
+  try {
+    if (cachedCanvas?.isLocked) {
+      await fs.promises.rm(cachedCanvas.canvasPath);
+      console.debug(`Cleared canvas ${canvasId} from file system`);
+    }
+  } catch {
+    console.warn(
+      `Failed to clear canvas ${canvasId} from file system. It may have already been removed.`,
+    );
   }
 }
 
@@ -394,7 +411,7 @@ interface CreateCanvasParams {
   height: number;
   startCoordinates?: [number, number];
   allColorsGlobal?: boolean;
-  cooldownLength?: number;
+  cooldownDuration?: number;
 }
 
 export async function createCanvas({
@@ -402,7 +419,8 @@ export async function createCanvas({
   width,
   height,
   startCoordinates = [1, 1],
-  cooldownLength = 15,
+  allColorsGlobal = false,
+  cooldownDuration = 15,
 }: CreateCanvasParams) {
   const currentEventId = await getCurrentEvent();
 
@@ -414,7 +432,8 @@ export async function createCanvas({
       event_id: currentEventId.id,
       start_coordinates: startCoordinates,
       locked: true,
-      cooldown_length: cooldownLength,
+      cooldown_length: cooldownDuration,
+      all_colors_global: allColorsGlobal,
     },
   });
 
@@ -462,14 +481,15 @@ interface EditCanvasParams {
   name?: string;
   isLocked?: boolean;
   allColorsGlobal?: boolean;
-  cooldownLength?: number;
+  cooldownDuration?: number;
 }
 
 export async function editCanvas({
   canvasId,
   name,
   isLocked,
-  cooldownLength,
+  allColorsGlobal,
+  cooldownDuration,
 }: EditCanvasParams) {
   const canvas = await prisma.canvas.update({
     where: {
@@ -478,7 +498,8 @@ export async function editCanvas({
     data: {
       name,
       locked: isLocked,
-      cooldown_length: cooldownLength,
+      cooldown_length: cooldownDuration,
+      all_colors_global: allColorsGlobal,
     },
   });
 

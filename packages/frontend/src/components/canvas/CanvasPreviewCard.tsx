@@ -3,7 +3,7 @@ import { css, styled } from "@mui/material";
 import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
 import { dateToRelativeTime } from "@/util/text";
-import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
+import CanvasIcon from "../CanvasIcon";
 
 export const EventCanvasCard = styled("button")`
   align-items: flex-start;
@@ -121,14 +121,15 @@ export function CanvasPreviewCard({
   });
 
   return (
-    <EventCanvasCard type="button" {...props}>
+    <EventCanvasCard type="button" title={canvas.name} {...props}>
       {sourceImage ?
         <EventCanvasPreview alt={canvas.name} src={sourceImage.src} />
       : <EventCanvasPreviewPlaceholder>
-          <CanvasAnimatedIcon
+          <CanvasIcon
+            loading
+            size={48}
             style={{
               color: "var(--discord-blurple)",
-              height: "24px",
               opacity: 0.5,
             }}
           />
@@ -148,17 +149,13 @@ export function CanvasPreviewCard({
       </EventCanvasMeta>
       {canvasStats && (
         <EventCanvasStats>
-          <EventCanvasStat
-            title={`${canvasStats.totalUsersInvolved.toLocaleString()} total ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"} involved`}
-          >
+          <EventCanvasStat>
             <Users size={16} />
-            <span>{`${canvasStats.totalUsersInvolved.toLocaleString()} ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"}`}</span>
+            {`${canvasStats.totalUsersInvolved.toLocaleString()} ${canvasStats.totalUsersInvolved === 1 ? "user" : "users"}`}
           </EventCanvasStat>
-          <EventCanvasStat
-            title={`${canvasStats.totalPixelsPlaced.toLocaleString()} total ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"} placed`}
-          >
+          <EventCanvasStat>
             <Grip size={16} />
-            <span>{`${canvasStats.totalPixelsPlaced.toLocaleString()} ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"}`}</span>
+            {`${canvasStats.totalPixelsPlaced.toLocaleString()} ${canvasStats.totalPixelsPlaced === 1 ? "pixel" : "pixels"}`}
           </EventCanvasStat>
           <EventCanvasStat
             title={
@@ -178,11 +175,9 @@ export function CanvasPreviewCard({
             }
           >
             <History size={16} />
-            <span>
-              {canvasStats.lastPlacedAt ?
-                dateToRelativeTime(new Date(canvasStats.lastPlacedAt))
-              : "Never"}
-            </span>
+            {canvasStats.lastPlacedAt ?
+              dateToRelativeTime(new Date(canvasStats.lastPlacedAt))
+            : "Never"}
           </EventCanvasStat>
         </EventCanvasStats>
       )}

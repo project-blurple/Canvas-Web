@@ -18,6 +18,7 @@ import {
   SelectedColorProvider,
   SelectedFrameProvider,
 } from "@/contexts";
+import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import serverConfig from "@/config/serverConfig";
 import { AppProviders } from "./providers";
@@ -65,7 +66,11 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
     );
     return response.data;
   } catch (error) {
-    console.error(error);
+    if (isDatabaseUnavailableError(error)) {
+      console.error("Error: Database is unavailable");
+    } else {
+      console.error(error);
+    }
 
     // Fallback in case something goes wrong
     return defaultCanvasInfo;
@@ -82,7 +87,7 @@ const defaultCanvasInfo = {
   eventId: 1,
   webPlacingEnabled: false,
   allColorsGlobal: false,
-  cooldownLength: 0,
+  cooldownDuration: 0,
 } satisfies CanvasInfo;
 
 export default async function RootLayout({

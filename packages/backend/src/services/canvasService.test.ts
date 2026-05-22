@@ -100,7 +100,6 @@ describe("Create Canvas Tests", () => {
         current_emoji_server_id: BigInt(1),
         host_server_id: BigInt(1),
         default_canvas_id: 1,
-        all_colors_global: false,
       },
     });
     await prisma.$executeRawUnsafe(
@@ -161,7 +160,7 @@ describe("Edit Canvas Tests", () => {
       name: "Edited Canvas",
       isLocked: true,
       allColorsGlobal: true,
-      cooldownLength: 45,
+      cooldownDuration: 45,
     });
 
     const canvas = await getCanvasInfo(1);
@@ -169,17 +168,20 @@ describe("Edit Canvas Tests", () => {
       id: 1,
       name: "Edited Canvas",
       isLocked: true,
+      allColorsGlobal: true,
     });
 
     const updatedCanvas = await prisma.canvas.findFirst({
       where: { id: 1 },
       select: {
         cooldown_length: true,
+        all_colors_global: true,
       },
     });
 
     expect(updatedCanvas).toMatchObject({
       cooldown_length: 45,
+      all_colors_global: true,
     });
   });
 });

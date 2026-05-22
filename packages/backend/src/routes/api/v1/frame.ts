@@ -1,16 +1,17 @@
 import { Router } from "express";
 import config from "@/config";
-import { ApiError } from "@/errors";
 import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
-import { parseCanvasId } from "@/models/canvas.models";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { CanvasIdParamModel } from "@/models/canvas.models";
 import {
+  CreateFrameBodyModel,
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
-  type FrameIdParam,
-  FrameOwnerParamModel,
-  parseFrameId,
+  FrameIdParamModel,
 } from "@/models/frame.models";
+import { UserCanvasParamModel } from "@/models/pixel.models";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import {
   assertMaxOwnerFramesNotExceeded,
@@ -22,49 +23,42 @@ import {
   getFramesByUserId,
 } from "@/services/frameService";
 import { normalizeBounds } from "@/utils";
-import { assertZodSuccess } from "@/utils/models";
 
-export const frameRouter = Router();
+export const frameRouter = typedRouter(Router());
 
-frameRouter.get("/:frameId", async (req, res) => {
-  try {
+frameRouter.get(
+  "/:frameId",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
     const frame = await getFrameById(req.params.frameId);
     res.status(200).json(frame);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-frameRouter.get("/user/:userId/:canvasId", async (req, res) => {
-  try {
+frameRouter.get(
+  "/user/:userId/:canvasId",
+  validate({ params: UserCanvasParamModel }),
+  async (req, res) => {
     const frames = await getFramesByUserId(
       req.params.userId,
-      await parseCanvasId(req.params),
+      req.params.canvasId,
     );
     res.status(200).json({
       data: frames,
       hasReachedMaxFrames: frames.length >= config.frames.maxAllowedUser,
     });
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-frameRouter.get("/guilds/:canvasId", async (req, res) => {
-  try {
-    const queryResult = await FrameGuildIdsQueryModel.safeParseAsync(req.query);
-    assertZodSuccess(
-      queryResult,
-      "Invalid query parameters. Expected guildIds as a string or string array",
-    );
-
-    const frames = await getFramesByGuildIds(
-      queryResult.data.guildIds,
-      await parseCanvasId(req.params),
-    );
+frameRouter.get(
+  "/guilds/:canvasId",
+  validate({ params: CanvasIdParamModel, query: FrameGuildIdsQueryModel }),
+  async (req, res) => {
+    const { guildIds } = req.query;
+    const frames = await getFramesByGuildIds(guildIds, req.params.canvasId);
 
     const hasReachedMaxFramesMap: Record<string, boolean> = {};
-    for (const guildId of queryResult.data.guildIds) {
+    for (const guildId of guildIds) {
       const frameCount = frames.reduce((count, frame) => {
         if (frame.owner.guild.guild_id === guildId) count++;
         return count;
@@ -77,111 +71,83 @@ frameRouter.get("/guilds/:canvasId", async (req, res) => {
       data: frames,
       hasReachedMaxFrames: hasReachedMaxFramesMap,
     });
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-frameRouter.put<FrameIdParam>(
+frameRouter.put(
   "/:frameId/edit",
   frameMutationLimiter,
   requireLoggedIn,
+  validate({ params: FrameIdParamModel, body: FrameDataParamModel }),
   async (req, res) => {
-    try {
-      assertLoggedIn(req);
+    assertLoggedIn(req);
 
-      const [frameId, bodyQueryResult] = await Promise.all([
-        parseFrameId(req.params),
-        FrameDataParamModel.safeParseAsync(req.body),
-      ]);
-      assertZodSuccess(bodyQueryResult);
-
-      const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
-
-      const frame = await withDiscordAccessToken(
-        req.session,
-        async (accessToken) =>
-          await editFrame(
-            req.user,
-            accessToken,
-            frameId,
-            bodyQueryResult.data.name,
-            x0,
-            y0,
-            x1,
-            y1,
-          ),
-      );
-      res.status(200).json(frame);
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    const { x0, y0, x1, y1 } = normalizeBounds(req.body);
+    const frame = await withDiscordAccessToken(
+      req.session,
+      async (accessToken) =>
+        await editFrame(
+          req.user,
+          accessToken,
+          req.params.frameId,
+          req.body.name,
+          x0,
+          y0,
+          x1,
+          y1,
+        ),
+    );
+    res.status(200).json(frame);
   },
 );
 
-frameRouter.delete<FrameIdParam>(
+frameRouter.delete(
   "/:frameId/delete",
   frameMutationLimiter,
   requireLoggedIn,
+  validate({ params: FrameIdParamModel }),
   async (req, res) => {
-    try {
-      assertLoggedIn(req);
+    assertLoggedIn(req);
 
-      const frameId = await parseFrameId(req.params);
-
-      await withDiscordAccessToken(req.session, async (accessToken) =>
-        deleteFrame(req.user, accessToken, frameId),
-      );
-      res.status(204).end();
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    await withDiscordAccessToken(req.session, async (accessToken) =>
+      deleteFrame(req.user, accessToken, req.params.frameId),
+    );
+    res.status(204).end();
   },
 );
 
-frameRouter.post<FrameIdParam>(
+frameRouter.post(
   "/",
   frameMutationLimiter,
   requireLoggedIn,
+  validate({ body: CreateFrameBodyModel }),
   async (req, res) => {
-    try {
-      assertLoggedIn(req);
+    assertLoggedIn(req);
 
-      const [canvasId, bodyQueryResult, ownerQueryResult] = await Promise.all([
-        parseCanvasId(req.body),
-        FrameDataParamModel.safeParseAsync(req.body),
-        FrameOwnerParamModel.safeParseAsync(req.body),
-      ]);
-      assertZodSuccess(bodyQueryResult);
-      assertZodSuccess(ownerQueryResult);
+    const { canvasId, owner, name } = req.body;
 
-      await assertMaxOwnerFramesNotExceeded({
-        canvasId,
-        ownerId: ownerQueryResult.data.ownerId,
-        isGuildOwned: ownerQueryResult.data.isGuildOwned,
-      });
+    await assertMaxOwnerFramesNotExceeded({
+      canvasId,
+      owner,
+    });
 
-      const { x0, y0, x1, y1 } = normalizeBounds(bodyQueryResult.data);
+    const { x0, y0, x1, y1 } = normalizeBounds(req.body);
 
-      const frame = await withDiscordAccessToken(
-        req.session,
-        async (accessToken) =>
-          await createFrame(
-            req.user,
-            accessToken,
-            canvasId,
-            bodyQueryResult.data.name,
-            ownerQueryResult.data.ownerId,
-            ownerQueryResult.data.isGuildOwned,
-            x0,
-            y0,
-            x1,
-            y1,
-          ),
-      );
-      res.status(201).json(frame);
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    const frame = await withDiscordAccessToken(
+      req.session,
+      async (accessToken) =>
+        await createFrame(
+          req.user,
+          accessToken,
+          canvasId,
+          name,
+          owner,
+          x0,
+          y0,
+          x1,
+          y1,
+        ),
+    );
+    res.status(201).json(frame);
   },
 );

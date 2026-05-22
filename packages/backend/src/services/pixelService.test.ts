@@ -1,12 +1,12 @@
 import { fail } from "node:assert";
 import { prisma } from "@/client";
-import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
   seedBlacklist,
   seedCanvases,
   seedColors,
   seedEvents,
+  seedGuilds,
   seedUsers,
 } from "@/test";
 import { getCanvasPng } from "./canvasService";
@@ -90,24 +90,69 @@ describe("Pixel Validation Tests", () => {
 });
 
 describe("Color Validation Tests", () => {
+  const emptyGuildIds: ReadonlySet<string> = new Set<string>();
+
   beforeEach(async () => {
+    await seedEvents();
+    await seedCanvases();
     await seedColors();
+    await seedGuilds();
   });
 
   it("Resolves valid color", async () => {
-    return expect(validateColor(1)).resolves.not.toThrow();
+    return expect(validateColor(1, 1, emptyGuildIds)).resolves.not.toThrow();
   });
 
-  it("Rejects color that is not global", async () => {
-    if (config.allColorsGlobal) {
-      return expect(validateColor(3)).resolves.toMatchObject({ id: 3 });
-    }
+  it("Rejects a non-global color when no participation exists for this event", async () => {
+    return expect(validateColor(3, 1, emptyGuildIds)).rejects.toThrow(
+      ForbiddenError,
+    );
+  });
 
-    return expect(validateColor(3)).rejects.toThrow(ForbiddenError);
+  it("Rejects a non-global color when the user is not in the partner guild", async () => {
+    await prisma.participation.create({
+      data: { color_id: 3, event_id: 1, guild_id: 1n },
+    });
+    return expect(validateColor(3, 1, emptyGuildIds)).rejects.toThrow(
+      ForbiddenError,
+    );
+  });
+
+  it("Resolves a non-global color when the canvas has all_colors_global=true regardless of guild membership", async () => {
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { all_colors_global: true },
+    });
+
+    return expect(validateColor(3, 1, emptyGuildIds)).resolves.toMatchObject({
+      id: 3,
+    });
+  });
+
+  it("Resolves a non-global color when the user is in the partner guild", async () => {
+    await prisma.participation.create({
+      data: { color_id: 3, event_id: 1, guild_id: 1n },
+    });
+    return expect(validateColor(3, 1, new Set(["1"]))).resolves.toMatchObject({
+      id: 3,
+    });
+  });
+
+  it("Rejects a non-global color when the canvas has no event", async () => {
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { event_id: null },
+    });
+
+    return expect(validateColor(3, 1, new Set(["1"]))).rejects.toThrow(
+      ForbiddenError,
+    );
   });
 
   it("Rejects invalid color", async () => {
-    return expect(validateColor(99)).rejects.toThrow(NotFoundError);
+    return expect(validateColor(99, 1, emptyGuildIds)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });
 

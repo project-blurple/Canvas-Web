@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import { CalendarRange, Radio } from "lucide-react";
-import CanvasAnimatedIcon from "@/components/CanvasAnimatedIcon";
+import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import {
@@ -59,11 +59,12 @@ const EventStatCard = styled("div")`
   font-size: 0.875rem;
   gap: 0.25rem;
   padding: 1rem;
+`;
 
-  & > h1 {
-    font-size: 1.25rem;
-    font-weight: 600;
-  }
+const EventStatCardValue = styled("p")`
+  font-size: 1.25rem;
+  font-stretch: 125%;
+  font-weight: 600;
 `;
 
 const EventCanvasList = styled("div")`
@@ -104,11 +105,13 @@ function AdminEventTab() {
     <AdminEventTabBlock>
       <EventInfoWrapper>
         {isLoading ?
-          <CanvasAnimatedIcon
+          <CanvasIcon
+            loading
+            size={64}
             style={{
               color: "var(--discord-blurple)",
-              height: "64px",
-              opacity: 0.5,
+              margin: "auto",
+              opacity: 0.55,
             }}
           />
         : !selectedEvent ?
@@ -127,17 +130,23 @@ function AdminEventTab() {
             <EventStatWrapper>
               <EventStatCard>
                 <span>Guilds</span>
-                <h1>{participatingGuildCount.toLocaleString()}</h1>
+                <EventStatCardValue>
+                  {participatingGuildCount.toLocaleString()}
+                </EventStatCardValue>
               </EventStatCard>
               {eventStats && (
                 <>
                   <EventStatCard>
                     <span>Users</span>
-                    <h1>{eventStats.totalUsersInvolved.toLocaleString()}</h1>
+                    <EventStatCardValue>
+                      {eventStats.totalUsersInvolved.toLocaleString()}
+                    </EventStatCardValue>
                   </EventStatCard>
                   <EventStatCard>
                     <span>Pixels placed</span>
-                    <h1>{eventStats.totalPixelsPlaced.toLocaleString()}</h1>
+                    <EventStatCardValue>
+                      {eventStats.totalPixelsPlaced.toLocaleString()}
+                    </EventStatCardValue>
                   </EventStatCard>
                 </>
               )}

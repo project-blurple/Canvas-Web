@@ -1,22 +1,8 @@
 import z from "zod";
-import { assertZodSuccess } from "@/utils/models";
 
-const NoticeIdParamModel = z.object({
+export const NoticeIdParamModel = z.object({
   noticeId: z.coerce.number().int().positive(),
 });
-
-export interface NoticeIdParam {
-  noticeId: number;
-}
-
-export async function parseNoticeId(
-  params: NoticeIdParam,
-): Promise<NoticeIdParam["noticeId"]> {
-  const result = await NoticeIdParamModel.safeParseAsync(params);
-  assertZodSuccess(result, `${params.noticeId} is not a valid notice ID`);
-
-  return result.data.noticeId;
-}
 
 export const ModifyNoticeBodyModel = z
   .object({

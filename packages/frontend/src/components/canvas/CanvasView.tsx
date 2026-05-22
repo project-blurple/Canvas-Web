@@ -35,7 +35,7 @@ import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
-import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
+import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import {
@@ -1311,10 +1311,11 @@ export default function CanvasView({
         </FullscreenPanelOverlay>
       )}
       {isLoading && (
-        <CanvasAnimatedIcon
+        <CanvasIcon
+          loading
+          size={128}
           style={{
             color: "var(--discord-blurple)",
-            height: "100px",
             opacity: 0.8,
             position: "absolute",
           }}

@@ -25,12 +25,17 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (
-      data: Partial<Pick<CanvasInfo, "name" | "isLocked" | "cooldownLength">>,
+    mutationFn: async (
+      data: Partial<
+        Pick<
+          CanvasInfo,
+          "name" | "isLocked" | "cooldownDuration" | "allColorsGlobal"
+        >
+      >,
     ) => {
       const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}`;
 
-      return axios.put(requestUrl, data, {
+      return await axios.put(requestUrl, data, {
         withCredentials: true,
       });
     },
@@ -46,7 +51,7 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
 }
 
 type CreateCanvasInput = Partial<
-  Omit<CanvasInfo, "eventId" | "webPlacingEnabled" | "allColorsGlobal">
+  Omit<CanvasInfo, "eventId" | "webPlacingEnabled">
 >;
 
 export function useCreateCanvas() {
