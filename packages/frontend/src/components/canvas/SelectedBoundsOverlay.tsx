@@ -178,7 +178,7 @@ function resizeBoundsFromHandle({
   };
 }
 
-function renderOverlayShades({
+export function RenderOverlayShades({
   canvasWidth,
   canvasHeight,
   overlayCutoutPath,
@@ -197,12 +197,14 @@ function renderOverlayShades({
         height={canvasHeight}
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       >
-        <path
-          d={overlayCutoutPath}
-          fill="#000000"
-          fillOpacity={0.5}
-          fillRule="evenodd"
-        />
+        {overlayCutoutPath && (
+          <path
+            d={overlayCutoutPath}
+            fill="#000000"
+            fillOpacity={0.5}
+            fillRule="evenodd"
+          />
+        )}
       </OverlayShade>
       <OverlayDesaturateShade
         aria-hidden
@@ -210,18 +212,20 @@ function renderOverlayShades({
         height={canvasHeight}
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       >
-        <path
-          d={overlayCutoutPath}
-          fill="oklch(32% 0 0deg)"
-          fillRule="evenodd"
-          fillOpacity={0.5}
-        />
+        {overlayCutoutPath && (
+          <path
+            d={overlayCutoutPath}
+            fill="oklch(32% 0 0deg)"
+            fillRule="evenodd"
+            fillOpacity={0.5}
+          />
+        )}
       </OverlayDesaturateShade>
     </>
   );
 }
 
-function renderEdgeHitTargets({
+function RenderEdgeHitTargets({
   canEdit,
   edgeThickness,
   edges,
@@ -271,7 +275,7 @@ function renderEdgeHitTargets({
   ));
 }
 
-function renderCornerHitTargets({
+function RenderCornerHitTargets({
   canEdit,
   corners,
   handleHandlePointerDown,
@@ -317,7 +321,7 @@ function renderCornerHitTargets({
   });
 }
 
-function renderCornerReticles({
+function RenderCornerReticles({
   corners,
   reticleScale,
   reticleSize,
@@ -354,7 +358,7 @@ function renderCornerReticles({
   ));
 }
 
-function renderEdgeReticles({
+function RenderEdgeReticles({
   edges,
   reticleScale,
   reticleSize,
@@ -612,37 +616,37 @@ export default function SelectedBoundsOverlay({
 
   return (
     <>
-      {renderOverlayShades({
-        canvasWidth,
-        canvasHeight,
-        overlayCutoutPath,
-      })}
-      {renderEdgeHitTargets({
-        canEdit,
-        edgeThickness: EDGE_HIT_TARGET_THICKNESS / zoom,
-        edges: selectedBoundsEdges,
-        handleHandlePointerDown,
-        handleHandlePointerMove,
-        handleHandlePointerUp,
-      })}
-      {renderCornerHitTargets({
-        canEdit,
-        corners: selectedBoundsCorners,
-        handleHandlePointerDown,
-        handleHandlePointerMove,
-        handleHandlePointerUp,
-        zoom,
-      })}
-      {renderCornerReticles({
-        corners: selectedBoundsCorners,
-        reticleScale,
-        reticleSize,
-      })}
-      {renderEdgeReticles({
-        edges: selectedBoundsEdgeReticles,
-        reticleScale,
-        reticleSize,
-      })}
+      <RenderOverlayShades
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+        overlayCutoutPath={overlayCutoutPath}
+      />
+      <RenderEdgeHitTargets
+        canEdit={canEdit}
+        edgeThickness={EDGE_HIT_TARGET_THICKNESS / zoom}
+        edges={selectedBoundsEdges}
+        handleHandlePointerDown={handleHandlePointerDown}
+        handleHandlePointerMove={handleHandlePointerMove}
+        handleHandlePointerUp={handleHandlePointerUp}
+      />
+      <RenderCornerHitTargets
+        canEdit={canEdit}
+        corners={selectedBoundsCorners}
+        handleHandlePointerDown={handleHandlePointerDown}
+        handleHandlePointerMove={handleHandlePointerMove}
+        handleHandlePointerUp={handleHandlePointerUp}
+        zoom={zoom}
+      />
+      <RenderCornerReticles
+        corners={selectedBoundsCorners}
+        reticleScale={reticleScale}
+        reticleSize={reticleSize}
+      />
+      <RenderEdgeReticles
+        edges={selectedBoundsEdgeReticles}
+        reticleScale={reticleScale}
+        reticleSize={reticleSize}
+      />
     </>
   );
 }
