@@ -68,8 +68,10 @@ const CanvasHeader = styled("h1")`
 `;
 
 const Table = styled("table")`
-  border-collapse: separate;
-  border-spacing: 2rem 0.5rem;
+  & td,
+  & th {
+    padding: 0.25rem 1rem;
+  }
 `;
 
 const CanvasDimensions = styled("code")`
