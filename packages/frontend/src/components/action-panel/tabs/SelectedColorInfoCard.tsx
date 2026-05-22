@@ -98,8 +98,7 @@ export default function ColorInfoCard({
             </RecheckMembershipsLink>
           </Subtitle>
         : <Subtitle>
-            Exclusive to {guildNameNode}. <a href="/signin">Log in</a> to verify
-            your membership
+            Exclusive to {guildNameNode}. <a href="/signin">Log in</a> to use.
           </Subtitle>)}
       {partnerGated && <RecheckStatusLine controller={recheckMutation} />}
     </Wrapper>
