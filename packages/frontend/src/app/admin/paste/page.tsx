@@ -35,6 +35,10 @@ import {
 const AdminPasteTabBlock = styled("section")`
   display: block;
   width: 100%;
+
+  > main {
+    padding-top: 0;
+  }
 `;
 
 const PasteWrapper = styled(CanvasWrapper)`
@@ -43,8 +47,11 @@ const PasteWrapper = styled(CanvasWrapper)`
 
     ${({ theme }) => theme.breakpoints.up("lg")} {
       --action-panel-width: 50rem;
+      --column-gap: 2rem;
     }
   }
+
+  column-gap: 1rem;
 `;
 
 const StyledButton = styled(Button)`
@@ -397,11 +404,31 @@ function AdminPasteTab() {
     setShowOverlay,
     setTopLeftCoordinates: setContextTopLeftCoordinates,
   } = useImageOverlayContext();
+  const [pasteWrapperMinHeight, setPasteWrapperMinHeight] = useState<string>();
+
+  const pasteWrapperRef = useRef<HTMLDivElement>(null);
 
   const [topLeftCoordinates, setTopLeftCoordinates] = useState<Point>({
     x: canvas.startCoordinates[0],
     y: canvas.startCoordinates[1],
   });
+
+  useEffect(() => {
+    const updatePasteWrapperHeight = () => {
+      const pasteWrapper = pasteWrapperRef.current;
+      if (!pasteWrapper) return;
+
+      const { top } = pasteWrapper.getBoundingClientRect();
+      setPasteWrapperMinHeight(`${Math.max(window.innerHeight - top, 0)}px`);
+    };
+
+    updatePasteWrapperHeight();
+    window.addEventListener("resize", updatePasteWrapperHeight);
+
+    return () => {
+      window.removeEventListener("resize", updatePasteWrapperHeight);
+    };
+  }, []);
 
   useEffect(
     () => () => {
@@ -448,7 +475,10 @@ function AdminPasteTab() {
 
   return (
     <AdminPasteTabBlock>
-      <PasteWrapper>
+      <PasteWrapper
+        ref={pasteWrapperRef}
+        style={{ minHeight: pasteWrapperMinHeight }}
+      >
         <CanvasView
           actionPanel={actionPanel}
           canvasLabel="Admin paste"
