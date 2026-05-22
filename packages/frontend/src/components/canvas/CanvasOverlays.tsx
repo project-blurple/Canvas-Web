@@ -17,7 +17,8 @@ const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 export default function CanvasOverlays() {
   const { canvas } = useCanvasContext();
   const { zoom } = useCanvasViewContext();
-  const { imageOverlay } = useImageOverlayContext();
+  const { imageOverlay, showOverlay: showImageOverlay } =
+    useImageOverlayContext();
   const {
     canEdit,
     minHeight,
@@ -51,7 +52,7 @@ export default function CanvasOverlays() {
           zoom={zoom}
         />
       )}
-      {imageOverlay && (
+      {showImageOverlay && imageOverlay && (
         <ImageOverlay
           alt={imageOverlay.alt}
           canvasHeight={canvas.height}

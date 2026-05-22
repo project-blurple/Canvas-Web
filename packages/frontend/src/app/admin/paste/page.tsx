@@ -415,29 +415,16 @@ function AdminPasteTab() {
 
   return (
     <AdminPasteTabBlock>
-      <ImageOverlayProvider
-        imageOverlay={
-          uploadedImage ?
-            {
-              file: uploadedImage.file,
-              left: topLeftCoordinates.x - canvas.startCoordinates[0],
-              top: topLeftCoordinates.y - canvas.startCoordinates[1],
-              alt: `Paste preview: ${uploadedImage.file.name}`,
-            }
-          : null
-        }
-      >
-        <PasteWrapper>
-          <CanvasView
-            actionPanel={actionPanel}
-            canvasLabel="Admin paste"
-            showInvite={false}
-            showNotices={false}
-            showReticle={false}
-          />
-          <SlideableDrawer>{actionPanel}</SlideableDrawer>
-        </PasteWrapper>
-      </ImageOverlayProvider>
+      <PasteWrapper>
+        <CanvasView
+          actionPanel={actionPanel}
+          canvasLabel="Admin paste"
+          showInvite={false}
+          showNotices={false}
+          showReticle={false}
+        />
+        <SlideableDrawer>{actionPanel}</SlideableDrawer>
+      </PasteWrapper>
     </AdminPasteTabBlock>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useState } from "react";
 
 interface ImageOverlayState {
   alt: string;
@@ -11,23 +11,34 @@ interface ImageOverlayState {
 
 interface ImageOverlayContextType {
   imageOverlay: ImageOverlayState | null;
+  showOverlay: boolean;
+  setImageOverlay: (overlay: ImageOverlayState | null) => void;
+  setShowOverlay: (show: boolean) => void;
 }
 
 const ImageOverlayContext = createContext<ImageOverlayContextType>({
   imageOverlay: null,
+  showOverlay: false,
+  setImageOverlay: () => {},
+  setShowOverlay: () => {},
 });
 
 interface ImageOverlayProviderProps {
   children: React.ReactNode;
-  imageOverlay: ImageOverlayState | null;
 }
 
 export const ImageOverlayProvider = ({
   children,
-  imageOverlay,
 }: ImageOverlayProviderProps) => {
+  const [imageOverlay, setImageOverlay] = useState<ImageOverlayState | null>(
+    null,
+  );
+  const [showOverlay, setShowOverlay] = useState(false);
+
   return (
-    <ImageOverlayContext.Provider value={{ imageOverlay }}>
+    <ImageOverlayContext.Provider
+      value={{ imageOverlay, setImageOverlay, showOverlay, setShowOverlay }}
+    >
       {children}
     </ImageOverlayContext.Provider>
   );

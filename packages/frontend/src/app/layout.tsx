@@ -13,6 +13,7 @@ import {
   AuthProvider,
   CanvasProvider,
   CanvasViewProvider,
+  ImageOverlayProvider,
   QueryClientProvider,
   SelectedBoundsProvider,
   SelectedColorProvider,
@@ -119,9 +120,11 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
               <CanvasProvider mainCanvasInfo={canvasInfo}>
                 <ActionPanelProvider>
                   <CanvasViewProvider>
-                    <SelectedBoundsProvider>
-                      <AppProviders>{children}</AppProviders>
-                    </SelectedBoundsProvider>
+                    <ImageOverlayProvider>
+                      <SelectedBoundsProvider>
+                        <AppProviders>{children}</AppProviders>
+                      </SelectedBoundsProvider>
+                    </ImageOverlayProvider>
                   </CanvasViewProvider>
                 </ActionPanelProvider>
               </CanvasProvider>
