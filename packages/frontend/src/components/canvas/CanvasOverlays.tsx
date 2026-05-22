@@ -53,10 +53,12 @@ export default function CanvasOverlays() {
       )}
       {imageOverlay && (
         <ImageOverlay
+          alt={imageOverlay.alt}
+          canvasHeight={canvas.height}
+          canvasWidth={canvas.width}
           file={imageOverlay.file}
           left={imageOverlay.left}
           top={imageOverlay.top}
-          alt={imageOverlay.alt}
         />
       )}
     </div>

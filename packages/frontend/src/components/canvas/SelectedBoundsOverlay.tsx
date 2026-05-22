@@ -181,11 +181,11 @@ function resizeBoundsFromHandle({
 export function RenderOverlayShades({
   canvasWidth,
   canvasHeight,
-  overlayCutoutPath,
+  overlayCutoutPath = null,
 }: {
   canvasWidth: number;
   canvasHeight: number;
-  overlayCutoutPath: string | null;
+  overlayCutoutPath?: string | null;
 }) {
   if (!overlayCutoutPath) return null;
 

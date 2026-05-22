@@ -2,6 +2,7 @@
 
 import { styled } from "@mui/material";
 import { useEffect, useState } from "react";
+import { RenderOverlayShades } from "./SelectedBoundsOverlay";
 
 const OverlayImage = styled("img")`
   image-rendering: pixelated;
@@ -9,17 +10,21 @@ const OverlayImage = styled("img")`
 `;
 
 interface ImageOverlayProps {
+  alt?: string;
+  canvasHeight: number;
+  canvasWidth: number;
   file: File | null;
   left: number;
   top: number;
-  alt?: string;
 }
 
 export default function ImageOverlay({
+  alt = "Overlay image",
+  canvasHeight,
+  canvasWidth,
   file,
   left,
   top,
-  alt = "Overlay image",
 }: ImageOverlayProps) {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -39,5 +44,13 @@ export default function ImageOverlay({
 
   if (!imageUrl) return null;
 
-  return <OverlayImage alt={alt} src={imageUrl} style={{ left, top }} />;
+  return (
+    <>
+      <OverlayImage alt={alt} src={imageUrl} style={{ left, top }} />
+      <RenderOverlayShades
+        canvasWidth={canvasWidth}
+        canvasHeight={canvasHeight}
+      />
+    </>
+  );
 }
