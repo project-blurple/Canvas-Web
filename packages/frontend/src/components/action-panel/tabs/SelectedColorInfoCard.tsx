@@ -1,6 +1,6 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useCanvasContext } from "@/contexts";
+import { useAuthContext, useCanvasContext } from "@/contexts";
 import {
   RecheckMembershipsLink,
   RecheckMembershipsStatus,
@@ -60,6 +60,7 @@ export default function ColorInfoCard({
   ...props
 }: ColorInfoCardProps) {
   const { canvas } = useCanvasContext();
+  const { user } = useAuthContext();
   const recheckMutation = useRecheckMemberships();
 
   if (!color) return <Wrapper>No color selected</Wrapper>;
@@ -90,12 +91,15 @@ export default function ColorInfoCard({
           <Subtitle>
             You can use {colorName} in {guildNameNode}
           </Subtitle>
-        : <Subtitle>
+        : user ?
+          <Subtitle>
             Exclusive to {guildNameNode}. Already joined?{" "}
             <RecheckMembershipsLink controller={recheckMutation}>
               Refresh here
             </RecheckMembershipsLink>
-            .
+          </Subtitle>
+        : <Subtitle>
+            Exclusive to {guildNameNode}. <a href="/signin">Log in</a> to use.
           </Subtitle>)}
       {partnerGated && <RecheckStatusLine controller={recheckMutation} />}
     </Wrapper>
