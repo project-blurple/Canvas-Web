@@ -1,11 +1,13 @@
+import type { Cooldown, DiscordUserProfile } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import { ApiError } from "@/errors";
+import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
 import {
-  type CanvasIdParam,
+  CanvasIdParamModel,
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
-  parseCanvasId,
 } from "@/models/canvas.models";
 import {
   type CachedCanvas,
@@ -19,104 +21,87 @@ import {
   getCurrentCanvasInfo,
   unlockedCanvasToPng,
 } from "@/services/canvasService";
-import { assertZodSuccess } from "@/utils/models";
+import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
 
-export const canvasRouter = Router();
+export const canvasRouter = typedRouter(Router());
 
 canvasRouter.use("/:canvasId/pixel", pixelRouter);
 
 canvasRouter.get("/", async (_req, res) => {
-  try {
-    const canvases = await getCanvases();
-    res.status(200).json(canvases);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
+  const canvases = await getCanvases();
+  res.status(200).json(canvases);
 });
 
 canvasRouter.get("/current/info", async (_req, res) => {
-  try {
-    const canvasInfo = await getCurrentCanvasInfo();
-    res.status(200).json(canvasInfo);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
+  const canvasInfo = await getCurrentCanvasInfo();
+  res.status(200).json(canvasInfo);
 });
 
-canvasRouter.get("/:canvasId/info", async (req, res) => {
-  try {
-    const canvasId = await parseCanvasId(req.params);
-    const canvasInfo = await getCanvasInfo(canvasId);
-
+canvasRouter.get(
+  "/:canvasId/info",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const canvasInfo = await getCanvasInfo(req.params.canvasId);
     res.status(200).json(canvasInfo);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
 canvasRouter.get("/current", async (_req, res) => {
-  try {
-    const [canvasId, cachedCanvas] = await getCurrentCanvas();
-    sendCachedCanvas(res, canvasId, cachedCanvas);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
+  const [canvasId, cachedCanvas] = await getCurrentCanvas();
+  sendCachedCanvas(res, canvasId, cachedCanvas);
 });
 
-canvasRouter.get("/:canvasId", async (req, res) => {
-  try {
-    const canvasId = await parseCanvasId(req.params);
-    const cachedCanvas = await getCanvasPng(canvasId);
+canvasRouter.get(
+  "/:canvasId",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const cachedCanvas = await getCanvasPng(req.params.canvasId);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+  },
+);
 
-    sendCachedCanvas(res, canvasId, cachedCanvas);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+canvasRouter.get(
+  "/:canvasId/cooldown/@me",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const profile = req.user as DiscordUserProfile;
 
-canvasRouter.post("/", requireCanvasAdmin, async (req, res) => {
-  try {
-    const canvasData = await CreateCanvasBodyModel.safeParseAsync(req.body);
-    assertZodSuccess(canvasData);
+    if (!profile?.id) {
+      throw new UnauthorizedError("User is not authenticated");
+    }
 
-    const canvas = await createCanvas({
-      name: canvasData.data.name,
-      width: canvasData.data.width,
-      height: canvasData.data.height,
-      startCoordinates: canvasData.data.startCoordinates,
-      cooldownLength: canvasData.data.cooldownLength,
-    });
+    const cooldownEndTime = await getUserCanvasCooldown(
+      req.params.canvasId,
+      BigInt(profile.id),
+    );
 
+    res.status(200).json({
+      cooldownEndTime: cooldownEndTime ?? undefined,
+    } satisfies Cooldown);
+  },
+);
+
+canvasRouter.post(
+  "/",
+  requireCanvasAdmin,
+  validate({ body: CreateCanvasBodyModel }),
+  async (req, res) => {
+    const canvas = await createCanvas(req.body);
     res.status(201).json(canvas);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-canvasRouter.put<CanvasIdParam>(
+canvasRouter.put(
   "/:canvasId",
   requireCanvasAdmin,
+  validate({ params: CanvasIdParamModel, body: EditCanvasBodyModel }),
   async (req, res) => {
-    try {
-      const [canvasId, canvasData] = await Promise.all([
-        parseCanvasId(req.params),
-        EditCanvasBodyModel.safeParseAsync(req.body),
-      ]);
-
-      assertZodSuccess(canvasData);
-
-      const canvas = await editCanvas({
-        canvasId,
-        name: canvasData.data.name,
-        cooldownLength: canvasData.data.cooldownLength,
-        isLocked: canvasData.data.isLocked,
-      });
-
-      res.status(200).json(canvas);
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    const canvas = await editCanvas({
+      canvasId: req.params.canvasId,
+      ...req.body,
+    });
+    res.status(200).json(canvas);
   },
 );
 

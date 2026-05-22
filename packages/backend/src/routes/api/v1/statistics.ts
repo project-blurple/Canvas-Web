@@ -1,37 +1,57 @@
 import { Router } from "express";
-import { ApiError } from "@/errors";
-import { parseCanvasId } from "@/models/canvas.models";
-import { LeaderboardQueryModel } from "@/models/pixel.models";
-import { getLeaderboard, getUserStats } from "@/services/statisticsService";
-import { assertZodSuccess } from "@/utils/models";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { CanvasIdParamModel } from "@/models/canvas.models";
+import { EventIdParamModel } from "@/models/event.models";
+import {
+  LeaderboardQueryModel,
+  UserCanvasParamModel,
+} from "@/models/pixel.models";
+import {
+  getCanvasStatisticsSummary,
+  getEventStatisticsSummary,
+  getLeaderboard,
+  getUserStats,
+} from "@/services/statisticsService";
 
-export const statisticsRouter = Router();
+export const statisticsRouter = typedRouter(Router());
 
-statisticsRouter.get("/user/:userId/:canvasId", async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const canvasId = await parseCanvasId({ canvasId: req.params.canvasId });
-    const stats = await getUserStats(userId, canvasId);
+statisticsRouter.get(
+  "/user/:userId/:canvasId",
+  validate({ params: UserCanvasParamModel }),
+  async (req, res) => {
+    const stats = await getUserStats(req.params.userId, req.params.canvasId);
     res.status(200).json(stats);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-statisticsRouter.get("/leaderboard/:canvasId", async (req, res) => {
-  try {
-    const [canvasId, queryParams] = await Promise.all([
-      parseCanvasId(req.params),
-      LeaderboardQueryModel.safeParseAsync(req.query),
-    ]);
-
-    assertZodSuccess(queryParams);
-
-    const { page, size } = queryParams.data;
-    const leaderboard = await getLeaderboard(canvasId, page, size);
-
+statisticsRouter.get(
+  "/leaderboard/:canvasId",
+  validate({ params: CanvasIdParamModel, query: LeaderboardQueryModel }),
+  async (req, res) => {
+    const leaderboard = await getLeaderboard(
+      req.params.canvasId,
+      req.query.page,
+      req.query.size,
+    );
     res.status(200).json(leaderboard);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
+
+statisticsRouter.get(
+  "/summary/canvas/:canvasId",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const summary = await getCanvasStatisticsSummary(req.params.canvasId);
+    res.status(200).json(summary);
+  },
+);
+
+statisticsRouter.get(
+  "/summary/event/:eventId",
+  validate({ params: EventIdParamModel }),
+  async (req, res) => {
+    const summary = await getEventStatisticsSummary(req.params.eventId);
+    res.status(200).json(summary);
+  },
+);

@@ -20,6 +20,8 @@ interface PlacePixelButtonProps extends React.ComponentPropsWithRef<
   cooldownSeconds?: number;
   busy?: boolean;
   isVerbose: boolean;
+  partnerServerJoinRequired?: boolean;
+  partnerServerName?: string | null;
 }
 
 const durationFormat =
@@ -31,6 +33,8 @@ export default function PlacePixelButton({
   "aria-busy": busy,
   cooldownSeconds = 0,
   isVerbose,
+  partnerServerJoinRequired = false,
+  partnerServerName = null,
   ...props
 }: PlacePixelButtonProps) {
   const { user } = useAuthContext();
@@ -52,6 +56,13 @@ export default function PlacePixelButton({
     return (
       <DynamicButton {...props} disabled>
         Sign in to place pixels
+      </DynamicButton>
+    );
+
+  if (partnerServerJoinRequired)
+    return (
+      <DynamicButton {...props} disabled>
+        Join {partnerServerName ?? "the partner server"} to use this color
       </DynamicButton>
     );
 

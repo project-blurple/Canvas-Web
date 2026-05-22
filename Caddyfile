@@ -1,5 +1,5 @@
 # 'backend' and 'frontend' here refer to the docker compose services.
-localhost {
+localhost, canvas.projectblurple.com {
   reverse_proxy /api/* backend:8000
   reverse_proxy /socket.io* backend:8000
   reverse_proxy /* frontend:3000

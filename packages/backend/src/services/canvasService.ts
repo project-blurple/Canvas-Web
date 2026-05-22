@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import type {
+  BlurpleEvent,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
@@ -92,9 +93,12 @@ export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
 /**
  * Retrieves canvas summary info for all canvases.
  *
+ * @param eventId If provided, only canvases for the specified event will be returned
  * @returns The canvas summary info of all canvases
  */
-export async function getCanvases(): Promise<CanvasSummary[]> {
+export async function getCanvases(
+  eventId?: BlurpleEvent["id"],
+): Promise<CanvasSummary[]> {
   const canvases = await prisma.canvas.findMany({
     orderBy: {
       id: "desc",
@@ -103,6 +107,10 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
       id: true,
       name: true,
       event_id: true,
+      locked: true,
+    },
+    where: {
+      event_id: eventId,
     },
   });
 
@@ -110,6 +118,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
     id: canvas.id,
     name: canvas.name,
     eventId: canvas.event_id,
+    isLocked: canvas.locked,
   }));
 }
 
@@ -120,7 +129,7 @@ export async function getCanvases(): Promise<CanvasSummary[]> {
  */
 export async function getCurrentCanvasInfo(): Promise<CanvasInfo> {
   const info = await prisma.info.findFirst({
-    select: { default_canvas_id: true, all_colors_global: true },
+    select: { default_canvas_id: true },
   });
 
   // To get rid of the nullable type from info. This should never happen
@@ -147,6 +156,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
       start_coordinates: true,
       locked: true,
       event_id: true,
+      all_colors_global: true,
     },
     where: {
       id: canvasId,
@@ -169,7 +179,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
     isLocked: canvas.locked,
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
-    allColorsGlobal: config.allColorsGlobal,
+    allColorsGlobal: canvas.all_colors_global,
   };
 }
 
@@ -364,6 +374,7 @@ export async function createCanvas({
   width,
   height,
   startCoordinates = [1, 1],
+  allColorsGlobal = false,
   cooldownLength = 15,
 }: CreateCanvasParams) {
   const currentEventId = await getCurrentEvent();
@@ -377,6 +388,7 @@ export async function createCanvas({
       start_coordinates: startCoordinates,
       locked: true,
       cooldown_length: cooldownLength,
+      all_colors_global: allColorsGlobal,
     },
   });
 
@@ -424,6 +436,7 @@ export async function editCanvas({
   canvasId,
   name,
   isLocked,
+  allColorsGlobal,
   cooldownLength,
 }: EditCanvasParams) {
   const canvas = await prisma.canvas.update({
@@ -434,6 +447,7 @@ export async function editCanvas({
       name,
       locked: isLocked,
       cooldown_length: cooldownLength,
+      all_colors_global: allColorsGlobal,
     },
   });
 

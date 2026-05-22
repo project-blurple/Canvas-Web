@@ -1,6 +1,4 @@
-import "@/utils";
-import express, { type RequestHandler } from "express";
-import request from "supertest";
+import { errorHandler } from "@/middleware/errorHandler";
 import {
   addUsersToBlocklist,
   getBlocklist,
@@ -8,6 +6,9 @@ import {
 } from "@/services/blocklistService";
 import { isCanvasModerator } from "@/services/discordGuildService";
 import { mockAuth } from "@/test/mockAuth";
+import "@/utils";
+import express, { type RequestHandler } from "express";
+import request from "supertest";
 import { blocklistRouter } from "./blocklist";
 
 vi.mock("@/services/blocklistService", () => ({
@@ -41,6 +42,7 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
 
   app.use(setTestRequestState);
   app.use("/api/v1/blocklist", blocklistRouter);
+  app.use(errorHandler);
   return app;
 };
 
@@ -63,7 +65,7 @@ describe("Blocklist route tests", () => {
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const response = await request(app)
       .get("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .expect(200);
 
     expect(response.body).toStrictEqual([
@@ -92,7 +94,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .put("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: ["1", "2"],
       })
@@ -120,7 +122,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: "9",
       })
@@ -149,7 +151,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .put("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: "1",
       })

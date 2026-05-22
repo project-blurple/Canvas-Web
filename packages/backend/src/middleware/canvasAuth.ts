@@ -1,25 +1,28 @@
-import type { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import type { NextFunction, Request, Response } from "express";
-import { ApiError, ForbiddenError, UnauthorizedError } from "@/errors";
+import { ForbiddenError, UnauthorizedError } from "@/errors";
 import {
   isCanvasAdmin,
   isCanvasModerator,
 } from "@/services/discordGuildService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 
-interface AuthenticatedRequest extends Request {
+// biome-ignore lint/suspicious/noExplicitAny: This allows us to pass params to the Request generic that are not strings or string-only arrays
+type AnyRequest = Request<any, any, any, any, any>;
+
+type AuthenticatedRequest<R extends AnyRequest = Request> = R & {
   user: DiscordUserProfile;
-  session: Request["session"] & {
+  session: R["session"] & {
     discordAccessToken: string;
     discordRefreshToken?: string;
     discordTokenExpiresAt?: number;
     discordTokenLifetimeMs?: number;
   };
-}
+};
 
-export function assertLoggedIn(
-  req: Request,
-): asserts req is AuthenticatedRequest {
+export function assertLoggedIn<R extends AnyRequest>(
+  req: R,
+): asserts req is AuthenticatedRequest<R> {
   if (
     !req.user ||
     !(req.session.discordAccessToken || req.session.discordRefreshToken)
@@ -30,20 +33,20 @@ export function assertLoggedIn(
 
 export function requireLoggedIn(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) {
   try {
     assertLoggedIn(req);
     next();
   } catch (error) {
-    ApiError.sendError(res, error);
+    next(error);
   }
 }
 
 export async function requireCanvasModerator(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) {
   try {
@@ -62,13 +65,13 @@ export async function requireCanvasModerator(
 
     next();
   } catch (error) {
-    ApiError.sendError(res, error);
+    next(error);
   }
 }
 
 export async function requireCanvasAdmin(
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ) {
   try {
@@ -87,6 +90,6 @@ export async function requireCanvasAdmin(
 
     next();
   } catch (error) {
-    ApiError.sendError(res, error);
+    next(error);
   }
 }

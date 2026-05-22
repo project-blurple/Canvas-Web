@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { ForbiddenError, UnprocessableError } from "@/errors";
+import { errorHandler } from "@/middleware/errorHandler";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -35,6 +36,8 @@ vi.mock("@/services/discordGuildService", () => ({
   isCanvasAdmin: vi.fn(),
 }));
 
+const TEST_USER_SNOWFLAKE = "123456789012345678";
+
 const endpointCases = [
   {
     name: "create",
@@ -43,8 +46,7 @@ const endpointCases = [
     body: {
       canvasId: 1,
       name: "Frame name",
-      ownerId: "1",
-      isGuildOwned: false,
+      owner: { type: "user", id: TEST_USER_SNOWFLAKE },
       x0: 0,
       y0: 0,
       x1: 10,
@@ -104,6 +106,7 @@ const createApp = (includeAccessToken: boolean) => {
     next();
   });
   app.use("/api/v1/frame", frameRouter);
+  app.use(errorHandler);
   return app;
 };
 
@@ -123,7 +126,7 @@ const sendMutationRequest = (
 const FRAME_MUTATION_LIMIT = 10;
 
 const getRateLimitHeaders = (ipSuffix: string) => ({
-  "X-TestUserId": "1",
+  "Test-User-Id": "1",
   "X-Forwarded-For": `203.0.113.${ipSuffix}`,
 });
 
@@ -158,7 +161,7 @@ describe("Frame mutation route tests", () => {
         app,
         method,
         body,
-      }).set("X-TestUserId", "1");
+      }).set("Test-User-Id", "1");
 
       expect(response.status).toBe(successStatus);
       expect(response.body).toStrictEqual(successBody);
@@ -178,14 +181,13 @@ describe("Frame mutation route tests", () => {
       body: {
         canvasId: 1,
         name: "Frame name",
-        ownerId: "1",
-        isGuildOwned: false,
+        owner: { type: "user", id: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,
         y1: 10,
       },
-    }).set("X-TestUserId", "1");
+    }).set("Test-User-Id", "1");
 
     expect(response.status).toBe(422);
     expect(response.body).toStrictEqual({ message: "Frame limit reached" });
@@ -224,13 +226,41 @@ describe("Frame mutation route tests", () => {
         app,
         method,
         body,
-      }).set("X-TestUserId", "1");
+      }).set("Test-User-Id", "1");
 
       expect(response.status).toBe(403);
       expect(response.body).toStrictEqual({ message: "Forbidden" });
       expect(serviceMock).toHaveBeenCalledTimes(1);
     },
   );
+
+  it("returns 400 when the owner type is system", async () => {
+    const app = createApp(true);
+    const response = await sendMutationRequest("/api/v1/frame", {
+      app,
+      method: "post",
+      body: {
+        canvasId: 1,
+        name: "Frame name",
+        owner: { type: "system", id: TEST_USER_SNOWFLAKE },
+        x0: 0,
+        y0: 0,
+        x1: 10,
+        y1: 10,
+      },
+    }).set(getRateLimitHeaders("30"));
+    expect(response.status).toBe(400);
+    expect(response.body).toStrictEqual({
+      errors: [
+        {
+          code: "custom",
+          path: ["owner", "type"],
+          message: "System-owned frames are not allowed",
+        },
+      ],
+      message: "Invalid request data",
+    });
+  });
 
   describe("rate limit", () => {
     beforeEach(() => {
@@ -295,8 +325,7 @@ describe("Frame mutation route tests", () => {
       const requestBody = {
         canvasId: 1,
         name: "Frame name",
-        ownerId: "1",
-        isGuildOwned: false,
+        owner: { type: "user", id: TEST_USER_SNOWFLAKE },
         x0: 0,
         y0: 0,
         x1: 10,

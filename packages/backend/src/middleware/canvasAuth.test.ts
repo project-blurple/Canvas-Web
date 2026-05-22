@@ -1,7 +1,7 @@
-import type { DiscordUserProfile } from "@blurple-canvas-web/types/src/discordUserProfile";
+import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import type { NextFunction, Request, Response } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, ForbiddenError, UnauthorizedError } from "@/errors";
+import { ForbiddenError, UnauthorizedError } from "@/errors";
 import {
   isCanvasAdmin,
   isCanvasModerator,
@@ -89,46 +89,34 @@ describe("canvasAuth", () => {
   });
 
   describe("requireLoggedIn", () => {
-    it("should call next when user is authenticated", () => {
+    it("should call next() with no error when user is authenticated", () => {
       requireLoggedIn(mockReq as Request, mockRes as Response, mockNext);
-      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it("should send error when user is not authenticated", () => {
+    it("should forward an UnauthorizedError when user is not authenticated", () => {
       mockReq.user = undefined;
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       requireLoggedIn(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
     });
 
-    it("should send error when token is missing", () => {
+    it("should forward an UnauthorizedError when token is missing", () => {
       mockReq.session = {} as Request["session"] & {
         discordAccessToken?: string;
       };
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       requireLoggedIn(mockReq as Request, mockRes as Response, mockNext);
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
-    });
-
-    it("should pass error object to ApiError.sendError", () => {
-      mockReq.user = undefined;
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
-
-      requireLoggedIn(mockReq as Request, mockRes as Response, mockNext);
-
-      const passedError = sendErrorSpy.mock.calls[0][1];
-      expect(passedError).toBeInstanceOf(UnauthorizedError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
     });
   });
 
   describe("requireCanvasModerator", () => {
-    it("should call next when user is a moderator", async () => {
+    it("should call next() with no error when user is a moderator", async () => {
       vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
 
       await requireCanvasModerator(
@@ -137,12 +125,11 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it("should send ForbiddenError when user is not a moderator", async () => {
+    it("should forward a ForbiddenError when user is not a moderator", async () => {
       vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasModerator(
         mockReq as Request,
@@ -150,15 +137,12 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
-      const passedError = sendErrorSpy.mock.calls[0][1];
-      expect(passedError).toBeInstanceOf(ForbiddenError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 
-    it("should send UnauthorizedError when user is not logged in", async () => {
+    it("should forward an UnauthorizedError when user is not logged in", async () => {
       mockReq.user = undefined;
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasModerator(
         mockReq as Request,
@@ -166,10 +150,8 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
-      const passedError = sendErrorSpy.mock.calls[0][1];
-      expect(passedError).toBeInstanceOf(UnauthorizedError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
     });
 
     it("should call isCanvasModerator with correct access token", async () => {
@@ -184,9 +166,8 @@ describe("canvasAuth", () => {
       expect(vi.mocked(isCanvasModerator)).toHaveBeenCalledWith("test-token");
     });
 
-    it("should have correct error message for non-moderators", async () => {
+    it("should forward an error whose message describes the missing permission", async () => {
       vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasModerator(
         mockReq as Request,
@@ -194,15 +175,16 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      const passedError = sendErrorSpy.mock.calls[0][1] as ForbiddenError;
-      expect(passedError.message).toBe(
-        "You do not have permission to perform this action",
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "You do not have permission to perform this action",
+        }),
       );
     });
   });
 
   describe("requireCanvasAdmin", () => {
-    it("should call next when user is an admin", async () => {
+    it("should call next() with no error when user is an admin", async () => {
       vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
 
       await requireCanvasAdmin(
@@ -211,12 +193,11 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(mockNext).toHaveBeenCalled();
+      expect(mockNext).toHaveBeenCalledWith();
     });
 
-    it("should send ForbiddenError when user is not an admin", async () => {
+    it("should forward a ForbiddenError when user is not an admin", async () => {
       vi.mocked(isCanvasAdmin).mockResolvedValueOnce(false);
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasAdmin(
         mockReq as Request,
@@ -224,15 +205,12 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
-      const passedError = sendErrorSpy.mock.calls[0][1];
-      expect(passedError).toBeInstanceOf(ForbiddenError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(ForbiddenError));
     });
 
-    it("should send UnauthorizedError when user is not logged in", async () => {
+    it("should forward an UnauthorizedError when user is not logged in", async () => {
       mockReq.user = undefined;
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasAdmin(
         mockReq as Request,
@@ -240,10 +218,8 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      expect(sendErrorSpy).toHaveBeenCalled();
-      expect(mockNext).not.toHaveBeenCalled();
-      const passedError = sendErrorSpy.mock.calls[0][1];
-      expect(passedError).toBeInstanceOf(UnauthorizedError);
+      expect(mockNext).toHaveBeenCalledTimes(1);
+      expect(mockNext).toHaveBeenCalledWith(expect.any(UnauthorizedError));
     });
 
     it("should call isCanvasAdmin with correct access token", async () => {
@@ -258,9 +234,8 @@ describe("canvasAuth", () => {
       expect(vi.mocked(isCanvasAdmin)).toHaveBeenCalledWith("test-token");
     });
 
-    it("should have correct error message for non-admins", async () => {
+    it("should forward an error whose message describes the missing permission", async () => {
       vi.mocked(isCanvasAdmin).mockResolvedValueOnce(false);
-      const sendErrorSpy = vi.spyOn(ApiError, "sendError");
 
       await requireCanvasAdmin(
         mockReq as Request,
@@ -268,9 +243,10 @@ describe("canvasAuth", () => {
         mockNext,
       );
 
-      const passedError = sendErrorSpy.mock.calls[0][1] as ForbiddenError;
-      expect(passedError.message).toBe(
-        "You do not have permission to perform this action",
+      expect(mockNext).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "You do not have permission to perform this action",
+        }),
       );
     });
   });

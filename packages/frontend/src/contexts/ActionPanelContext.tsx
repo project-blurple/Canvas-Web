@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 
-export type TabKey = "look" | "place" | "frame";
+type TabKey = "look" | "place" | "frame";
 
 interface ActionPanelContextType {
   areTabsLocked: boolean;

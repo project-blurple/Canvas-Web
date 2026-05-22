@@ -1,47 +1,37 @@
 import { Router } from "express";
-import { ApiError } from "@/errors";
 import { requireCanvasModerator } from "@/middleware/canvasAuth";
-import { parseBlocklistParams } from "@/models/blocklist.models";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { BlocklistBodyModel } from "@/models/blocklist.models";
 import {
   addUsersToBlocklist,
   getBlocklist,
   removeUsersFromBlocklist,
 } from "@/services/blocklistService";
 
-export const blocklistRouter = Router();
+export const blocklistRouter = typedRouter(Router());
 
 blocklistRouter.use(requireCanvasModerator);
 
 blocklistRouter.get("/", async (_req, res) => {
-  try {
-    const blocklist = await getBlocklist();
-
-    res.status(200).json(blocklist);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
+  const blocklist = await getBlocklist();
+  res.status(200).json(blocklist);
 });
 
-blocklistRouter.put("/", async (req, res) => {
-  try {
-    const userIds = await parseBlocklistParams(req.body);
-
-    const addedUsers = await addUsersToBlocklist(userIds);
-
+blocklistRouter.put(
+  "/",
+  validate({ body: BlocklistBodyModel }),
+  async (req, res) => {
+    const addedUsers = await addUsersToBlocklist(req.body);
     res.status(201).json(addedUsers);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-blocklistRouter.delete("/", async (req, res) => {
-  try {
-    const userIds = await parseBlocklistParams(req.body);
-
-    await removeUsersFromBlocklist(userIds);
-
+blocklistRouter.delete(
+  "/",
+  validate({ body: BlocklistBodyModel }),
+  async (req, res) => {
+    await removeUsersFromBlocklist(req.body);
     res.status(204).send();
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);

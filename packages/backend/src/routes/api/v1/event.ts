@@ -1,12 +1,11 @@
 import { Router } from "express";
-
-import { ApiError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
 import {
   CreateEventBodyModel,
   EditEventBodyModel,
-  type EventIdParam,
-  parseEventId,
+  EventIdParamModel,
 } from "@/models/event.models";
 import {
   createEvent,
@@ -14,59 +13,39 @@ import {
   getCurrentEvent,
   getEventById,
 } from "@/services/eventService";
-import { assertZodSuccess } from "@/utils/models";
 
-export const eventRouter = Router();
+export const eventRouter = typedRouter(Router());
 
 eventRouter.get("/current", async (_req, res) => {
-  try {
-    const event = await getCurrentEvent();
-    res.status(200).json(event);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
+  const event = await getCurrentEvent();
+  res.status(200).json(event);
 });
 
-eventRouter.get("/:eventId", async (req, res) => {
-  try {
-    const eventId = await parseEventId(req.params);
-    const event = await getEventById(eventId);
-
+eventRouter.get(
+  "/:eventId",
+  validate({ params: EventIdParamModel }),
+  async (req, res) => {
+    const event = await getEventById(req.params.eventId);
     res.status(200).json(event);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-eventRouter.post("/", requireCanvasAdmin, async (req, res) => {
-  try {
-    const eventData = await CreateEventBodyModel.safeParseAsync(req.body);
-    assertZodSuccess(eventData);
-
-    const event = await createEvent(eventData.data.name, eventData.data.id);
-
+eventRouter.post(
+  "/",
+  requireCanvasAdmin,
+  validate({ body: CreateEventBodyModel }),
+  async (req, res) => {
+    const event = await createEvent(req.body.name, req.body.id);
     res.status(201).json(event);
-  } catch (error) {
-    ApiError.sendError(res, error);
-  }
-});
+  },
+);
 
-eventRouter.put<EventIdParam>(
+eventRouter.put(
   "/:eventId",
   requireCanvasAdmin,
+  validate({ params: EventIdParamModel, body: EditEventBodyModel }),
   async (req, res) => {
-    try {
-      const [eventId, eventData] = await Promise.all([
-        parseEventId(req.params),
-        EditEventBodyModel.safeParseAsync(req.body),
-      ]);
-      assertZodSuccess(eventData);
-
-      const event = await editEvent(eventId, eventData.data.name);
-
-      res.status(200).json(event);
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    const event = await editEvent(req.params.eventId, req.body.name);
+    res.status(200).json(event);
   },
 );
