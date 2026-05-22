@@ -40,7 +40,7 @@ const CanvasList = styled("div")`
   width: 100%;
 
   & > button {
-    flex-basis: 10rem;
+    flex: 0 0 10rem;
     inline-size: 10rem;
   }
 `;
