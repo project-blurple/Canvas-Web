@@ -7,6 +7,7 @@ import {
   useSelectedBoundsContext,
 } from "@/contexts";
 import ImageOverlay from "./ImageOverlay";
+import ReticleOverlay from "./ReticleOverlay";
 import SelectedBoundsOverlay from "./SelectedBoundsOverlay";
 
 const RETICLE_ORIGINAL_SCALE = 10;
@@ -14,7 +15,11 @@ const RETICLE_ORIGINAL_SIZE = 14;
 const RETICLE_SIZE = RETICLE_ORIGINAL_SIZE * 10;
 const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 
-export default function CanvasOverlays() {
+interface CanvasOverlaysProps {
+  showReticle: boolean;
+}
+
+export default function CanvasOverlays({ showReticle }: CanvasOverlaysProps) {
   const { canvas } = useCanvasContext();
   const { zoom } = useCanvasViewContext();
   const {
@@ -41,6 +46,7 @@ export default function CanvasOverlays() {
         zIndex: 1,
       }}
     >
+      <ReticleOverlay showReticle={showReticle} />
       {showSelectedBounds && (
         <SelectedBoundsOverlay
           canvasWidth={canvas.width}
