@@ -15,13 +15,11 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
   useActionPanelContext,
   useCanvasContext,
   useCanvasViewContext,
-  useSelectedBoundsContext,
   useSelectedColorContext,
   useSelectedFrameContext,
 } from "@/contexts";
@@ -50,7 +48,6 @@ import {
 } from "./point";
 
 const CanvasWrapper = styled("div")`
-  position: relative;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
   border: var(--card-border);
@@ -72,6 +69,7 @@ const CanvasWrapper = styled("div")`
 
   ${({ theme }) => theme.breakpoints.down("md")} {
     border-radius: 0;
+  import CanvasOverlays from "./CanvasOverlays";
   }
 
   &:active {
@@ -503,14 +501,6 @@ export default function CanvasView({
 
   const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
-  const {
-    canEdit,
-    minHeight,
-    minWidth,
-    selectedBounds,
-    showSelectedBounds,
-    setSelectedBounds,
-  } = useSelectedBoundsContext();
   const { canvas, setCanvas } = useCanvasContext();
   const {
     containerRef,
@@ -1302,20 +1292,7 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
-        {showSelectedBounds && (
-          <SelectedBoundsOverlay
-            canvasWidth={canvas.width}
-            canvasHeight={canvas.height}
-            canEdit={canEdit}
-            minHeight={minHeight}
-            minWidth={minWidth}
-            selectedBounds={selectedBounds}
-            reticleScale={RETICLE_SCALE}
-            reticleSize={RETICLE_SIZE}
-            setSelectedBounds={setSelectedBounds}
-            zoom={zoom}
-          />
-        )}
+        <CanvasOverlays />
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
