@@ -36,13 +36,12 @@ const CanvasList = styled("div")`
   flex-wrap: nowrap;
   gap: 0.75rem;
   overflow-x: auto;
-  overflow-y: hidden;
   padding-bottom: 0.5rem;
   width: 100%;
 
   & > button {
-    flex: 0 0 10rem;
-    width: 10rem;
+    flex-basis: 10rem;
+    inline-size: 10rem;
   }
 `;
 
@@ -92,7 +91,7 @@ const ErrorText = styled("div")`
 `;
 
 const SaveStatusText = styled("p")`
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 600;
   min-height: 1.25rem;
 `;
@@ -117,20 +116,21 @@ const createDefaults = {
   isLocked: true,
   name: "",
   width: 1,
-  startCoordinates: [1, 1] as [number, number],
-};
+  startCoordinates: [1, 1],
+} as const satisfies CanvasSettingsFormValues;
 
 type FormMode = "edit" | "create";
 
-interface CanvasSettingsFormValues {
-  allColorsGlobal: boolean;
-  cooldownDuration: number;
-  height: number;
-  isLocked: boolean;
-  name: string;
-  width: number;
-  startCoordinates: [number, number];
-}
+interface CanvasSettingsFormValues extends Pick<
+  CanvasInfo,
+  | "allColorsGlobal"
+  | "cooldownDuration"
+  | "height"
+  | "isLocked"
+  | "name"
+  | "width"
+  | "startCoordinates"
+> {}
 
 function areCanvasSettingsEqual(
   left: CanvasSettingsFormValues,
@@ -412,7 +412,7 @@ function AdminCanvasTab() {
     : 0,
   );
 
-  const [formValues, setFormValues] = useState({
+  const [formValues, setFormValues] = useState<CanvasSettingsFormValues>({
     allColorsGlobal:
       activeCanvas?.allColorsGlobal ?? createDefaults.allColorsGlobal,
     cooldownDuration:
