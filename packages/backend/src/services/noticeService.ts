@@ -40,7 +40,11 @@ function normalizeNoticeWindow({
   endAt?: Date | null;
 }): { startAt?: Date | null; endAt?: Date | null } {
   const normalizedStartAt =
-    endAt !== undefined && endAt !== null && startAt === undefined ?
+    (
+      endAt !== undefined &&
+      endAt !== null &&
+      (startAt === undefined || startAt === null)
+    ) ?
       new Date()
     : startAt;
 
