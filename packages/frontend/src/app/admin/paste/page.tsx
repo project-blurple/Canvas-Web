@@ -2,7 +2,6 @@
 
 import type { Point } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { set } from "colorjs.io/fn";
 import { CircleAlert, X } from "lucide-react";
 import NextImage from "next/image";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
@@ -16,11 +15,7 @@ import { Button } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
-import {
-  ImageOverlayProvider,
-  useCanvasContext,
-  useImageOverlayContext,
-} from "@/contexts";
+import { useCanvasContext, useImageOverlayContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { useCanvasPaste } from "@/hooks/queries/usePaste";
 import AdminDashboard from "../AdminDashboard";
