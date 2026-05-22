@@ -37,6 +37,7 @@ import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
+import CanvasOverlays from "./CanvasOverlays";
 import {
   addPoints,
   diffPoints,

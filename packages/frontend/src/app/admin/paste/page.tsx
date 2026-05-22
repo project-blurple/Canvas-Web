@@ -15,7 +15,7 @@ import { Button } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
-import { useCanvasContext } from "@/contexts";
+import { ImageOverlayProvider, useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { useCanvasPaste } from "@/hooks/queries/usePaste";
 import AdminDashboard from "../AdminDashboard";
@@ -415,16 +415,29 @@ function AdminPasteTab() {
 
   return (
     <AdminPasteTabBlock>
-      <PasteWrapper>
-        <CanvasView
-          actionPanel={actionPanel}
-          canvasLabel="Admin paste"
-          showInvite={false}
-          showNotices={false}
-          showReticle={false}
-        />
-        <SlideableDrawer>{actionPanel}</SlideableDrawer>
-      </PasteWrapper>
+      <ImageOverlayProvider
+        imageOverlay={
+          uploadedImage ?
+            {
+              file: uploadedImage.file,
+              left: topLeftCoordinates.x - canvas.startCoordinates[0],
+              top: topLeftCoordinates.y - canvas.startCoordinates[1],
+              alt: `Paste preview: ${uploadedImage.file.name}`,
+            }
+          : null
+        }
+      >
+        <PasteWrapper>
+          <CanvasView
+            actionPanel={actionPanel}
+            canvasLabel="Admin paste"
+            showInvite={false}
+            showNotices={false}
+            showReticle={false}
+          />
+          <SlideableDrawer>{actionPanel}</SlideableDrawer>
+        </PasteWrapper>
+      </ImageOverlayProvider>
     </AdminPasteTabBlock>
   );
 }

@@ -3,8 +3,10 @@
 import {
   useCanvasContext,
   useCanvasViewContext,
+  useImageOverlayContext,
   useSelectedBoundsContext,
 } from "@/contexts";
+import ImageOverlay from "./ImageOverlay";
 import SelectedBoundsOverlay from "./SelectedBoundsOverlay";
 
 const RETICLE_ORIGINAL_SCALE = 10;
@@ -15,6 +17,7 @@ const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 export default function CanvasOverlays() {
   const { canvas } = useCanvasContext();
   const { zoom } = useCanvasViewContext();
+  const { imageOverlay } = useImageOverlayContext();
   const {
     canEdit,
     minHeight,
@@ -25,7 +28,15 @@ export default function CanvasOverlays() {
   } = useSelectedBoundsContext();
 
   return (
-    <>
+    <div
+      aria-hidden
+      style={{
+        inset: 0,
+        pointerEvents: "none",
+        position: "absolute",
+        zIndex: 1,
+      }}
+    >
       {showSelectedBounds && (
         <SelectedBoundsOverlay
           canvasWidth={canvas.width}
@@ -40,6 +51,14 @@ export default function CanvasOverlays() {
           zoom={zoom}
         />
       )}
-    </>
+      {imageOverlay && (
+        <ImageOverlay
+          file={imageOverlay.file}
+          left={imageOverlay.left}
+          top={imageOverlay.top}
+          alt={imageOverlay.alt}
+        />
+      )}
+    </div>
   );
 }

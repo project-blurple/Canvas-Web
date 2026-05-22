@@ -5,6 +5,10 @@ export {
 export { AuthProvider, useAuthContext } from "./AuthProvider";
 export { CanvasProvider, useCanvasContext } from "./CanvasContext";
 export { CanvasViewProvider, useCanvasViewContext } from "./CanvasViewContext";
+export {
+  ImageOverlayProvider,
+  useImageOverlayContext,
+} from "./ImageOverlayContext";
 export { QueryClientProvider } from "./QueryClientProvider";
 export {
   SelectedBoundsProvider,
