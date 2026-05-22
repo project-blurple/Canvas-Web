@@ -1,3 +1,4 @@
+import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import {
   type DiscordUserProfile,
@@ -454,16 +455,60 @@ export async function assertMaxOwnerFramesNotExceeded({
   }
 }
 
-export async function exportFrameAsPng(frameId: string): Promise<Buffer> {
+export async function exportFrameAsStream(
+  frameId: string,
+): Promise<NodeJS.ReadableStream> {
   const frame = await getFrameById(frameId);
-
-  return exportCanvasBoundsAsPng(
+  return exportCanvasBoundsAsStream(
     frame.canvasId,
     frame.x0,
     frame.y0,
     frame.x1,
     frame.y1,
   );
+}
+
+export async function exportCanvasBoundsAsStream(
+  canvasId: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): Promise<NodeJS.ReadableStream> {
+  const width = x1 - x0;
+  const height = y1 - y0;
+
+  if (width <= 0 || height <= 0) {
+    throw new BadRequestError("Invalid crop dimensions");
+  }
+
+  const cached = await getCanvasPng(canvasId);
+
+  if ("canvasPath" in cached) {
+    const fileStream = createReadStream(cached.canvasPath);
+    const transformer = sharp()
+      .extract({ left: x0, top: y0, width, height })
+      .png();
+    return fileStream.pipe(transformer);
+  }
+
+  const unlocked = cached as {
+    isLocked: false;
+    width: number;
+    height: number;
+    pixels: PixelColor[];
+  };
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlocked.pixels,
+    unlocked.width,
+    unlocked.height,
+  );
+
+  return sharp(rawBuffer, {
+    raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
+  })
+    .extract({ left: x0, top: y0, width, height })
+    .png();
 }
 
 export async function exportCanvasBoundsAsPng(
