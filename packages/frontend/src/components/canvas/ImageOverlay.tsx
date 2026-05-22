@@ -51,7 +51,11 @@ export default function ImageOverlay({
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
       />
-      <OverlayImage alt={alt} src={imageUrl} style={{ left, top }} />
+      <OverlayImage
+        alt={alt}
+        src={imageUrl}
+        style={{ transform: `translate(${left}px, ${top}px)` }}
+      />
     </>
   );
 }
