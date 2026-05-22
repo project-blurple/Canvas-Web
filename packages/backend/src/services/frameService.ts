@@ -1,10 +1,13 @@
+import fs from "node:fs/promises";
 import {
   type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
   type GuildOwnedFrame,
+  type PixelColor,
   type UserOwnedFrame,
 } from "@blurple-canvas-web/types";
+import sharp from "sharp";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
 import {
@@ -15,6 +18,7 @@ import {
 } from "@/errors";
 import type { FrameOwnerInput } from "@/models/frame.models";
 import { PrismaErrorCode } from "@/utils";
+import { getCanvasPng } from "./canvasService";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -448,4 +452,109 @@ export async function assertMaxOwnerFramesNotExceeded({
       } on this canvas`,
     );
   }
+}
+
+export async function exportFrameAsPng(frameId: string): Promise<Buffer> {
+  const frame = await getFrameById(frameId);
+
+  return exportCanvasBoundsAsPng(
+    frame.canvasId,
+    frame.x0,
+    frame.y0,
+    frame.x1,
+    frame.y1,
+  );
+}
+
+export async function exportCanvasBoundsAsPng(
+  canvasId: number,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+): Promise<Buffer> {
+  // Validate coordinates and get canvas dimensions
+  const canvas = await assertCoordsAreWithinCanvas(canvasId, x0, y0, x1, y1);
+
+  const width = x1 - x0;
+  const height = y1 - y0;
+
+  if (width <= 0 || height <= 0) {
+    throw new BadRequestError("Invalid crop dimensions");
+  }
+
+  // Use cached canvas as the source (this triggers loading/saving inside canvasService)
+  const cached = await getCanvasPng(canvasId);
+
+  // If the cache entry is a locked file, prefer using the file path via sharp
+  if ("canvasPath" in cached) {
+    const canvasPath = cached.canvasPath;
+
+    // If the requested bounds equal the whole canvas, skip cropping and return file bytes
+    if (
+      x0 === 0 &&
+      y0 === 0 &&
+      width === canvas.width &&
+      height === canvas.height
+    ) {
+      return fs.readFile(canvasPath);
+    }
+
+    return sharp(canvasPath)
+      .extract({ left: x0, top: y0, width, height })
+      .png()
+      .toBuffer();
+  }
+
+  // Otherwise use the in-memory pixels
+  const unlocked = cached as {
+    isLocked: false;
+    width: number;
+    height: number;
+    pixels: PixelColor[];
+  };
+
+  // If requested bounds equal whole canvas, avoid an extra extract step
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlocked.pixels,
+    unlocked.width,
+    unlocked.height,
+  );
+
+  if (
+    x0 === 0 &&
+    y0 === 0 &&
+    width === unlocked.width &&
+    height === unlocked.height
+  ) {
+    return sharp(rawBuffer, {
+      raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
+    })
+      .png()
+      .toBuffer();
+  }
+
+  return sharp(rawBuffer, {
+    raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
+  })
+    .extract({ left: x0, top: y0, width, height })
+    .png()
+    .toBuffer();
+}
+
+function pixelsToRgbaBuffer(
+  pixels: PixelColor[],
+  width: number,
+  height: number,
+): Buffer {
+  const buf = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < pixels.length; i++) {
+    const p = pixels[i];
+    const off = i * 4;
+    buf[off] = p[0];
+    buf[off + 1] = p[1];
+    buf[off + 2] = p[2];
+    buf[off + 3] = p[3];
+  }
+  return buf;
 }
