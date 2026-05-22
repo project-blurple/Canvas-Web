@@ -55,6 +55,14 @@ export default function ImageOverlay({
 
   if (!imageUrl) return null;
 
+  // TODO: Fix the visualization
+  // The sizing of the image can look slightly off, depending on your current zoom level and the
+  // dimensions of the image. This is because the image itself is already rather tiny, so the browser
+  // rendering of width/height is imprecise. Enlarging the image when zooming into the canvas just
+  // exaggerates this issue.
+  // The math to calculate the correct displayed size of the image is already correct, it's just
+  // an annoying browser issue.
+
   return (
     <>
       <RenderOverlayShades
