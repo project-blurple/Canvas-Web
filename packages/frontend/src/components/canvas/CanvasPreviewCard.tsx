@@ -121,7 +121,7 @@ export function CanvasPreviewCard({
   });
 
   return (
-    <EventCanvasCard type="button" {...props}>
+    <EventCanvasCard type="button" title={canvas.name} {...props}>
       {sourceImage ?
         <EventCanvasPreview alt={canvas.name} src={sourceImage.src} />
       : <EventCanvasPreviewPlaceholder>
