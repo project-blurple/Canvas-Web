@@ -187,7 +187,17 @@ export function RenderOverlayShades({
   canvasHeight: number;
   overlayCutoutPath?: string | null;
 }) {
-  if (!overlayCutoutPath) return null;
+  const shadeProps = {
+    fill: "#000000",
+    fillOpacity: 0.5,
+    fillRule: "evenodd" as const,
+  };
+
+  const desaturateShadeProps = {
+    fill: "oklch(32% 0 0deg)",
+    fillOpacity: 0.5,
+    fillRule: "evenodd" as const,
+  };
 
   return (
     <>
@@ -197,14 +207,9 @@ export function RenderOverlayShades({
         height={canvasHeight}
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       >
-        {overlayCutoutPath && (
-          <path
-            d={overlayCutoutPath}
-            fill="#000000"
-            fillOpacity={0.5}
-            fillRule="evenodd"
-          />
-        )}
+        {overlayCutoutPath ?
+          <path d={overlayCutoutPath} {...shadeProps} />
+        : <rect width={canvasWidth} height={canvasHeight} {...shadeProps} />}
       </OverlayShade>
       <OverlayDesaturateShade
         aria-hidden
@@ -212,14 +217,14 @@ export function RenderOverlayShades({
         height={canvasHeight}
         viewBox={`0 0 ${canvasWidth} ${canvasHeight}`}
       >
-        {overlayCutoutPath && (
-          <path
-            d={overlayCutoutPath}
-            fill="oklch(32% 0 0deg)"
-            fillRule="evenodd"
-            fillOpacity={0.5}
+        {overlayCutoutPath ?
+          <path d={overlayCutoutPath} {...desaturateShadeProps} />
+        : <rect
+            width={canvasWidth}
+            height={canvasHeight}
+            {...desaturateShadeProps}
           />
-        )}
+        }
       </OverlayDesaturateShade>
     </>
   );

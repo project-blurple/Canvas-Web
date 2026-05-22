@@ -7,6 +7,7 @@ import { RenderOverlayShades } from "./SelectedBoundsOverlay";
 const OverlayImage = styled("img")`
   image-rendering: pixelated;
   position: absolute;
+  z-index: 2;
 `;
 
 interface ImageOverlayProps {
@@ -46,11 +47,11 @@ export default function ImageOverlay({
 
   return (
     <>
-      <OverlayImage alt={alt} src={imageUrl} style={{ left, top }} />
       <RenderOverlayShades
         canvasWidth={canvasWidth}
         canvasHeight={canvasHeight}
       />
+      <OverlayImage alt={alt} src={imageUrl} style={{ left, top }} />
     </>
   );
 }
