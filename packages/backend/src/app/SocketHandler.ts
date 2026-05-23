@@ -39,17 +39,14 @@ async function resyncClient(
       `[Socket ${socket.id}]: Synchronizing client requires ${pixels.length} pixels to be sent`,
     );
 
-    for (const pixel of pixels) {
-      socket.emit(
-        SocketEvents.placePixel(canvasId),
-        {
-          x: pixel.x,
-          y: pixel.y,
-          rgba: pixel.color.rgba,
-        },
-        new Date().toISOString(),
-      );
-    }
+    const payloads: PlacePixelSocket.Payload[] = pixels.map((pixel) => ({
+      x: pixel.x,
+      y: pixel.y,
+      rgba: pixel.color.rgba,
+    }));
+    socket.emit(SocketEvents.placePixelBulk(canvasId), {
+      pixels: payloads,
+    });
   } catch (error) {
     console.error(
       `[Socket ${socket.id}]: Error fetching new placed pixels: ${error}`,
