@@ -739,6 +739,26 @@ export default function CanvasView({
       console.debug("[Live Updating]: Disconnected from server");
     };
 
+    const paintPixel = (
+      ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+      payload: PlacePixelSocket.Payload,
+    ) => {
+      const [r, g, b, a] = payload.rgba;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+      ctx.fillRect(payload.x, payload.y, 1, 1);
+    };
+
+    const refreshCanvasImage = () => {
+      clearOverlay();
+      offscreenCanvasRef.current?.convertToBlob().then((blob) => {
+        if (!imageRef.current) return;
+        const oldSrc = imageRef.current.src;
+        imageRef.current.src = URL.createObjectURL(blob);
+        URL.revokeObjectURL(oldSrc);
+      });
+      overlayCountRef.current = 0;
+    };
+
     // If the canvas is locked, we don't need to listen for updates.
     if (canvas.isLocked) {
       return;
@@ -766,26 +786,44 @@ export default function CanvasView({
       // Updates the canvas `canvas` which is used as the source of truth for the canvas
       const ctx = offscreenCanvasRef.current?.getContext("2d");
       if (!ctx) return;
-      const [r, g, b, a] = payload.rgba;
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      ctx.fillRect(payload.x, payload.y, 1, 1);
+      paintPixel(ctx, payload);
 
       // This method prevents the need to convert an N×M canvas to a png on every update
       // while also preventing an inordinate amount of overlaid pixels from causing lag
       if (overlayCountRef.current >= pixelOverlayThreshold) {
         // flush the overlaid pixels and update canvas image
-        clearOverlay();
-        offscreenCanvasRef.current?.convertToBlob().then((blob) => {
-          if (!imageRef.current) return;
-          const oldSrc = imageRef.current.src;
-          imageRef.current.src = URL.createObjectURL(blob);
-          URL.revokeObjectURL(oldSrc);
-        });
-        overlayCountRef.current = 0;
+        refreshCanvasImage();
       } else {
         // overlay the pixel without any changes
         overlayCountRef.current++;
         overlayPixel(payload);
+      }
+    };
+
+    const onPixelBulkPlaced = (payload: PlacePixelSocket.BulkPayload) => {
+      console.debug("[Live Updating]: Received pixel bulk update", payload);
+
+      if (payload.pixels.length === 0) return;
+
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!ctx) return;
+
+      for (const pixel of payload.pixels) {
+        paintPixel(ctx, pixel);
+      }
+
+      const shouldRefreshCanvasImage =
+        overlayCountRef.current + payload.pixels.length >=
+        pixelOverlayThreshold;
+
+      if (shouldRefreshCanvasImage) {
+        refreshCanvasImage();
+        return;
+      }
+
+      for (const pixel of payload.pixels) {
+        overlayCountRef.current++;
+        overlayPixel(pixel);
       }
     };
 
@@ -797,9 +835,7 @@ export default function CanvasView({
       const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
       const ctx = offscreenCanvas.getContext("2d");
       if (!ctx) return;
-      const [r, g, b, a] = payload.rgba;
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      ctx.fillRect(payload.x, payload.y, 1, 1);
+      paintPixel(ctx, payload);
       offscreenCanvas.convertToBlob().then((blob) => {
         const pixelImage = new Image();
         pixelImage.src = URL.createObjectURL(blob);
@@ -810,15 +846,18 @@ export default function CanvasView({
     };
 
     const pixelPlaceEvent = SocketEvents.placePixel(canvas.id);
+    const pixelBulkPlaceEvent = SocketEvents.placePixelBulk(canvas.id);
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on(pixelPlaceEvent, onPixelPlaced);
+    socket.on(pixelBulkPlaceEvent, onPixelBulkPlaced);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off(pixelPlaceEvent, onPixelPlaced);
+      socket.off(pixelBulkPlaceEvent, onPixelBulkPlaced);
     };
   }, [canvas]);
 
@@ -1213,7 +1252,9 @@ export default function CanvasView({
         config.discordServerInvite &&
         !isFullscreen && (
           <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
+            <InviteButton onPointerDown={(event) => event.stopPropagation()}>
+              Project Blurple
+            </InviteButton>
           </a>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
