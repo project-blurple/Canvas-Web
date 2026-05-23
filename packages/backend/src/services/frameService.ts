@@ -506,7 +506,7 @@ export async function exportCanvasBoundsAsStream({
 
   const cached = await getCanvasPng(canvasId, size);
 
-  if ("canvasPaths" in cached) {
+  if (cached.isLocked) {
     const canvasPath = getLockedCanvasPath(cached.canvasPaths, size);
 
     if (!canvasPath) {
