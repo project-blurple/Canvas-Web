@@ -13,6 +13,8 @@ import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
+import { getEventPalette } from "./paletteService";
+import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -498,7 +500,103 @@ export async function editCanvas({
 
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
+  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
+
   return canvas;
+}
+
+export async function isCanvasInCurrentEvent(
+  canvasId: number,
+): Promise<boolean> {
+  const canvas = await prisma.canvas.findUnique({
+    where: { id: canvasId },
+    select: { event_id: true },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  const currentEvent = await getCurrentEvent();
+  return canvas.event_id === currentEvent.id;
+}
+
+export async function pasteCanvasData(
+  canvasId: number,
+  authorId: bigint,
+  data: [number, number, number][],
+): Promise<void> {
+  const canvas = await prisma.canvas.findFirst({
+    where: { id: canvasId },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  if (!canvas.event_id) {
+    throw new Error(
+      `Canvas with ID ${canvasId} is not associated with an event`,
+    );
+  }
+
+  const colors = await getEventPalette(canvas.event_id, false);
+
+  // ~~~ Validation ~~~
+
+  const entries = data.map(
+    ([x, y, colorId]) =>
+      ({
+        x,
+        y,
+        colorId,
+      }) as BulkPlaceEntry,
+  );
+
+  const lowestX = Math.min(...entries.map(({ x }) => x));
+  const lowestY = Math.min(...entries.map(({ y }) => y));
+  const highestX = Math.max(...entries.map(({ x }) => x));
+  const highestY = Math.max(...entries.map(({ y }) => y));
+
+  if (
+    lowestX < 0 ||
+    lowestY < 0 ||
+    highestX >= canvas.width ||
+    highestY >= canvas.height
+  ) {
+    throw new Error(
+      `Data contains coordinates that are out of bounds for canvas with ID ${canvasId}`,
+    );
+  }
+
+  const uniqueColors = Array.from(
+    new Set(entries.map(({ colorId }) => colorId)),
+  );
+  const invalidColorIds = uniqueColors.filter(
+    (colorId) => !colors.some((color) => color.id === colorId),
+  );
+
+  if (invalidColorIds.length > 0) {
+    throw new Error(
+      `Data contains color IDs that are not in the event palette: ${invalidColorIds.join(
+        ", ",
+      )}`,
+    );
+  }
+
+  // ~~~ Execution ~~~
+
+  await prisma.user.upsert({
+    where: { id: authorId },
+    create: { id: authorId },
+    update: {},
+  });
+
+  await createBulkPlaceEntries({
+    canvasId,
+    userId: authorId,
+    entries,
+  });
 }
 
 function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
