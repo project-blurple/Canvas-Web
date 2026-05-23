@@ -106,18 +106,13 @@ canvasRouter.put(
   },
 );
 
-canvasRouter.delete<CanvasIdParam>(
+canvasRouter.delete(
   "/:canvasId/cache",
   requireCanvasAdmin,
+  validate({ params: CanvasIdParamModel }),
   async (req, res) => {
-    try {
-      const canvasId = await parseCanvasId(req.params);
-      await clearCachedCanvas(canvasId);
-
-      res.status(204).end();
-    } catch (error) {
-      ApiError.sendError(res, error);
-    }
+    await clearCachedCanvas(req.params.canvasId);
+    res.status(204).end();
   },
 );
 
