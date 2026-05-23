@@ -75,7 +75,7 @@ export default function Header({
         />
         <Wordmark>Blurple Canvas</Wordmark>
       </CompositeLogo>
-      <CanvasPicker isCanvasPage={isCanvasPage} />
+      <CanvasPicker shouldRedirect={isCanvasPage} />
       <Nav />
     </Wrapper>
   );
