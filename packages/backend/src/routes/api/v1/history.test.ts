@@ -260,6 +260,30 @@ describe("History route tests", () => {
     );
   });
 
+  it("returns 403 when deleting history for a canvas not in current event", async () => {
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
+    vi.mocked(isCanvasInCurrentEvent).mockResolvedValueOnce(false);
+    const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
+
+    const response = await request(app)
+      .delete("/api/v1/canvas/1/pixel/history")
+      .set("testUserId", "1")
+      .send({
+        x0: 0,
+        y0: 0,
+        includeUserIds: ["1"],
+      })
+      .type("json");
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({
+      error:
+        "Cannot erase history for a canvas that is not in the current event",
+    });
+    expect(deletePixelHistoryEntries).not.toHaveBeenCalled();
+  });
+
   it("force-deletes history entries for an admin", async () => {
     vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true });
@@ -324,7 +348,7 @@ describe("History route tests", () => {
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("testUserId", "1")
+      .set("X-TestUserId", "1")
       .send({
         historyIds: [1],
       })
