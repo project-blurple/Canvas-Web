@@ -1213,7 +1213,9 @@ export default function CanvasView({
         config.discordServerInvite &&
         !isFullscreen && (
           <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
+            <InviteButton onPointerDown={(event) => event.stopPropagation()}>
+              Project Blurple
+            </InviteButton>
           </a>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
