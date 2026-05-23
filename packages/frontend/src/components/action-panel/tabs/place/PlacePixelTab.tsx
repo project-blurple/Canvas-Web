@@ -217,7 +217,7 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      setCooldownSeconds(cooldown ? Math.ceil(cooldown / 1000) : 0);
+      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
     },
   });
 
