@@ -1,15 +1,16 @@
-import type { Cooldown, DiscordUserProfile } from "@blurple-canvas-web/types";
+import {
+  CanvasIdParamModel,
+  CanvasPasteBodyModel,
+  type Cooldown,
+  CreateCanvasBodyModel,
+  type DiscordUserProfile,
+  EditCanvasBodyModel,
+} from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import {
-  CanvasIdParamModel,
-  CanvasPasteBodyModel,
-  CreateCanvasBodyModel,
-  EditCanvasBodyModel,
-} from "@/models/canvas.models";
 import {
   type CachedCanvas,
   clearCachedCanvas,

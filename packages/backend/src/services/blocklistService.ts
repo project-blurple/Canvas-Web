@@ -21,16 +21,14 @@ export async function getBlocklist(): Promise<BlocklistEntry[]> {
   `;
 
   return blocklist.map((entry) => ({
-    userId: entry.user_id,
-    dateAdded: entry.date_added,
+    userId: entry.user_id.toString(),
+    dateAdded: entry.date_added.toISOString(),
     username: entry.username,
     profilePictureUrl: entry.profile_picture_url,
   }));
 }
 
-export async function userIsBlocklisted(
-  userId: BlocklistEntry["userId"],
-): Promise<boolean> {
+export async function userIsBlocklisted(userId: bigint): Promise<boolean> {
   const blocklistEntry = await prisma.blacklist.findFirst({
     where: {
       user_id: userId,
@@ -39,9 +37,7 @@ export async function userIsBlocklisted(
   return !!blocklistEntry;
 }
 
-export async function addUsersToBlocklist(
-  userIds: Iterable<BlocklistEntry["userId"]>,
-) {
+export async function addUsersToBlocklist(userIds: Iterable<bigint>) {
   const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
   return await prisma.blacklist.createManyAndReturn({
     data: userIdsArray.map((userId) => ({
@@ -51,9 +47,7 @@ export async function addUsersToBlocklist(
   });
 }
 
-export async function removeUsersFromBlocklist(
-  userIds: Iterable<BlocklistEntry["userId"]>,
-) {
+export async function removeUsersFromBlocklist(userIds: Iterable<bigint>) {
   await prisma.blacklist.deleteMany({
     where: {
       user_id: {

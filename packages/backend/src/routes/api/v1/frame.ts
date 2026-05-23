@@ -1,17 +1,17 @@
+import {
+  CanvasIdParamModel,
+  CreateFrameBodyModel,
+  FrameDataParamModel,
+  FrameGuildIdsQueryModel,
+  FrameIdParamModel,
+  UserCanvasParamModel,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
-  CreateFrameBodyModel,
-  FrameDataParamModel,
-  FrameGuildIdsQueryModel,
-  FrameIdParamModel,
-} from "@/models/frame.models";
-import { UserCanvasParamModel } from "@/models/pixel.models";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import {
   assertMaxOwnerFramesNotExceeded,
