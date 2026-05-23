@@ -186,6 +186,7 @@ model user {
   leaderboard          leaderboard[]
   leaderboard_guild    leaderboard_guild[]
   discord_user_profile discord_user_profile?
+  audit_logs           audit_log[]
 }
 
 model session {
@@ -207,6 +208,23 @@ model notice {
   canvas_id  Int?
   canvas     canvas?   @relation(fields: [canvas_id], references: [id])
   created_at DateTime  @default(now()) @db.Timestamptz(6)
+}
+
+model audit_log {
+  id            BigInt   @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  actor_id      BigInt
+  actor         user     @relation(fields: [actor_id], references: [id])
+  actor_role    String // "admin" | "moderator"
+  action        String // e.g. "notice.create", "history.delete"
+  resource_type String?
+  resource_id   String?
+  metadata      Json?
+
+  @@index([created_at(sort: Desc)])
+  @@index([actor_id, created_at(sort: Desc)])
+  @@index([action, created_at(sort: Desc)])
+  @@index([resource_type, resource_id])
 }
 
 view user_stats {

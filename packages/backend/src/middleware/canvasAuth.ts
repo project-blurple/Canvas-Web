@@ -10,7 +10,7 @@ import { withDiscordAccessToken } from "@/services/discordTokenService";
 // biome-ignore lint/suspicious/noExplicitAny: This allows us to pass params to the Request generic that are not strings or string-only arrays
 type AnyRequest = Request<any, any, any, any, any>;
 
-type AuthenticatedRequest<R extends AnyRequest = Request> = R & {
+export type AuthenticatedRequest<R extends AnyRequest = Request> = R & {
   user: DiscordUserProfile;
   session: R["session"] & {
     discordAccessToken: string;

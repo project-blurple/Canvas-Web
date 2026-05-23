@@ -1,4 +1,5 @@
 export * from "./api";
+export * from "./auditLog";
 export * from "./blocklist";
 export * from "./canvasInfo";
 export * from "./cooldown";
@@ -15,4 +16,4 @@ export * from "./pixelInfo";
 export * from "./point";
 export * from "./socket";
 export * from "./statistics";
-export type * from "./util";
+export * from "./util";

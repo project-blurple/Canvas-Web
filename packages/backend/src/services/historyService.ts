@@ -467,12 +467,6 @@ export async function getPixelHistorySummary(
   };
 }
 
-/**
- * Deletes pixel history entries matching the filter criteria
- *
- * @param params - Filter parameters to match history entries for deletion
- * @param shouldBlockAuthors - Whether to add authors of the deleted entries to the blocklist
- */
 export async function deletePixelHistoryEntries(
   params: GetPixelHistoryParams,
   shouldBlockAuthors: boolean = false,
@@ -522,9 +516,7 @@ export async function deletePixelHistoryEntries(
     RETURNING id, user_id, x, y
   `;
 
-  if (deletedEntries.length === 0) {
-    return;
-  }
+  if (deletedEntries.length === 0) return;
 
   const coordinatesUpdated = [
     ...new Map(
