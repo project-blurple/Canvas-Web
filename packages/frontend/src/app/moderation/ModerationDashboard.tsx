@@ -44,7 +44,7 @@ type TabKey = "search" | "blocklist";
 const Tab = ActionPanelPrimitives.GenericTab<TabKey>;
 
 function ModerationDashboardActionPanel() {
-  const [currentTab, setCurrentTab] = useState("search");
+  const [currentTab, setCurrentTab] = useState<TabKey>("search");
   const [areTabsLocked] = useState(false);
 
   const { resetSelectedBounds, setShowSelectedBounds } =

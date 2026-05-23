@@ -11,6 +11,7 @@ import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import {
   type CachedCanvas,
   clearCachedCanvas,
@@ -93,6 +94,10 @@ canvasRouter.post(
   async (req, res) => {
     const canvas = await createCanvas(req.body);
     res.status(201).json(canvas);
+    void audit(req, "admin", "canvas.create", {
+      resourceId: canvas.id,
+      metadata: req.body,
+    });
   },
 );
 
@@ -106,6 +111,10 @@ canvasRouter.put(
       ...req.body,
     });
     res.status(200).json(canvas);
+    void audit(req, "admin", "canvas.update", {
+      resourceId: canvas.id,
+      metadata: req.body,
+    });
   },
 );
 
@@ -123,6 +132,25 @@ canvasRouter.post(
       message: "Canvas data pasted",
       count: data.length,
     });
+
+    const lowestX = Math.min(...data.map(([x]) => x));
+    const lowestY = Math.min(...data.map(([_, y]) => y));
+    const highestX = Math.max(...data.map(([x]) => x));
+    const highestY = Math.max(...data.map(([_, y]) => y));
+
+    void audit(req, "admin", "canvas.paste", {
+      resourceId: canvasId,
+      metadata: {
+        authorId: authorId.toString(),
+        pixelCount: data.length,
+        area: {
+          topLeftX: lowestX,
+          topLeftY: lowestY,
+          bottomRightX: highestX,
+          bottomRightY: highestY,
+        },
+      },
+    });
   },
 );
 
@@ -133,6 +161,10 @@ canvasRouter.delete(
   async (req, res) => {
     await clearCachedCanvas(req.params.canvasId);
     res.status(204).end();
+
+    void audit(req, "admin", "canvas.clearCache", {
+      resourceId: req.params.canvasId,
+    });
   },
 );
 

@@ -9,6 +9,7 @@ import { Router } from "express";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import {
   assignColorToEvent,
   createColor,
@@ -47,8 +48,12 @@ paletteRouter.post(
   requireCanvasAdmin,
   validate({ body: ColorBodyModel }),
   async (req, res) => {
-    await createColor(req.body);
+    const color = await createColor(req.body);
     res.status(201).json({ message: "Color created" });
+    void audit(req, "admin", "color.create", {
+      resourceId: color.id,
+      metadata: req.body,
+    });
   },
 );
 
@@ -62,6 +67,10 @@ paletteRouter.put(
       data: req.body,
     });
     res.status(200).json({ message: "Color edited" });
+    void audit(req, "admin", "color.update", {
+      resourceId: req.params.colorId,
+      metadata: req.body,
+    });
   },
 );
 
@@ -72,6 +81,9 @@ paletteRouter.delete(
   async (req, res) => {
     await deleteColor(req.params.colorId);
     res.status(204).end();
+    void audit(req, "admin", "color.delete", {
+      resourceId: req.params.colorId,
+    });
   },
 );
 
@@ -86,6 +98,14 @@ paletteRouter.post(
       guildId: BigInt(req.params.guildId),
     });
     res.status(200).json({ message: "Color assigned to event" });
+    void audit(req, "admin", "participation.assign", {
+      resourceId: `${req.params.colorId}:${req.params.eventId}:${req.params.guildId}`,
+      metadata: {
+        colorId: req.params.colorId,
+        eventId: req.params.eventId,
+        guildId: req.params.guildId,
+      },
+    });
   },
 );
 
@@ -94,11 +114,17 @@ paletteRouter.delete(
   requireCanvasAdmin,
   validate({ params: AssignColorParamModel }),
   async (req, res) => {
-    // Color ID isn't actually used here, but I'm not sure how else to structure the route
     await unassignColorFromEvent({
       eventId: req.params.eventId,
       guildId: BigInt(req.params.guildId),
     });
     res.status(204).end();
+    void audit(req, "admin", "participation.unassign", {
+      resourceId: `${req.params.colorId}:${req.params.eventId}:${req.params.guildId}`,
+      metadata: {
+        eventId: req.params.eventId,
+        guildId: req.params.guildId,
+      },
+    });
   },
 );

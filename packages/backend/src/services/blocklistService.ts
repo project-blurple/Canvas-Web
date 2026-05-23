@@ -48,10 +48,11 @@ export async function addUsersToBlocklist(userIds: Iterable<bigint>) {
 }
 
 export async function removeUsersFromBlocklist(userIds: Iterable<bigint>) {
+  const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
   await prisma.blacklist.deleteMany({
     where: {
       user_id: {
-        in: Array.isArray(userIds) ? userIds : Array.from(userIds),
+        in: userIdsArray,
       },
     },
   });
