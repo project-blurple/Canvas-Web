@@ -1,5 +1,7 @@
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
+import { PassThrough } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import {
   type DiscordUserProfile,
   type Frame,
@@ -503,7 +505,14 @@ export async function exportCanvasBoundsAsStream(
     const transformer = sharp()
       .extract({ left: x0, top: y0, width, height })
       .png();
-    return fileStream.pipe(transformer);
+
+    const output = new PassThrough();
+
+    pipeline(fileStream, transformer, output).catch((error: unknown) => {
+      output.destroy(error as Error);
+    });
+
+    return output;
   }
 
   const unlocked = cached as {
