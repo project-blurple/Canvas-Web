@@ -15,6 +15,7 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import CanvasImageMask from "@/components/canvas/CanvasImageMask";
 import config from "@/config/clientConfig";
 import {
   useActionPanelContext,
@@ -467,7 +468,7 @@ export default function CanvasView({
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
-  const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
+  const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { frame, setFrame } = useSelectedFrameContext();
@@ -490,6 +491,7 @@ export default function CanvasView({
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [maskCoordinates, setMaskCoordinates] = useState<Point[]>([]);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -497,6 +499,17 @@ export default function CanvasView({
   const overlayCountRef = useRef(0);
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
+
+  const addMaskCoordinate = useCallback((point: Point) => {
+    setMaskCoordinates((prev) => {
+      for (const p of prev) if (p.x === point.x && p.y === point.y) return prev;
+      return [...prev, point];
+    });
+  }, []);
+
+  const clearMaskCoordinates = useCallback(() => {
+    setMaskCoordinates([]);
+  }, []);
 
   /**
    * Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
@@ -694,7 +707,12 @@ export default function CanvasView({
     const paintPixel = (
       ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
       payload: PlacePixelSocket.Payload,
+      clearBeforePaint: boolean,
     ) => {
+      if (clearBeforePaint && payload.rgba[3] < 255) {
+        ctx.clearRect(payload.x, payload.y, 1, 1);
+      }
+
       const [r, g, b, a] = payload.rgba;
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
       ctx.fillRect(payload.x, payload.y, 1, 1);
@@ -702,6 +720,7 @@ export default function CanvasView({
 
     const refreshCanvasImage = () => {
       clearOverlay();
+      clearMaskCoordinates();
       offscreenCanvasRef.current?.convertToBlob().then((blob) => {
         if (!imageRef.current) return;
         const oldSrc = imageRef.current.src;
@@ -738,7 +757,7 @@ export default function CanvasView({
       // Updates the canvas `canvas` which is used as the source of truth for the canvas
       const ctx = offscreenCanvasRef.current?.getContext("2d");
       if (!ctx) return;
-      paintPixel(ctx, payload);
+      paintPixel(ctx, payload, true);
 
       // This method prevents the need to convert an N×M canvas to a png on every update
       // while also preventing an inordinate amount of overlaid pixels from causing lag
@@ -746,6 +765,10 @@ export default function CanvasView({
         // flush the overlaid pixels and update canvas image
         refreshCanvasImage();
       } else {
+        if (payload.rgba[3] < 255) {
+          addMaskCoordinate({ x: payload.x, y: payload.y });
+        }
+
         // overlay the pixel without any changes
         overlayCountRef.current++;
         overlayPixel(payload);
@@ -761,7 +784,7 @@ export default function CanvasView({
       if (!ctx) return;
 
       for (const pixel of payload.pixels) {
-        paintPixel(ctx, pixel);
+        paintPixel(ctx, pixel, true);
       }
 
       const shouldRefreshCanvasImage =
@@ -769,11 +792,16 @@ export default function CanvasView({
         pixelOverlayThreshold;
 
       if (shouldRefreshCanvasImage) {
+        // When flushing to the main canvas image we should clear the mask set
+        // since the offscreen canvas now contains the authoritative pixels.
         refreshCanvasImage();
         return;
       }
 
       for (const pixel of payload.pixels) {
+        if (pixel.rgba[3] < 255) {
+          addMaskCoordinate({ x: pixel.x, y: pixel.y });
+        }
         overlayCountRef.current++;
         overlayPixel(pixel);
       }
@@ -787,10 +815,34 @@ export default function CanvasView({
       const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
       const ctx = offscreenCanvas.getContext("2d");
       if (!ctx) return;
-      paintPixel(ctx, payload);
+      paintPixel(ctx, payload, false);
+
+      const key = `${payload.x}:${payload.y}`;
+
+      // If this pixel is translucent, clear any previous overlay for the same
+      // coordinate to avoid stacking translucent overlays.
+      if (payload.rgba[3] < 255) {
+        const wrapper = canvasImageWrapperRef.current;
+        if (wrapper) {
+          const children = Array.from(wrapper.children);
+          for (const child of children) {
+            if (
+              child instanceof HTMLImageElement &&
+              child.dataset.coord === key
+            ) {
+              try {
+                URL.revokeObjectURL(child.src);
+              } catch {}
+              wrapper.removeChild(child);
+            }
+          }
+        }
+      }
+
       offscreenCanvas.convertToBlob().then((blob) => {
         const pixelImage = new Image();
         pixelImage.src = URL.createObjectURL(blob);
+        pixelImage.dataset.coord = key;
         pixelImage.onload = () => {
           canvasImageWrapperRef.current?.appendChild(pixelImage);
         };
@@ -1239,6 +1291,13 @@ export default function CanvasView({
             // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
+          {maskCoordinates && maskCoordinates.length > 0 && (
+            <CanvasImageMask
+              canvasHeight={canvas.height}
+              canvasWidth={canvas.width}
+              coordinates={maskCoordinates}
+            />
+          )}
         </CanvasImageWrapper>
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
