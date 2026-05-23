@@ -1,7 +1,7 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { type notice as NoticeDbModel, prisma } from "@/client";
 import { BadRequestError } from "@/errors";
-import type { CreateNoticeBody } from "@/models/notice.models";
+import type { NoticeBody } from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
   return {
@@ -18,6 +18,17 @@ function noticeFromDb(notice: NoticeDbModel): Notice {
   };
 }
 
+function isNoticeActive(notice: Notice): boolean {
+  const now = new Date();
+  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : null;
+  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : null;
+  return (
+    (hasStarted === true && hasEnded === false) ||
+    (hasStarted === true && hasEnded === null) ||
+    (hasStarted === null && hasEnded === false) // this case should theoretically never exist
+  );
+}
+
 function normalizeNoticeWindow({
   startAt,
   endAt,
@@ -26,7 +37,11 @@ function normalizeNoticeWindow({
   endAt?: Date | null;
 }): { startAt?: Date | null; endAt?: Date | null } {
   const normalizedStartAt =
-    endAt !== undefined && endAt !== null && startAt === undefined ?
+    (
+      endAt !== undefined &&
+      endAt !== null &&
+      (startAt === undefined || startAt === null)
+    ) ?
       new Date()
     : startAt;
 
@@ -60,12 +75,26 @@ export async function getNotices(activeOnly: boolean): Promise<Notice[]> {
           OR: [{ end_at: null }, { end_at: { gt: now } }],
         }
       : undefined,
-    orderBy: {
-      priority: "asc",
-    },
+    orderBy: [{ priority: "asc" }, { created_at: "desc" }],
   });
 
-  return notices.map(noticeFromDb);
+  const mappedNotices = notices.map(noticeFromDb);
+  if (!activeOnly) {
+    mappedNotices.sort((a, b) => {
+      // Active notices should be sorted above inactive ones, regardless of priority
+      const aIsActive = isNoticeActive(a);
+      const bIsActive = isNoticeActive(b);
+
+      if (aIsActive && !bIsActive) {
+        return -1;
+      } else if (!aIsActive && bIsActive) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+  }
+  return mappedNotices;
 }
 
 export async function createNotice({
@@ -77,7 +106,7 @@ export async function createNotice({
   endAt,
   persisted,
   canvasId,
-}: CreateNoticeBody): Promise<Notice> {
+}: NoticeBody): Promise<Notice> {
   const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
 
   const notice = await prisma.notice.create({
@@ -96,9 +125,9 @@ export async function createNotice({
   return noticeFromDb(notice);
 }
 
-interface UpdateNoticeBody {
+interface UpdateNoticeInput {
   noticeId: number;
-  data: CreateNoticeBody;
+  data: NoticeBody;
 }
 
 export async function updateNotice({
@@ -113,7 +142,7 @@ export async function updateNotice({
     persisted,
     canvasId,
   },
-}: UpdateNoticeBody): Promise<Notice> {
+}: UpdateNoticeInput): Promise<Notice> {
   const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
 
   const notice = await prisma.notice.update({
