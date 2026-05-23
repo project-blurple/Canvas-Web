@@ -13,7 +13,7 @@ export function useCanvasList() {
     return response.data;
   };
 
-  return useQuery({
+  return useQuery<CanvasListRequest.ResBody>({
     queryKey: ["canvas"],
     queryFn: getCanvasList,
     refetchOnMount: false,

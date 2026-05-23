@@ -1,11 +1,8 @@
+import { NoticeBodyModel, NoticeIdParamModel } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import {
-  ModifyNoticeBodyModel,
-  NoticeIdParamModel,
-} from "@/models/notice.models";
 import {
   createNotice,
   deleteNotice,
@@ -28,7 +25,7 @@ noticeRouter.get("/all", requireCanvasAdmin, async (_req, res) => {
 noticeRouter.post(
   "/",
   requireCanvasAdmin,
-  validate({ body: ModifyNoticeBodyModel }),
+  validate({ body: NoticeBodyModel }),
   async (req, res) => {
     const notice = await createNotice(req.body);
     res.status(201).json(notice);
@@ -38,7 +35,7 @@ noticeRouter.post(
 noticeRouter.put(
   "/:noticeId",
   requireCanvasAdmin,
-  validate({ params: NoticeIdParamModel, body: ModifyNoticeBodyModel }),
+  validate({ params: NoticeIdParamModel, body: NoticeBodyModel }),
   async (req, res) => {
     const notice = await updateNotice({
       noticeId: req.params.noticeId,

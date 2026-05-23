@@ -3,7 +3,7 @@ import type {
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
-  LeaderboardEntry,
+  LeaderboardEntrySchema,
   Paginated,
   UserStats,
 } from "@blurple-canvas-web/types";
@@ -62,7 +62,7 @@ export async function getLeaderboard(
   canvasId: CanvasInfo["id"],
   page = 1,
   size = 10,
-): Promise<Paginated<LeaderboardEntry>> {
+): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
@@ -111,14 +111,26 @@ export async function getLeaderboard(
 export async function getCanvasStatisticsSummary(
   canvasId: CanvasInfo["id"],
 ): Promise<CanvasStatisticsSummary> {
-  const leaderboardRows = await prisma.leaderboard.findMany({
-    where: {
-      canvas_id: canvasId,
-    },
-    select: {
-      total_pixels: true,
-    },
-  });
+  const [leaderboardRows, latestHistoryRow] = await Promise.all([
+    prisma.leaderboard.findMany({
+      where: {
+        canvas_id: canvasId,
+      },
+      select: {
+        total_pixels: true,
+      },
+    }),
+    prisma.history.findFirst({
+      where: {
+        canvas_id: canvasId,
+        erased_at: null,
+      },
+      orderBy: [{ timestamp: "desc" }, { id: "desc" }],
+      select: {
+        timestamp: true,
+      },
+    }),
+  ]);
 
   return {
     canvasId,
@@ -127,6 +139,7 @@ export async function getCanvasStatisticsSummary(
       (total, row) => total + row.total_pixels,
       0,
     ),
+    lastPlacedAt: latestHistoryRow?.timestamp.toISOString() ?? null,
   };
 }
 

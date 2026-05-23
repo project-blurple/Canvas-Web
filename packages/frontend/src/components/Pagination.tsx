@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 const StyledPaginationItem = styled(PaginationItem)`
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 `;
 
 const customIconSlots = {
@@ -15,7 +15,7 @@ const customIconSlots = {
   previous: ChevronLeft,
   next: ChevronRight,
   last: ChevronLast,
-};
+} as const;
 
 export default function StyledPagination(
   props: React.ComponentProps<typeof Pagination>,

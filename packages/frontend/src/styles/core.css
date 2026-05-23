@@ -145,6 +145,10 @@
   table {
     border-collapse: collapse;
   }
+
+  th {
+    text-align: left;
+  }
 }
 
 @layer fonts {
@@ -254,7 +258,9 @@
   input[type="tel"],
   input[type="text"],
   input[type="url"],
-  input[type="week"] {
+  input[type="week"],
+  select,
+  textarea {
     border-radius: 8px;
     border-style: solid;
     border-width: 1px;

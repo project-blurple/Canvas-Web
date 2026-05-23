@@ -1,4 +1,8 @@
-import type { DiscordUserProfile, Frame } from "@blurple-canvas-web/types";
+import {
+  type DiscordUserProfile,
+  type Frame,
+  FrameOwnerType,
+} from "@blurple-canvas-web/types";
 import {
   useAuthContext,
   useCanvasContext,
@@ -18,11 +22,11 @@ import FrameInfoCard from "./SelectedFrameInfoCard";
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
-    case "system":
+    case FrameOwnerType.System:
       return false;
-    case "user":
+    case FrameOwnerType.User:
       return frame.owner.user.id === user.id;
-    case "guild": {
+    case FrameOwnerType.Guild: {
       const guildId = frame.owner.guild.guild_id;
       const userGuildData = user.guilds?.[guildId];
       return (
@@ -86,7 +90,7 @@ function FrameInfoPanelBody({
             Edit frame
           </DynamicButton>
         )}
-        {selectedFrame.owner.type !== "system" && (
+        {selectedFrame.owner.type !== FrameOwnerType.System && (
           <TooltipDynamicButton
             color={hexStringToPixelColor(selectedFrame.id)}
             tooltipTitle="Copied"

@@ -1,14 +1,14 @@
-import { Router } from "express";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
 import {
   AssignColorParamModel,
   ColorBodyModel,
   ColorIdParamModel,
+  EventIdParamModel,
   PaletteQueryModel,
-} from "@/models/color.models";
-import { EventIdParamModel } from "@/models/event.models";
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
 import {
   assignColorToEvent,
   createColor,
@@ -71,7 +71,7 @@ paletteRouter.delete(
   validate({ params: ColorIdParamModel }),
   async (req, res) => {
     await deleteColor(req.params.colorId);
-    res.status(200).json({ message: "Color deleted" });
+    res.status(204).end();
   },
 );
 
@@ -99,6 +99,6 @@ paletteRouter.delete(
       eventId: req.params.eventId,
       guildId: BigInt(req.params.guildId),
     });
-    res.status(200).json({ message: "Color unassigned from event" });
+    res.status(204).end();
   },
 );
