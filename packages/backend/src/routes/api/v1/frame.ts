@@ -27,6 +27,33 @@ import { normalizeBounds } from "@/utils";
 
 export const frameRouter = typedRouter(Router());
 
+// Needs to be above the `/:frameId` route to avoid being treated as a frame ID
+frameRouter.get(
+  "/:frameId.png",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    const frame = await getFrameById(req.params.frameId);
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="frame-${frame.id}.png"`,
+    );
+
+    try {
+      const stream = await exportFrameAsStream(req.params.frameId);
+      stream.on("error", (err) => {
+        console.error("Error streaming frame PNG:", err);
+        if (!res.headersSent) res.sendStatus(500);
+      });
+      stream.pipe(res);
+    } catch (err) {
+      console.error("Failed to export frame stream:", err);
+      res.sendStatus(500);
+    }
+  },
+);
+
 frameRouter.get(
   "/:frameId",
   validate({ params: FrameIdParamModel }),
@@ -150,31 +177,5 @@ frameRouter.post(
         ),
     );
     res.status(201).json(frame);
-  },
-);
-
-frameRouter.get(
-  "/:frameId.png",
-  validate({ params: FrameIdParamModel }),
-  async (req, res) => {
-    const frame = await getFrameById(req.params.frameId);
-
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="frame-${frame.id}.png"`,
-    );
-
-    try {
-      const stream = await exportFrameAsStream(req.params.frameId);
-      stream.on("error", (err) => {
-        console.error("Error streaming frame PNG:", err);
-        if (!res.headersSent) res.sendStatus(500);
-      });
-      stream.pipe(res);
-    } catch (err) {
-      console.error("Failed to export frame stream:", err);
-      res.sendStatus(500);
-    }
   },
 );
