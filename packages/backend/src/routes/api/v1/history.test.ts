@@ -227,7 +227,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         x0: 0,
         y0: 0,
@@ -331,7 +331,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history/force")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({ x0: 0, y0: 0 })
       .type("json");
 
