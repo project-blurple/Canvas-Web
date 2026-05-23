@@ -36,7 +36,7 @@ interface LockedCanvas {
  * easy updating of the canvas, while also allowing it to be rapidly returned from requests (as
  * most of the time to build a canvas image from scratch is fetching the pixels from the database).
  */
-export interface UnlockedCanvas {
+interface UnlockedCanvas {
   isLocked: false;
   width: number;
   height: number;

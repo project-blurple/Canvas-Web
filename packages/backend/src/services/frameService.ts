@@ -23,11 +23,7 @@ import {
   UnprocessableError,
 } from "@/errors";
 import { PrismaErrorCode } from "@/utils";
-import {
-  getCanvasPng,
-  getLockedCanvasPath,
-  type UnlockedCanvas,
-} from "./canvasService";
+import { getCanvasPng, getLockedCanvasPath } from "./canvasService";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -540,7 +536,7 @@ export async function exportCanvasBoundsAsStream({
     return output;
   }
 
-  const unlocked = cached as UnlockedCanvas;
+  const unlocked = cached;
   const rawBuffer = pixelsToRgbaBuffer(
     unlocked.pixels,
     unlocked.width,
