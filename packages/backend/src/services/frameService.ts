@@ -1,5 +1,4 @@
 import { createReadStream } from "node:fs";
-import fs from "node:fs/promises";
 import { PassThrough } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
