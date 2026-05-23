@@ -1,5 +1,6 @@
 import {
   type CanvasInfo,
+  type PixelColor,
   type PlacePixelSocket,
   SocketEvents,
 } from "@blurple-canvas-web/types";
@@ -72,7 +73,7 @@ export class SocketHandler {
         pixels: pixels.map((pixel) => ({
           x: pixel.x,
           y: pixel.y,
-          rgba: pixel.color.rgba,
+          rgba: pixel.color.rgba as PixelColor,
         })),
       });
     } catch (error) {

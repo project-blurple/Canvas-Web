@@ -226,6 +226,10 @@ importers:
         version: 6.0.3
 
   packages/types:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@tsconfig/node24':
         specifier: ^24.0.4

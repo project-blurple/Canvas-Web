@@ -1,12 +1,12 @@
+import {
+  CanvasIdParamModel,
+  EventIdParamModel,
+  LeaderboardQueryModel,
+  UserCanvasParamModel,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import { EventIdParamModel } from "@/models/event.models";
-import {
-  LeaderboardQueryModel,
-  UserCanvasParamModel,
-} from "@/models/pixel.models";
 import {
   getCanvasStatisticsSummary,
   getEventStatisticsSummary,
