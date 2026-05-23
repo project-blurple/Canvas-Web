@@ -14,7 +14,7 @@ function timestampTooLongAgo(timestamp: string): boolean {
 
 export class SocketHandler {
   public constructor(private io: Server) {
-    this.io.on("connection", this.onConnection);
+    this.io.on("connection", this.onConnection.bind(this));
   }
 
   onConnection(socket: Socket) {
