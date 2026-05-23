@@ -8,7 +8,7 @@ import { Prisma, prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {
-  restorePixelsAfterHistoryDeletion,
+  restorePixelsAfterHistoryModification,
   validatePixel,
 } from "./pixelService";
 
@@ -535,7 +535,10 @@ export async function deletePixelHistoryEntries(
     ).values(),
   ];
 
-  await restorePixelsAfterHistoryDeletion(params.canvasId, coordinatesUpdated);
+  await restorePixelsAfterHistoryModification(
+    params.canvasId,
+    coordinatesUpdated,
+  );
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
