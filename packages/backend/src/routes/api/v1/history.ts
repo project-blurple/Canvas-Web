@@ -15,6 +15,7 @@ import {
 } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import { isCanvasInCurrentEvent } from "@/services/canvasService";
 import {
   deletePixelHistoryEntries,
@@ -175,6 +176,10 @@ historyRouter.delete(
     await deletePixelHistoryEntries(payload, shouldBlockAuthors);
 
     res.status(204).send();
+    void audit(req, "moderator", "pixel_history.delete", {
+      resourceId: req.params.canvasId,
+      metadata: { filters: req.body, shouldBlockAuthors, forced: false },
+    });
   },
 );
 
@@ -191,5 +196,9 @@ historyRouter.delete(
     await deletePixelHistoryEntries(payload, shouldBlockAuthors);
 
     res.status(204).send();
+    void audit(req, "admin", "pixel_history.delete", {
+      resourceId: req.params.canvasId,
+      metadata: { filters: req.body, shouldBlockAuthors, forced: true },
+    });
   },
 );

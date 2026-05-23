@@ -3,7 +3,7 @@ import LayoutWithHeader from "../../../components/LayoutWithHeader";
 
 export default function CanvasPage() {
   return (
-    <LayoutWithHeader>
+    <LayoutWithHeader isCanvasPage>
       <Main />
     </LayoutWithHeader>
   );

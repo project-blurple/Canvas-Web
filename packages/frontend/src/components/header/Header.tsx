@@ -5,6 +5,10 @@ import Image from "next/image";
 import { CanvasPicker } from "../canvas";
 import Nav, { NavLink } from "./Nav";
 
+interface HeaderProps {
+  isCanvasPage?: boolean;
+}
+
 const Wrapper = styled("header")`
   body:has(&) {
     --layout-padding-x: 2rem;
@@ -57,7 +61,9 @@ const Logo = styled(Image)(
   `,
 );
 
-export default function Header() {
+export default function Header({
+  isCanvasPage: isCanvasPage = false,
+}: HeaderProps) {
   return (
     <Wrapper>
       <CompositeLogo href="/">
@@ -69,7 +75,7 @@ export default function Header() {
         />
         <Wordmark>Blurple Canvas</Wordmark>
       </CompositeLogo>
-      <CanvasPicker />
+      <CanvasPicker shouldRedirect={isCanvasPage} />
       <Nav />
     </Wrapper>
   );

@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import { isCanvasInCurrentEvent } from "@/services/canvasService";
 import {
   isCanvasAdmin,
@@ -16,6 +17,10 @@ import { historyRouter } from "./history";
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
   getPixelHistorySummary: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -264,6 +269,18 @@ describe("History route tests", () => {
       },
       true,
     );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "pixel_history.delete",
+      expect.objectContaining({
+        resourceId: 1,
+        metadata: expect.objectContaining({
+          shouldBlockAuthors: true,
+          forced: false,
+        }),
+      }),
+    );
   });
 
   it("returns 403 when deleting history for a canvas not in current event", async () => {
@@ -327,6 +344,18 @@ describe("History route tests", () => {
         colorFilter: undefined,
       },
       true,
+    );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "pixel_history.delete",
+      expect.objectContaining({
+        resourceId: 1,
+        metadata: expect.objectContaining({
+          shouldBlockAuthors: true,
+          forced: true,
+        }),
+      }),
     );
   });
 
