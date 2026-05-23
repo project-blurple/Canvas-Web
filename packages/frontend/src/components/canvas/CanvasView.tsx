@@ -137,7 +137,7 @@ const CanvasViewLabel = styled("div")`
   }
 `;
 
-const InviteButton = styled(Button)`
+const InviteButtonRoot = styled(Button)`
   ${sharedLabelStyles}
 
   @media (hover: hover) and (pointer: fine) {
@@ -155,7 +155,22 @@ const InviteButton = styled(Button)`
     inset-block-start: 0.5rem;
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
-`;
+` as React.ComponentType<
+  React.ComponentProps<typeof Button> & { component?: React.ElementType }
+>;
+
+type InviteButtonProps = Omit<React.ComponentProps<"a">, "color"> &
+  React.ComponentProps<typeof InviteButtonRoot>;
+
+function InviteButton(props: InviteButtonProps) {
+  return (
+    <InviteButtonRoot
+      {...props}
+      component="a"
+      onPointerDown={(event) => event.stopPropagation()}
+    />
+  );
+}
 
 const BaseFullscreenButton = styled(Button, {
   shouldForwardProp: (prop: string) =>
@@ -1212,9 +1227,13 @@ export default function CanvasView({
       {showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
-          <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
-          </a>
+          <InviteButton
+            href={config.discordServerInvite}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Project Blurple
+          </InviteButton>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
       <div
