@@ -361,6 +361,7 @@ function CanvasSettingsForm({
                 type="checkbox"
                 checked={formValues.isLocked}
                 onChange={handleIsLockedChange}
+                disabled={mode === "create"}
               />
             </td>
           </tr>

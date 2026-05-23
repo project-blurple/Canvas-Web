@@ -110,7 +110,7 @@ interface CanvasSummaryRow {
 export async function getCanvases(
   eventId?: BlurpleEvent["id"],
 ): Promise<CanvasSummary[]> {
-  const whereSQL =
+  const whereSql =
     eventId === undefined ?
       Prisma.sql`TRUE`
     : Prisma.sql`c.event_id = ${eventId}`;
@@ -129,7 +129,7 @@ export async function getCanvases(
     LEFT JOIN history h
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
