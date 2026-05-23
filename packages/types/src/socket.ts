@@ -3,4 +3,7 @@ export const SocketEvents = {
   placePixel(canvasId: number) {
     return `place pixel ${canvasId}` as const;
   },
+  placePixelBulk(canvasId: number) {
+    return `place pixel bulk ${canvasId}` as const;
+  },
 } as const;
