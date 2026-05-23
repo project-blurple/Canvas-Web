@@ -1,4 +1,8 @@
-import type { Cooldown, DiscordUserProfile } from "@blurple-canvas-web/types";
+import type {
+  CanvasExportSize,
+  Cooldown,
+  DiscordUserProfile,
+} from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
@@ -13,7 +17,6 @@ import {
 import { ExportFrameQueryModel } from "@/models/frame.models";
 import {
   type CachedCanvas,
-  type CanvasExportSize,
   clearCachedCanvas,
   createCanvas,
   editCanvas,
@@ -62,11 +65,10 @@ canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
-    const cachedCanvas = await getCanvasPng(
-      req.params.canvasId,
-      req.query.size,
-    );
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, req.query.size);
+    const size = req.query.size as CanvasExportSize | undefined;
+
+    const cachedCanvas = await getCanvasPng(req.params.canvasId, size);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);
   },
 );
 

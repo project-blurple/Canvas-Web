@@ -1,4 +1,9 @@
-import { FrameOwnerType } from "@blurple-canvas-web/types";
+import type { CanvasExportSize } from "@blurple-canvas-web/types";
+import {
+  CANVAS_EXPORT_SIZES,
+  DEFAULT_CANVAS_EXPORT_SIZE,
+  FrameOwnerType,
+} from "@blurple-canvas-web/types";
 import z from "zod";
 import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
 import { CanvasIdParamModel } from "./canvas.models";
@@ -83,8 +88,8 @@ export const ExportFrameQueryModel = z.object({
   size: z.coerce
     .number()
     .int()
-    .refine((size) => size === 1 || size === 2 || size === 4, {
-      message: "size must be 1, 2, or 4",
+    .refine((size) => CANVAS_EXPORT_SIZES.includes(size as CanvasExportSize), {
+      message: `size must be one of: ${CANVAS_EXPORT_SIZES.join(", ")}`,
     })
-    .default(1),
+    .default(DEFAULT_CANVAS_EXPORT_SIZE as CanvasExportSize),
 });

@@ -1,10 +1,15 @@
 import fs from "node:fs";
 import type {
   BlurpleEvent,
+  CanvasExportSize,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
   Point,
+} from "@blurple-canvas-web/types";
+import {
+  CANVAS_EXPORT_SIZES,
+  DEFAULT_CANVAS_EXPORT_SIZE,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
 import sharp from "sharp";
@@ -14,10 +19,6 @@ import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
-
-export type CanvasExportSize = 1 | 2 | 4;
-
-const CANVAS_EXPORT_SIZES: readonly CanvasExportSize[] = [1, 2, 4];
 
 import { getEventPalette } from "./paletteService";
 import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
@@ -108,7 +109,7 @@ export function initializeCache(): void {
 export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
-  size: CanvasExportSize = 1,
+  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
 ): string {
   const sizeSuffix = size === 1 ? "" : `__${size}x`;
 
@@ -131,7 +132,7 @@ export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
 
 export function unlockedCanvasToPngStream(
   unlockedCanvas: UnlockedCanvas,
-  size: CanvasExportSize = 1,
+  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
 ): NodeJS.ReadableStream {
   if (size === 1) {
     return unlockedCanvasToPng(unlockedCanvas).pack();
