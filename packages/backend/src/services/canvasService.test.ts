@@ -1,5 +1,6 @@
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
+import { socketHandler } from "@/index";
 import { seedCanvases, seedColors, seedEvents, seedPixels } from "@/test";
 import {
   createCanvas,
@@ -9,8 +10,16 @@ import {
   getCanvasPixels,
 } from "./canvasService";
 
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
+
 describe("Canvas Info Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -52,6 +61,7 @@ describe("Canvas Info Tests", () => {
 
 describe("Canvas Validation Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -67,6 +77,7 @@ describe("Canvas Validation Tests", () => {
 
 describe("Canvas Pixels Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -87,6 +98,7 @@ describe("Canvas Pixels Tests", () => {
 
 describe("Create Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -108,7 +120,8 @@ describe("Create Canvas Tests", () => {
   });
 
   it("Creates a canvas and seeds its pixels", async () => {
-    const canvasName = `Generated Canvas ${Date.now()}`;
+    const now = Date.now();
+    const canvasName = `Generated Canvas ${now}`;
 
     await createCanvas({
       name: canvasName,
@@ -145,11 +158,24 @@ describe("Create Canvas Tests", () => {
       [88, 101, 242, 127],
       [88, 101, 242, 127],
     ]);
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: createdCanvas.id,
+        name: canvasName,
+        width: 3,
+        height: 2,
+        isLocked: true,
+        allColorsGlobal: false,
+        cooldownDuration: 15,
+      }),
+    );
   });
 });
 
 describe("Edit Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -160,7 +186,7 @@ describe("Edit Canvas Tests", () => {
       name: "Edited Canvas",
       isLocked: true,
       allColorsGlobal: true,
-      cooldownLength: 45,
+      cooldownDuration: 45,
     });
 
     const canvas = await getCanvasInfo(1);
@@ -183,6 +209,16 @@ describe("Edit Canvas Tests", () => {
       cooldown_length: 45,
       all_colors_global: true,
     });
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        name: "Edited Canvas",
+        isLocked: true,
+        allColorsGlobal: true,
+        cooldownDuration: 45,
+      }),
+    );
   });
 });
 

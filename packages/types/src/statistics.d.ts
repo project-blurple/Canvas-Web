@@ -24,6 +24,7 @@ export interface CanvasStatisticsSummary {
   canvasId: CanvasInfo["id"];
   totalUsersInvolved: number;
   totalPixelsPlaced: number;
+  lastPlacedAt: Date | null;
 }
 
 export interface EventStatisticsSummary {
