@@ -305,9 +305,9 @@ function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
           ))
         : colors.map((color) => (
             <InteractiveSwatch
-              aria-disabled={isColorDisabled?.(color) || undefined}
               aria-selected={color === selectedColor}
               key={color.code}
+              locked={isColorDisabled?.(color)}
               onClick={() => {
                 playSound();
                 setColor(color);
