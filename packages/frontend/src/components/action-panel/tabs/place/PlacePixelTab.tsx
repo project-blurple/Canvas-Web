@@ -169,10 +169,9 @@ export default function PlacePixelTab({
     },
   } = useCanvasContext();
 
-  const { data: initialCooldown } = useCanvasCooldown(
-    canvasId,
-    active && Boolean(user) && !isInitialCooldownLoaded,
-  );
+  const { data: initialCooldown } = useCanvasCooldown(canvasId, {
+    enabled: active && Boolean(user) && !isInitialCooldownLoaded,
+  });
 
   useEffect(
     function resetInitialCooldownState() {
