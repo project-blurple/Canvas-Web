@@ -1,9 +1,20 @@
 "use client";
 
-import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
+import {
+  type CanvasInfo,
+  type CanvasInfoRequest,
+  SocketEvents,
+} from "@blurple-canvas-web/types";
+import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import config from "@/config/clientConfig";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
@@ -40,10 +51,40 @@ export const CanvasProvider = ({
   mainCanvasInfo,
 }: CanvasProviderProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
 
   const { setColor } = useSelectedColorContext();
   const { setFrame } = useSelectedFrameContext();
+
+  useEffect(() => {
+    socket.auth = {
+      canvasId: mainCanvasInfo.id,
+      pixelTimestamp: new Date().toISOString(),
+    };
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [mainCanvasInfo.id]);
+
+  useEffect(() => {
+    const onCanvasUpdate = (canvas: CanvasInfo) => {
+      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
+      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
+
+      if (canvas.id === activeCanvas.id) {
+        setActiveCanvas(canvas);
+      }
+    };
+
+    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
+
+    return () => {
+      socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
+    };
+  }, [activeCanvas.id, queryClient]);
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
@@ -71,8 +112,15 @@ export const CanvasProvider = ({
         canvasId,
         pixelTimestamp: new Date().toISOString(),
       };
+
+      if (canvasId !== activeCanvas.id) {
+        if (socket.connected) {
+          socket.disconnect();
+        }
+        socket.connect();
+      }
     },
-    [router, setColor, setFrame, mainCanvasInfo.id],
+    [activeCanvas.id, router, setColor, setFrame, mainCanvasInfo.id],
   );
 
   return (

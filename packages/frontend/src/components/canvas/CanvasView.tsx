@@ -1,10 +1,11 @@
 "use client";
 
-import type {
-  CanvasInfo,
-  Frame,
-  PlacePixelSocket,
-  Point,
+import {
+  type CanvasInfo,
+  type Frame,
+  type PlacePixelSocket,
+  type Point,
+  SocketEvents,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import {
@@ -743,10 +744,6 @@ export default function CanvasView({
       return;
     }
 
-    if (!socket.connected) {
-      socket.connect();
-    }
-
     const onConnect = () => {
       console.debug("[Live Updating]: Connected to server");
       console.debug(
@@ -812,7 +809,7 @@ export default function CanvasView({
       });
     };
 
-    const pixelPlaceEvent = `place pixel ${canvas.id}`;
+    const pixelPlaceEvent = SocketEvents.placePixel(canvas.id);
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
@@ -822,7 +819,6 @@ export default function CanvasView({
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off(pixelPlaceEvent, onPixelPlaced);
-      socket.disconnect();
     };
   }, [canvas]);
 
