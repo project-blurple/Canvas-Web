@@ -1,7 +1,7 @@
-import { FrameOwnerType } from "@blurple-canvas-web/types";
 import z from "zod";
-import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
+import { FrameOwnerType } from "../frame";
 import { CanvasIdParamModel } from "./canvas.models";
+import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),

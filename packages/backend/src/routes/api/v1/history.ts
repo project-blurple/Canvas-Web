@@ -1,4 +1,11 @@
-import type { Point } from "@blurple-canvas-web/types";
+import {
+  CanvasIdParamModel,
+  PixelHistoryComplexBodyModel,
+  PixelHistoryComplexParamModel,
+  PixelHistoryDeleteBodyModel,
+  PixelHistoryParamModel,
+  type Point,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import type { z } from "zod";
 import {
@@ -8,13 +15,6 @@ import {
 } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
-  PixelHistoryComplexBodyModel,
-  PixelHistoryComplexParamModel,
-  PixelHistoryDeleteBodyModel,
-  PixelHistoryParamModel,
-} from "@/models/history.models";
 import { isCanvasInCurrentEvent } from "@/services/canvasService";
 import {
   deletePixelHistoryEntries,

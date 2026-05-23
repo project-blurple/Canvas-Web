@@ -1,14 +1,14 @@
-import { Router } from "express";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
 import {
   AssignColorParamModel,
   ColorBodyModel,
   ColorIdParamModel,
+  EventIdParamModel,
   PaletteQueryModel,
-} from "@/models/color.models";
-import { EventIdParamModel } from "@/models/event.models";
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
 import {
   assignColorToEvent,
   createColor,
