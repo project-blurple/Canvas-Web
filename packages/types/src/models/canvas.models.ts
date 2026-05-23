@@ -1,5 +1,5 @@
 import z from "zod";
-import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
+import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),

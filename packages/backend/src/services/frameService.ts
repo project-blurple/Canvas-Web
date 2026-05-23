@@ -1,6 +1,7 @@
 import {
   type DiscordUserProfile,
   type Frame,
+  type FrameOwnerInput,
   FrameOwnerType,
   type GuildOwnedFrame,
   type UserOwnedFrame,
@@ -13,7 +14,6 @@ import {
   NotFoundError,
   UnprocessableError,
 } from "@/errors";
-import type { FrameOwnerInput } from "@/models/frame.models";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 

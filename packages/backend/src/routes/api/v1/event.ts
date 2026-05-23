@@ -1,12 +1,12 @@
-import { Router } from "express";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
 import {
   CreateEventBodyModel,
   EditEventBodyModel,
   EventIdParamModel,
-} from "@/models/event.models";
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
 import {
   createEvent,
   editEvent,

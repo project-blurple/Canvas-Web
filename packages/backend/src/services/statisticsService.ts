@@ -139,7 +139,7 @@ export async function getCanvasStatisticsSummary(
       (total, row) => total + row.total_pixels,
       0,
     ),
-    lastPlacedAt: latestHistoryRow?.timestamp ?? null,
+    lastPlacedAt: latestHistoryRow?.timestamp.toISOString() ?? null,
   };
 }
 

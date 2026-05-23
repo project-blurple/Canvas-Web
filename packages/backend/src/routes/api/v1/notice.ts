@@ -1,8 +1,8 @@
+import { NoticeBodyModel, NoticeIdParamModel } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { NoticeBodyModel, NoticeIdParamModel } from "@/models/notice.models";
 import {
   createNotice,
   deleteNotice,
