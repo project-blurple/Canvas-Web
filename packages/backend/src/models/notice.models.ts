@@ -25,8 +25,4 @@ export const NoticeBodyModel = z
     }
   });
 
-export type CreateNoticeBody = z.infer<typeof NoticeBodyModel>;
-export type ModifyNoticeBody = CreateNoticeBody;
-
-export const CreateNoticeBodyModel = NoticeBodyModel;
-export const ModifyNoticeBodyModel = NoticeBodyModel;
+export type NoticeBody = z.infer<typeof NoticeBodyModel>;
