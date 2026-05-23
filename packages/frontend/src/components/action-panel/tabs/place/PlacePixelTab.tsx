@@ -118,12 +118,23 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
+  const { user } = useAuthContext();
+  const {
+    canvas: {
+      allColorsGlobal,
+      id: canvasId,
+      isLocked: readOnly,
+      webPlacingEnabled,
+    },
+  } = useCanvasContext();
+  const { data: initialCooldown } = useCanvasCooldown(canvasId, {
+    enabled: active && Boolean(user),
+  });
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [isInitialCooldownLoaded, setIsInitialCooldownLoaded] = useState(false);
   const [prevTimeLeft, setPrevTimeLeft] = useState(0);
 
   const { data: palette } = usePalette(eventId ?? undefined);
@@ -159,36 +170,13 @@ export default function PlacePixelTab({
 
   const { color: selectedColor } = useSelectedColorContext();
 
-  const { user } = useAuthContext();
-  const {
-    canvas: {
-      allColorsGlobal,
-      id: canvasId,
-      isLocked: readOnly,
-      webPlacingEnabled,
-    },
-  } = useCanvasContext();
-
-  const { data: initialCooldown } = useCanvasCooldown(canvasId, {
-    enabled: active && Boolean(user) && !isInitialCooldownLoaded,
-  });
-
   useEffect(
-    function resetInitialCooldownState() {
-      setIsInitialCooldownLoaded(false);
+    function syncInitialCooldown() {
+      const cooldown = initialCooldown?.cooldownEndTime;
+      if (cooldown === undefined) return;
+      setCooldownSeconds(Math.ceil(cooldown / 1000));
     },
-    [canvasId, user?.id],
-  );
-
-  useEffect(
-    function initializeCooldownOnLoad() {
-      if (!active || isInitialCooldownLoaded || !initialCooldown) return;
-
-      const cooldown = initialCooldown.cooldownEndTime;
-      setCooldownSeconds(cooldown ? Math.ceil(cooldown / 1000) : 0);
-      setIsInitialCooldownLoaded(true);
-    },
-    [active, initialCooldown, isInitialCooldownLoaded],
+    [initialCooldown?.cooldownEndTime],
   );
 
   const inviteSlug = selectedColor?.invite;
@@ -229,7 +217,7 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
+      setCooldownSeconds(cooldown ? Math.ceil(cooldown / 1000) : 0);
     },
   });
 

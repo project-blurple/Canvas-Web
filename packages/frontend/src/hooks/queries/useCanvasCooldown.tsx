@@ -26,6 +26,7 @@ export function useCanvasCooldown(
     enabled: enabled && Boolean(canvasId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    staleTime: Infinity,
     retry: false,
   });
 }
