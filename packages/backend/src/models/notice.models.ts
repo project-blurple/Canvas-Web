@@ -4,7 +4,7 @@ export const NoticeIdParamModel = z.object({
   noticeId: z.coerce.number().int().positive(),
 });
 
-export const ModifyNoticeBodyModel = z
+export const NoticeBodyModel = z
   .object({
     type: z.string(),
     header: z.string().nullable().optional(),
@@ -25,4 +25,4 @@ export const ModifyNoticeBodyModel = z
     }
   });
 
-export type CreateNoticeBody = z.infer<typeof ModifyNoticeBodyModel>;
+export type NoticeBody = z.infer<typeof NoticeBodyModel>;
