@@ -1,6 +1,7 @@
 import { styled } from "@mui/material";
-import { Lock as LockIcon } from "lucide-react";
+import { LockKeyhole as LockIcon } from "lucide-react";
 import { PrimitiveButton } from "../button";
+import VisuallyHidden from "../VisuallyHidden";
 import { StaticSwatch } from "./StaticSwatch";
 
 const StyledSwatch = styled(StaticSwatch, {
@@ -13,7 +14,7 @@ const StyledSwatch = styled(StaticSwatch, {
   will-change: opacity; /* Chromium fumbles hover style without this 🤷 */
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover:not([aria-disabled="true"], [aria-selected="true"]) {
+    &:hover:not([aria-selected="true"]) {
       opacity: 85%;
     }
   }
@@ -27,18 +28,6 @@ const StyledSwatch = styled(StaticSwatch, {
     background-clip: content-box;
     padding: 3px;
   }
-
-  &:active:not([aria-disabled="true"]) {
-    scale: 97%;
-  }
-
-  /* aria-disabled keeps the swatch clickable (so the user can select it to see
-   * why it can't be placed yet) while making it visually distinct. The lock
-   * overlay handles the disabled-state cue so we don't have to dim the swatch
-   * colors. */
-  &[aria-disabled="true"] {
-    cursor: not-allowed;
-  }
 `;
 
 const DisabledLockOverlay = styled("span")`
@@ -49,17 +38,23 @@ const DisabledLockOverlay = styled("span")`
   position: absolute;
 
   & > svg {
-    block-size: 50%;
-    inline-size: 50%;
+    block-size: 33%;
+    inline-size: 33%;
+    opacity: 60%;
   }
 `;
 
-export function InteractiveSwatch(
-  props: React.ComponentPropsWithRef<typeof StaticSwatch>,
-) {
-  const ariaDisabled = props["aria-disabled"];
-  const isDisabled = ariaDisabled === true || ariaDisabled === "true";
+interface InteractiveSwatchProps extends React.ComponentPropsWithRef<
+  typeof StaticSwatch
+> {
+  locked?: boolean;
+}
 
+export function InteractiveSwatch({
+  children,
+  locked,
+  ...props
+}: InteractiveSwatchProps) {
   return (
     <StyledSwatch
       as={PrimitiveButton}
@@ -68,9 +63,11 @@ export function InteractiveSwatch(
       type="button"
       {...props}
     >
-      {isDisabled && (
-        <DisabledLockOverlay aria-hidden>
+      {children}
+      {locked && (
+        <DisabledLockOverlay>
           <LockIcon />
+          <VisuallyHidden>Locked</VisuallyHidden>
         </DisabledLockOverlay>
       )}
     </StyledSwatch>
