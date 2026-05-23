@@ -8,9 +8,10 @@ export interface CanvasInfo {
   eventId: number | null;
   webPlacingEnabled: boolean;
   allColorsGlobal: boolean;
+  cooldownDuration: number | null;
 }
 
 export type CanvasSummary = Pick<
   CanvasInfo,
-  "id" | "name" | "eventId" | "isLocked"
+  "id" | "name" | "eventId" | "isLocked" | "width" | "height"
 >;
