@@ -4,6 +4,7 @@ import { pipeline } from "node:stream/promises";
 import {
   type CanvasExportSize,
   type CanvasInfo,
+  DEFAULT_CANVAS_EXPORT_SIZE,
   type DiscordUserProfile,
   type Frame,
   type FrameOwnerInput,
@@ -470,7 +471,7 @@ export async function assertMaxOwnerFramesNotExceeded({
 
 export async function exportFrameAsStream({
   frameId,
-  size = 1,
+  size = DEFAULT_CANVAS_EXPORT_SIZE,
 }: {
   frameId: Frame["id"];
   size?: CanvasExportSize;
@@ -488,7 +489,7 @@ export async function exportCanvasBoundsAsStream({
   y0,
   x1,
   y1,
-  size = 1,
+  size = DEFAULT_CANVAS_EXPORT_SIZE,
 }: {
   canvasId: CanvasInfo["id"];
   x0: number;
