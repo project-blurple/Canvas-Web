@@ -504,7 +504,9 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
         // all sizes atomically via `saveCanvasToFileSystem` below.
         if (cachedCanvas.isLocked) {
           const locked = cachedCanvas as LockedCanvas;
-          const missing = CANVAS_EXPORT_SIZES.some((s) => !locked.canvasPaths[s]);
+          const missing = CANVAS_EXPORT_SIZES.some(
+            (s) => !locked.canvasPaths[s],
+          );
 
           if (missing) {
             console.debug(
