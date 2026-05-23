@@ -7,6 +7,7 @@ import { validate } from "@/middleware/validate";
 import { CanvasIdParamModel } from "@/models/canvas.models";
 import {
   CreateFrameBodyModel,
+  ExportFrameQueryModel,
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
   FrameIdParamModel,
@@ -30,7 +31,7 @@ export const frameRouter = typedRouter(Router());
 // Needs to be above the `/:frameId` route to avoid being treated as a frame ID
 frameRouter.get(
   "/:frameId.png",
-  validate({ params: FrameIdParamModel }),
+  validate({ params: FrameIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
     const frame = await getFrameById(req.params.frameId);
 

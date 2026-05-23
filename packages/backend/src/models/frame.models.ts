@@ -78,3 +78,7 @@ export const FrameGuildIdsQueryModel = z.object({
       : [value],
     ),
 });
+
+export const ExportFrameQueryModel = z.object({
+  size: z.enum(["1", "2", "4"]).default("1"),
+});

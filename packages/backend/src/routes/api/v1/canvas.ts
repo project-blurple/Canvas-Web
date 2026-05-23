@@ -9,6 +9,7 @@ import {
   CreateCanvasBodyModel,
   EditCanvasBodyModel,
 } from "@/models/canvas.models";
+import { ExportFrameQueryModel } from "@/models/frame.models";
 import {
   type CachedCanvas,
   createCanvas,
@@ -54,7 +55,7 @@ canvasRouter.get("/current", async (_req, res) => {
 
 canvasRouter.get(
   "/:canvasId",
-  validate({ params: CanvasIdParamModel }),
+  validate({ params: CanvasIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
