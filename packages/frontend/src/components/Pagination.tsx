@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 const StyledPaginationItem = styled(PaginationItem)`
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 `;
 
 const customIconSlots = {
