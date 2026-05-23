@@ -1,10 +1,11 @@
 import type {
+  Palette,
   PaletteColor,
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
 
-import { type color, prisma } from "@/client";
+import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -323,7 +324,7 @@ export async function placePixel(
 const COORDINATE_CHUNK_SIZE = 500;
 
 /**
- * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ * Rebuilds the current pixel state for the given coordinates after bulk history operations.
  *
  * @param canvasId - The ID of the canvas
  * @param coordinates - The coordinates that need to be refreshed
@@ -333,7 +334,7 @@ const COORDINATE_CHUNK_SIZE = 500;
  * Coordinates are processed in chunks to avoid hitting query size limits
  * and ensure predictable performance for large erasures.
  */
-export async function restorePixelsAfterHistoryDeletion(
+export async function restorePixelsAfterHistoryModification(
   canvasId: number,
   coordinates: Point[],
 ): Promise<void> {
@@ -432,19 +433,70 @@ export async function restorePixelsAfterHistoryDeletion(
     }
   }
 
-  // Broadcast and cache per-pixel
+  // Build bulk payload and update cache per-pixel
+  const pixels: { x: number; y: number; rgba: PixelColor }[] = [];
   for (const coordinate of uniqueCoordinates.values()) {
     const key = `${coordinate.x}:${coordinate.y}`;
     const latestEntry = latestByCoord.get(key);
     const pixelColor =
       (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
 
-    socketHandler.broadcastPixelPlacement(canvasId, {
-      x: coordinate.x,
-      y: coordinate.y,
-      rgba: pixelColor,
-    });
+    pixels.push({ x: coordinate.x, y: coordinate.y, rgba: pixelColor });
 
     updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
   }
+
+  if (pixels.length > 0) {
+    socketHandler.broadcastPixelBulkPlacement(canvasId, { pixels });
+  }
+}
+
+export interface BulkPlaceEntry {
+  colorId: number;
+  x: number;
+  y: number;
+}
+
+export async function createBulkPlaceEntries({
+  canvasId,
+  userId,
+  guildId,
+  timestamp,
+  entries,
+}: {
+  canvasId: number;
+  userId: bigint;
+  guildId?: bigint;
+  timestamp?: Date;
+  entries: BulkPlaceEntry[];
+}) {
+  console.log(
+    `Creating ${entries.length} history entries for canvas ${canvasId}`,
+  );
+
+  const batchSize = 10_000;
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const batch = entries.slice(i, i + batchSize);
+    console.log(
+      `Inserting batch ${i / batchSize + 1} (${batch.length} entries)`,
+    );
+
+    const data = batch.map(
+      (entry) =>
+        ({
+          canvas_id: canvasId,
+          user_id: userId,
+          guild_id: guildId,
+          color_id: entry.colorId,
+          x: entry.x,
+          y: entry.y,
+          timestamp: timestamp ?? new Date(),
+        }) as Prisma.historyCreateManyInput,
+    );
+    await prisma.history.createMany({
+      data,
+    });
+  }
+
+  await restorePixelsAfterHistoryModification(canvasId, entries);
 }
