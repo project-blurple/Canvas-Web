@@ -118,7 +118,7 @@ describe("History route tests", () => {
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         fromDateTime: "1970-01-01T00:00:00.000Z",
         toDateTime: "1970-01-02T00:00:00.000Z",
@@ -169,7 +169,7 @@ describe("History route tests", () => {
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         excludeColors: [3, 4],
       })
@@ -205,7 +205,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         includeColors: [1],
         excludeColors: [2],
@@ -268,7 +268,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         x0: 0,
         y0: 0,
@@ -291,7 +291,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history/force")
-      .set("testUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         x0: 0,
         y0: 0,
@@ -348,7 +348,7 @@ describe("History route tests", () => {
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         historyIds: [1],
       })

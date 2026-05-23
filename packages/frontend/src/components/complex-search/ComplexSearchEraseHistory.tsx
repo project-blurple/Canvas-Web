@@ -17,7 +17,7 @@ import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
 import type { ComplexPixelHistoryQuery } from "@/hooks/queries/usePixelHistory";
-import { StyledButton } from "../button/DynamicButton";
+import { Button } from "../button";
 
 const StyledDialog = styled(Dialog)`
   & .MuiDialog-paper {
@@ -26,11 +26,16 @@ const StyledDialog = styled(Dialog)`
   }
 `;
 
-const Button = styled(StyledButton)`
+const StyledButton = styled(Button)`
   color: white;
+
+  &:hover,
+  &:focus-visible {
+    border-color: oklch(from var(--discord-white) l c h / 36%);
+  }
 `;
 
-const RedButton = styled(Button)`
+const RedButton = styled(StyledButton)`
   &:hover,
   &:focus-visible {
     background-color: rgb(255, 0, 0);
@@ -159,7 +164,7 @@ export default function ComplexSearchEraseHistory({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelErase}>Cancel</Button>
+          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
           <RedButton onClick={handleConfirmErase}>Erase</RedButton>
         </DialogActions>
       </StyledDialog>

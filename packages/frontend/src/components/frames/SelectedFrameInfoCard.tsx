@@ -1,4 +1,4 @@
-import type { Frame } from "@blurple-canvas-web/types";
+import { type Frame, FrameOwnerType } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Paintbrush, User, Users } from "lucide-react";
 
@@ -26,12 +26,12 @@ export default function FrameInfoCard({ frame }: { frame?: Frame }) {
 
   const ownerInfo = (() => {
     switch (frame.owner.type) {
-      case "guild":
+      case FrameOwnerType.Guild:
         return {
           icon: <Users aria-hidden />,
           label: frame.owner.guild.name ?? "Unknown guild",
         };
-      case "user":
+      case FrameOwnerType.User:
         return {
           icon: <User aria-hidden />,
           label: frame.owner.user.username ?? "Unknown user",
