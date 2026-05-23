@@ -70,3 +70,15 @@ export function useCreateCanvas() {
     },
   });
 }
+
+export function useClearCanvasCache(canvasId: CanvasInfo["id"]) {
+  return useMutation({
+    mutationFn: async () => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/cache`;
+
+      return await axios.delete(requestUrl, {
+        withCredentials: true,
+      });
+    },
+  });
+}

@@ -13,7 +13,10 @@ import {
 import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
-import { useCreateCanvas } from "@/hooks/queries/useCanvasInfo";
+import {
+  useClearCanvasCache,
+  useCreateCanvas,
+} from "@/hooks/queries/useCanvasInfo";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminCanvasTabBlock = styled("section")`
@@ -409,6 +412,8 @@ function AdminCanvasTab() {
   } | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
+
   canvases.sort((a, b) =>
     a.eventId === event?.id ? -1
     : b.eventId === event?.id ? 1
@@ -539,6 +544,16 @@ function AdminCanvasTab() {
                 await setCanvas(canvasId, false);
               }}
             />
+            {mode !== "create" && (
+              <StyledButton
+                onClick={async () => {
+                  await clearCanvasCache.mutateAsync();
+                  window.location.reload();
+                }}
+              >
+                Clear cached image
+              </StyledButton>
+            )}
           </>
         }
       </CanvasInfoWrapper>
