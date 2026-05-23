@@ -539,7 +539,7 @@ export default function CanvasView({
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [maskCoordinates] = useState<Point[]>([]);
+  const [maskCoordinates, setMaskCoordinates] = useState<Point[]>([]);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -547,6 +547,17 @@ export default function CanvasView({
   const overlayCountRef = useRef(0);
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
+
+  const addMaskCoordinate = useCallback((point: Point) => {
+    setMaskCoordinates((prev) => {
+      for (const p of prev) if (p.x === point.x && p.y === point.y) return prev;
+      return [...prev, point];
+    });
+  }, []);
+
+  const clearMaskCoordinates = useCallback(() => {
+    setMaskCoordinates([]);
+  }, []);
 
   /**
    * Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
@@ -744,7 +755,12 @@ export default function CanvasView({
     const paintPixel = (
       ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
       payload: PlacePixelSocket.Payload,
+      clearBeforePaint: boolean,
     ) => {
+      if (clearBeforePaint && payload.rgba[3] < 255) {
+        ctx.clearRect(payload.x, payload.y, 1, 1);
+      }
+
       const [r, g, b, a] = payload.rgba;
       ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
       ctx.fillRect(payload.x, payload.y, 1, 1);
@@ -752,6 +768,7 @@ export default function CanvasView({
 
     const refreshCanvasImage = () => {
       clearOverlay();
+      clearMaskCoordinates();
       offscreenCanvasRef.current?.convertToBlob().then((blob) => {
         if (!imageRef.current) return;
         const oldSrc = imageRef.current.src;
@@ -788,7 +805,7 @@ export default function CanvasView({
       // Updates the canvas `canvas` which is used as the source of truth for the canvas
       const ctx = offscreenCanvasRef.current?.getContext("2d");
       if (!ctx) return;
-      paintPixel(ctx, payload);
+      paintPixel(ctx, payload, true);
 
       // This method prevents the need to convert an N×M canvas to a png on every update
       // while also preventing an inordinate amount of overlaid pixels from causing lag
@@ -796,6 +813,10 @@ export default function CanvasView({
         // flush the overlaid pixels and update canvas image
         refreshCanvasImage();
       } else {
+        if (payload.rgba[3] < 255) {
+          addMaskCoordinate({ x: payload.x, y: payload.y });
+        }
+
         // overlay the pixel without any changes
         overlayCountRef.current++;
         overlayPixel(payload);
@@ -811,7 +832,7 @@ export default function CanvasView({
       if (!ctx) return;
 
       for (const pixel of payload.pixels) {
-        paintPixel(ctx, pixel);
+        paintPixel(ctx, pixel, true);
       }
 
       const shouldRefreshCanvasImage =
@@ -819,11 +840,16 @@ export default function CanvasView({
         pixelOverlayThreshold;
 
       if (shouldRefreshCanvasImage) {
+        // When flushing to the main canvas image we should clear the mask set
+        // since the offscreen canvas now contains the authoritative pixels.
         refreshCanvasImage();
         return;
       }
 
       for (const pixel of payload.pixels) {
+        if (pixel.rgba[3] < 255) {
+          addMaskCoordinate({ x: pixel.x, y: pixel.y });
+        }
         overlayCountRef.current++;
         overlayPixel(pixel);
       }
@@ -837,7 +863,7 @@ export default function CanvasView({
       const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
       const ctx = offscreenCanvas.getContext("2d");
       if (!ctx) return;
-      paintPixel(ctx, payload);
+      paintPixel(ctx, payload, false);
       offscreenCanvas.convertToBlob().then((blob) => {
         const pixelImage = new Image();
         pixelImage.src = URL.createObjectURL(blob);
