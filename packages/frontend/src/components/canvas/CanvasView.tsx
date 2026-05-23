@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
+import CanvasImageMask from "@/components/canvas/CanvasImageMask";
 import config from "@/config/clientConfig";
 import {
   useActionPanelContext,
@@ -498,7 +499,7 @@ export default function CanvasView({
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
-  const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
+  const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
@@ -538,6 +539,7 @@ export default function CanvasView({
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [maskCoordinates] = useState<Point[]>([]);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -1335,6 +1337,13 @@ export default function CanvasView({
             // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
+          {maskCoordinates && maskCoordinates.length > 0 && (
+            <CanvasImageMask
+              canvasHeight={canvas.height}
+              canvasWidth={canvas.width}
+              coordinates={maskCoordinates}
+            />
+          )}
         </CanvasImageWrapper>
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
