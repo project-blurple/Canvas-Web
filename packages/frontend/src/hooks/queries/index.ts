@@ -1,3 +1,4 @@
+export { useBlocklist, useBlocklistMutations } from "./useBlocklist";
 export { useCanvasInfo, useUpdateCanvasInfo } from "./useCanvasInfo";
 export { useCanvasList } from "./useCanvasList";
 export { useCanvasStats } from "./useCanvasStats";
@@ -6,5 +7,5 @@ export { useEventStats } from "./useEventStats";
 export { useLeaderboard } from "./useLeaderboard";
 export { usePalette } from "./usePalette";
 export { usePixelHistory } from "./usePixelHistory";
-export { useUserData } from "./useUserData";
+export { useRefreshGuildMemberships, useUserData } from "./useUserData";
 export { useUserStats } from "./useUserStats";

@@ -110,7 +110,7 @@ interface CanvasSummaryRow {
 export async function getCanvases(
   eventId?: BlurpleEvent["id"],
 ): Promise<CanvasSummary[]> {
-  const whereSQL =
+  const whereSql =
     eventId === undefined ?
       Prisma.sql`TRUE`
     : Prisma.sql`c.event_id = ${eventId}`;
@@ -129,7 +129,7 @@ export async function getCanvases(
     LEFT JOIN history h
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
@@ -330,9 +330,15 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE[canvasId];
 
-  if (cachedCanvas?.isLocked) {
-    await fs.promises.rm(cachedCanvas.canvasPath);
-    console.debug(`Cleared canvas ${canvasId} from file system`);
+  try {
+    if (cachedCanvas?.isLocked) {
+      await fs.promises.rm(cachedCanvas.canvasPath);
+      console.debug(`Cleared canvas ${canvasId} from file system`);
+    }
+  } catch {
+    console.warn(
+      `Failed to clear canvas ${canvasId} from file system. It may have already been removed.`,
+    );
   }
 }
 
