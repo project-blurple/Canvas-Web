@@ -15,7 +15,7 @@ const customIconSlots = {
   previous: ChevronLeft,
   next: ChevronRight,
   last: ChevronLast,
-};
+} as const;
 
 export default function StyledPagination(
   props: React.ComponentProps<typeof Pagination>,
