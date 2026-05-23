@@ -34,9 +34,12 @@ const frameSelect = {
 } as const satisfies FrameSelect;
 
 async function findFrameForType(frameId: string) {
-  return prisma.frame.findUnique({
+  return prisma.frame.findFirst({
     where: {
-      id: frameId,
+      id: {
+        equals: frameId,
+        mode: Prisma.QueryMode.insensitive,
+      },
     },
     select: frameSelect,
   });
@@ -187,9 +190,12 @@ function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
 }
 
 export async function getFrameById(frameId: string): Promise<Frame> {
-  const frame = await prisma.frame.findUnique({
+  const frame = await prisma.frame.findFirst({
     where: {
-      id: frameId,
+      id: {
+        equals: frameId,
+        mode: Prisma.QueryMode.insensitive,
+      },
     },
     select: frameSelect,
   });
