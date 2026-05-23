@@ -262,23 +262,14 @@ describe("Edit Canvas Tests", () => {
 });
 
 describe("Paste Canvas Data Tests", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    await seedEvents();
+    await seedCanvases();
+    await seedColors();
   });
 
   it("validates paste data and creates bulk history entries", async () => {
-    vi.spyOn(prisma.canvas, "findFirst").mockResolvedValueOnce({
-      id: 1,
-      name: "Unlocked Canvas",
-      locked: false,
-      event_id: 1,
-      width: 2,
-      height: 2,
-      cooldown_length: 15,
-      start_coordinates: [1, 1],
-      all_colors_global: false,
-    } as never);
-
     vi.spyOn(prisma.user, "upsert").mockResolvedValueOnce({} as never);
 
     vi.mocked(getEventPalette).mockResolvedValueOnce([
