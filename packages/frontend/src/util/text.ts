@@ -2,7 +2,7 @@
 // Discord's format
 const DATETIME_REGEX = /<t:(\d+):?([tTdDfFR])?>/g;
 
-function dateToRelativeTime(date: Date): string {
+export function dateToRelativeTime(date: Date): string {
   const now = new Date();
   const diff = date.getTime() - now.getTime();
   const absDiff = Math.abs(diff);

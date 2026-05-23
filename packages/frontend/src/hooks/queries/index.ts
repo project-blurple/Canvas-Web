@@ -1,5 +1,5 @@
 export { useBlocklist, useBlocklistMutations } from "./useBlocklist";
-export { useCanvasInfo } from "./useCanvasInfo";
+export { useCanvasInfo, useUpdateCanvasInfo } from "./useCanvasInfo";
 export { useCanvasList } from "./useCanvasList";
 export { useCanvasStats } from "./useCanvasStats";
 export { useEventInfo } from "./useEventInfo";

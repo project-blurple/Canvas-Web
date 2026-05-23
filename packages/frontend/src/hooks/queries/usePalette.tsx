@@ -45,6 +45,5 @@ export function usePalette(
     enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
-    placeholderData: [] as PaletteRequest.ResBody,
   });
 }

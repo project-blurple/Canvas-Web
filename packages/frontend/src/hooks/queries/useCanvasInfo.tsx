@@ -1,8 +1,8 @@
 "use client";
 
 import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axios, { type AxiosError, type AxiosResponse } from "axios";
 import config from "@/config/clientConfig";
 
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
@@ -18,5 +18,55 @@ export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
     queryFn: getMainCanvasInfo,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+  });
+}
+
+export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      data: Partial<
+        Pick<
+          CanvasInfo,
+          "name" | "isLocked" | "cooldownDuration" | "allColorsGlobal"
+        >
+      >,
+    ) => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}`;
+
+      return await axios.put(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["canvas"] }),
+        canvasId === undefined ?
+          Promise.resolve()
+        : queryClient.invalidateQueries({ queryKey: ["canvasInfo", canvasId] }),
+      ]);
+    },
+  });
+}
+
+type CreateCanvasInput = Partial<
+  Omit<CanvasInfo, "eventId" | "webPlacingEnabled">
+>;
+
+export function useCreateCanvas() {
+  const queryClient = useQueryClient();
+
+  return useMutation<AxiosResponse<CanvasInfo>, AxiosError, CreateCanvasInput>({
+    mutationFn: (data: CreateCanvasInput) => {
+      const requestUrl = `${config.apiUrl}/api/v1/canvas`;
+
+      return axios.post(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["canvas"] });
+    },
   });
 }
