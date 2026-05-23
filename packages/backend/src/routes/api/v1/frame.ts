@@ -1,5 +1,4 @@
 import {
-  type CanvasExportSize,
   CanvasIdParamModel,
   CreateFrameBodyModel,
   ExportFrameParamModel,
@@ -42,29 +41,23 @@ frameRouter.get(
   "/:frameId/:size.png",
   validate({ params: ExportFrameParamModel }),
   async (req, res) => {
-    const frame = await getFrameById(req.params.frameId);
-    const size = req.params.size as CanvasExportSize;
+    const size = req.params.size;
 
     res.setHeader("Content-Type", "image/png");
     res.setHeader(
       "Content-Disposition",
-      `inline; filename="frame-${frame.id}.png"`,
+      `inline; filename="frame-${req.params.frameId}.png"`,
     );
 
-    try {
-      const stream = await exportFrameAsStream({
-        frameId: req.params.frameId,
-        size,
-      });
-      stream.on("error", (err) => {
-        console.error("Error streaming frame PNG:", err);
-        if (!res.headersSent) res.sendStatus(500);
-      });
-      stream.pipe(res);
-    } catch (err) {
-      console.error("Failed to export frame stream:", err);
-      res.sendStatus(500);
-    }
+    const stream = await exportFrameAsStream({
+      frameId: req.params.frameId,
+      size,
+    });
+    stream.on("error", (err) => {
+      console.error("Error streaming frame PNG:", err);
+      if (!res.headersSent) res.sendStatus(500);
+    });
+    stream.pipe(res);
   },
 );
 

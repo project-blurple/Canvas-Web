@@ -97,42 +97,28 @@ describe("Locked canvas PNG cache tests", () => {
     try {
       await getCanvasPng(createdCanvas.id);
 
-      const canvas1x = await getCanvasPng(createdCanvas.id);
-      const canvas2x = await getCanvasPng(createdCanvas.id, 2);
-      const canvas4x = await getCanvasPng(createdCanvas.id, 4);
+      const canvas = await getCanvasPng(createdCanvas.id);
 
-      if (!canvas1x.isLocked || !canvas2x.isLocked || !canvas4x.isLocked) {
+      if (!canvas.isLocked) {
         throw new Error("Expected locked canvas cache entries");
       }
 
-      expect(canvas1x).toMatchObject({
+      expect(canvas).toMatchObject({
         isLocked: true,
         canvasPaths: expect.objectContaining({
           1: expect.stringContaining(getCanvasFilename(createdCanvas.id, true)),
-        }),
-      });
-
-      expect(canvas2x).toMatchObject({
-        isLocked: true,
-        canvasPaths: expect.objectContaining({
           2: expect.stringContaining(
             getCanvasFilename(createdCanvas.id, true, 2),
           ),
-        }),
-      });
-
-      expect(canvas4x).toMatchObject({
-        isLocked: true,
-        canvasPaths: expect.objectContaining({
           4: expect.stringContaining(
             getCanvasFilename(createdCanvas.id, true, 4),
           ),
         }),
       });
 
-      const canvas1xPath = getLockedCanvasPath(canvas1x.canvasPaths, 1);
-      const canvas2xPath = getLockedCanvasPath(canvas2x.canvasPaths, 2);
-      const canvas4xPath = getLockedCanvasPath(canvas4x.canvasPaths, 4);
+      const canvas1xPath = getLockedCanvasPath(canvas.canvasPaths, 1);
+      const canvas2xPath = getLockedCanvasPath(canvas.canvasPaths, 2);
+      const canvas4xPath = getLockedCanvasPath(canvas.canvasPaths, 4);
 
       if (!canvas1xPath || !canvas2xPath || !canvas4xPath) {
         throw new Error("Expected locked canvas paths to exist");

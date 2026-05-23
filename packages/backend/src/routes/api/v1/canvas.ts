@@ -5,6 +5,7 @@ import {
   CanvasPasteBodyModel,
   type Cooldown,
   CreateCanvasBodyModel,
+  DEFAULT_CANVAS_EXPORT_SIZE,
   type DiscordUserProfile,
   EditCanvasBodyModel,
 } from "@blurple-canvas-web/types";
@@ -72,9 +73,9 @@ canvasRouter.get(
   "/:canvasId/:size.png",
   validate({ params: CanvasExportParamModel }),
   async (req, res) => {
-    const size = req.params.size as CanvasExportSize;
+    const size = req.params.size;
 
-    const cachedCanvas = await getCanvasPng(req.params.canvasId, size);
+    const cachedCanvas = await getCanvasPng(req.params.canvasId);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);
   },
 );
@@ -157,7 +158,7 @@ function sendCachedCanvas(
   res: Response,
   canvasId: number,
   cachedCanvas: CachedCanvas,
-  size: CanvasExportSize = 1,
+  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
 ): void {
   if (cachedCanvas.isLocked) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, size);

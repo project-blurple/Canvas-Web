@@ -296,27 +296,8 @@ export async function getCurrentCanvas(): Promise<[number, CachedCanvas]> {
  * @param canvasId The ID of the canvas to retrieve
  * @returns The cached canvas
  */
-export async function getCanvasPng(
-  canvasId: number,
-  size: CanvasExportSize = 1,
-): Promise<CachedCanvas> {
-  const cachedCanvas = await getOrFetchCacheCanvas(canvasId);
-
-  if (!cachedCanvas.isLocked) {
-    return cachedCanvas;
-  }
-
-  const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, size);
-
-  if (!canvasPath) {
-    throw new Error(
-      `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
-    );
-  }
-
-  return {
-    ...cachedCanvas,
-  };
+export async function getCanvasPng(canvasId: number): Promise<CachedCanvas> {
+  return getOrFetchCacheCanvas(canvasId);
 }
 
 /**
@@ -566,9 +547,7 @@ export function getLockedCanvasPath(
   canvasPaths: Partial<Record<CanvasExportSize, string>>,
   size: CanvasExportSize,
 ): string | undefined {
-  return (
-    canvasPaths[size] ?? canvasPaths[1] ?? canvasPaths[2] ?? canvasPaths[4]
-  );
+  return canvasPaths[size];
 }
 
 interface CreateCanvasParams {

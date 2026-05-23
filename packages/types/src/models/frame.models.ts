@@ -1,5 +1,4 @@
 import z from "zod";
-import type CanvasExportSize from "../canvasExport";
 import { CANVAS_EXPORT_SIZES } from "../canvasExport";
 import { FrameOwnerType } from "../frame";
 import { CanvasIdParamModel } from "./canvas.models";
@@ -83,10 +82,5 @@ export const FrameGuildIdsQueryModel = z.object({
 
 export const ExportFrameParamModel = z.object({
   frameId: FrameIdParamModel.shape.frameId,
-  size: z.coerce
-    .number()
-    .int()
-    .refine((size) => CANVAS_EXPORT_SIZES.includes(size as CanvasExportSize), {
-      message: `size must be one of: ${CANVAS_EXPORT_SIZES.join(", ")}`,
-    }),
+  size: z.literal(CANVAS_EXPORT_SIZES),
 });

@@ -501,7 +501,7 @@ export async function exportCanvasBoundsAsStream({
     throw new BadRequestError("Invalid crop dimensions");
   }
 
-  const cached = await getCanvasPng(canvasId, size);
+  const cached = await getCanvasPng(canvasId);
 
   if (cached.isLocked) {
     const canvasPath = getLockedCanvasPath(cached.canvasPaths, size);
