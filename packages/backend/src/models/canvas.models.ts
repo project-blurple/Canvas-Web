@@ -1,4 +1,5 @@
 import z from "zod";
+import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
 
 export const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),
@@ -20,4 +21,15 @@ export const EditCanvasBodyModel = z.object({
   cooldownDuration: z.number().int().nonnegative().optional(),
   isLocked: z.boolean().optional(),
   allColorsGlobal: z.boolean().optional(),
+});
+
+export const CanvasPasteBodyModel = z.object({
+  authorId: DiscordSnowflakeSchema,
+  data: z.array(
+    z.tuple([
+      z.number().int().nonnegative(), // x
+      z.number().int().nonnegative(), // y
+      z.number().int().nonnegative(), // color ID
+    ]),
+  ),
 });
