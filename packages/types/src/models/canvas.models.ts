@@ -1,4 +1,6 @@
 import z from "zod";
+import type CanvasExportSize from "../canvasExport";
+import { CANVAS_EXPORT_SIZES } from "../canvasExport";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
@@ -32,4 +34,14 @@ export const CanvasPasteBodyModel = z.object({
       z.number().int().nonnegative(), // color ID
     ]),
   ),
+});
+
+export const CanvasExportParamModel = z.object({
+  canvasId: CanvasIdParamModel.shape.canvasId,
+  size: z.coerce
+    .number()
+    .int()
+    .refine((size) => CANVAS_EXPORT_SIZES.includes(size as CanvasExportSize), {
+      message: `size must be one of: ${CANVAS_EXPORT_SIZES.join(", ")}`,
+    }),
 });

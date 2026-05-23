@@ -1,4 +1,5 @@
 import {
+  CanvasExportParamModel,
   type CanvasExportSize,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
@@ -6,7 +7,6 @@ import {
   CreateCanvasBodyModel,
   type DiscordUserProfile,
   EditCanvasBodyModel,
-  ExportFrameQueryModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
 import { UnauthorizedError } from "@/errors";
@@ -61,9 +61,18 @@ canvasRouter.get("/current", async (_req, res) => {
 
 canvasRouter.get(
   "/:canvasId",
-  validate({ params: CanvasIdParamModel, query: ExportFrameQueryModel }),
+  validate({ params: CanvasIdParamModel }),
   async (req, res) => {
-    const size = req.query.size as CanvasExportSize;
+    const cachedCanvas = await getCanvasPng(req.params.canvasId);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+  },
+);
+
+canvasRouter.get(
+  "/:canvasId/:size.png",
+  validate({ params: CanvasExportParamModel }),
+  async (req, res) => {
+    const size = req.params.size as CanvasExportSize;
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId, size);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);

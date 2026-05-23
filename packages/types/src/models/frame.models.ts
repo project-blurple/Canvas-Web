@@ -1,9 +1,6 @@
 import z from "zod";
 import type CanvasExportSize from "../canvasExport";
-import {
-  CANVAS_EXPORT_SIZES,
-  DEFAULT_CANVAS_EXPORT_SIZE,
-} from "../canvasExport";
+import { CANVAS_EXPORT_SIZES } from "../canvasExport";
 import { FrameOwnerType } from "../frame";
 import { CanvasIdParamModel } from "./canvas.models";
 import { DiscordSnowflakeSchema } from "./snowflake";
@@ -84,12 +81,12 @@ export const FrameGuildIdsQueryModel = z.object({
     ),
 });
 
-export const ExportFrameQueryModel = z.object({
+export const ExportFrameParamModel = z.object({
+  frameId: FrameIdParamModel.shape.frameId,
   size: z.coerce
     .number()
     .int()
     .refine((size) => CANVAS_EXPORT_SIZES.includes(size as CanvasExportSize), {
       message: `size must be one of: ${CANVAS_EXPORT_SIZES.join(", ")}`,
-    })
-    .default(DEFAULT_CANVAS_EXPORT_SIZE as CanvasExportSize),
+    }),
 });

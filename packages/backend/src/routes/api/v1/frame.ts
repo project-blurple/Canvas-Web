@@ -2,7 +2,7 @@ import {
   type CanvasExportSize,
   CanvasIdParamModel,
   CreateFrameBodyModel,
-  ExportFrameQueryModel,
+  ExportFrameParamModel,
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
   FrameIdParamModel,
@@ -29,13 +29,12 @@ import { normalizeBounds } from "@/utils";
 
 export const frameRouter = typedRouter(Router());
 
-// Needs to be above the `/:frameId` route to avoid being treated as a frame ID
 frameRouter.get(
-  "/:frameId.png",
-  validate({ params: FrameIdParamModel, query: ExportFrameQueryModel }),
+  "/:frameId/:size.png",
+  validate({ params: ExportFrameParamModel }),
   async (req, res) => {
     const frame = await getFrameById(req.params.frameId);
-    const size = req.query.size as CanvasExportSize;
+    const size = req.params.size as CanvasExportSize;
 
     res.setHeader("Content-Type", "image/png");
     res.setHeader(
