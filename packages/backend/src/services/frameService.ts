@@ -22,7 +22,11 @@ import {
   UnprocessableError,
 } from "@/errors";
 import { PrismaErrorCode } from "@/utils";
-import { getCanvasPng, getLockedCanvasPath } from "./canvasService";
+import {
+  getCanvasPng,
+  getLockedCanvasPath,
+  type UnlockedCanvas,
+} from "./canvasService";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -473,11 +477,7 @@ export async function exportFrameAsStream({
 }): Promise<NodeJS.ReadableStream> {
   const frame = await getFrameById(frameId);
   return exportCanvasBoundsAsStream({
-    canvasId: frame.canvasId,
-    x0: frame.x0,
-    y0: frame.y0,
-    x1: frame.x1,
-    y1: frame.y1,
+    ...frame,
     size,
   });
 }
@@ -539,12 +539,7 @@ export async function exportCanvasBoundsAsStream({
     return output;
   }
 
-  const unlocked = cached as {
-    isLocked: false;
-    width: number;
-    height: number;
-    pixels: PixelColor[];
-  };
+  const unlocked = cached as UnlockedCanvas;
   const rawBuffer = pixelsToRgbaBuffer(
     unlocked.pixels,
     unlocked.width,
