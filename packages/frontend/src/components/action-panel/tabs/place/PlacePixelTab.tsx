@@ -13,7 +13,12 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
+import {
+  useCanvasCooldown,
+  usePalette,
+  usePlayCooldownExpirySound,
+  usePlaySound,
+} from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -118,6 +123,7 @@ export default function PlacePixelTab({
   const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
   const [cooldownSeconds, setCooldownSeconds] = useState(0);
+  const [isInitialCooldownLoaded, setIsInitialCooldownLoaded] = useState(false);
   const [prevTimeLeft, setPrevTimeLeft] = useState(0);
 
   const { data: palette } = usePalette(eventId ?? undefined);
@@ -155,8 +161,36 @@ export default function PlacePixelTab({
 
   const { user } = useAuthContext();
   const {
-    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
+    canvas: {
+      allColorsGlobal,
+      id: canvasId,
+      isLocked: readOnly,
+      webPlacingEnabled,
+    },
   } = useCanvasContext();
+
+  const { data: initialCooldown } = useCanvasCooldown(
+    canvasId,
+    active && Boolean(user) && !isInitialCooldownLoaded,
+  );
+
+  useEffect(
+    function resetInitialCooldownState() {
+      setIsInitialCooldownLoaded(false);
+    },
+    [canvasId, user?.id],
+  );
+
+  useEffect(
+    function initializeCooldownOnLoad() {
+      if (!active || isInitialCooldownLoaded || !initialCooldown) return;
+
+      const cooldown = initialCooldown.cooldownEndTime;
+      setCooldownSeconds(cooldown ? Math.ceil(cooldown / 1000) : 0);
+      setIsInitialCooldownLoaded(true);
+    },
+    [active, initialCooldown, isInitialCooldownLoaded],
+  );
 
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
