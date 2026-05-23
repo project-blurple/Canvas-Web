@@ -33,19 +33,20 @@ const ColorName = styled("p")`
   letter-spacing: 0.01em;
 `;
 
+interface PixelHistoryListItemProps extends React.ComponentPropsWithRef<
+  typeof Wrapper
+> {
+  record?: PixelHistoryRecord;
+}
+
 export default function PixelHistoryListItem({
   record,
-  id,
-  props,
-}: {
-  record?: PixelHistoryRecord;
-  id?: string;
-  props?: React.ComponentPropsWithoutRef<typeof Wrapper>;
-}) {
+  ...props
+}: PixelHistoryListItemProps) {
   const { color, userProfile } = record ?? {};
 
   return (
-    <Wrapper id={id} {...props}>
+    <Wrapper {...props}>
       {color ?
         <StyledSwatch key={color.code} paletteColor={color} />
       : <SwatchSkeleton variant="rectangular" />}

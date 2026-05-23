@@ -54,7 +54,7 @@ export function usePixelHistory(
     return response.data;
   };
 
-  const queryResult = useQuery({
+  return useQuery({
     ...options,
     queryKey: ["pixelHistory", canvasId, params],
     queryFn: fetchHistory,
@@ -64,8 +64,6 @@ export function usePixelHistory(
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds
   });
-
-  return queryResult;
 }
 
 export interface ComplexPixelHistoryParams {
@@ -115,12 +113,10 @@ export function useComplexPixelHistory(
     return response.data;
   };
 
-  const queryResult = useQuery({
+  return useQuery({
     queryKey: ["complexPixelHistory", canvasId, params],
     queryFn: fetchComplexHistory,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
-
-  return queryResult;
 }

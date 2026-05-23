@@ -33,8 +33,6 @@ interface PixelHistoryProps {
   isLoading: boolean;
   history: PixelHistoryRecord[];
   page: number;
-  currentId: string;
-  pastId: string;
 }
 
 export function PixelHistoryPast({
@@ -42,7 +40,7 @@ export function PixelHistoryPast({
   history,
   page,
   pastId,
-}: PixelHistoryProps) {
+}: PixelHistoryProps & { pastId: string }) {
   const pastPixelHistory = history.slice(page === 1 ? 1 : 0); // [] if out of index
 
   if (isLoading || pastPixelHistory.length === 0) return;
@@ -66,7 +64,7 @@ const PixelHistoryCurrent = ({
   history,
   page,
   currentId,
-}: PixelHistoryProps) => {
+}: PixelHistoryProps & { currentId: string }) => {
   if (isLoading) {
     return <PixelHistoryListItem />;
   }
@@ -155,7 +153,6 @@ export default function PixelInfoTab({
               isLoading={isLoading}
               page={truePage}
               currentId={currentId}
-              pastId={pastId}
             />
           </div>
         : <p>No selected pixel</p>}
@@ -169,7 +166,6 @@ export default function PixelInfoTab({
                   history={pixelHistory}
                   isLoading={isLoading}
                   page={truePage}
-                  currentId={currentId}
                   pastId={pastId}
                 />
               </div>
