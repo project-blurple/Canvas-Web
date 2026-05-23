@@ -1,8 +1,8 @@
+import { BlocklistBodyModel } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { requireCanvasModerator } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { BlocklistBodyModel } from "@/models/blocklist.models";
 import {
   addUsersToBlocklist,
   getBlocklist,

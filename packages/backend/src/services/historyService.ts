@@ -114,7 +114,7 @@ function mapPixelHistoryRow(history: PixelHistoryRow) {
   return {
     id: history.id.toString(),
     color: toPaletteColorSummary(history.color),
-    timestamp: history.timestamp,
+    timestamp: history.timestamp.toISOString(),
     guildId: history.guild_id?.toString(),
     userId: history.user_id.toString(),
     userProfile:
@@ -378,8 +378,8 @@ function buildPixelHistoryUsers(
     users[userCount.user_id.toString()] = {
       count: userCount._count._all,
       colors: {},
-      firstPlaced: userCount._min.timestamp ?? new Date(0),
-      lastPlaced: userCount._max.timestamp ?? new Date(0),
+      firstPlaced: (userCount._min.timestamp ?? new Date(0)).toISOString(),
+      lastPlaced: (userCount._max.timestamp ?? new Date(0)).toISOString(),
       userProfile:
         userCount.discord_user_profile ?
           ({

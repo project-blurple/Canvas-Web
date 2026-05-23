@@ -4,6 +4,7 @@ import type {
   CanvasInfo,
   CanvasSummary,
   PixelColor,
+  PlacePixelArray,
   Point,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
@@ -11,7 +12,6 @@ import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
-import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
 import { getEventPalette } from "./paletteService";
 import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
