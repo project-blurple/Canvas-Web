@@ -1,7 +1,11 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
-import { createCanvas, editCanvas } from "@/services/canvasService";
+import {
+  clearCachedCanvas,
+  createCanvas,
+  editCanvas,
+} from "@/services/canvasService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { canvasRouter } from "./canvas";
 
@@ -12,6 +16,7 @@ vi.mock("@/index", () => ({
 }));
 
 vi.mock("@/services/canvasService", () => ({
+  clearCachedCanvas: vi.fn(),
   createCanvas: vi.fn(),
   editCanvas: vi.fn(),
   getCanvases: vi.fn(),
@@ -137,5 +142,16 @@ describe("Canvas admin route tests", () => {
       isLocked: true,
       allColorsGlobal: false,
     });
+  });
+
+  it("clears cached canvas by ID", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
+    const app = createApp();
+
+    const response = await request(app).delete("/api/v1/canvas/7/cache");
+
+    expect(response.status).toBe(204);
+    expect(response.body).toStrictEqual({});
+    expect(vi.mocked(clearCachedCanvas)).toHaveBeenCalledWith(7);
   });
 });

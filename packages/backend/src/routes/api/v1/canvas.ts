@@ -12,6 +12,7 @@ import {
 } from "@/models/canvas.models";
 import {
   type CachedCanvas,
+  clearCachedCanvas,
   createCanvas,
   editCanvas,
   getCanvases,
@@ -121,6 +122,16 @@ canvasRouter.post(
       message: "Canvas data pasted",
       count: data.length,
     });
+  },
+);
+
+canvasRouter.delete(
+  "/:canvasId/cache",
+  requireCanvasAdmin,
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    await clearCachedCanvas(req.params.canvasId);
+    res.status(204).end();
   },
 );
 
