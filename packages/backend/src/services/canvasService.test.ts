@@ -1,5 +1,6 @@
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
+import { socketHandler } from "@/index";
 import { seedCanvases, seedColors, seedEvents, seedPixels } from "@/test";
 import {
   createCanvas,
@@ -7,10 +8,41 @@ import {
   getCanvases,
   getCanvasInfo,
   getCanvasPixels,
+  pasteCanvasData,
 } from "./canvasService";
+import { getEventPalette } from "./paletteService";
+import { createBulkPlaceEntries } from "./pixelService";
+
+vi.mock("./historyService", () => ({
+  createBulkHistoryEntries: vi.fn(),
+}));
+
+vi.mock("./paletteService", () => ({
+  getEventPalette: vi.fn(),
+}));
+
+vi.mock("./pixelService", () => ({
+  createBulkPlaceEntries: vi.fn(),
+}));
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
+  },
+}));
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+  },
+}));
 
 describe("Canvas Info Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -52,6 +84,8 @@ describe("Canvas Info Tests", () => {
 
 describe("Canvas Validation Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -67,6 +101,8 @@ describe("Canvas Validation Tests", () => {
 
 describe("Canvas Pixels Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -87,6 +123,8 @@ describe("Canvas Pixels Tests", () => {
 
 describe("Create Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
     await seedColors();
@@ -108,7 +146,8 @@ describe("Create Canvas Tests", () => {
   });
 
   it("Creates a canvas and seeds its pixels", async () => {
-    const canvasName = `Generated Canvas ${Date.now()}`;
+    const now = Date.now();
+    const canvasName = `Generated Canvas ${now}`;
 
     await createCanvas({
       name: canvasName,
@@ -145,11 +184,37 @@ describe("Create Canvas Tests", () => {
       [88, 101, 242, 127],
       [88, 101, 242, 127],
     ]);
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: createdCanvas.id,
+        name: canvasName,
+        width: 3,
+        height: 2,
+        isLocked: true,
+        allColorsGlobal: false,
+        cooldownDuration: 15,
+      }),
+    );
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: createdCanvas.id,
+        name: canvasName,
+        width: 3,
+        height: 2,
+        isLocked: true,
+        allColorsGlobal: false,
+        cooldownDuration: 15,
+      }),
+    );
   });
 });
 
 describe("Edit Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -160,7 +225,7 @@ describe("Edit Canvas Tests", () => {
       name: "Edited Canvas",
       isLocked: true,
       allColorsGlobal: true,
-      cooldownLength: 45,
+      cooldownDuration: 45,
     });
 
     const canvas = await getCanvasInfo(1);
@@ -182,6 +247,69 @@ describe("Edit Canvas Tests", () => {
     expect(updatedCanvas).toMatchObject({
       cooldown_length: 45,
       all_colors_global: true,
+    });
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 1,
+        name: "Edited Canvas",
+        isLocked: true,
+        allColorsGlobal: true,
+        cooldownDuration: 45,
+      }),
+    );
+  });
+});
+
+describe("Paste Canvas Data Tests", () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    await seedEvents();
+    await seedCanvases();
+    await seedColors();
+  });
+
+  it("validates paste data and creates bulk history entries", async () => {
+    vi.spyOn(prisma.user, "upsert").mockResolvedValueOnce({} as never);
+
+    vi.mocked(getEventPalette).mockResolvedValueOnce([
+      {
+        id: 1,
+        code: "5872f2ff",
+        name: "Blurple",
+        rgba: [88, 101, 242, 255],
+        global: true,
+        invite: null,
+        guildName: null,
+        guildId: null,
+      },
+      {
+        id: 2,
+        code: "ea2328ff",
+        name: "Red",
+        rgba: [234, 35, 40, 255],
+        global: true,
+        invite: null,
+        guildName: null,
+        guildId: null,
+      },
+    ]);
+
+    const authorId = 1n;
+
+    await pasteCanvasData(1, authorId, [
+      [0, 0, 1],
+      [1, 1, 2],
+    ]);
+
+    expect(vi.mocked(getEventPalette)).toHaveBeenCalledWith(1, false);
+    expect(vi.mocked(createBulkPlaceEntries)).toHaveBeenCalledWith({
+      canvasId: 1,
+      userId: authorId,
+      entries: [
+        { x: 0, y: 0, colorId: 1 },
+        { x: 1, y: 1, colorId: 2 },
+      ],
     });
   });
 });

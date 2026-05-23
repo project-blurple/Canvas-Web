@@ -1,13 +1,31 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 
-export async function getBlocklist() {
-  return await prisma.blacklist.findMany({
-    select: {
-      user_id: true,
-      date_added: true,
-    },
-  });
+interface BlocklistRow {
+  user_id: bigint;
+  date_added: Date;
+  username: string | null;
+  profile_picture_url: string | null;
+}
+
+export async function getBlocklist(): Promise<BlocklistEntry[]> {
+  const blocklist = await prisma.$queryRaw<BlocklistRow[]>`
+    SELECT
+      b.user_id,
+      b.date_added,
+      dup.username,
+      dup.profile_picture_url
+    FROM blacklist b
+    LEFT JOIN discord_user_profile dup ON b.user_id = dup.user_id
+    ORDER BY b.date_added DESC
+  `;
+
+  return blocklist.map((entry) => ({
+    userId: entry.user_id,
+    dateAdded: entry.date_added,
+    username: entry.username,
+    profilePictureUrl: entry.profile_picture_url,
+  }));
 }
 
 export async function userIsBlocklisted(
