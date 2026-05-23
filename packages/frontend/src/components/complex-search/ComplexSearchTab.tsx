@@ -15,7 +15,7 @@ import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import {
-  type ComplexPixelHistoryQuery,
+  type ComplexPixelHistoryParams,
   useComplexPixelHistory,
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
@@ -93,11 +93,11 @@ export default function ComplexSearchTab({
   const [fromTime, setFromTime] = useState<DateTime | null>(null);
   const [toTime, setToTime] = useState<DateTime | null>(null);
 
-  const [searchQuery, setSearchQuery] =
-    useState<ComplexPixelHistoryQuery | null>(null);
-  const historyQuery = useComplexPixelHistory(canvas.id, searchQuery);
+  const [searchParams, setSearchParams] =
+    useState<ComplexPixelHistoryParams | null>(null);
+  const historyQuery = useComplexPixelHistory(canvas.id, searchParams);
   const historyData: PixelHistoryWrapper | null =
-    searchQuery === null ? null : (historyQuery.data ?? null);
+    searchParams === null ? null : (historyQuery.data ?? null);
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -135,7 +135,7 @@ export default function ComplexSearchTab({
 
     setCanEdit(false);
 
-    setSearchQuery({
+    setSearchParams({
       point0: {
         x: selectedBounds.left,
         y: selectedBounds.top,
@@ -156,7 +156,7 @@ export default function ComplexSearchTab({
   }
 
   function resetResults() {
-    setSearchQuery(null);
+    setSearchParams(null);
   }
 
   const pixelsInBounds =
@@ -168,7 +168,7 @@ export default function ComplexSearchTab({
   const boundsValid = areBoundsValid(selectedBounds);
   const isLoading = historyQuery.isLoading;
 
-  const entriesCount = historyData?.totalEntries ?? 0;
+  const entriesCount = historyData?.total ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
   const Results: React.FC = () => {
@@ -283,13 +283,13 @@ export default function ComplexSearchTab({
         </ActionPanelTabBody>
         <Results />
       </FullWidthScrollView>
-      {historyData && searchQuery && (
+      {historyData && searchParams && (
         <ActionPanelTabBody>
           <EraseWrapper>
             <ComplexSearchEraseHistory
               entriesCount={entriesCount}
               usersLength={usersLength}
-              query={searchQuery}
+              params={searchParams}
               resetResults={resetResults}
             />
           </EraseWrapper>

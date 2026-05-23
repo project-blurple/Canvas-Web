@@ -1,5 +1,6 @@
 import z from "zod";
 import { DiscordUserProfileSchema } from "./discordUserProfile";
+import { paginatedSchema } from "./pagination";
 import { PaletteColorSummarySchema } from "./palette";
 
 export const PixelHistoryRecordSchema = z.object({
@@ -25,14 +26,11 @@ export type PixelHistoryUserSummary = z.infer<
   typeof PixelHistoryUserSummarySchema
 >;
 
-export const PixelHistoryWrapperSchema = z.object({
-  pixelHistory: z.array(PixelHistoryRecordSchema),
-  totalEntries: z.number().int().nonnegative(),
-  users: z.record(z.string(), PixelHistoryUserSummarySchema).optional(),
-  executionDurationMs: z.number().nonnegative().optional(),
-});
+export const PixelHistoryWrapperSchema = z
+  .object({
+    users: z.record(z.string(), PixelHistoryUserSummarySchema).optional(),
+    executionDurationMs: z.number().nonnegative().optional(),
+  })
+  .extend(paginatedSchema(PixelHistoryRecordSchema).shape);
 
 export type PixelHistoryWrapper = z.infer<typeof PixelHistoryWrapperSchema>;
-
-export const PixelHistorySchema = PixelHistoryWrapperSchema;
-export type PixelHistory = PixelHistoryWrapper;

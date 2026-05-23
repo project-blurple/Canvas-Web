@@ -3,7 +3,7 @@ import type {
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
-  LeaderboardEntry,
+  LeaderboardEntrySchema,
   Paginated,
   UserStats,
 } from "@blurple-canvas-web/types";
@@ -62,7 +62,7 @@ export async function getLeaderboard(
   canvasId: CanvasInfo["id"],
   page = 1,
   size = 10,
-): Promise<Paginated<LeaderboardEntry>> {
+): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
