@@ -493,10 +493,31 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
         console.debug(
           `Canvas ${canvasId} lock status has changed. Updating cache...`,
         );
-        clearCanvasFromFileSystem(canvasId);
+        // Ensure on-disk files are removed and cache entry cleared so we regenerate below
+        await clearCanvasFromFileSystem(canvasId);
+        CANVAS_CACHE.delete(canvasId);
       } else {
         console.debug(`Cache hit for canvas ${canvasId}`);
-        return cachedCanvas;
+
+        // If this is a locked canvas, verify the cache is complete. If any expected
+        // export size is missing, clear the cache and treat as a miss so we generate
+        // all sizes atomically via `saveCanvasToFileSystem` below.
+        if (cachedCanvas.isLocked) {
+          const locked = cachedCanvas as LockedCanvas;
+          const missing = CANVAS_EXPORT_SIZES.some((s) => !locked.canvasPaths[s]);
+
+          if (missing) {
+            console.debug(
+              `Cached locked canvas ${canvasId} is incomplete; clearing to regenerate all sizes.`,
+            );
+            await clearCanvasFromFileSystem(canvasId);
+            CANVAS_CACHE.delete(canvasId);
+          } else {
+            return cachedCanvas;
+          }
+        } else {
+          return cachedCanvas;
+        }
       }
     } else {
       console.debug(`Cache miss for canvas ${canvasId}`);
