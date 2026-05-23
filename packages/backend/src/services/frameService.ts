@@ -1,8 +1,10 @@
-import type {
-  DiscordUserProfile,
-  Frame,
-  GuildOwnedFrame,
-  UserOwnedFrame,
+import {
+  type DiscordUserProfile,
+  type Frame,
+  type FrameOwnerInput,
+  FrameOwnerType,
+  type GuildOwnedFrame,
+  type UserOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
@@ -21,8 +23,8 @@ type FrameSelect = NonNullable<FrameFindManyArgs>["select"];
 const frameSelect = {
   id: true,
   canvas_id: true,
-  owner_id: true,
-  is_guild_owned: true,
+  owner_user_id: true,
+  owner_guild_id: true,
   name: true,
   x_0: true,
   y_0: true,
@@ -32,9 +34,12 @@ const frameSelect = {
 } as const satisfies FrameSelect;
 
 async function findFrameForType(frameId: string) {
-  return prisma.frame.findUnique({
+  return prisma.frame.findFirst({
     where: {
-      id: frameId,
+      id: {
+        equals: frameId,
+        mode: Prisma.QueryMode.insensitive,
+      },
     },
     select: frameSelect,
   });
@@ -63,7 +68,11 @@ function partitionOwnerIds(frames: FrameDbRecord[]) {
   const guildIds = new Set<bigint>();
 
   for (const frame of frames) {
-    (frame.is_guild_owned ? guildIds : userIds).add(frame.owner_id);
+    if (frame.owner_user_id !== null) {
+      userIds.add(frame.owner_user_id);
+    } else if (frame.owner_guild_id !== null) {
+      guildIds.add(frame.owner_guild_id);
+    }
   }
 
   return {
@@ -122,19 +131,19 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
     y1: frame.y_1,
   };
 
-  if (frame.is_guild_owned) {
-    const guildData = owners.guildsById.get(frame.owner_id);
+  if (frame.owner_guild_id !== null) {
+    const guildData = owners.guildsById.get(frame.owner_guild_id);
 
     if (!guildData) {
       throw new Error(
-        `Guild owner with ID ${frame.owner_id} not found for frame ${frame.id}`,
+        `Guild owner with ID ${frame.owner_guild_id} not found for frame ${frame.id}`,
       );
     }
 
     return {
       ...baseFrame,
       owner: {
-        type: "guild",
+        type: FrameOwnerType.Guild,
         guild: {
           guild_id: guildData.guild_id.toString(),
           name: guildData.name,
@@ -143,18 +152,22 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
     };
   }
 
-  const userData = owners.usersById.get(frame.owner_id);
+  if (frame.owner_user_id === null) {
+    throw new Error(`Frame ${frame.id} has no owner set`);
+  }
+
+  const userData = owners.usersById.get(frame.owner_user_id);
 
   if (!userData) {
     throw new Error(
-      `User owner with ID ${frame.owner_id} not found for frame ${frame.id}`,
+      `User owner with ID ${frame.owner_user_id} not found for frame ${frame.id}`,
     );
   }
 
   return {
     ...baseFrame,
     owner: {
-      type: "user",
+      type: FrameOwnerType.User,
       user: {
         id: userData.user_id.toString(),
         username: userData.username,
@@ -165,21 +178,24 @@ function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
 }
 
 function asUserFrame(frame: Frame): asserts frame is UserOwnedFrame {
-  if (frame.owner.type !== "user") {
+  if (frame.owner.type !== FrameOwnerType.User) {
     throw new Error(`Expected user-owned frame, got ${frame.owner.type}`);
   }
 }
 
 function asGuildFrame(frame: Frame): asserts frame is GuildOwnedFrame {
-  if (frame.owner.type !== "guild") {
+  if (frame.owner.type !== FrameOwnerType.Guild) {
     throw new Error(`Expected guild-owned frame, got ${frame.owner.type}`);
   }
 }
 
 export async function getFrameById(frameId: string): Promise<Frame> {
-  const frame = await prisma.frame.findUnique({
+  const frame = await prisma.frame.findFirst({
     where: {
-      id: frameId,
+      id: {
+        equals: frameId,
+        mode: Prisma.QueryMode.insensitive,
+      },
     },
     select: frameSelect,
   });
@@ -198,9 +214,8 @@ export async function getFramesByUserId(
 ): Promise<UserOwnedFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
-      owner_id: BigInt(userId),
+      owner_user_id: BigInt(userId),
       canvas_id: canvasId,
-      is_guild_owned: false,
     },
     select: frameSelect,
   });
@@ -220,11 +235,10 @@ export async function getFramesByGuildIds(
 ): Promise<GuildOwnedFrame[]> {
   const frames = await prisma.frame.findMany({
     where: {
-      owner_id: {
+      owner_guild_id: {
         in: guildIds.map(BigInt),
       },
       canvas_id: canvasId,
-      is_guild_owned: true,
     },
     select: frameSelect,
   });
@@ -241,20 +255,20 @@ export async function getFramesByGuildIds(
 async function assertUserHasPermissionsForFrame(
   user: DiscordUserProfile,
   accessToken: string,
-  isGuildOwned: boolean,
-  ownerId: string,
+  owner: FrameOwnerInput,
 ) {
-  if (isGuildOwned) {
-    const permissions = await getGuildPermissionsForUser(ownerId, accessToken);
+  if (owner.type === FrameOwnerType.Guild) {
+    const permissions = await getGuildPermissionsForUser(owner.id, accessToken);
 
     if (!permissions.administrator && !permissions.manage_guild) {
       throw new ForbiddenError(
         "You do not have permission to modify frames for this guild",
       );
     }
+    return;
   }
 
-  if (ownerId !== user.id) {
+  if (owner.id !== user.id) {
     throw new ForbiddenError("You are not the owner of this frame");
   }
 }
@@ -264,17 +278,16 @@ async function assertUserHasPermissionsForFrameObject(
   accessToken: string,
   frame: Frame,
 ) {
-  if (frame.owner.type === "system") {
+  if (frame.owner.type === FrameOwnerType.System) {
     throw new ForbiddenError("System-owned frames cannot be edited");
   }
-  return assertUserHasPermissionsForFrame(
-    user,
-    accessToken,
-    frame.owner.type === "guild",
-    frame.owner.type === "guild" ?
-      frame.owner.guild.guild_id
-    : frame.owner.user.id,
-  );
+
+  const owner: FrameOwnerInput =
+    frame.owner.type === FrameOwnerType.Guild ?
+      { type: FrameOwnerType.Guild, id: frame.owner.guild.guild_id }
+    : { type: FrameOwnerType.User, id: frame.owner.user.id };
+
+  return assertUserHasPermissionsForFrame(user, accessToken, owner);
 }
 
 async function assertCoordsAreWithinCanvas(
@@ -358,21 +371,20 @@ export async function createFrame(
   accessToken: string,
   canvasId: number,
   name: string,
-  ownerId: string,
-  isGuildOwned: boolean,
+  owner: FrameOwnerInput,
   x0: number,
   y0: number,
   x1: number,
   y1: number,
 ) {
-  await assertUserHasPermissionsForFrame(
-    user,
-    accessToken,
-    isGuildOwned,
-    ownerId,
-  );
+  await assertUserHasPermissionsForFrame(user, accessToken, owner);
 
   await assertCoordsAreWithinCanvas(canvasId, x0, y0, x1, y1);
+
+  const ownerColumns =
+    owner.type === FrameOwnerType.Guild ?
+      { owner_guild_id: BigInt(owner.id), owner_user_id: null }
+    : { owner_user_id: BigInt(owner.id), owner_guild_id: null };
 
   while (true) {
     // Frame IDs are all 6-character hex strings, between 000000 and FFFFFF inclusive
@@ -387,8 +399,7 @@ export async function createFrame(
           id,
           canvas_id: canvasId,
           name,
-          owner_id: BigInt(ownerId),
-          is_guild_owned: isGuildOwned,
+          ...ownerColumns,
           x_0: x0,
           y_0: y0,
           x_1: x1,
@@ -408,43 +419,38 @@ export async function createFrame(
   }
 }
 
-interface GetFrameCountForOwnerParams {
+export interface GetFrameCountForOwnerParams {
   canvasId: number;
-  ownerId: string;
-  isGuildOwned: boolean;
+  owner: FrameOwnerInput;
 }
 
 async function getFrameCountForOwner({
   canvasId,
-  ownerId,
-  isGuildOwned,
+  owner,
 }: GetFrameCountForOwnerParams) {
   return prisma.frame.count({
     where: {
       canvas_id: canvasId,
-      owner_id: BigInt(ownerId),
-      is_guild_owned: isGuildOwned,
+      ...(owner.type === FrameOwnerType.Guild ?
+        { owner_guild_id: BigInt(owner.id) }
+      : { owner_user_id: BigInt(owner.id) }),
     },
   });
 }
 
 export async function assertMaxOwnerFramesNotExceeded({
   canvasId,
-  ownerId,
-  isGuildOwned,
+  owner,
 }: GetFrameCountForOwnerParams) {
-  const frameCount = await getFrameCountForOwner({
-    canvasId,
-    ownerId,
-    isGuildOwned,
-  });
+  const frameCount = await getFrameCountForOwner({ canvasId, owner });
+  const isGuildOwner = owner.type === FrameOwnerType.Guild;
   const limit =
-    isGuildOwned ? config.frames.maxAllowedGuild : config.frames.maxAllowedUser;
+    isGuildOwner ? config.frames.maxAllowedGuild : config.frames.maxAllowedUser;
 
   if (frameCount >= limit) {
     throw new UnprocessableError(
       `Frame limit of ${limit} exceeded for this ${
-        isGuildOwned ? "guild" : "user"
+        isGuildOwner ? "guild" : "user"
       } on this canvas`,
     );
   }

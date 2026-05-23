@@ -13,7 +13,12 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
+import {
+  useCanvasCooldown,
+  usePalette,
+  usePlayCooldownExpirySound,
+  usePlaySound,
+} from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -113,6 +118,18 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
+  const { user } = useAuthContext();
+  const {
+    canvas: {
+      allColorsGlobal,
+      id: canvasId,
+      isLocked: readOnly,
+      webPlacingEnabled,
+    },
+  } = useCanvasContext();
+  const { data: initialCooldown } = useCanvasCooldown(canvasId, {
+    enabled: active && Boolean(user),
+  });
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playCooldownExpirySound = usePlayCooldownExpirySound();
@@ -153,10 +170,14 @@ export default function PlacePixelTab({
 
   const { color: selectedColor } = useSelectedColorContext();
 
-  const { user } = useAuthContext();
-  const {
-    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
-  } = useCanvasContext();
+  useEffect(
+    function syncInitialCooldown() {
+      const cooldown = initialCooldown?.cooldownEndTime;
+      if (cooldown === undefined) return;
+      setCooldownSeconds(Math.ceil(cooldown / 1000));
+    },
+    [initialCooldown?.cooldownEndTime],
+  );
 
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
@@ -305,9 +326,9 @@ function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
           ))
         : colors.map((color) => (
             <InteractiveSwatch
-              aria-disabled={isColorDisabled?.(color) || undefined}
               aria-selected={color === selectedColor}
               key={color.code}
+              locked={isColorDisabled?.(color)}
               onClick={() => {
                 playSound();
                 setColor(color);

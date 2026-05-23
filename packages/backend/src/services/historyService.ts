@@ -8,7 +8,7 @@ import { Prisma, prisma } from "@/client";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {
-  restorePixelsAfterHistoryDeletion,
+  restorePixelsAfterHistoryModification,
   validatePixel,
 } from "./pixelService";
 
@@ -116,7 +116,7 @@ function mapPixelHistoryEntry(history: PixelHistoryRow) {
   return {
     id: history.id.toString(),
     color: toPaletteColorSummary(history.color),
-    timestamp: history.timestamp,
+    timestamp: history.timestamp.toISOString(),
     guildId: history.guild_id?.toString(),
     userId: history.user_id.toString(),
     userProfile:
@@ -151,11 +151,11 @@ async function getPixelHistoryRowsWithCount({
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
-  let whereSQL: Prisma.Sql;
+  let whereSql: Prisma.Sql;
   if (whereFragments.length === 0) {
-    whereSQL = Prisma.sql`TRUE`;
+    whereSql = Prisma.sql`TRUE`;
   } else {
-    whereSQL =
+    whereSql =
       whereFragments.length === 1 ?
         whereFragments[0]
       : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
@@ -183,7 +183,7 @@ async function getPixelHistoryRowsWithCount({
     FROM history h
     INNER JOIN color c ON c.id = h.color_id
     LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     ORDER BY h.timestamp DESC
     LIMIT ${take}
     OFFSET ${Math.max((page - 1) * take, 0)}
@@ -297,7 +297,7 @@ async function getPixelHistoryUserCounts(
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
-  const whereSQL =
+  const whereSql =
     whereFragments.length === 1 ?
       whereFragments[0]
     : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
@@ -313,7 +313,7 @@ async function getPixelHistoryUserCounts(
       p.profile_picture_url
     FROM history h
     LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     GROUP BY h.user_id, p.user_id, p.username, p.profile_picture_url
   `;
 
@@ -349,7 +349,7 @@ async function getPixelHistoryUserColorCounts(
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
-  const whereSQL =
+  const whereSql =
     whereFragments.length === 1 ?
       whereFragments[0]
     : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
@@ -364,7 +364,7 @@ async function getPixelHistoryUserColorCounts(
       p.profile_picture_url
     FROM history h
     LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     GROUP BY h.user_id, h.color_id, p.user_id, p.username, p.profile_picture_url
   `;
 
@@ -395,8 +395,8 @@ function buildPixelHistoryUsers(
     users[userCount.user_id.toString()] = {
       count: userCount._count._all,
       colors: {},
-      firstPlaced: userCount._min.timestamp ?? new Date(0),
-      lastPlaced: userCount._max.timestamp ?? new Date(0),
+      firstPlaced: (userCount._min.timestamp ?? new Date(0)).toISOString(),
+      lastPlaced: (userCount._max.timestamp ?? new Date(0)).toISOString(),
       userProfile:
         userCount.discord_user_profile ?
           ({
@@ -517,11 +517,11 @@ export async function deletePixelHistoryEntries(
   const whereFragments = buildPixelHistoryWhereSQL(params);
 
   // Combine fragments with AND
-  let whereSQL: Prisma.Sql;
+  let whereSql: Prisma.Sql;
   if (whereFragments.length === 0) {
-    whereSQL = Prisma.sql`TRUE`;
+    whereSql = Prisma.sql`TRUE`;
   } else {
-    whereSQL =
+    whereSql =
       whereFragments.length === 1 ?
         whereFragments[0]
       : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
@@ -540,7 +540,7 @@ export async function deletePixelHistoryEntries(
   const deletedEntries = await prisma.$queryRaw<DeletedEntry[]>`
     UPDATE history h
     SET erased_at = ${erasedAt}
-    WHERE ${whereSQL}
+    WHERE ${whereSql}
     RETURNING id, user_id, x, y
   `;
 
@@ -557,7 +557,10 @@ export async function deletePixelHistoryEntries(
     ).values(),
   ];
 
-  await restorePixelsAfterHistoryDeletion(params.canvasId, coordinatesUpdated);
+  await restorePixelsAfterHistoryModification(
+    params.canvasId,
+    coordinatesUpdated,
+  );
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));

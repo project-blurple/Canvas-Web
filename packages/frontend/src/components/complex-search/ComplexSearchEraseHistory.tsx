@@ -15,8 +15,9 @@ import axios from "axios";
 import { useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
+import { useEventInfo } from "@/hooks";
 import type { ComplexPixelHistoryParams } from "@/hooks/queries/usePixelHistory";
-import { StyledButton } from "../button/DynamicButton";
+import { Button } from "../button";
 
 const StyledDialog = styled(Dialog)`
   & .MuiDialog-paper {
@@ -25,11 +26,16 @@ const StyledDialog = styled(Dialog)`
   }
 `;
 
-const Button = styled(StyledButton)`
+const StyledButton = styled(Button)`
   color: white;
+
+  &:hover,
+  &:focus-visible {
+    border-color: oklch(from var(--discord-white) l c h / 36%);
+  }
 `;
 
-const RedButton = styled(Button)`
+const RedButton = styled(StyledButton)`
   &:hover,
   &:focus-visible {
     background-color: rgb(255, 0, 0);
@@ -50,6 +56,7 @@ export default function ComplexSearchEraseHistory({
   resetResults,
 }: ComplexSearchEraseHistoryProps) {
   const { canvas } = useCanvasContext();
+  const { data: currentEvent } = useEventInfo();
   const queryClient = useQueryClient();
 
   const [isEraseConfirmOpen, setIsEraseConfirmOpen] = useState(false);
@@ -117,9 +124,11 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
   }
 
+  const isDisabled = entriesCount === 0 || currentEvent?.id !== canvas.eventId;
+
   return (
     <>
-      <RedButton disabled={entriesCount === 0} onClick={handleEraseHistory}>
+      <RedButton disabled={isDisabled} onClick={handleEraseHistory}>
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
       </RedButton>
@@ -155,7 +164,7 @@ export default function ComplexSearchEraseHistory({
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelErase}>Cancel</Button>
+          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
           <RedButton onClick={handleConfirmErase}>Erase</RedButton>
         </DialogActions>
       </StyledDialog>

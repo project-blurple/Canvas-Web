@@ -42,7 +42,7 @@ const Paragraph = styled("p")`
   grid-area: --entry-count;
 `;
 
-const UserId = styled(PrimitiveButton)`
+export const UserIdButton = styled(PrimitiveButton)`
   color: oklch(from var(--discord-white) l c h / 60%);
   cursor: pointer;
   font-size: 0.75rem;
@@ -112,7 +112,7 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
           );
         })}
       </ColorChipList>
-      <UserId
+      <UserIdButton
         onClick={async () =>
           void (await navigator.clipboard.writeText(userId.toString()))
         }
@@ -125,7 +125,7 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
         <VisuallyHidden>
           {summary.userProfile?.username}’s user ID. Click to copy.
         </VisuallyHidden>
-      </UserId>
+      </UserIdButton>
     </UserCard>
   );
 }

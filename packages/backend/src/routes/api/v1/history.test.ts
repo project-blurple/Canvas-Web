@@ -1,7 +1,11 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
-import { isCanvasModerator } from "@/services/discordGuildService";
+import { isCanvasInCurrentEvent } from "@/services/canvasService";
+import {
+  isCanvasAdmin,
+  isCanvasModerator,
+} from "@/services/discordGuildService";
 import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
@@ -17,6 +21,9 @@ vi.mock("@/services/historyService", () => ({
 vi.mock("@/services/discordGuildService", () => ({
   isCanvasModerator: vi.fn(),
   isCanvasAdmin: vi.fn(),
+}));
+vi.mock("@/services/canvasService", () => ({
+  isCanvasInCurrentEvent: vi.fn(),
 }));
 
 const createApp = ({ authenticated = false, moderator = false } = {}) => {
@@ -115,7 +122,7 @@ describe("History route tests", () => {
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         fromDateTime: "1970-01-01T00:00:00.000Z",
         toDateTime: "1970-01-02T00:00:00.000Z",
@@ -168,7 +175,7 @@ describe("History route tests", () => {
     const app = createApp({ authenticated: true, moderator: true });
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         excludeColors: [3, 4],
       })
@@ -204,7 +211,7 @@ describe("History route tests", () => {
 
     const response = await request(app)
       .post("/api/v1/canvas/9/pixel/history?x0=1&y0=2&x1=3&y1=4")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         includeColors: [1],
         excludeColors: [2],
@@ -220,12 +227,13 @@ describe("History route tests", () => {
 
   it("deletes history entries for a moderator", async () => {
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
+    vi.mocked(isCanvasInCurrentEvent).mockResolvedValueOnce(true);
     const app = createApp({ authenticated: true, moderator: true });
     vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
 
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         x0: 0,
         y0: 0,
@@ -258,13 +266,95 @@ describe("History route tests", () => {
     );
   });
 
+  it("returns 403 when deleting history for a canvas not in current event", async () => {
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
+    vi.mocked(isCanvasInCurrentEvent).mockResolvedValueOnce(false);
+    const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
+
+    const response = await request(app)
+      .delete("/api/v1/canvas/1/pixel/history")
+      .set("Test-User-Id", "1")
+      .send({
+        x0: 0,
+        y0: 0,
+        includeUserIds: ["1"],
+      })
+      .type("json");
+
+    expect(response.status).toBe(403);
+    expect(response.body).toMatchObject({
+      error:
+        "Cannot erase history for a canvas that is not in the current event",
+    });
+    expect(deletePixelHistoryEntries).not.toHaveBeenCalled();
+  });
+
+  it("force-deletes history entries for an admin", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
+    const app = createApp({ authenticated: true });
+    vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
+
+    const response = await request(app)
+      .delete("/api/v1/canvas/1/pixel/history/force")
+      .set("Test-User-Id", "1")
+      .send({
+        x0: 0,
+        y0: 0,
+        includeUserIds: ["1", "2"],
+        shouldBlockAuthors: true,
+      })
+      .type("json")
+      .expect(204);
+
+    expect(response.body).toStrictEqual({});
+    expect(deletePixelHistoryEntries).toHaveBeenCalledTimes(1);
+    expect(deletePixelHistoryEntries).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: [
+          { x: 0, y: 0 },
+          { x: 0, y: 0 },
+        ],
+        dateRange: {
+          from: undefined,
+          to: undefined,
+        },
+        userIdFilter: {
+          ids: [1n, 2n],
+          include: true,
+        },
+        colorFilter: undefined,
+      },
+      true,
+    );
+  });
+
+  it("returns 403 when force-deleting without admin permissions", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(false);
+    const app = createApp({ authenticated: true });
+    vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
+
+    const response = await request(app)
+      .delete("/api/v1/canvas/1/pixel/history/force")
+      .set("Test-User-Id", "1")
+      .send({ x0: 0, y0: 0 })
+      .type("json");
+
+    expect(response.status).toBe(403);
+    expect(response.body).toStrictEqual({
+      message: "You do not have permission to perform this action",
+    });
+    expect(deletePixelHistoryEntries).not.toHaveBeenCalled();
+  });
+
   it("returns 403 when deleting history without moderator permissions", async () => {
     const app = createApp({ authenticated: true, moderator: false });
     vi.mocked(deletePixelHistoryEntries).mockResolvedValueOnce(undefined);
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(false);
     const response = await request(app)
       .delete("/api/v1/canvas/1/pixel/history")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         historyIds: [1],
       })

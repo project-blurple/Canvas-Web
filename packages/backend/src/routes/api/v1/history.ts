@@ -1,18 +1,21 @@
-import type { Point } from "@blurple-canvas-web/types";
-import { Router } from "express";
 import {
-  assertLoggedIn,
-  requireCanvasModerator,
-} from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
+  CanvasIdParamModel,
   PixelHistoryComplexBodyModel,
   PixelHistoryComplexParamModel,
   PixelHistoryDeleteBodyModel,
   PixelHistoryParamModel,
-} from "@/models/history.models";
+  type Point,
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import type { z } from "zod";
+import {
+  assertLoggedIn,
+  requireCanvasAdmin,
+  requireCanvasModerator,
+} from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { isCanvasInCurrentEvent } from "@/services/canvasService";
 import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
@@ -107,6 +110,51 @@ historyRouter.post(
   },
 );
 
+function buildDeletePayload(req: {
+  body: z.infer<typeof PixelHistoryDeleteBodyModel>;
+  params: z.infer<typeof CanvasIdParamModel>;
+}) {
+  const {
+    x0,
+    y0,
+    x1,
+    y1,
+    fromDateTime,
+    toDateTime,
+    includeUserIds,
+    excludeUserIds,
+    includeColors,
+    excludeColors,
+    shouldBlockAuthors,
+  } = req.body;
+
+  const point0 = { x: x0, y: y0 } as Point;
+  const point1 = { x: x1 ?? x0, y: y1 ?? y0 } as Point;
+
+  const userIdFilter =
+    includeUserIds ? { ids: includeUserIds.map(BigInt), include: true }
+    : excludeUserIds ? { ids: excludeUserIds.map(BigInt), include: false }
+    : undefined;
+
+  const colorFilter =
+    includeColors ? { colors: includeColors, include: true }
+    : excludeColors ? { colors: excludeColors, include: false }
+    : undefined;
+
+  const payload = {
+    canvasId: req.params.canvasId,
+    points: [point0, point1] as [Point, Point],
+    dateRange: {
+      from: fromDateTime,
+      to: toDateTime,
+    },
+    userIdFilter,
+    colorFilter,
+  };
+
+  return { payload, shouldBlockAuthors };
+}
+
 historyRouter.delete(
   "/",
   requireCanvasModerator,
@@ -114,46 +162,33 @@ historyRouter.delete(
   async (req, res) => {
     assertLoggedIn(req);
 
-    const {
-      x0,
-      y0,
-      x1,
-      y1,
-      fromDateTime,
-      toDateTime,
-      includeUserIds,
-      excludeUserIds,
-      includeColors,
-      excludeColors,
-      shouldBlockAuthors,
-    } = req.body;
+    const { payload, shouldBlockAuthors } = buildDeletePayload(req);
 
-    const point0 = { x: x0, y: y0 };
-    const point1 = { x: x1 ?? x0, y: y1 ?? y0 };
+    if (!(await isCanvasInCurrentEvent(req.params.canvasId))) {
+      res.status(403).json({
+        error:
+          "Cannot erase history for a canvas that is not in the current event",
+      });
+      return;
+    }
 
-    const userIdFilter =
-      includeUserIds ? { ids: includeUserIds.map(BigInt), include: true }
-      : excludeUserIds ? { ids: excludeUserIds.map(BigInt), include: false }
-      : undefined;
+    await deletePixelHistoryEntries(payload, shouldBlockAuthors);
 
-    const colorFilter =
-      includeColors ? { colors: includeColors, include: true }
-      : excludeColors ? { colors: excludeColors, include: false }
-      : undefined;
+    res.status(204).send();
+  },
+);
 
-    await deletePixelHistoryEntries(
-      {
-        canvasId: req.params.canvasId,
-        points: [point0, point1],
-        dateRange: {
-          from: fromDateTime,
-          to: toDateTime,
-        },
-        userIdFilter,
-        colorFilter,
-      },
-      shouldBlockAuthors,
-    );
+// Admin-only endpoint to force-delete pixel history regardless of current event
+historyRouter.delete(
+  "/force",
+  requireCanvasAdmin,
+  validate({ params: CanvasIdParamModel, body: PixelHistoryDeleteBodyModel }),
+  async (req, res) => {
+    assertLoggedIn(req);
+
+    const { payload, shouldBlockAuthors } = buildDeletePayload(req);
+
+    await deletePixelHistoryEntries(payload, shouldBlockAuthors);
 
     res.status(204).send();
   },

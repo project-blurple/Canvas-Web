@@ -17,8 +17,10 @@ describe("blocklistService", () => {
     it("returns the blocklist entries", async () => {
       await expect(getBlocklist()).resolves.toStrictEqual([
         {
-          user_id: 9n,
-          date_added: new Date(0),
+          dateAdded: new Date(0).toISOString(),
+          profilePictureUrl: null,
+          userId: "9",
+          username: null,
         },
       ]);
     });
