@@ -41,7 +41,8 @@ export type CachedCanvas = LockedCanvas | UnlockedCanvas;
  * or if the image is locked (and therefore cannot be modified) the path to the canvas image on the
  * file system.
  */
-const CANVAS_CACHE: Record<number, CachedCanvas> = {};
+const CANVAS_CACHE = new Map<number, CachedCanvas>();
+const CANVAS_LOADS = new Map<number, Promise<CachedCanvas>>();
 
 export function initializeCache(): void {
   // look through the files in the canvas directory and build the locked cache object from them
@@ -57,10 +58,10 @@ export function initializeCache(): void {
 
     console.log(`Loaded cached canvas ${canvasPath}`);
 
-    CANVAS_CACHE[canvasId] = {
+    CANVAS_CACHE.set(canvasId, {
       isLocked: true,
       canvasPath: `${config.paths.canvases}/${filename}`,
-    };
+    });
   }
 }
 
@@ -226,7 +227,7 @@ export async function updateManyCachedPixels(
   canvasId: number,
   pixels: PlacePixelArray,
 ): Promise<void> {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (!cachedCanvas || cachedCanvas.isLocked) {
     return;
@@ -251,7 +252,7 @@ export function updateCachedCanvasPixel(
   coordinates: Point,
   color: PixelColor,
 ) {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (!cachedCanvas || cachedCanvas.isLocked) {
     return;
@@ -301,7 +302,7 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (cachedCanvas?.isLocked) {
     await fs.promises.rm(cachedCanvas.canvasPath);
@@ -310,54 +311,69 @@ async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
 }
 
 async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
-  const canvas = await prisma.canvas.findFirst({
-    where: { id: canvasId },
-  });
-
-  if (!canvas) {
-    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  const inFlightLoad = CANVAS_LOADS.get(canvasId);
+  if (inFlightLoad) {
+    return inFlightLoad;
   }
 
-  const cachedCanvas = CANVAS_CACHE[canvasId];
-  if (cachedCanvas) {
-    if (cachedCanvas.isLocked !== canvas.locked) {
-      console.debug(
-        `Canvas ${canvasId} lock status has changed. Updating cache...`,
-      );
-      clearCanvasFromFileSystem(canvasId);
-    } else {
-      console.debug(`Cache hit for canvas ${canvasId}`);
-      return cachedCanvas;
+  const loadPromise = (async () => {
+    const canvas = await prisma.canvas.findFirst({
+      where: { id: canvasId },
+    });
+
+    if (!canvas) {
+      throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
     }
-  } else {
-    console.debug(`Cache miss for canvas ${canvasId}`);
-  }
 
-  const pixels = await getCanvasPixels(canvasId);
-  const unlockedCanvas: UnlockedCanvas = {
-    isLocked: false,
-    width: canvas.width,
-    height: canvas.height,
-    pixels,
-  };
+    const cachedCanvas = CANVAS_CACHE.get(canvasId);
+    if (cachedCanvas) {
+      if (cachedCanvas.isLocked !== canvas.locked) {
+        console.debug(
+          `Canvas ${canvasId} lock status has changed. Updating cache...`,
+        );
+        clearCanvasFromFileSystem(canvasId);
+      } else {
+        console.debug(`Cache hit for canvas ${canvasId}`);
+        return cachedCanvas;
+      }
+    } else {
+      console.debug(`Cache miss for canvas ${canvasId}`);
+    }
 
-  if (canvas.locked) {
-    const path = saveCanvasToFileSystem(canvas, pixels);
-    CANVAS_CACHE[canvasId] = {
-      isLocked: true,
-      canvasPath: path,
+    const pixels = await getCanvasPixels(canvasId);
+    const unlockedCanvas: UnlockedCanvas = {
+      isLocked: false,
+      width: canvas.width,
+      height: canvas.height,
+      pixels,
     };
 
-    console.debug(`Canvas ${canvasId} saved to ${path}`);
-  } else {
-    CANVAS_CACHE[canvasId] = unlockedCanvas;
-    console.debug(`Canvas ${canvasId} cached in memory`);
-  }
+    if (canvas.locked) {
+      const path = saveCanvasToFileSystem(canvas, pixels);
+      CANVAS_CACHE.set(canvasId, {
+        isLocked: true,
+        canvasPath: path,
+      });
 
-  // We always want to return the unlocked canvas, even if the image is locked as sometimes the
-  // image hasn’t finished being written to the file system when Express tries to send it in the
-  // response.
-  return unlockedCanvas;
+      console.debug(`Canvas ${canvasId} saved to ${path}`);
+    } else {
+      CANVAS_CACHE.set(canvasId, unlockedCanvas);
+      console.debug(`Canvas ${canvasId} cached in memory`);
+    }
+
+    // We always want to return the unlocked canvas, even if the image is locked as sometimes the
+    // image hasn’t finished being written to the file system when Express tries to send it in the
+    // response.
+    return unlockedCanvas;
+  })();
+
+  CANVAS_LOADS.set(canvasId, loadPromise);
+
+  try {
+    return await loadPromise;
+  } finally {
+    CANVAS_LOADS.delete(canvasId);
+  }
 }
 
 interface CreateCanvasParams {
