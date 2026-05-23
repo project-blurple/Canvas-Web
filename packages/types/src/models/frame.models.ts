@@ -1,12 +1,12 @@
-import type { CanvasExportSize } from "@blurple-canvas-web/types";
+import z from "zod";
+import type CanvasExportSize from "../canvasExport";
 import {
   CANVAS_EXPORT_SIZES,
   DEFAULT_CANVAS_EXPORT_SIZE,
-  FrameOwnerType,
-} from "@blurple-canvas-web/types";
-import z from "zod";
-import { DiscordSnowflakeSchema } from "@/utils/discordRouteUtils";
+} from "../canvasExport";
+import { FrameOwnerType } from "../frame";
 import { CanvasIdParamModel } from "./canvas.models";
+import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),

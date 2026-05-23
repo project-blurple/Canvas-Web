@@ -1,4 +1,10 @@
-import type { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import {
+  CanvasIdParamModel,
+  type DiscordUserProfile,
+  PlacePixelArrayBodyModel,
+  PlacePixelBodyModel,
+  type Point,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import { ForbiddenError, UnauthorizedError } from "@/errors";
@@ -6,11 +12,6 @@ import { socketHandler } from "@/index";
 import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
-  PlacePixelArrayBodyModel,
-  PlacePixelBodyModel,
-} from "@/models/pixel.models";
 import { updateManyCachedPixels } from "@/services/canvasService";
 import { getCachedUserGuildFlags } from "@/services/discordGuildService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";

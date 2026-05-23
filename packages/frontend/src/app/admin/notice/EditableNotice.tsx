@@ -241,12 +241,13 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
     setIsTogglingActivate(true);
     try {
       const now = new Date();
-      const endAt = notice.endAt && notice.endAt > now ? notice.endAt : null;
+      const endAt =
+        notice.endAt && new Date(notice.endAt) > now ? notice.endAt : null;
 
       await modifyNoticeMutation.mutateAsync({
         ...notice,
         endAt,
-        startAt: now,
+        startAt: now.toISOString(),
       });
     } catch (err) {
       console.error("Failed to activate notice", err);
@@ -260,11 +261,13 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
     try {
       const now = new Date();
       const startAt =
-        notice.startAt && notice.startAt > now ? null : notice.startAt;
+        notice.startAt && new Date(notice.startAt) > now ?
+          null
+        : notice.startAt;
 
       await modifyNoticeMutation.mutateAsync({
         ...notice,
-        endAt: now,
+        endAt: now.toISOString(),
         startAt,
       });
     } catch (err) {
@@ -442,7 +445,9 @@ function EditModeNotice({
             name="startAt"
             value={startAt ? new Date(startAt).toISOString().slice(0, 16) : ""}
             onChange={(e) =>
-              setStartAt(e.target.value ? new Date(e.target.value) : null)
+              setStartAt(
+                e.target.value ? new Date(e.target.value).toISOString() : null,
+              )
             }
           />
           <ClearIconButton type="button" onClick={() => setStartAt(null)}>
@@ -457,7 +462,9 @@ function EditModeNotice({
             name="endAt"
             value={endAt ? new Date(endAt).toISOString().slice(0, 16) : ""}
             onChange={(e) =>
-              setEndAt(e.target.value ? new Date(e.target.value) : null)
+              setEndAt(
+                e.target.value ? new Date(e.target.value).toISOString() : null,
+              )
             }
           />
           <ClearIconButton type="button" onClick={() => setEndAt(null)}>
