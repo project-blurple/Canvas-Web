@@ -11,7 +11,6 @@ import {
   CANVAS_EXPORT_SIZES,
   DEFAULT_CANVAS_EXPORT_SIZE,
 } from "@blurple-canvas-web/types";
-import { PNG } from "pngjs";
 import sharp from "sharp";
 import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
@@ -117,27 +116,14 @@ export function getCanvasFilename(
 }
 
 /**
- * Converts an unlocked canvas from the cache to a PNG image.
+ * Converts an unlocked canvas from the cache to PNG bytes.
  *
  * @param unlockedCanvas The unlocked canvas to convert
- * @returns The PNG image
+ * @returns The PNG bytes
  */
-export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
-  return pixelsToPng(
-    unlockedCanvas.width,
-    unlockedCanvas.height,
-    unlockedCanvas.pixels,
-  );
-}
-
-export function unlockedCanvasToPngStream(
+export async function unlockedCanvasToPng(
   unlockedCanvas: UnlockedCanvas,
-  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
-): NodeJS.ReadableStream {
-  if (size === 1) {
-    return unlockedCanvasToPng(unlockedCanvas).pack();
-  }
-
+): Promise<Buffer> {
   const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
 
   return sharp(rawBuffer, {
@@ -147,12 +133,33 @@ export function unlockedCanvasToPngStream(
       channels: 4,
     },
   })
-    .resize({
-      width: unlockedCanvas.width * size,
-      height: unlockedCanvas.height * size,
-      kernel: sharp.kernel.nearest,
-    })
-    .png();
+    .png()
+    .toBuffer();
+}
+
+export function unlockedCanvasToPngStream(
+  unlockedCanvas: UnlockedCanvas,
+  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
+): NodeJS.ReadableStream {
+  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+
+  const image = sharp(rawBuffer, {
+    raw: {
+      width: unlockedCanvas.width,
+      height: unlockedCanvas.height,
+      channels: 4,
+    },
+  });
+
+  return size === 1 ?
+      image.png()
+    : image
+        .resize({
+          width: unlockedCanvas.width * size,
+          height: unlockedCanvas.height * size,
+          kernel: sharp.kernel.nearest,
+        })
+        .png();
 }
 
 interface CanvasSummaryRow {
@@ -382,20 +389,6 @@ export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
   })) as { color: { rgba: PixelColor } }[];
 
   return pixels.map((pixel) => pixel.color.rgba);
-}
-
-function pixelsToPng(width: number, height: number, pixels: PixelColor[]): PNG {
-  const image = new PNG({ width, height, filterType: 0 });
-
-  pixels.forEach((color, index) => {
-    const imageIndex = index * 4;
-    image.data[imageIndex] = color[0];
-    image.data[imageIndex + 1] = color[1];
-    image.data[imageIndex + 2] = color[2];
-    image.data[imageIndex + 3] = color[3];
-  });
-
-  return image;
 }
 
 function pixelsToRgbaBuffer(pixels: PixelColor[]): Buffer {
