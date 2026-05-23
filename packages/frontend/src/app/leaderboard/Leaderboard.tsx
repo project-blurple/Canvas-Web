@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
-import StyledPagination from "@/components/Pagination";
+import Pagination from "@/components/Pagination";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
@@ -73,12 +73,14 @@ export default function Leaderboard() {
           ))
         : isLeaderboardEmpty ?
           <NoContentsMessage>No leaderboard found</NoContentsMessage>
-        : entries?.map((entry) => (
-            <LeaderboardRow key={entry.userId} entry={entry} />
-          ))
+        : entries?.map(
+            (
+              entry: any, // ToDo: re-apply types
+            ) => <LeaderboardRow key={entry.userId} entry={entry} />,
+          )
         }
       </List>
-      <StyledPagination
+      <Pagination
         aria-controls={listId}
         count={total ? Math.ceil(total / size) : currentPage}
         onChange={(_, value) => setPage(value)}

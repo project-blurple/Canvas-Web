@@ -1,4 +1,8 @@
-import { Pagination, PaginationItem, styled } from "@mui/material";
+import {
+  Pagination as MuiPagination,
+  PaginationItem,
+  styled,
+} from "@mui/material";
 import {
   ChevronFirst,
   ChevronLast,
@@ -17,11 +21,11 @@ const customIconSlots = {
   last: ChevronLast,
 } as const;
 
-export default function StyledPagination(
-  props: React.ComponentProps<typeof Pagination>,
+export default function Pagination(
+  props: React.ComponentProps<typeof MuiPagination>,
 ) {
   return (
-    <Pagination
+    <MuiPagination
       color="primary"
       renderItem={(item) => (
         <StyledPaginationItem slots={customIconSlots} {...item} />

@@ -2,7 +2,7 @@ import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
 import { ButtonSupplement } from "@/components/button";
-import StyledPagination from "@/components/Pagination";
+import Pagination from "@/components/Pagination";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
 import {
   type PixelHistoryParams,
@@ -173,7 +173,7 @@ export default function PixelInfoTab({
           )}
           <ActionPanelTabBody>
             <div>
-              <StyledPagination
+              <Pagination
                 aria-controls={listId}
                 count={
                   data?.total ? Math.ceil(data.total / data.size) : truePage
