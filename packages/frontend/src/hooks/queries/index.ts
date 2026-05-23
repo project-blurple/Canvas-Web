@@ -1,4 +1,5 @@
 export { useBlocklist, useBlocklistMutations } from "./useBlocklist";
+export { useCanvasCooldown } from "./useCanvasCooldown";
 export { useCanvasInfo, useUpdateCanvasInfo } from "./useCanvasInfo";
 export { useCanvasList } from "./useCanvasList";
 export { useCanvasStats } from "./useCanvasStats";
