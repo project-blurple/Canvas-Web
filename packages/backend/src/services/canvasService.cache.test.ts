@@ -11,6 +11,14 @@ import {
   getLockedCanvasPath,
 } from "./canvasService";
 
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
+  },
+}));
+
 describe("Canvas cache concurrency tests", () => {
   beforeEach(async () => {
     await seedColors();
