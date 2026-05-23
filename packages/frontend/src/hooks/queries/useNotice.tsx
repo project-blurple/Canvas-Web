@@ -8,10 +8,7 @@ import {
 import axios, { type AxiosError, type AxiosResponse } from "axios";
 import config from "@/config/clientConfig";
 
-type NoticeInput = Partial<Omit<Notice, "id" | "createdAt">>;
-type NoticeCreateInput = NoticeInput & {
-  type: Notice["type"];
-};
+type NoticeInput = Omit<Notice, "id" | "createdAt">;
 
 export function useNotices(fetchAll: boolean = false) {
   const getNotices = async (): Promise<NoticeRequest.NoticeResBody> => {
@@ -38,12 +35,12 @@ export function useNotices(fetchAll: boolean = false) {
 export function useCreateNotice(): UseMutationResult<
   AxiosResponse<Notice>,
   AxiosError,
-  NoticeCreateInput
+  NoticeInput
 > {
   const queryClient = useQueryClient();
 
-  return useMutation<AxiosResponse<Notice>, AxiosError, NoticeCreateInput>({
-    mutationFn: async (data: NoticeCreateInput) => {
+  return useMutation<AxiosResponse<Notice>, AxiosError, NoticeInput>({
+    mutationFn: async (data: NoticeInput) => {
       const requestUrl = `${config.apiUrl}/api/v1/notice`;
 
       return await axios.post(requestUrl, data, {

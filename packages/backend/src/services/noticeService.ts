@@ -1,10 +1,7 @@
 import type { Notice, NoticeType } from "@blurple-canvas-web/types";
 import { type notice as NoticeDbModel, prisma } from "@/client";
 import { BadRequestError } from "@/errors";
-import type {
-  CreateNoticeBody,
-  ModifyNoticeBody,
-} from "@/models/notice.models";
+import type { CreateNoticeBody } from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
   return {
@@ -130,7 +127,7 @@ export async function createNotice({
 
 interface UpdateNoticeInput {
   noticeId: number;
-  data: ModifyNoticeBody;
+  data: CreateNoticeBody;
 }
 
 export async function updateNotice({

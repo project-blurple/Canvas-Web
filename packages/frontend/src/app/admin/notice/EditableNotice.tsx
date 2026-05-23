@@ -244,6 +244,7 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
       const endAt = notice.endAt && notice.endAt > now ? notice.endAt : null;
 
       await modifyNoticeMutation.mutateAsync({
+        ...notice,
         endAt,
         startAt: now,
       });
@@ -262,6 +263,7 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         notice.startAt && notice.startAt > now ? null : notice.startAt;
 
       await modifyNoticeMutation.mutateAsync({
+        ...notice,
         endAt: now,
         startAt,
       });
