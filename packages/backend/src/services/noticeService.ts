@@ -143,16 +143,7 @@ export async function updateNotice({
     canvasId,
   },
 }: UpdateNoticeInput): Promise<Notice> {
-  const existingTimestamps = await getNoticeTimestamps(noticeId);
-
-  const updatedStartAt =
-    startAt !== undefined ? startAt : existingTimestamps.startAt;
-  const updatedEndAt = endAt !== undefined ? endAt : existingTimestamps.endAt;
-
-  const normalizedWindow = normalizeNoticeWindow({
-    startAt: updatedStartAt,
-    endAt: updatedEndAt,
-  });
+  const normalizedWindow = normalizeNoticeWindow({ startAt, endAt });
 
   const notice = await prisma.notice.update({
     where: {
@@ -179,28 +170,4 @@ export async function deleteNotice(noticeId: number): Promise<void> {
       id: noticeId,
     },
   });
-}
-
-async function getNoticeTimestamps(noticeId: number): Promise<{
-  startAt?: Date | null;
-  endAt?: Date | null;
-}> {
-  const notice = await prisma.notice.findUnique({
-    where: {
-      id: noticeId,
-    },
-    select: {
-      start_at: true,
-      end_at: true,
-    },
-  });
-
-  if (!notice) {
-    throw new BadRequestError("Notice not found");
-  }
-
-  return {
-    startAt: notice.start_at,
-    endAt: notice.end_at,
-  };
 }
