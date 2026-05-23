@@ -1,3 +1,4 @@
+import type { CanvasExportSize } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
@@ -34,6 +35,7 @@ frameRouter.get(
   validate({ params: FrameIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
     const frame = await getFrameById(req.params.frameId);
+    const size = req.query.size as CanvasExportSize;
 
     res.setHeader("Content-Type", "image/png");
     res.setHeader(
@@ -42,7 +44,10 @@ frameRouter.get(
     );
 
     try {
-      const stream = await exportFrameAsStream(req.params.frameId);
+      const stream = await exportFrameAsStream({
+        frameId: req.params.frameId,
+        size,
+      });
       stream.on("error", (err) => {
         console.error("Error streaming frame PNG:", err);
         if (!res.headersSent) res.sendStatus(500);

@@ -3,6 +3,8 @@ import fs from "node:fs/promises";
 import { PassThrough } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
+  type CanvasExportSize,
+  type CanvasInfo,
   type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
@@ -463,26 +465,39 @@ export async function assertMaxOwnerFramesNotExceeded({
   }
 }
 
-export async function exportFrameAsStream(
-  frameId: string,
-): Promise<NodeJS.ReadableStream> {
+export async function exportFrameAsStream({
+  frameId,
+  size = 1,
+}: {
+  frameId: Frame["id"];
+  size?: CanvasExportSize;
+}): Promise<NodeJS.ReadableStream> {
   const frame = await getFrameById(frameId);
-  return exportCanvasBoundsAsStream(
-    frame.canvasId,
-    frame.x0,
-    frame.y0,
-    frame.x1,
-    frame.y1,
-  );
+  return exportCanvasBoundsAsStream({
+    canvasId: frame.canvasId,
+    x0: frame.x0,
+    y0: frame.y0,
+    x1: frame.x1,
+    y1: frame.y1,
+    size,
+  });
 }
 
-export async function exportCanvasBoundsAsStream(
-  canvasId: number,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): Promise<NodeJS.ReadableStream> {
+export async function exportCanvasBoundsAsStream({
+  canvasId,
+  x0,
+  y0,
+  x1,
+  y1,
+  size = 1,
+}: {
+  canvasId: CanvasInfo["id"];
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  size?: CanvasExportSize;
+}): Promise<NodeJS.ReadableStream> {
   const width = x1 - x0;
   const height = y1 - y0;
 
@@ -490,20 +505,30 @@ export async function exportCanvasBoundsAsStream(
     throw new BadRequestError("Invalid crop dimensions");
   }
 
-  const cached = await getCanvasPng(canvasId);
+  const cached = await getCanvasPng(canvasId, size);
 
   if ("canvasPaths" in cached) {
-    const canvasPath = getLockedCanvasPath(cached.canvasPaths, 1);
+    const canvasPath = getLockedCanvasPath(cached.canvasPaths, size);
 
     if (!canvasPath) {
       throw new Error(
-        `There is no cached canvas file for canvas ${canvasId} at 1x`,
+        `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
       );
     }
 
+    const cropX = x0 * size;
+    const cropY = y0 * size;
+    const cropWidth = width * size;
+    const cropHeight = height * size;
+
     const fileStream = createReadStream(canvasPath);
     const transformer = sharp()
-      .extract({ left: x0, top: y0, width, height })
+      .extract({
+        left: cropX,
+        top: cropY,
+        width: cropWidth,
+        height: cropHeight,
+      })
       .png();
 
     const output = new PassThrough();
@@ -527,93 +552,30 @@ export async function exportCanvasBoundsAsStream(
     unlocked.height,
   );
 
-  return sharp(rawBuffer, {
+  const cropX = x0 * size;
+  const cropY = y0 * size;
+  const cropWidth = width * size;
+  const cropHeight = height * size;
+
+  const source = sharp(rawBuffer, {
     raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
-  })
-    .extract({ left: x0, top: y0, width, height })
-    .png();
-}
+  });
 
-export async function exportCanvasBoundsAsPng(
-  canvasId: number,
-  x0: number,
-  y0: number,
-  x1: number,
-  y1: number,
-): Promise<Buffer> {
-  // Validate coordinates and get canvas dimensions
-  const canvas = await assertCoordsAreWithinCanvas(canvasId, x0, y0, x1, y1);
-
-  const width = x1 - x0;
-  const height = y1 - y0;
-
-  if (width <= 0 || height <= 0) {
-    throw new BadRequestError("Invalid crop dimensions");
-  }
-
-  // Use cached canvas as the source (this triggers loading/saving inside canvasService)
-  const cached = await getCanvasPng(canvasId);
-
-  // If the cache entry is a locked file, prefer using the file path via sharp
-  if ("canvasPaths" in cached) {
-    const canvasPath = getLockedCanvasPath(cached.canvasPaths, 1);
-
-    if (!canvasPath) {
-      throw new Error(
-        `There is no cached canvas file for canvas ${canvasId} at 1x`,
-      );
-    }
-
-    // If the requested bounds equal the whole canvas, skip cropping and return file bytes
-    if (
-      x0 === 0 &&
-      y0 === 0 &&
-      width === canvas.width &&
-      height === canvas.height
-    ) {
-      return fs.readFile(canvasPath);
-    }
-
-    return sharp(canvasPath)
-      .extract({ left: x0, top: y0, width, height })
-      .png()
-      .toBuffer();
-  }
-
-  // Otherwise use the in-memory pixels
-  const unlocked = cached as {
-    isLocked: false;
-    width: number;
-    height: number;
-    pixels: PixelColor[];
-  };
-
-  // If requested bounds equal whole canvas, avoid an extra extract step
-  const rawBuffer = pixelsToRgbaBuffer(
-    unlocked.pixels,
-    unlocked.width,
-    unlocked.height,
-  );
-
-  if (
-    x0 === 0 &&
-    y0 === 0 &&
-    width === unlocked.width &&
-    height === unlocked.height
-  ) {
-    return sharp(rawBuffer, {
-      raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
-    })
-      .png()
-      .toBuffer();
-  }
-
-  return sharp(rawBuffer, {
-    raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
-  })
-    .extract({ left: x0, top: y0, width, height })
-    .png()
-    .toBuffer();
+  return size === 1 ?
+      source.extract({ left: x0, top: y0, width, height }).png()
+    : source
+        .resize({
+          width: unlocked.width * size,
+          height: unlocked.height * size,
+          kernel: sharp.kernel.nearest,
+        })
+        .extract({
+          left: cropX,
+          top: cropY,
+          width: cropWidth,
+          height: cropHeight,
+        })
+        .png();
 }
 
 function pixelsToRgbaBuffer(

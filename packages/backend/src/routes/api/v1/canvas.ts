@@ -65,7 +65,7 @@ canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
-    const size = req.query.size as CanvasExportSize | undefined;
+    const size = req.query.size as CanvasExportSize;
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId, size);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);
