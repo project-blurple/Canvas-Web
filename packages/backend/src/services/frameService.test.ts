@@ -1,5 +1,5 @@
 import { FrameOwnerType } from "@blurple-canvas-web/types";
-import { prisma } from "@/client";
+import { Prisma, prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import { getFrameById } from "./frameService";
 
@@ -50,27 +50,19 @@ describe("frameService.getFrameById", () => {
 
     expect(calledArg.where.id).toEqual({
       equals: queryId,
-      mode: "insensitive",
+      mode: Prisma.QueryMode.insensitive,
     });
 
     expect(result.id).toBe(storedId);
-    function isUserOwner(
-      o: typeof result.owner,
-    ): o is Extract<typeof result.owner, { type: FrameOwnerType.User }> {
-      return o.type === FrameOwnerType.User;
-    }
-
-    if (!isUserOwner(result.owner)) {
-      throw new Error("Expected user-owned frame");
-    }
-    const userOwner = result.owner as Extract<
-      typeof result.owner,
-      { type: FrameOwnerType.User }
-    >;
-
-    expect(userOwner.type).toBe(FrameOwnerType.User);
-    expect(userOwner.user.id).toBe(userRecord.user_id.toString());
-    expect(userOwner.user.username).toBe(userRecord.username);
+    expect(result).toMatchObject({
+      owner: {
+        type: FrameOwnerType.User,
+        user: {
+          id: userRecord.user_id.toString(),
+          username: userRecord.username,
+        },
+      },
+    });
   });
 
   it("throws NotFoundError when frame not found", async () => {

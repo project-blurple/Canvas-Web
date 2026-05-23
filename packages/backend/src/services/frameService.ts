@@ -38,7 +38,7 @@ async function findFrameForType(frameId: string) {
     where: {
       id: {
         equals: frameId,
-        mode: "insensitive",
+        mode: Prisma.QueryMode.insensitive,
       },
     },
     select: frameSelect,
@@ -194,7 +194,7 @@ export async function getFrameById(frameId: string): Promise<Frame> {
     where: {
       id: {
         equals: frameId,
-        mode: "insensitive",
+        mode: Prisma.QueryMode.insensitive,
       },
     },
     select: frameSelect,
