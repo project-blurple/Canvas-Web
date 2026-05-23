@@ -457,6 +457,14 @@ function AdminPasteTab() {
     uploadedImage,
   ]);
 
+  useEffect(
+    () => () => {
+      setImageOverlay(null);
+      setShowOverlay(false);
+    },
+    [setImageOverlay, setShowOverlay],
+  );
+
   const actionPanel = (
     <AdminDashboardPasteActionPanel
       uploadedImage={uploadedImage}
