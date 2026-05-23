@@ -864,9 +864,33 @@ export default function CanvasView({
       const ctx = offscreenCanvas.getContext("2d");
       if (!ctx) return;
       paintPixel(ctx, payload, false);
+
+      const key = `${payload.x}:${payload.y}`;
+
+      // If this pixel is translucent, clear any previous overlay for the same
+      // coordinate to avoid stacking translucent overlays.
+      if (payload.rgba[3] < 255) {
+        const wrapper = canvasImageWrapperRef.current;
+        if (wrapper) {
+          const children = Array.from(wrapper.children);
+          for (const child of children) {
+            if (
+              child instanceof HTMLImageElement &&
+              child.dataset.coord === key
+            ) {
+              try {
+                URL.revokeObjectURL(child.src);
+              } catch {}
+              wrapper.removeChild(child);
+            }
+          }
+        }
+      }
+
       offscreenCanvas.convertToBlob().then((blob) => {
         const pixelImage = new Image();
         pixelImage.src = URL.createObjectURL(blob);
+        pixelImage.dataset.coord = key;
         pixelImage.onload = () => {
           canvasImageWrapperRef.current?.appendChild(pixelImage);
         };
