@@ -80,5 +80,11 @@ export const FrameGuildIdsQueryModel = z.object({
 });
 
 export const ExportFrameQueryModel = z.object({
-  size: z.enum(["1", "2", "4"]).default("1"),
+  size: z.coerce
+    .number()
+    .int()
+    .refine((size) => size === 1 || size === 2 || size === 4, {
+      message: "size must be 1, 2, or 4",
+    })
+    .default(1),
 });

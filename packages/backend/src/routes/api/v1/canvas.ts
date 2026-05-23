@@ -12,6 +12,7 @@ import {
 import { ExportFrameQueryModel } from "@/models/frame.models";
 import {
   type CachedCanvas,
+  type CanvasExportSize,
   createCanvas,
   editCanvas,
   getCanvases,
@@ -20,7 +21,8 @@ import {
   getCanvasPng,
   getCurrentCanvas,
   getCurrentCanvasInfo,
-  unlockedCanvasToPng,
+  getLockedCanvasPath,
+  unlockedCanvasToPngStream,
 } from "@/services/canvasService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
@@ -57,8 +59,11 @@ canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel, query: ExportFrameQueryModel }),
   async (req, res) => {
-    const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+    const cachedCanvas = await getCanvasPng(
+      req.params.canvasId,
+      req.query.size,
+    );
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, req.query.size);
   },
 );
 
@@ -113,23 +118,30 @@ function sendCachedCanvas(
   res: Response,
   canvasId: number,
   cachedCanvas: CachedCanvas,
+  size: CanvasExportSize = 1,
 ): void {
   if (cachedCanvas.isLocked) {
-    res.sendFile(cachedCanvas.canvasPath);
+    const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, size);
+
+    if (!canvasPath) {
+      throw new Error(
+        `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
+      );
+    }
+
+    res.sendFile(canvasPath);
     return;
   }
 
-  const filename = getCanvasFilename(canvasId);
+  const filename = getCanvasFilename(canvasId, false, size);
 
-  unlockedCanvasToPng(cachedCanvas)
-    .pack()
-    .pipe(
-      res
-        .status(200)
-        .type("png")
-        .setHeader("Cache-Control", ["no-cache", "no-store"])
-        // Needed to force Safari to not cache the image
-        .setHeader("Vary", "*")
-        .setHeader("Content-Disposition", `inline; filename="${filename}"`),
-    );
+  unlockedCanvasToPngStream(cachedCanvas, size).pipe(
+    res
+      .status(200)
+      .type("png")
+      .setHeader("Cache-Control", ["no-cache", "no-store"])
+      // Needed to force Safari to not cache the image
+      .setHeader("Vary", "*")
+      .setHeader("Content-Disposition", `inline; filename="${filename}"`),
+  );
 }

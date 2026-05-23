@@ -19,7 +19,7 @@ import {
 } from "@/errors";
 import type { FrameOwnerInput } from "@/models/frame.models";
 import { PrismaErrorCode } from "@/utils";
-import { getCanvasPng } from "./canvasService";
+import { getCanvasPng, getLockedCanvasPath } from "./canvasService";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -484,8 +484,16 @@ export async function exportCanvasBoundsAsStream(
 
   const cached = await getCanvasPng(canvasId);
 
-  if ("canvasPath" in cached) {
-    const fileStream = createReadStream(cached.canvasPath);
+  if ("canvasPaths" in cached) {
+    const canvasPath = getLockedCanvasPath(cached.canvasPaths, 1);
+
+    if (!canvasPath) {
+      throw new Error(
+        `There is no cached canvas file for canvas ${canvasId} at 1x`,
+      );
+    }
+
+    const fileStream = createReadStream(canvasPath);
     const transformer = sharp()
       .extract({ left: x0, top: y0, width, height })
       .png();
@@ -532,8 +540,14 @@ export async function exportCanvasBoundsAsPng(
   const cached = await getCanvasPng(canvasId);
 
   // If the cache entry is a locked file, prefer using the file path via sharp
-  if ("canvasPath" in cached) {
-    const canvasPath = cached.canvasPath;
+  if ("canvasPaths" in cached) {
+    const canvasPath = getLockedCanvasPath(cached.canvasPaths, 1);
+
+    if (!canvasPath) {
+      throw new Error(
+        `There is no cached canvas file for canvas ${canvasId} at 1x`,
+      );
+    }
 
     // If the requested bounds equal the whole canvas, skip cropping and return file bytes
     if (

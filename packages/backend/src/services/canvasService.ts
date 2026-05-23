@@ -7,11 +7,16 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import { PNG } from "pngjs";
+import sharp from "sharp";
 import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import type { PlacePixelArray } from "@/models/pixel.models";
 import { getCurrentEvent } from "./eventService";
+
+export type CanvasExportSize = 1 | 2 | 4;
+
+const CANVAS_EXPORT_SIZES: readonly CanvasExportSize[] = [1, 2, 4];
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -19,7 +24,7 @@ import { getCurrentEvent } from "./eventService";
  */
 interface LockedCanvas {
   isLocked: true;
-  canvasPath: string;
+  canvasPaths: Partial<Record<CanvasExportSize, string>>;
 }
 
 /**
@@ -46,21 +51,41 @@ const CANVAS_LOADS = new Map<number, Promise<CachedCanvas>>();
 
 export function initializeCache(): void {
   // look through the files in the canvas directory and build the locked cache object from them
+  const lockedCanvasPaths = new Map<
+    number,
+    Partial<Record<CanvasExportSize, string>>
+  >();
+
   for (const filename of fs.readdirSync(config.paths.canvases)) {
-    const match = filename.match(/^blurple-canvas__(\d+)__locked.png$/);
+    const match = filename.match(
+      /^blurple-canvas__(\d+)__locked(?:__(\d)x)?\.png$/,
+    );
 
     if (!match) {
-      return;
+      continue;
     }
 
     const canvasId = Number.parseInt(match[1], 10);
+    const size = (match[2] ? Number.parseInt(match[2], 10) : 1) as CanvasExportSize;
     const canvasPath = `${config.paths.canvases}/${filename}`;
 
     console.log(`Loaded cached canvas ${canvasPath}`);
 
+    const canvasPaths = lockedCanvasPaths.get(canvasId) ?? {};
+    canvasPaths[size] = canvasPath;
+    lockedCanvasPaths.set(canvasId, canvasPaths);
+  }
+
+  for (const [canvasId, canvasPaths] of lockedCanvasPaths) {
+    const canvasPath = getLockedCanvasPath(canvasPaths, 1);
+
+    if (!canvasPath) {
+      continue;
+    }
+
     CANVAS_CACHE.set(canvasId, {
       isLocked: true,
-      canvasPath: `${config.paths.canvases}/${filename}`,
+      canvasPaths,
     });
   }
 }
@@ -73,8 +98,14 @@ export function initializeCache(): void {
  * @param isLocked Whether the canvas is locked or not
  * @returns The generated filename
  */
-export function getCanvasFilename(canvasId: number, isLocked = false): string {
-  return `blurple-canvas__${canvasId}__${isLocked ? "locked" : Date.now()}.png`;
+export function getCanvasFilename(
+  canvasId: number,
+  isLocked = false,
+  size: CanvasExportSize = 1,
+): string {
+  const sizeSuffix = size === 1 ? "" : `__${size}x`;
+
+  return `blurple-canvas__${canvasId}__${isLocked ? `locked${sizeSuffix}` : `${Date.now()}${sizeSuffix}`}.png`;
 }
 
 /**
@@ -89,6 +120,31 @@ export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
     unlockedCanvas.height,
     unlockedCanvas.pixels,
   );
+}
+
+export function unlockedCanvasToPngStream(
+  unlockedCanvas: UnlockedCanvas,
+  size: CanvasExportSize = 1,
+): NodeJS.ReadableStream {
+  if (size === 1) {
+    return unlockedCanvasToPng(unlockedCanvas).pack();
+  }
+
+  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+
+  return sharp(rawBuffer, {
+    raw: {
+      width: unlockedCanvas.width,
+      height: unlockedCanvas.height,
+      channels: 4,
+    },
+  })
+    .resize({
+      width: unlockedCanvas.width * size,
+      height: unlockedCanvas.height * size,
+      kernel: sharp.kernel.nearest,
+    })
+    .png();
 }
 
 /**
@@ -212,8 +268,27 @@ export async function getCurrentCanvas(): Promise<[number, CachedCanvas]> {
  * @param canvasId The ID of the canvas to retrieve
  * @returns The cached canvas
  */
-export async function getCanvasPng(canvasId: number): Promise<CachedCanvas> {
-  return getOrFetchCacheCanvas(canvasId);
+export async function getCanvasPng(
+  canvasId: number,
+  size: CanvasExportSize = 1,
+): Promise<CachedCanvas> {
+  const cachedCanvas = await getOrFetchCacheCanvas(canvasId);
+
+  if (!cachedCanvas.isLocked) {
+    return cachedCanvas;
+  }
+
+  const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, size);
+
+  if (!canvasPath) {
+    throw new Error(
+      `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
+    );
+  }
+
+  return {
+    ...cachedCanvas,
+  };
 }
 
 /**
@@ -290,22 +365,72 @@ function pixelsToPng(width: number, height: number, pixels: PixelColor[]): PNG {
   return image;
 }
 
-function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
-  const filename = getCanvasFilename(canvas.id, canvas.locked);
-  const path = `${config.paths.canvases}/${filename}`;
+function pixelsToRgbaBuffer(pixels: PixelColor[]): Buffer {
+  const buffer = Buffer.alloc(pixels.length * 4);
 
-  pixelsToPng(canvas.width, canvas.height, pixels)
-    .pack()
-    .pipe(fs.createWriteStream(path));
+  pixels.forEach((color, index) => {
+    const imageIndex = index * 4;
+    buffer[imageIndex] = color[0];
+    buffer[imageIndex + 1] = color[1];
+    buffer[imageIndex + 2] = color[2];
+    buffer[imageIndex + 3] = color[3];
+  });
 
-  return path;
+  return buffer;
+}
+
+async function saveCanvasToFileSystem(
+  canvas: canvas,
+  pixels: PixelColor[],
+): Promise<Partial<Record<CanvasExportSize, string>>> {
+  const rawBuffer = pixelsToRgbaBuffer(pixels);
+  const baseImage = sharp(rawBuffer, {
+    raw: {
+      width: canvas.width,
+      height: canvas.height,
+      channels: 4,
+    },
+  });
+
+  const files = await Promise.all(
+    CANVAS_EXPORT_SIZES.map(async (size) => {
+      const path = `${config.paths.canvases}/${getCanvasFilename(
+        canvas.id,
+        true,
+        size,
+      )}`;
+
+      await baseImage
+        .clone()
+        .resize({
+          width: canvas.width * size,
+          height: canvas.height * size,
+          kernel: sharp.kernel.nearest,
+        })
+        .png()
+        .toFile(path);
+
+      return [size, path] as const;
+    }),
+  );
+
+  return Object.fromEntries(files) as Partial<Record<CanvasExportSize, string>>;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (cachedCanvas?.isLocked) {
-    await fs.promises.rm(cachedCanvas.canvasPath);
+    const uniquePaths = new Set([
+      ...Object.values(cachedCanvas.canvasPaths),
+    ]);
+
+    await Promise.all(
+      [...uniquePaths].map(async (canvasPath) => {
+        await fs.promises.rm(canvasPath, { force: true });
+      }),
+    );
+
     console.debug(`Cleared canvas ${canvasId} from file system`);
   }
 }
@@ -349,13 +474,21 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
     };
 
     if (canvas.locked) {
-      const path = saveCanvasToFileSystem(canvas, pixels);
+      const canvasPaths = await saveCanvasToFileSystem(canvas, pixels);
+      const canvasPath = getLockedCanvasPath(canvasPaths, 1);
+
+      if (!canvasPath) {
+        throw new Error(
+          `Failed to create locked canvas files for canvas ${canvasId}`,
+        );
+      }
+
       CANVAS_CACHE.set(canvasId, {
         isLocked: true,
-        canvasPath: path,
+        canvasPaths,
       });
 
-      console.debug(`Canvas ${canvasId} saved to ${path}`);
+      console.debug(`Canvas ${canvasId} saved to ${canvasPath}`);
     } else {
       CANVAS_CACHE.set(canvasId, unlockedCanvas);
       console.debug(`Canvas ${canvasId} cached in memory`);
@@ -374,6 +507,15 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
   } finally {
     CANVAS_LOADS.delete(canvasId);
   }
+}
+
+export function getLockedCanvasPath(
+  canvasPaths: Partial<Record<CanvasExportSize, string>>,
+  size: CanvasExportSize,
+): string | undefined {
+  return (
+    canvasPaths[size] ?? canvasPaths[1] ?? canvasPaths[2] ?? canvasPaths[4]
+  );
 }
 
 interface CreateCanvasParams {
