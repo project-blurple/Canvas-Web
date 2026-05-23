@@ -1,7 +1,11 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
-import { createCanvas, editCanvas } from "@/services/canvasService";
+import {
+  clearCachedCanvas,
+  createCanvas,
+  editCanvas,
+} from "@/services/canvasService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { canvasRouter } from "./canvas";
 
@@ -12,6 +16,7 @@ vi.mock("@/index", () => ({
 }));
 
 vi.mock("@/services/canvasService", () => ({
+  clearCachedCanvas: vi.fn(),
   createCanvas: vi.fn(),
   editCanvas: vi.fn(),
   getCanvases: vi.fn(),
@@ -71,7 +76,7 @@ describe("Canvas admin route tests", () => {
         height: 16,
         startCoordinates: [1, 1],
         allColorsGlobal: true,
-        cooldownLength: 30,
+        cooldownDuration: 30,
       });
 
     expect(response.status).toBe(201);
@@ -92,7 +97,7 @@ describe("Canvas admin route tests", () => {
       height: 16,
       startCoordinates: [1, 1],
       allColorsGlobal: true,
-      cooldownLength: 30,
+      cooldownDuration: 30,
     });
   });
 
@@ -114,7 +119,7 @@ describe("Canvas admin route tests", () => {
     const response = await request(app).put("/api/v1/canvas/7").send({
       name: "Updated Canvas",
       allColorsGlobal: false,
-      cooldownLength: 45,
+      cooldownDuration: 45,
       isLocked: true,
     });
 
@@ -133,9 +138,20 @@ describe("Canvas admin route tests", () => {
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,
       name: "Updated Canvas",
-      cooldownLength: 45,
+      cooldownDuration: 45,
       isLocked: true,
       allColorsGlobal: false,
     });
+  });
+
+  it("clears cached canvas by ID", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
+    const app = createApp();
+
+    const response = await request(app).delete("/api/v1/canvas/7/cache");
+
+    expect(response.status).toBe(204);
+    expect(response.body).toStrictEqual({});
+    expect(vi.mocked(clearCachedCanvas)).toHaveBeenCalledWith(7);
   });
 });

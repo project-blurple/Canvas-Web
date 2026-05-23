@@ -1,4 +1,8 @@
-import type { PlacePixelSocket } from "@blurple-canvas-web/types";
+import {
+  type CanvasInfo,
+  type PlacePixelSocket,
+  SocketEvents,
+} from "@blurple-canvas-web/types";
 import type { Server, Socket } from "socket.io";
 import { prisma } from "@/client";
 
@@ -37,7 +41,7 @@ async function resyncClient(
 
     for (const pixel of pixels) {
       socket.emit(
-        `place pixel ${canvasId}`,
+        SocketEvents.placePixel(canvasId),
         {
           x: pixel.x,
           y: pixel.y,
@@ -83,9 +87,13 @@ export class SocketHandler {
   }
 
   public broadcastPixelPlacement(
-    canvasId: number,
+    canvasId: CanvasInfo["id"],
     payload: PlacePixelSocket.Payload,
   ) {
-    this.io.emit(`place pixel ${canvasId}`, payload);
+    this.io.emit(SocketEvents.placePixel(canvasId), payload);
+  }
+
+  public broadcastCanvasUpdate(payload: CanvasInfo) {
+    this.io.emit(SocketEvents.canvasUpdate, payload);
   }
 }
