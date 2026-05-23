@@ -66,7 +66,10 @@ export function initializeCache(): void {
     }
 
     const canvasId = Number.parseInt(match[1], 10);
-    const size = (match[2] ? Number.parseInt(match[2], 10) : 1) as CanvasExportSize;
+    const size = (
+      match[2] ?
+        Number.parseInt(match[2], 10)
+      : 1) as CanvasExportSize;
     const canvasPath = `${config.paths.canvases}/${filename}`;
 
     console.log(`Loaded cached canvas ${canvasPath}`);
@@ -421,9 +424,7 @@ async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (cachedCanvas?.isLocked) {
-    const uniquePaths = new Set([
-      ...Object.values(cachedCanvas.canvasPaths),
-    ]);
+    const uniquePaths = new Set([...Object.values(cachedCanvas.canvasPaths)]);
 
     await Promise.all(
       [...uniquePaths].map(async (canvasPath) => {
