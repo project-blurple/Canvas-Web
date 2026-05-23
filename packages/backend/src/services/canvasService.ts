@@ -44,7 +44,7 @@ export type CachedCanvas = LockedCanvas | UnlockedCanvas;
  * or if the image is locked (and therefore cannot be modified) the path to the canvas image on the
  * file system.
  */
-const CANVAS_CACHE: Record<number, CachedCanvas> = {};
+const CANVAS_CACHE: Map<number, CachedCanvas> = new Map();
 
 export function initializeCache(): void {
   // look through the files in the canvas directory and build the locked cache object from them
@@ -60,10 +60,10 @@ export function initializeCache(): void {
 
     console.log(`Loaded cached canvas ${canvasPath}`);
 
-    CANVAS_CACHE[canvasId] = {
+    CANVAS_CACHE.set(canvasId, {
       isLocked: true,
       canvasPath: `${config.paths.canvases}/${filename}`,
-    };
+    });
   }
 }
 
@@ -232,6 +232,18 @@ export async function getCanvasPng(canvasId: number): Promise<CachedCanvas> {
 }
 
 /**
+ * Clears a canvas from the in-memory cache. If the canvas is locked, the cached image is also
+ * removed from the file system.
+ *
+ * @param canvasId The ID of the canvas to clear from cache
+ */
+export async function clearCachedCanvas(canvasId: number): Promise<void> {
+  await clearCanvasFromFileSystem(canvasId);
+  CANVAS_CACHE.delete(canvasId);
+  console.debug(`Cleared canvas ${canvasId} from cache`);
+}
+
+/**
  * Updates many pixels in the canvas cache at once. If the canvas is not in the cache or the canvas
  * is locked this will do nothing.
  *
@@ -242,7 +254,7 @@ export async function updateManyCachedPixels(
   canvasId: number,
   pixels: PlacePixelArray,
 ): Promise<void> {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (!cachedCanvas || cachedCanvas.isLocked) {
     return;
@@ -267,7 +279,7 @@ export function updateCachedCanvasPixel(
   coordinates: Point,
   color: PixelColor,
 ) {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   if (!cachedCanvas || cachedCanvas.isLocked) {
     return;
@@ -317,7 +329,7 @@ function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   try {
     if (cachedCanvas?.isLocked) {
@@ -340,7 +352,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
 
-  const cachedCanvas = CANVAS_CACHE[canvasId];
+  const cachedCanvas = CANVAS_CACHE.get(canvasId);
   if (cachedCanvas) {
     if (cachedCanvas.isLocked !== canvas.locked) {
       console.debug(
@@ -365,14 +377,14 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
 
   if (canvas.locked) {
     const path = saveCanvasToFileSystem(canvas, pixels);
-    CANVAS_CACHE[canvasId] = {
+    CANVAS_CACHE.set(canvasId, {
       isLocked: true,
       canvasPath: path,
-    };
+    });
 
     console.debug(`Canvas ${canvasId} saved to ${path}`);
   } else {
-    CANVAS_CACHE[canvasId] = unlockedCanvas;
+    CANVAS_CACHE.set(canvasId, unlockedCanvas);
     console.debug(`Canvas ${canvasId} cached in memory`);
   }
 
@@ -485,6 +497,8 @@ export async function editCanvas({
   if (!canvas) {
     throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
   }
+
+  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 

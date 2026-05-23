@@ -85,6 +85,7 @@ export class SocketHandler {
 
   public broadcastPixelPlacement(
     canvasId: CanvasInfo["id"],
+    canvasId: CanvasInfo["id"],
     payload: PlacePixelSocket.Payload,
   ) {
     this.io.emit(SocketEvents.placePixel(canvasId), payload);

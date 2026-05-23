@@ -1,11 +1,10 @@
 "use client";
 
-import {
-  type CanvasInfo,
-  type Frame,
-  type PlacePixelSocket,
-  type Point,
-  SocketEvents,
+import type {
+  CanvasInfo,
+  Frame,
+  PlacePixelSocket,
+  Point,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import {

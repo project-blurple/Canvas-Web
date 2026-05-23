@@ -1,14 +1,7 @@
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
-import {
-  seedCanvases,
-  seedColors,
-  seedDiscordProfiles,
-  seedEvents,
-  seedPixels,
-  seedUsers,
-} from "@/test";
+import { seedCanvases, seedColors, seedEvents, seedPixels } from "@/test";
 import {
   createCanvas,
   editCanvas,
@@ -17,6 +10,8 @@ import {
   getCanvasPixels,
   pasteCanvasData,
 } from "./canvasService";
+import { getEventPalette } from "./paletteService";
+import { createBulkPlaceEntries } from "./pixelService";
 
 vi.mock("./historyService", () => ({
   createBulkHistoryEntries: vi.fn(),
@@ -30,14 +25,18 @@ vi.mock("./pixelService", () => ({
   createBulkPlaceEntries: vi.fn(),
 }));
 
-import { getEventPalette } from "./paletteService";
-import { createBulkPlaceEntries } from "./pixelService";
-
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastCanvasUpdate: vi.fn(),
     broadcastPixelPlacement: vi.fn(),
     broadcastPixelBulkPlacement: vi.fn(),
+  },
+}));
+
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
   },
 }));
 
@@ -86,6 +85,7 @@ describe("Canvas Info Tests", () => {
 describe("Canvas Validation Tests", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
   });
@@ -101,6 +101,7 @@ describe("Canvas Validation Tests", () => {
 
 describe("Canvas Pixels Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
@@ -122,6 +123,7 @@ describe("Canvas Pixels Tests", () => {
 
 describe("Create Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
@@ -194,11 +196,24 @@ describe("Create Canvas Tests", () => {
         cooldownDuration: 15,
       }),
     );
+
+    expect(vi.mocked(socketHandler.broadcastCanvasUpdate)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: createdCanvas.id,
+        name: canvasName,
+        width: 3,
+        height: 2,
+        isLocked: true,
+        allColorsGlobal: false,
+        cooldownDuration: 15,
+      }),
+    );
   });
 });
 
 describe("Edit Canvas Tests", () => {
   beforeEach(async () => {
+    vi.clearAllMocks();
     vi.clearAllMocks();
     await seedEvents();
     await seedCanvases();
