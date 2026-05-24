@@ -6,14 +6,12 @@ import {
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
-  type DiscordUserProfile,
   EditCanvasBodyModel,
   type FrameBoundsInput,
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import { UnauthorizedError } from "@/errors";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { assertLoggedIn, requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { audit } from "@/services/auditLogService";
@@ -94,11 +92,8 @@ canvasRouter.get(
   "/:canvasId/cooldown/@me",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
-    const profile = req.user as DiscordUserProfile;
-
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
+    assertLoggedIn(req);
+    const profile = req.user;
 
     const cooldownEndTime = await getUserCanvasCooldown(
       req.params.canvasId,

@@ -13,9 +13,13 @@ const SwatchBase = styled("div")`
   position: relative;
 
   @supports not (color: contrast-color(black)) {
-    color: var(--swatch-color);
-    filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-    mix-blend-mode: luminosity;
+    @supports (color: oklch(from red l c h)) {
+      color: oklch(from var(--swatch-color) round(1.21 - l, 1) 0 0);
+    }
+    @supports not (color: oklch(from red l c h)) {
+      color: white;
+      mix-blend-mode: difference;
+    }
   }
 
   // Makes the VisuallyHidden label smaller and positioned higher so they do not overlap the lock icon (or less chance to overlap the name label). Color is inherited from the swatch's contrast color.

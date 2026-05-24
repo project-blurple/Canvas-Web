@@ -17,7 +17,7 @@ import sharp from "sharp";
 import type z from "zod";
 import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
-import { NotFoundError } from "@/errors";
+import { NotFoundError, UnprocessableError } from "@/errors";
 import { socketHandler } from "@/index";
 import {
   pixelsToRgbaBuffer,
@@ -653,7 +653,7 @@ export async function pasteCanvasData(
   }
 
   if (!canvas.event_id) {
-    throw new Error(
+    throw new UnprocessableError(
       `Canvas with ID ${canvasId} is not associated with an event`,
     );
   }
