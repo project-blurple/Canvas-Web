@@ -4,6 +4,7 @@ import {
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import config from "@/config/clientConfig";
 import {
   useAuthContext,
   useCanvasContext,
@@ -44,6 +45,17 @@ const FrameInfoPanelBodyShell = styled("div")`
   }
 `;
 
+const ButtonWrapper = styled("div")`
+  background: transparent;
+  display: flex;
+  gap: 0.5rem;
+  padding: 0;
+
+  > * {
+    flex: 1;
+  }
+`;
+
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
     case FrameOwnerType.System:
@@ -80,6 +92,13 @@ export default function FrameInfoPanel({
   );
 }
 
+function calculateScale(pixelCount: number): number {
+  // TODO: this is duped from another PR, should dedupe once merged
+  if (pixelCount <= 90_000) return 4; // 300x300
+  if (pixelCount <= 360_000) return 2; // 600x600
+  return 1;
+}
+
 function FrameInfoPanelBody({
   setActivePanel,
 }: {
@@ -103,6 +122,38 @@ function FrameInfoPanelBody({
     selectedFrame && user && userCanEditFrame(user, selectedFrame);
 
   if (selectedFrame) {
+    const downloadLink = (() => {
+      const scale = calculateScale(
+        (selectedFrame.x1 - selectedFrame.x0 + 1) *
+          (selectedFrame.y1 - selectedFrame.y0 + 1),
+      );
+
+      if (selectedFrame.owner.type === FrameOwnerType.System) {
+        const baseUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}@${scale}.png`;
+
+        const isWholeCanvas =
+          selectedFrame.x0 === 0 &&
+          selectedFrame.y0 === 0 &&
+          selectedFrame.x1 === canvas.width - 1 &&
+          selectedFrame.y1 === canvas.height - 1;
+
+        if (isWholeCanvas) {
+          return baseUrl;
+        }
+
+        return `${baseUrl}?${new URLSearchParams({
+          x0: selectedFrame.x0.toString(),
+          y0: selectedFrame.y0.toString(),
+          x1: selectedFrame.x1.toString(),
+          y1: selectedFrame.y1.toString(),
+        })}`;
+      }
+
+      return `${config.apiUrl}/api/v1/frame/${selectedFrame.id}@${scale}.png`;
+    })();
+
+    const color = hexStringToPixelColor(selectedFrame.id);
+
     return (
       <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
         <ActionPanelTabBody>
@@ -117,17 +168,28 @@ function FrameInfoPanelBody({
               Edit frame
             </DynamicButton>
           )}
-          {selectedFrame.owner.type !== FrameOwnerType.System && (
-            <TooltipDynamicButton
-              color={hexStringToPixelColor(selectedFrame.id)}
-              tooltipTitle="Copied"
-              onAction={() => {
-                navigator.clipboard.writeText(frameUrl);
-              }}
-            >
-              Copy frame link
-            </TooltipDynamicButton>
-          )}
+          <ButtonWrapper>
+            {selectedFrame.owner.type !== FrameOwnerType.System && (
+              <TooltipDynamicButton
+                color={color}
+                tooltipTitle="Copied"
+                onAction={() => {
+                  navigator.clipboard.writeText(frameUrl);
+                }}
+              >
+                Copy frame link
+              </TooltipDynamicButton>
+            )}
+            <a href={downloadLink} target="_blank" rel="noopener noreferrer">
+              <DynamicButton
+                color={color}
+                disabled={!frameUrl}
+                style={{ width: "100%" }}
+              >
+                Download
+              </DynamicButton>
+            </a>
+          </ButtonWrapper>
         </ActionPanelTabBody>
       </FrameInfoPanelBodyShell>
     );
