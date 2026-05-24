@@ -116,13 +116,18 @@ export function extractSearchParam(
   return variantUsed ? searchParams.get(variantUsed) : null;
 }
 
+export interface SearchParams {
+  [key: string]: string | string[] | undefined;
+}
+
 function extractSearchParamFromRecord(
-  searchParams: Record<string, string | string[] | undefined> | null,
+  searchParams: SearchParams,
   key: ParamKey,
 ): string | null {
   if (!searchParams) return null;
 
   const variants = getSearchParamVariants(key);
+  console.log({ variants, searchParams });
 
   for (const variant of variants) {
     const value = searchParams[variant];
@@ -138,7 +143,7 @@ function extractSearchParamFromRecord(
 }
 
 export function extractAllSearchParamsFromRecord(
-  searchParams: Record<string, string | string[] | undefined> | null,
+  searchParams: SearchParams,
 ): Record<ParamKey, string | null> {
   const values = {} as Record<ParamKey, string | null>;
 
