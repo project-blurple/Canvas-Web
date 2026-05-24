@@ -17,7 +17,7 @@ import {
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { Button, DynamicButton } from "../button";
+import { Button } from "../button";
 import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
