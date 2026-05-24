@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import type {
   BlurpleEvent,
-  CanvasExportQueryModel,
   CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
+  OptionalFrameBoundsModel,
   PixelColor,
   PlacePixelArray,
   Point,
@@ -114,7 +114,7 @@ export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-  bounds?: z.infer<typeof CanvasExportQueryModel>,
+  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
 ): string {
   const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
   const boundsSuffix =

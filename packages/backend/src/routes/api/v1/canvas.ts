@@ -1,6 +1,5 @@
 import {
   CanvasExportParamModel,
-  CanvasExportQueryModel,
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
@@ -9,6 +8,7 @@ import {
   DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   EditCanvasBodyModel,
+  OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
 import type z from "zod";
@@ -66,7 +66,7 @@ canvasRouter.get("/current", async (_req, res) => {
 
 canvasRouter.get(
   "/:canvasId@:scale.png",
-  validate({ params: CanvasExportParamModel, query: CanvasExportQueryModel }),
+  validate({ params: CanvasExportParamModel, query: OptionalFrameBoundsModel }),
   async (req, res) => {
     const scale = req.params.scale;
 
@@ -200,7 +200,7 @@ async function sendCachedCanvas(
   canvasId: number,
   cachedCanvas: CachedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-  bounds?: z.infer<typeof CanvasExportQueryModel>,
+  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
 ): Promise<void> {
   if (cachedCanvas.isLocked) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);

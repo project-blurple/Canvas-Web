@@ -7,12 +7,20 @@ export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
 });
 
-export const FrameBoundsModel = z.object({
+const FrameBoundsModel = z.object({
   x0: z.coerce.number().int().nonnegative(),
   y0: z.coerce.number().int().nonnegative(),
   x1: z.coerce.number().int().positive(),
   y1: z.coerce.number().int().positive(),
 });
+
+export const OptionalFrameBoundsModel = z.union([
+  z
+    .object({})
+    .strict()
+    .transform(() => undefined),
+  FrameBoundsModel,
+]);
 
 const frameBoundsRefiner = (
   { x0, y0, x1, y1 }: z.infer<typeof FrameBoundsModel>,
