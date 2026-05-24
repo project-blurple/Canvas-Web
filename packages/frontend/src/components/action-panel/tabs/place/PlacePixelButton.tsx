@@ -7,6 +7,7 @@ import {
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
+import { useUserStats } from "@/hooks";
 import ButtonSupplement from "../../../button/ButtonSupplement";
 import DynamicButton from "../../../button/DynamicButton";
 
@@ -43,8 +44,13 @@ export default function PlacePixelButton({
   const { color } = useSelectedColorContext();
   const isSelected = adjustedCoords && color;
 
+  const { data: userStats } = useUserStats(
+    canvas.isSoftLocked && user ? user.id : undefined,
+    canvas.id,
+  );
+
   // Both these buttons never show as the logic is hoisted at the level above this
-  // My issues with having it above is that the user has no indication of why they can't place pixels
+  // My issues with having it above is that the user has no indication of why they can’t place pixels
   if (canvas.isLocked)
     return (
       <DynamicButton {...props} disabled>
@@ -56,6 +62,13 @@ export default function PlacePixelButton({
     return (
       <DynamicButton {...props} disabled>
         Sign in to place pixels
+      </DynamicButton>
+    );
+
+  if (canvas.isSoftLocked && userStats === null)
+    return (
+      <DynamicButton {...props} disabled>
+        You cannot place pixels on this canvas at this time
       </DynamicButton>
     );
 

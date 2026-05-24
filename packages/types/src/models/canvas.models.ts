@@ -20,6 +20,7 @@ export const EditCanvasBodyModel = z.object({
   name: z.string().min(1).optional(),
   cooldownDuration: z.number().int().nonnegative().optional(),
   isLocked: z.boolean().optional(),
+  isSoftLocked: z.boolean().optional(),
   allColorsGlobal: z.boolean().optional(),
 });
 

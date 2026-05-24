@@ -183,6 +183,7 @@ interface CanvasSummaryRow {
   name: string;
   event_id: number | null;
   locked: boolean;
+  soft_locked: boolean;
   last_pixel_timestamp: Date | null;
   width: number;
   height: number;
@@ -209,6 +210,7 @@ export async function getCanvases(
       c.name,
       c.event_id,
       c.locked,
+      c.soft_locked,
       c.width,
       c.height,
       c.cooldown_length,
@@ -218,7 +220,7 @@ export async function getCanvases(
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
     WHERE ${whereSql}
-    GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
+    GROUP BY c.id, c.name, c.event_id, c.locked, c.soft_locked, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
       c.id DESC
@@ -229,6 +231,7 @@ export async function getCanvases(
     name: canvas.name,
     eventId: canvas.event_id,
     isLocked: canvas.locked,
+    isSoftLocked: canvas.soft_locked,
     width: canvas.width,
     height: canvas.height,
     cooldownDuration: canvas.cooldown_length,
@@ -268,6 +271,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
       height: true,
       start_coordinates: true,
       locked: true,
+      soft_locked: true,
       event_id: true,
       cooldown_length: true,
       all_colors_global: true,
@@ -591,6 +595,7 @@ interface EditCanvasParams {
   canvasId: number;
   name?: string;
   isLocked?: boolean;
+  isSoftLocked?: boolean;
   allColorsGlobal?: boolean;
   cooldownDuration?: number;
 }
@@ -599,6 +604,7 @@ export async function editCanvas({
   canvasId,
   name,
   isLocked,
+  isSoftLocked,
   allColorsGlobal,
   cooldownDuration,
 }: EditCanvasParams) {
@@ -609,6 +615,7 @@ export async function editCanvas({
     data: {
       name,
       locked: isLocked,
+      soft_locked: isSoftLocked,
       cooldown_length: cooldownDuration,
       all_colors_global: allColorsGlobal,
     },
@@ -728,6 +735,7 @@ function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
       canvas.start_coordinates[1],
     ],
     isLocked: canvas.locked,
+    isSoftLocked: canvas.soft_locked,
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
     allColorsGlobal: canvas.all_colors_global,

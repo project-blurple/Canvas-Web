@@ -82,7 +82,7 @@ pixelRouter.post(
 
     const [color] = await Promise.all([
       validateColor(colorId, req.params.canvasId, userGuildIds),
-      validatePixel(req.params.canvasId, coordinates, true),
+      validatePixel(req.params.canvasId, coordinates, true, BigInt(profile.id)),
       validateUser(BigInt(profile.id)),
     ]);
     const { futureCooldown } = await placePixel(

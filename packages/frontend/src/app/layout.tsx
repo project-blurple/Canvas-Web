@@ -81,6 +81,7 @@ const defaultCanvasInfo = {
   id: 1,
   name: "Something went wrong...",
   isLocked: true,
+  isSoftLocked: false,
   width: 600,
   height: 600,
   startCoordinates: [1, 1],

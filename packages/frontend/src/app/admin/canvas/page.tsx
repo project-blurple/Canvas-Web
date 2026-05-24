@@ -119,6 +119,7 @@ const createDefaults = {
   cooldownDuration: 0,
   height: 1,
   isLocked: true,
+  isSoftLocked: false,
   name: "",
   width: 1,
   startCoordinates: [1, 1],
@@ -132,6 +133,7 @@ interface CanvasSettingsFormValues extends Pick<
   | "cooldownDuration"
   | "height"
   | "isLocked"
+  | "isSoftLocked"
   | "name"
   | "width"
   | "startCoordinates"
@@ -146,6 +148,7 @@ function areCanvasSettingsEqual(
     left.cooldownDuration === right.cooldownDuration &&
     left.height === right.height &&
     left.isLocked === right.isLocked &&
+    left.isSoftLocked === right.isSoftLocked &&
     left.name === right.name &&
     left.width === right.width &&
     left.startCoordinates[0] === right.startCoordinates[0] &&
@@ -194,6 +197,7 @@ function CanvasSettingsForm({
       cooldownDuration: activeCanvas.cooldownDuration ?? 0,
       height: activeCanvas.height,
       isLocked: activeCanvas.isLocked,
+      isSoftLocked: activeCanvas.isSoftLocked,
       name: activeCanvas.name,
       width: activeCanvas.width,
       startCoordinates: activeCanvas.startCoordinates,
@@ -204,6 +208,15 @@ function CanvasSettingsForm({
     onFormValuesChange({
       ...formValues,
       isLocked: event.target.checked,
+    });
+  }
+
+  function handleIsSoftLockedChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    onFormValuesChange({
+      ...formValues,
+      isSoftLocked: event.target.checked,
     });
   }
 
@@ -253,6 +266,7 @@ function CanvasSettingsForm({
         cooldownDuration: activeCanvas.cooldownDuration ?? 0,
         height: activeCanvas.height,
         isLocked: activeCanvas.isLocked,
+        isSoftLocked: activeCanvas.isSoftLocked,
         name: activeCanvas.name,
         width: activeCanvas.width,
         startCoordinates: activeCanvas.startCoordinates,
@@ -290,6 +304,7 @@ function CanvasSettingsForm({
           allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
           isLocked: formValues.isLocked,
+          isSoftLocked: formValues.isSoftLocked,
           name: formValues.name,
         });
         await onSaved(activeCanvas.id);
@@ -366,6 +381,17 @@ function CanvasSettingsForm({
             </td>
           </tr>
           <tr>
+            <td>Soft-lock</td>
+            <td>
+              <Switch
+                type="checkbox"
+                checked={formValues.isSoftLocked}
+                onChange={handleIsSoftLockedChange}
+                disabled={mode === "create"}
+              />
+            </td>
+          </tr>
+          <tr>
             <td>Global colors</td>
             <td>
               <Switch
@@ -427,6 +453,7 @@ function AdminCanvasTab() {
       activeCanvas?.cooldownDuration ?? createDefaults.cooldownDuration,
     height: activeCanvas?.height ?? createDefaults.height,
     isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
+    isSoftLocked: activeCanvas?.isSoftLocked ?? createDefaults.isSoftLocked,
     name: activeCanvas?.name ?? createDefaults.name,
     width: activeCanvas?.width ?? createDefaults.width,
     startCoordinates:
@@ -444,6 +471,7 @@ function AdminCanvasTab() {
           activeCanvas.cooldownDuration ?? createDefaults.cooldownDuration,
         height: activeCanvas.height ?? createDefaults.height,
         isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
+        isSoftLocked: activeCanvas.isSoftLocked ?? createDefaults.isSoftLocked,
         name: activeCanvas.name ?? createDefaults.name,
         width: activeCanvas.width ?? createDefaults.width,
         startCoordinates:
@@ -465,6 +493,7 @@ function AdminCanvasTab() {
     if (mode === "create") {
       return (
         formValues.isLocked !== createDefaults.isLocked ||
+        formValues.isSoftLocked !== createDefaults.isSoftLocked ||
         formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
         formValues.cooldownDuration !== createDefaults.cooldownDuration ||
         formValues.name !== createDefaults.name ||
@@ -475,6 +504,7 @@ function AdminCanvasTab() {
     if (!activeCanvas) return false;
     return (
       formValues.isLocked !== activeCanvas.isLocked ||
+      formValues.isSoftLocked !== activeCanvas.isSoftLocked ||
       formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
       (formValues.cooldownDuration !== activeCanvas.cooldownDuration &&
         activeCanvas.cooldownDuration !== null) ||

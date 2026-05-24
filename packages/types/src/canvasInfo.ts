@@ -10,6 +10,7 @@ export const CanvasInfoSchema = z.object({
     z.number().int().nonnegative(),
   ]),
   isLocked: z.boolean(),
+  isSoftLocked: z.boolean(),
   eventId: z.number().int().nullable(),
   webPlacingEnabled: z.boolean(),
   allColorsGlobal: z.boolean(),
@@ -23,6 +24,7 @@ export const CanvasSummarySchema = CanvasInfoSchema.pick({
   name: true,
   eventId: true,
   isLocked: true,
+  isSoftLocked: true,
   width: true,
   height: true,
 });

@@ -17,12 +17,14 @@ const BLANK_PIXEL_COLOR_ID = 1;
  *
  * @param canvasId - The ID of the canvas
  * @param coordinates - The coordinates of the pixel
- * @param honorLocked - True will return an error if the canvas is locked
+ * @param honorLocked - True will return an error if the canvas is locked or soft-locked
+ * @param userId - Required when honorLocked is true and the canvas may be soft-locked
  */
 export async function validatePixel(
   canvasId: number,
   coordinates: Point,
   honorLocked: boolean,
+  userId?: bigint,
 ) {
   const canvas = await prisma.canvas.findFirst({
     where: {
@@ -49,6 +51,23 @@ export async function validatePixel(
 
   if (honorLocked && canvas.locked) {
     throw new ForbiddenError(`Canvas with ID ${canvasId} is locked`);
+  }
+
+  if (honorLocked && canvas.soft_locked && userId !== undefined) {
+    const existingHistory = await prisma.history.findFirst({
+      where: {
+        canvas_id: canvasId,
+        user_id: userId,
+        erased_at: null,
+      },
+      select: { id: true },
+    });
+
+    if (!existingHistory) {
+      throw new ForbiddenError(
+        "This canvas is soft-locked. Only users with existing placements may place pixels.",
+      );
+    }
   }
 }
 

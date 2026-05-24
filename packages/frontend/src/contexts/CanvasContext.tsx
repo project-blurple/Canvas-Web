@@ -33,6 +33,7 @@ const CanvasContext = createContext<CanvasContextType>({
     height: 0,
     startCoordinates: [0, 0],
     isLocked: false,
+    isSoftLocked: false,
     eventId: null,
     webPlacingEnabled: false,
     allColorsGlobal: false,

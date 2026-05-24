@@ -139,7 +139,7 @@ export function CanvasPreviewCard({
         <EventCanvasNameWrapper>
           <EventCanvasName>{canvas.name}</EventCanvasName>
           {currentEventId === canvas.eventId && <Radio size={16} />}
-          {canvas.isLocked && <Lock size={16} />}
+          {(canvas.isLocked || canvas.isSoftLocked) && <Lock size={16} />}
         </EventCanvasNameWrapper>
         <EventCanvasCoords>
           {canvas.width}
