@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { createEvent, editEvent } from "@/services/eventService";
 import { eventRouter } from "./event";
@@ -10,6 +11,10 @@ vi.mock("@/services/eventService", () => ({
   editEvent: vi.fn(),
   getCurrentEvent: vi.fn(),
   getEventById: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -58,6 +63,12 @@ describe("Event admin route tests", () => {
       isCurrentEvent: false,
     });
     expect(vi.mocked(createEvent)).toHaveBeenCalledWith("Spring Event", 42);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "event.create",
+      expect.objectContaining({ resourceId: 42 }),
+    );
   });
 
   it("edits an event", async () => {
@@ -80,5 +91,11 @@ describe("Event admin route tests", () => {
       isCurrentEvent: false,
     });
     expect(vi.mocked(editEvent)).toHaveBeenCalledWith(42, "Updated Event");
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "event.update",
+      expect.objectContaining({ resourceId: 42 }),
+    );
   });
 });

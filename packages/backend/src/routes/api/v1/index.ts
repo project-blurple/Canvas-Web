@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { auditLogRouter } from "./auditLog";
 import { blocklistRouter } from "./blocklist";
 import { canvasRouter } from "./canvas";
 import { discordRouter } from "./discord";
@@ -10,6 +11,7 @@ import { statisticsRouter } from "./statistics";
 
 export const apiV1Router = Router();
 
+apiV1Router.use("/audit-log", auditLogRouter);
 apiV1Router.use("/blocklist", blocklistRouter);
 apiV1Router.use("/canvas", canvasRouter);
 apiV1Router.use("/discord", discordRouter);

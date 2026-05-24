@@ -15,6 +15,8 @@ import {
 interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
   points: Point | [Point, Point];
+  page?: number;
+  size?: number;
   dateRange?: {
     from?: Date;
     to?: Date;
@@ -110,7 +112,7 @@ interface PixelHistoryRowRawResultWithCount {
   total_count: bigint;
 }
 
-function mapPixelHistoryRow(history: PixelHistoryRow) {
+function mapPixelHistoryEntry(history: PixelHistoryRow) {
   return {
     id: history.id.toString(),
     color: toPaletteColorSummary(history.color),
@@ -134,11 +136,18 @@ function mapPixelHistoryRow(history: PixelHistoryRow) {
  */
 async function getPixelHistoryRowsWithCount({
   fetchParams,
-  limit,
+  page = 1,
+  size = 20,
 }: {
   fetchParams: GetPixelHistoryParams;
-  limit?: number;
-}): Promise<{ rows: PixelHistoryRow[]; totalCount: number }> {
+  page?: number;
+  size?: number;
+}): Promise<{
+  total: number;
+  page: number;
+  size: number;
+  entries: PixelHistoryRow[];
+}> {
   const whereFragments = buildPixelHistoryWhereSQL(fetchParams);
 
   // Combine fragments with AND
@@ -151,6 +160,8 @@ async function getPixelHistoryRowsWithCount({
         whereFragments[0]
       : Prisma.sql`${Prisma.join(whereFragments, " AND ")}`;
   }
+
+  const take = Math.min(Math.max(size, 1), 100); // Arbitrary maximum
 
   const results = await prisma.$queryRaw<PixelHistoryRowRawResultWithCount[]>`
     SELECT
@@ -174,17 +185,18 @@ async function getPixelHistoryRowsWithCount({
     LEFT JOIN discord_user_profile p ON p.user_id = h.user_id
     WHERE ${whereSql}
     ORDER BY h.timestamp DESC
-    LIMIT ${limit ?? 100}
+    LIMIT ${take}
+    OFFSET ${Math.max((page - 1) * take, 0)}
   `;
 
-  let totalCount = 0;
+  let total = 0;
   if (results.length > 0) {
     const [first] = results;
-    totalCount = Number(first.total_count);
+    total = Number(first.total_count);
   }
 
   // Map raw results to PixelHistoryRow shape with profile object
-  const rows: PixelHistoryRow[] = results.map((row) => ({
+  const entries: PixelHistoryRow[] = results.map((row) => ({
     id: row.id,
     color: {
       id: row.color_id,
@@ -208,7 +220,12 @@ async function getPixelHistoryRowsWithCount({
       : null,
   }));
 
-  return { rows, totalCount };
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries,
+  };
 }
 
 /**
@@ -406,6 +423,8 @@ function buildPixelHistoryUsers(
  *
  * @param canvasId - The ID of the canvas
  * @param points - The coordinates of the pixel
+ * @param page - The page number for pagination
+ * @param size - The page size for pagination
  * @param dateRange - The date range for filtering history
  * @param userIdFilter - The user ID filter
  * @param colorFilter - The color filter
@@ -414,6 +433,8 @@ export async function getPixelHistorySummary(
   {
     canvasId,
     points,
+    page,
+    size,
     dateRange,
     userIdFilter,
     colorFilter,
@@ -442,7 +463,8 @@ export async function getPixelHistorySummary(
 
   const pixelHistoryAndCountPromise = getPixelHistoryRowsWithCount({
     fetchParams,
-    limit: 100,
+    page,
+    size,
   });
 
   const summaryPromise =
@@ -453,26 +475,20 @@ export async function getPixelHistorySummary(
       ] as const)
     : Promise.resolve(null);
 
-  const [{ rows: pixelHistoryRows, totalCount }, summary] = await Promise.all([
-    pixelHistoryAndCountPromise,
-    summaryPromise,
-  ]);
+  const [{ entries, total, page: truePage, size: trueSize }, summary] =
+    await Promise.all([pixelHistoryAndCountPromise, summaryPromise]);
 
   const users = summary ? buildPixelHistoryUsers(...summary) : undefined;
 
   return {
-    pixelHistory: pixelHistoryRows.map(mapPixelHistoryRow),
-    totalEntries: totalCount,
+    total,
+    page: truePage,
+    size: trueSize,
+    entries: entries.map(mapPixelHistoryEntry),
     users,
   };
 }
 
-/**
- * Deletes pixel history entries matching the filter criteria
- *
- * @param params - Filter parameters to match history entries for deletion
- * @param shouldBlockAuthors - Whether to add authors of the deleted entries to the blocklist
- */
 export async function deletePixelHistoryEntries(
   params: GetPixelHistoryParams,
   shouldBlockAuthors: boolean = false,
@@ -522,9 +538,7 @@ export async function deletePixelHistoryEntries(
     RETURNING id, user_id, x, y
   `;
 
-  if (deletedEntries.length === 0) {
-    return;
-  }
+  if (deletedEntries.length === 0) return;
 
   const coordinatesUpdated = [
     ...new Map(

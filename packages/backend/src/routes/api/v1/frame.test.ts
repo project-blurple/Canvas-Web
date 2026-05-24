@@ -36,6 +36,10 @@ vi.mock("@/services/discordGuildService", () => ({
   isCanvasAdmin: vi.fn(),
 }));
 
+vi.mock("@/services/exportService", () => ({
+  exportFrameAsStream: vi.fn(),
+}));
+
 const TEST_USER_SNOWFLAKE = "123456789012345678";
 
 const endpointCases = [

@@ -33,3 +33,13 @@ export const CanvasPasteBodyModel = z.object({
     ]),
   ),
 });
+
+export const CanvasExportScaleSchema = z.preprocess(
+  (v) => Number(v),
+  z.union([z.literal(1), z.literal(2), z.literal(4)]),
+);
+
+export const CanvasExportParamModel = z.object({
+  canvasId: CanvasIdParamModel.shape.canvasId,
+  scale: CanvasExportScaleSchema,
+});

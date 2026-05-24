@@ -3,7 +3,7 @@ import Main from "./Main";
 
 export default async function Page() {
   return (
-    <LayoutWithHeader>
+    <LayoutWithHeader isCanvasPage>
       <Main />
     </LayoutWithHeader>
   );

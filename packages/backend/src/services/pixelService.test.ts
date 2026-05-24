@@ -1,4 +1,5 @@
 import { fail } from "node:assert";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
@@ -297,6 +298,95 @@ describe("Place Pixel Tests", () => {
     }
     const after = await fetchCooldownPixelHistory(canvasId, userId, 1, 1);
     expect(before.history.length + 1).toEqual(after.history.length);
+  });
+
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when there is no previous cooldown", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].reason).toBeInstanceOf(ForbiddenError);
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when the cooldown has just expired", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    // Seed an already-expired cooldown record (in the past)
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: new Date(0) },
+    });
+
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect((failures[0] as PromiseRejectedResult).reason).toBeInstanceOf(
+      ForbiddenError,
+    );
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should allow a user with cooldown_time=null to place a pixel", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: null },
+    });
+
+    await expect(
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ).resolves.not.toThrow();
+
+    // Cooldown should now be set to a future time (bypass is consumed by placement)
+    const cooldown = await prisma.cooldown.findFirst({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(cooldown?.cooldown_time).not.toBeNull();
+    expect(cooldown?.cooldown_time?.getTime()).toBeGreaterThan(Date.now());
   });
 
   it("Resolves updating cached canvas pixel", async () => {

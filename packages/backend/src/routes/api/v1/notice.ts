@@ -1,8 +1,10 @@
 import { NoticeBodyModel, NoticeIdParamModel } from "@blurple-canvas-web/types";
 import { Router } from "express";
+import { socketHandler } from "@/index";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import {
   createNotice,
   deleteNotice,
@@ -29,6 +31,11 @@ noticeRouter.post(
   async (req, res) => {
     const notice = await createNotice(req.body);
     res.status(201).json(notice);
+    void audit(req, "admin", "notice.create", {
+      resourceId: notice.id,
+      metadata: req.body,
+    });
+    socketHandler.broadcastNoticeUpdate();
   },
 );
 
@@ -42,6 +49,11 @@ noticeRouter.put(
       data: req.body,
     });
     res.status(200).json(notice);
+    void audit(req, "admin", "notice.update", {
+      resourceId: notice.id,
+      metadata: req.body,
+    });
+    socketHandler.broadcastNoticeUpdate();
   },
 );
 
@@ -52,5 +64,9 @@ noticeRouter.delete(
   async (req, res) => {
     await deleteNotice(req.params.noticeId);
     res.status(204).end();
+    void audit(req, "admin", "notice.delete", {
+      resourceId: req.params.noticeId,
+    });
+    socketHandler.broadcastNoticeUpdate();
   },
 );

@@ -47,23 +47,19 @@ export function getOrdinalSuffix(rank: number) {
 }
 
 export function formatTimestamp(timestamp: string, utc = true) {
-  const date = new Date(timestamp);
-  date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-  return dateToString(date, utc);
+  return dateToString(DateTime.fromISO(timestamp), utc);
 }
 
 export function formatTimestampLocalTZ(timestamp: string) {
   return formatTimestamp(timestamp, false);
 }
 
-function dateToString(date: Date, utc?: boolean) {
-  let luxonDate = DateTime.fromJSDate(date);
-  let format = DateTime.DATETIME_FULL;
-  if (utc) {
-    luxonDate = luxonDate.toUTC();
-  } else {
-    format = { ...format, timeZoneName: undefined };
-  }
+function dateToString(date: DateTime, utc?: boolean) {
+  const luxonDate = utc ? date.toUTC() : date.toLocal();
+  const format =
+    utc ?
+      DateTime.DATETIME_FULL
+    : { ...DateTime.DATETIME_FULL, timeZoneName: undefined };
   return luxonDate.toLocaleString(format);
 }
 

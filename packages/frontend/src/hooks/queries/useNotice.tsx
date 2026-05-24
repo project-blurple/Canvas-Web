@@ -1,4 +1,5 @@
 import type { Notice, NoticeRequest } from "@blurple-canvas-web/types";
+import { SocketEvents } from "@blurple-canvas-web/types";
 import {
   type UseMutationResult,
   useMutation,
@@ -6,11 +7,35 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
+import { useEffect } from "react";
 import config from "@/config/clientConfig";
+import { socket } from "@/socket";
 
 type NoticeInput = Omit<Notice, "id" | "createdAt">;
 
 export function useNotices(fetchAll: boolean = false) {
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const onNoticeUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: ["notices"] });
+    };
+
+    const shouldDisconnect = !socket.connected;
+    if (shouldDisconnect) {
+      socket.connect();
+    }
+
+    socket.on(SocketEvents.noticeUpdate, onNoticeUpdate);
+
+    return () => {
+      socket.off(SocketEvents.noticeUpdate, onNoticeUpdate);
+      if (shouldDisconnect) {
+        socket.disconnect();
+      }
+    };
+  }, [queryClient]);
+
   const getNotices = async (): Promise<NoticeRequest.NoticeResBody> => {
     const url =
       !fetchAll ?
@@ -28,6 +53,8 @@ export function useNotices(fetchAll: boolean = false) {
     queryFn: getNotices,
     refetchOnMount: true,
     refetchOnWindowFocus: false,
+    refetchInterval: 60_000,
+    refetchIntervalInBackground: true,
     placeholderData: [],
   });
 }

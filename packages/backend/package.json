@@ -38,9 +38,9 @@
     "check": "pnpm run format && pnpm run lint",
     "check:fix": "pnpm run format:fix && pnpm run lint:fix",
     "clean": "rm -rf -- build/ && pnpm purge",
-    "prisma:push": "prisma db push && node --experimental-strip-types prisma/apply-views.ts",
+    "prisma:push": "prisma db push",
     "prisma:seed": "prisma db seed --",
-    "prisma:migrate": "prisma migrate deploy && node --experimental-strip-types prisma/apply-views.ts",
+    "prisma:migrate": "prisma migrate deploy",
     "db:resequence": "dotenvx run -f .env -- node scripts/resequence.mjs"
   },
   "dependencies": {
@@ -56,7 +56,7 @@
     "express-session": "^1.19.0",
     "passport": "^0.7.0",
     "passport-oauth2-refresh": "^2.2.0",
-    "pngjs": "^7.0.0",
+    "sharp": "^0.34.5",
     "socket.io": "^4.8.3",
     "zod": "^4.3.6"
   },
@@ -69,7 +69,6 @@
     "@types/node": "^24.1.0",
     "@types/passport": "^1.0.17",
     "@types/passport-oauth2": "^1.8.0",
-    "@types/pngjs": "^6.0.5",
     "@types/supertest": "^7.2.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
