@@ -17,7 +17,7 @@ import {
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { DynamicButton } from "../button";
+import { Button, DynamicButton } from "../button";
 import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
@@ -42,6 +42,11 @@ const FrameInfoPanelBodyShell = styled("div")`
   > * {
     min-height: 0;
   }
+`;
+
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
+  color: var(--discord-white);
 `;
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
@@ -108,14 +113,13 @@ function FrameInfoPanelBody({
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
-            <DynamicButton
-              color={null}
-              onAction={() => {
+            <StyledButton
+              onClick={() => {
                 setActivePanel(FramePanelMode.Edit);
               }}
             >
               Edit frame
-            </DynamicButton>
+            </StyledButton>
           )}
           {selectedFrame.owner.type !== FrameOwnerType.System && (
             <TooltipDynamicButton
@@ -138,14 +142,13 @@ function FrameInfoPanelBody({
       <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
-          <DynamicButton
-            color={null}
-            onAction={() => {
+          <StyledButton
+            onClick={() => {
               setActivePanel(FramePanelMode.Create);
             }}
           >
             New frame
-          </DynamicButton>
+          </StyledButton>
         </ActionPanelTabBody>
       </FrameInfoPanelBodyShell>
     );
