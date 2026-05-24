@@ -8,10 +8,10 @@ import {
   DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   EditCanvasBodyModel,
+  type FrameBoundsInput,
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import type z from "zod";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
@@ -200,7 +200,7 @@ async function sendCachedCanvas(
   canvasId: number,
   cachedCanvas: CachedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
+  bounds?: FrameBoundsInput,
 ): Promise<void> {
   if (cachedCanvas.isLocked) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);

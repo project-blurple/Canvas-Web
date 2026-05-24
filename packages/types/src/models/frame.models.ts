@@ -22,6 +22,8 @@ export const OptionalFrameBoundsModel = z.union([
   FrameBoundsModel,
 ]);
 
+export type FrameBoundsInput = z.infer<typeof OptionalFrameBoundsModel>;
+
 const frameBoundsRefiner = (
   { x0, y0, x1, y1 }: z.infer<typeof FrameBoundsModel>,
   ctx: z.core.$RefinementCtx,
