@@ -148,28 +148,19 @@ export async function exportCanvasBoundsAsStream({
   const unlocked = cached;
   const rawBuffer = pixelsToRgbaBuffer(unlocked.pixels);
 
-  const cropX = x0 * scale;
-  const cropY = y0 * scale;
-  const cropWidth = width * scale;
-  const cropHeight = height * scale;
-
   const source = sharp(rawBuffer, {
     raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
   });
 
-  return scale === 1 ?
-      source.extract({ left: x0, top: y0, width, height }).png()
-    : source
-        .resize({
-          width: unlocked.width * scale,
-          height: unlocked.height * scale,
-          kernel: sharp.kernel.nearest,
-        })
-        .extract({
-          left: cropX,
-          top: cropY,
-          width: cropWidth,
-          height: cropHeight,
-        })
-        .png();
+  const cropped = source.extract({ left: x0, top: y0, width, height });
+  const resized =
+    scale === 1 ? cropped : (
+      cropped.resize({
+        width: width * scale,
+        height: height * scale,
+        kernel: sharp.kernel.nearest,
+      })
+    );
+
+  return resized.png();
 }
