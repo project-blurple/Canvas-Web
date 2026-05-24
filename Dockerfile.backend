@@ -15,7 +15,7 @@ RUN pnpm ci --no-optional
 
 # Sharp needs the linux-specific version of the package
 # TODO: figure out a better way to do this
-RUN pnpm add sharp --os=linux --libc=musl --cpu=x64
+RUN pnpm --filter backend add sharp --os=linux --libc=musl --cpu=x64
 
 ENV NODE_ENV=production
 
