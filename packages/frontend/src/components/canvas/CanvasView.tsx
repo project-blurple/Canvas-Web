@@ -86,6 +86,10 @@ const CanvasWrapper = styled("div")`
   & {
     user-select: none;
   }
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 const ReticleContainer = styled("div")`
@@ -381,6 +385,15 @@ const RETICLE_SIZE = RETICLE_ORIGINAL_SIZE * 10;
 const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 const PREVIEW_PIXEL_SIZE = 0.8 * RETICLE_ORIGINAL_SCALE * 10;
 
+const ARROW_KEY_DELTAS: Record<string, Point> = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+};
+const ARROW_KEY_SHIFT_STEP_SIZE = 10;
+const ARROW_KEY_AUTO_PAN_PADDING = 80;
+
 const pointerEvents: Map<number, PointerEvent> = new Map();
 const previousPointerEvents: Map<number, PointerEvent> = new Map();
 // Used to handle pointer events when there are multiple pointers down
@@ -484,6 +497,8 @@ export default function CanvasView({
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
 
   const [initialZoom, setInitialZoom] = useState(1);
   const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
@@ -1173,6 +1188,55 @@ export default function CanvasView({
       );
   }, [handleCanvasClick]);
 
+  const handleArrowKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!coords) return;
+
+      const delta = ARROW_KEY_DELTAS[event.key];
+      if (!delta) return;
+
+      event.preventDefault();
+
+      const step = event.shiftKey ? ARROW_KEY_SHIFT_STEP_SIZE : 1;
+      const newCoords = {
+        x: clamp(coords.x + delta.x * step, 0, canvas.width - 1),
+        y: clamp(coords.y + delta.y * step, 0, canvas.height - 1),
+      };
+
+      setCoords(newCoords);
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const { clientWidth: containerWidth, clientHeight: containerHeight } = container;
+      const zoom = zoomRef.current;
+      const offset = offsetRef.current;
+      const padding = Math.min(ARROW_KEY_AUTO_PAN_PADDING, containerWidth / 4, containerHeight / 4);
+
+      // Screen-space position of the pixel: canvas origin is at the container center,
+      // shifted by offset, with each canvas pixel occupying zoom screen pixels.
+      const pixelScreenX = containerWidth / 2 + offset.x + (newCoords.x + 0.5 - canvas.width / 2) * zoom;
+      const pixelScreenY = containerHeight / 2 + offset.y + (newCoords.y + 0.5 - canvas.height / 2) * zoom;
+
+      const isOutsidePaddedBounds =
+        pixelScreenX < padding ||
+        pixelScreenX > containerWidth - padding ||
+        pixelScreenY < padding ||
+        pixelScreenY > containerHeight - padding;
+
+      if (isOutsidePaddedBounds) {
+        setOffset(clampOffset(
+          {
+            x: (canvas.width / 2 - newCoords.x - 0.5) * zoom,
+            y: (canvas.height / 2 - newCoords.y - 0.5) * zoom,
+          },
+          zoom,
+        ));
+      }
+    },
+    [canvas.width, canvas.height, clampOffset, containerRef, coords, setCoords, setOffset],
+  );
+
   const reticleOffset = calculateReticleOffset(coords);
 
   const toggleFullscreen = useCallback(async () => {
@@ -1229,7 +1293,9 @@ export default function CanvasView({
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
       ref={containerRef}
+      onKeyDown={handleArrowKeyDown}
       onPointerDown={handlePointerDown}
+      tabIndex={0}
     >
       {showNotices && <Notices />}
 
