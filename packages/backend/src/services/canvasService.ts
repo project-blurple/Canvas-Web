@@ -127,7 +127,11 @@ export function getCanvasFilename(
 export async function unlockedCanvasToPng(
   unlockedCanvas: UnlockedCanvas,
 ): Promise<Buffer> {
-  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
+    unlockedCanvas.width,
+    unlockedCanvas.height,
+  );
 
   return sharp(rawBuffer, {
     raw: {
@@ -144,7 +148,11 @@ export function unlockedCanvasToPngStream(
   unlockedCanvas: UnlockedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): NodeJS.ReadableStream {
-  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
+    unlockedCanvas.width,
+    unlockedCanvas.height,
+  );
 
   const image = sharp(rawBuffer, {
     raw: {
