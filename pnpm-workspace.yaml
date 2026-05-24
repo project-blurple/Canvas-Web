@@ -18,9 +18,3 @@ allowBuilds:
   protobufjs: false
   sharp: false
   ssh2: false
-
-packageExtensions:
-  "sharp@0.34.5":
-    dependencies:
-      "@img/sharp-linuxmusl-x64": 0.34.5
-      "@img/sharp-libvips-linuxmusl-x64": 1.2.4
