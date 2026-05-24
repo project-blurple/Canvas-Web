@@ -2,9 +2,9 @@ import { createReadStream } from "node:fs";
 import { PassThrough } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
-  type CanvasExportSize,
+  type CanvasExportScale,
   type CanvasInfo,
-  DEFAULT_CANVAS_EXPORT_SIZE,
+  DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   type Frame,
   type FrameOwnerInput,
@@ -13,6 +13,7 @@ import {
   type PixelColor,
   type UserOwnedFrame,
 } from "@blurple-canvas-web/types";
+
 import sharp from "sharp";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
@@ -467,15 +468,15 @@ export async function assertMaxOwnerFramesNotExceeded({
 
 export async function exportFrameAsStream({
   frameId,
-  size = DEFAULT_CANVAS_EXPORT_SIZE,
+  scale = DEFAULT_CANVAS_EXPORT_SCALE,
 }: {
   frameId: Frame["id"];
-  size?: CanvasExportSize;
+  scale?: CanvasExportScale;
 }): Promise<NodeJS.ReadableStream> {
   const frame = await getFrameById(frameId);
   return exportCanvasBoundsAsStream({
     ...frame,
-    size,
+    scale,
   });
 }
 
@@ -485,14 +486,14 @@ export async function exportCanvasBoundsAsStream({
   y0,
   x1,
   y1,
-  size = DEFAULT_CANVAS_EXPORT_SIZE,
+  scale = DEFAULT_CANVAS_EXPORT_SCALE,
 }: {
   canvasId: CanvasInfo["id"];
   x0: number;
   y0: number;
   x1: number;
   y1: number;
-  size?: CanvasExportSize;
+  scale?: CanvasExportScale;
 }): Promise<NodeJS.ReadableStream> {
   const width = x1 - x0;
   const height = y1 - y0;
@@ -504,18 +505,18 @@ export async function exportCanvasBoundsAsStream({
   const cached = await getCanvasPng(canvasId);
 
   if (cached.isLocked) {
-    const canvasPath = getLockedCanvasPath(cached.canvasPaths, size);
+    const canvasPath = getLockedCanvasPath(cached.canvasPaths, scale);
 
     if (!canvasPath) {
       throw new Error(
-        `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
+        `There is no cached canvas file for canvas ${canvasId} at ${scale}x`,
       );
     }
 
-    const cropX = x0 * size;
-    const cropY = y0 * size;
-    const cropWidth = width * size;
-    const cropHeight = height * size;
+    const cropX = x0 * scale;
+    const cropY = y0 * scale;
+    const cropWidth = width * scale;
+    const cropHeight = height * scale;
 
     const fileStream = createReadStream(canvasPath);
     const transformer = sharp()
@@ -543,21 +544,21 @@ export async function exportCanvasBoundsAsStream({
     unlocked.height,
   );
 
-  const cropX = x0 * size;
-  const cropY = y0 * size;
-  const cropWidth = width * size;
-  const cropHeight = height * size;
+  const cropX = x0 * scale;
+  const cropY = y0 * scale;
+  const cropWidth = width * scale;
+  const cropHeight = height * scale;
 
   const source = sharp(rawBuffer, {
     raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
   });
 
-  return size === 1 ?
+  return scale === 1 ?
       source.extract({ left: x0, top: y0, width, height }).png()
     : source
         .resize({
-          width: unlocked.width * size,
-          height: unlocked.height * size,
+          width: unlocked.width * scale,
+          height: unlocked.height * scale,
           kernel: sharp.kernel.nearest,
         })
         .extract({

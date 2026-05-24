@@ -1,5 +1,5 @@
-export type CanvasExportSize = 1 | 2 | 4;
+export type CanvasExportScale = 1 | 2 | 4;
 
-export const CANVAS_EXPORT_SIZES: readonly CanvasExportSize[] = [1, 2, 4];
+export const CANVAS_EXPORT_SCALES: readonly CanvasExportScale[] = [1, 2, 4];
 
-export const DEFAULT_CANVAS_EXPORT_SIZE: CanvasExportSize = 1;
+export const DEFAULT_CANVAS_EXPORT_SCALE: CanvasExportScale = 1;

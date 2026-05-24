@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import type {
   BlurpleEvent,
-  CanvasExportSize,
+  CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
   PixelColor,
@@ -9,8 +9,8 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 import {
-  CANVAS_EXPORT_SIZES,
-  DEFAULT_CANVAS_EXPORT_SIZE,
+  CANVAS_EXPORT_SCALES,
+  DEFAULT_CANVAS_EXPORT_SCALE,
 } from "@blurple-canvas-web/types";
 import sharp from "sharp";
 import { type canvas, Prisma, prisma } from "@/client";
@@ -28,7 +28,7 @@ import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
  */
 interface LockedCanvas {
   isLocked: true;
-  canvasPaths: Partial<Record<CanvasExportSize, string>>;
+  canvasPaths: Partial<Record<CanvasExportScale, string>>;
 }
 
 /**
@@ -57,7 +57,7 @@ export function initializeCache(): void {
   // look through the files in the canvas directory and build the locked cache object from them
   const lockedCanvasPaths = new Map<
     number,
-    Partial<Record<CanvasExportSize, string>>
+    Partial<Record<CanvasExportScale, string>>
   >();
 
   for (const filename of fs.readdirSync(config.paths.canvases)) {
@@ -70,16 +70,16 @@ export function initializeCache(): void {
     }
 
     const canvasId = Number.parseInt(match[1], 10);
-    const size = (
+    const scale = (
       match[2] ?
         Number.parseInt(match[2], 10)
-      : 1) as CanvasExportSize;
+      : 1) as CanvasExportScale;
     const canvasPath = `${config.paths.canvases}/${filename}`;
 
     console.log(`Loaded cached canvas ${canvasPath}`);
 
     const canvasPaths = lockedCanvasPaths.get(canvasId) ?? {};
-    canvasPaths[size] = canvasPath;
+    canvasPaths[scale] = canvasPath;
     lockedCanvasPaths.set(canvasId, canvasPaths);
   }
 
@@ -108,11 +108,11 @@ export function initializeCache(): void {
 export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
-  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): string {
-  const sizeSuffix = size === 1 ? "" : `@${size}x`;
+  const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
 
-  return `blurple-canvas__${canvasId}__${isLocked ? `locked${sizeSuffix}` : `${Date.now()}${sizeSuffix}`}.png`;
+  return `blurple-canvas__${canvasId}__${isLocked ? `locked${scaleSuffix}` : `${Date.now()}${scaleSuffix}`}.png`;
 }
 
 /**
@@ -139,7 +139,7 @@ export async function unlockedCanvasToPng(
 
 export function unlockedCanvasToPngStream(
   unlockedCanvas: UnlockedCanvas,
-  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): NodeJS.ReadableStream {
   const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
 
@@ -151,12 +151,12 @@ export function unlockedCanvasToPngStream(
     },
   });
 
-  return size === 1 ?
+  return scale === 1 ?
       image.png()
     : image
         .resize({
-          width: unlockedCanvas.width * size,
-          height: unlockedCanvas.height * size,
+          width: unlockedCanvas.width * scale,
+          height: unlockedCanvas.height * scale,
           kernel: sharp.kernel.nearest,
         })
         .png();
@@ -389,7 +389,7 @@ function pixelsToRgbaBuffer(pixels: PixelColor[]): Buffer {
 async function saveCanvasToFileSystem(
   canvas: canvas,
   pixels: PixelColor[],
-): Promise<Partial<Record<CanvasExportSize, string>>> {
+): Promise<Partial<Record<CanvasExportScale, string>>> {
   const rawBuffer = pixelsToRgbaBuffer(pixels);
   const baseImage = sharp(rawBuffer, {
     raw: {
@@ -400,28 +400,30 @@ async function saveCanvasToFileSystem(
   });
 
   const files = await Promise.all(
-    CANVAS_EXPORT_SIZES.map(async (size) => {
+    CANVAS_EXPORT_SCALES.map(async (scale) => {
       const path = `${config.paths.canvases}/${getCanvasFilename(
         canvas.id,
         true,
-        size,
+        scale,
       )}`;
 
       await baseImage
         .clone()
         .resize({
-          width: canvas.width * size,
-          height: canvas.height * size,
+          width: canvas.width * scale,
+          height: canvas.height * scale,
           kernel: sharp.kernel.nearest,
         })
         .png()
         .toFile(path);
 
-      return [size, path] as const;
+      return [scale, path] as const;
     }),
   );
 
-  return Object.fromEntries(files) as Partial<Record<CanvasExportSize, string>>;
+  return Object.fromEntries(files) as Partial<
+    Record<CanvasExportScale, string>
+  >;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
@@ -474,11 +476,11 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
         console.debug(`Cache hit for canvas ${canvasId}`);
 
         // If this is a locked canvas, verify the cache is complete. If any expected
-        // export size is missing, clear the cache and treat as a miss so we generate
+        // export scale is missing, clear the cache and treat as a miss so we generate
         // all sizes atomically via `saveCanvasToFileSystem` below.
         if (cachedCanvas.isLocked) {
           const locked = cachedCanvas as LockedCanvas;
-          const missing = CANVAS_EXPORT_SIZES.some(
+          const missing = CANVAS_EXPORT_SCALES.some(
             (s) => !locked.canvasPaths[s],
           );
 
@@ -544,10 +546,10 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
 }
 
 export function getLockedCanvasPath(
-  canvasPaths: Partial<Record<CanvasExportSize, string>>,
-  size: CanvasExportSize,
+  canvasPaths: Partial<Record<CanvasExportScale, string>>,
+  scale: CanvasExportScale,
 ): string | undefined {
-  return canvasPaths[size];
+  return canvasPaths[scale];
 }
 
 interface CreateCanvasParams {

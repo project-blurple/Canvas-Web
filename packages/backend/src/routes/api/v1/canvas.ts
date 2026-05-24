@@ -1,14 +1,15 @@
 import {
   CanvasExportParamModel,
-  type CanvasExportSize,
+  type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
   type Cooldown,
   CreateCanvasBodyModel,
-  DEFAULT_CANVAS_EXPORT_SIZE,
+  DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   EditCanvasBodyModel,
 } from "@blurple-canvas-web/types";
+
 import { type Response, Router } from "express";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
@@ -61,13 +62,13 @@ canvasRouter.get("/current", async (_req, res) => {
 });
 
 canvasRouter.get(
-  "/:canvasId@:size.png",
+  "/:canvasId@:scale.png",
   validate({ params: CanvasExportParamModel }),
   async (req, res) => {
-    const size = req.params.size;
+    const scale = req.params.scale;
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, scale);
   },
 );
 
@@ -158,14 +159,14 @@ function sendCachedCanvas(
   res: Response,
   canvasId: number,
   cachedCanvas: CachedCanvas,
-  size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): void {
   if (cachedCanvas.isLocked) {
-    const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, size);
+    const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);
 
     if (!canvasPath) {
       throw new Error(
-        `There is no cached canvas file for canvas ${canvasId} at ${size}x`,
+        `There is no cached canvas file for canvas ${canvasId} at ${scale}x`,
       );
     }
 
@@ -173,9 +174,9 @@ function sendCachedCanvas(
     return;
   }
 
-  const filename = getCanvasFilename(canvasId, false, size);
+  const filename = getCanvasFilename(canvasId, false, scale);
 
-  unlockedCanvasToPngStream(cachedCanvas, size).pipe(
+  unlockedCanvasToPngStream(cachedCanvas, scale).pipe(
     res
       .status(200)
       .type("png")

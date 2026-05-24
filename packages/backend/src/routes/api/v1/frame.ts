@@ -29,10 +29,10 @@ import { normalizeBounds } from "@/utils";
 export const frameRouter = typedRouter(Router());
 
 frameRouter.get(
-  "/:frameId@:size.png",
+  "/:frameId@:scale.png",
   validate({ params: ExportFrameParamModel }),
   async (req, res) => {
-    const size = req.params.size;
+    const scale = req.params.scale;
 
     res.setHeader("Content-Type", "image/png");
     res.setHeader(
@@ -42,7 +42,7 @@ frameRouter.get(
 
     const stream = await exportFrameAsStream({
       frameId: req.params.frameId,
-      size,
+      scale,
     });
     stream.on("error", (err) => {
       console.error("Error streaming frame PNG:", err);
