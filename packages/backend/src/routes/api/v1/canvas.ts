@@ -225,9 +225,14 @@ async function sendCachedCanvas(
     : unlockedCanvasToPngStream(cachedCanvas, scale);
 
   stream.on("error", (err) => {
-    console.error("Error streaming frame PNG:", err);
-    if (!res.headersSent) res.sendStatus(500);
+    console.error(`Error streaming canvas %d PNG:`, canvasId, err);
+    if (res.headersSent) {
+      res.destroy(err);
+    } else {
+      res.sendStatus(500);
+    }
   });
+
   stream.pipe(
     res
       .status(200)

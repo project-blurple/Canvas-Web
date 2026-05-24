@@ -20,16 +20,31 @@ import {
 } from "@/services/canvasService";
 import { getFrameById } from "./frameService";
 
-export function pixelsToRgbaBuffer(pixels: PixelColor[]): Buffer {
-  const buffer = Buffer.alloc(pixels.length * 4);
+export function pixelsToRgbaBuffer(
+  pixels: PixelColor[],
+  width: number,
+  height: number,
+): Buffer {
+  const expectedPixelCount = width * height;
+  const buffer = Buffer.alloc(expectedPixelCount * 4);
 
-  pixels.forEach((color, index) => {
+  if (pixels.length !== expectedPixelCount) {
+    console.warn(
+      `Pixel count mismatch when building RGBA buffer: expected ${expectedPixelCount} (${width}x${height}), got ${pixels.length}. The buffer will be padded/truncated to fit.`,
+    );
+  }
+
+  const pixelsToCopy = Math.min(pixels.length, expectedPixelCount);
+  for (let index = 0; index < pixelsToCopy; index += 1) {
+    const color = pixels[index];
+    if (!color) continue;
+
     const imageIndex = index * 4;
-    buffer[imageIndex] = color[0];
-    buffer[imageIndex + 1] = color[1];
-    buffer[imageIndex + 2] = color[2];
-    buffer[imageIndex + 3] = color[3];
-  });
+    buffer[imageIndex] = color[0] ?? 0;
+    buffer[imageIndex + 1] = color[1] ?? 0;
+    buffer[imageIndex + 2] = color[2] ?? 0;
+    buffer[imageIndex + 3] = color[3] ?? 0;
+  }
 
   return buffer;
 }
@@ -38,7 +53,7 @@ export async function saveCanvasToFileSystem(
   canvas: PrismaCanvas,
   pixels: PixelColor[],
 ): Promise<Partial<Record<CanvasExportScale, string>>> {
-  const rawBuffer = pixelsToRgbaBuffer(pixels);
+  const rawBuffer = pixelsToRgbaBuffer(pixels, canvas.width, canvas.height);
   const baseImage = sharp(rawBuffer, {
     raw: {
       width: canvas.width,
@@ -146,7 +161,11 @@ export async function exportCanvasBoundsAsStream({
   }
 
   const unlocked = cached;
-  const rawBuffer = pixelsToRgbaBuffer(unlocked.pixels);
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlocked.pixels,
+    unlocked.width,
+    unlocked.height,
+  );
 
   const source = sharp(rawBuffer, {
     raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
@@ -162,5 +181,12 @@ export async function exportCanvasBoundsAsStream({
       })
     );
 
-  return resized.png();
+  const transformer = resized.png();
+  const output = new PassThrough();
+
+  pipeline(transformer, output).catch((error: unknown) => {
+    output.destroy(error as Error);
+  });
+
+  return output;
 }
