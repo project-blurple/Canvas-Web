@@ -38,9 +38,9 @@
     "check": "pnpm run format && pnpm run lint",
     "check:fix": "pnpm run format:fix && pnpm run lint:fix",
     "clean": "rm -rf -- build/ && pnpm purge",
-    "prisma:push": "prisma db push && node --experimental-strip-types prisma/apply-views.ts",
+    "prisma:push": "prisma db push",
     "prisma:seed": "prisma db seed --",
-    "prisma:migrate": "prisma migrate deploy && node --experimental-strip-types prisma/apply-views.ts",
+    "prisma:migrate": "prisma migrate deploy",
     "db:resequence": "dotenvx run -f .env -- node scripts/resequence.mjs"
   },
   "dependencies": {
