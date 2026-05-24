@@ -1,4 +1,4 @@
-import cors from "cors";
+import cors, { type CorsOptions } from "cors";
 import express from "express";
 
 import config from "@/config";
@@ -19,9 +19,9 @@ export function createApp(): App {
   const app = express();
 
   const corsOptions = {
-    origin: config.frontendUrl,
+    origin: [config.frontendUrl, "http://localhost:3000"],
     credentials: true,
-  };
+  } satisfies CorsOptions;
   app.use(cors(corsOptions));
 
   app.set("trust proxy", 1 /* number of proxies between user and server */);
@@ -37,7 +37,7 @@ export function createApp(): App {
   const server = createServer(app);
   const io = new Server(server, {
     cors: {
-      origin: config.frontendUrl,
+      origin: [config.frontendUrl, "http://localhost:3000"],
     },
   });
 
