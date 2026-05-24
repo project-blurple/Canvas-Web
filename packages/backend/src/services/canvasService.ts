@@ -62,7 +62,7 @@ export function initializeCache(): void {
 
   for (const filename of fs.readdirSync(config.paths.canvases)) {
     const match = filename.match(
-      /^blurple-canvas__(\d+)__locked(?:__(\d)x)?\.png$/,
+      /^blurple-canvas__(\d+)__locked(?:@(\d+)x)?\.png$/,
     );
 
     if (!match) {
@@ -110,7 +110,7 @@ export function getCanvasFilename(
   isLocked = false,
   size: CanvasExportSize = DEFAULT_CANVAS_EXPORT_SIZE,
 ): string {
-  const sizeSuffix = size === 1 ? "" : `__${size}x`;
+  const sizeSuffix = size === 1 ? "" : `@${size}x`;
 
   return `blurple-canvas__${canvasId}__${isLocked ? `locked${sizeSuffix}` : `${Date.now()}${sizeSuffix}`}.png`;
 }
