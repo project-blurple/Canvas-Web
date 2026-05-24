@@ -8,9 +8,6 @@ export const paginatedSchema = <Item extends z.ZodType>(item: Item) =>
     entries: z.array(item),
   });
 
-export type Paginated<T> = {
-  total: number;
-  page: number;
-  size: number;
-  entries: T[];
-};
+export type Paginated<T extends z.ZodType> = z.infer<
+  ReturnType<typeof paginatedSchema<T>>
+>;

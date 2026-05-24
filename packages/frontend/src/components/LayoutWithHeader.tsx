@@ -3,14 +3,18 @@
 import type { ReactNode } from "react";
 import { Header } from "@/components/header";
 
+interface LayoutWithHeaderProps {
+  children?: ReactNode;
+  isCanvasPage?: boolean;
+}
+
 export default function LayoutWithHeader({
   children,
-}: {
-  children?: ReactNode;
-}) {
+  isCanvasPage = false,
+}: LayoutWithHeaderProps) {
   return (
     <>
-      <Header />
+      <Header isCanvasPage={isCanvasPage} />
       {children}
     </>
   );

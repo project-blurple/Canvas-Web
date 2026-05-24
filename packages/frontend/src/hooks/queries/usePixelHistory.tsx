@@ -5,51 +5,72 @@ import type {
   HistoryRequest,
   Point,
 } from "@blurple-canvas-web/types";
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  type UseQueryOptions,
+  useQuery,
+} from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
 
 const emptyHistoryResult = (): HistoryRequest.ResBody => ({
-  pixelHistory: [],
-  totalEntries: 0,
-  users: {},
+  total: 0,
+  page: 1,
+  size: 20,
+  entries: [],
+  executionDurationMs: -1,
 });
+
+export interface PixelHistoryParams {
+  point: Point;
+  page?: number;
+  size?: number;
+}
 
 export function usePixelHistory(
   canvasId: CanvasInfo["id"],
-  coordinates: Point | null,
+  params: PixelHistoryParams | null,
   options?: Omit<
     UseQueryOptions<HistoryRequest.ResBody>,
     "queryKey" | "queryFn"
   >,
 ) {
   const fetchHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!coordinates) return emptyHistoryResult();
+    if (!params) return emptyHistoryResult();
 
-    const { x, y } = coordinates;
     const response = await axios.get<HistoryRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
       {
-        params: { x, y },
+        params: {
+          x: params.point.x,
+          y: params.point.y,
+          page: params.page ?? 1,
+          size: params.size ?? 20,
+        },
         signal,
       },
     );
+
     return response.data;
   };
 
   return useQuery({
     ...options,
-    queryKey: ["pixelHistory", canvasId, coordinates],
+    queryKey: ["pixelHistory", canvasId, params],
     queryFn: fetchHistory,
-    enabled: Boolean(coordinates) && (options?.enabled ?? true),
+    placeholderData: keepPreviousData,
+    enabled: Boolean(params) && (options?.enabled ?? true),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    staleTime: 30_000, // 30 seconds
   });
 }
 
-export interface ComplexPixelHistoryQuery {
+export interface ComplexPixelHistoryParams {
   point0: Point;
   point1?: Point;
+  page?: number;
+  size?: number;
   fromDateTime?: string;
   toDateTime?: string;
   includeUserIds?: string[];
@@ -60,27 +81,29 @@ export interface ComplexPixelHistoryQuery {
 
 export function useComplexPixelHistory(
   canvasId: CanvasInfo["id"],
-  query: ComplexPixelHistoryQuery | null,
+  params: ComplexPixelHistoryParams | null,
 ) {
   const fetchComplexHistory = async ({ signal }: { signal: AbortSignal }) => {
-    if (!query) return null;
+    if (!params) return null;
 
     const response = await axios.post<HistoryRequest.ResBody>(
       `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/pixel/history`,
       {
-        fromDateTime: query.fromDateTime,
-        toDateTime: query.toDateTime,
-        includeUserIds: query.includeUserIds,
-        excludeUserIds: query.excludeUserIds,
-        includeColors: query.includeColors,
-        excludeColors: query.excludeColors,
+        fromDateTime: params.fromDateTime,
+        toDateTime: params.toDateTime,
+        includeUserIds: params.includeUserIds,
+        excludeUserIds: params.excludeUserIds,
+        includeColors: params.includeColors,
+        excludeColors: params.excludeColors,
       },
       {
         params: {
-          x0: query.point0.x,
-          y0: query.point0.y,
-          x1: query.point1?.x,
-          y1: query.point1?.y,
+          x0: params.point0.x,
+          y0: params.point0.y,
+          x1: params.point1?.x,
+          y1: params.point1?.y,
+          page: params.page,
+          size: params.size,
         },
         signal,
         withCredentials: true,
@@ -90,12 +113,10 @@ export function useComplexPixelHistory(
     return response.data;
   };
 
-  const queryResult = useQuery({
-    queryKey: ["complexPixelHistory", canvasId, query],
+  return useQuery({
+    queryKey: ["complexPixelHistory", canvasId, params],
     queryFn: fetchComplexHistory,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
-
-  return queryResult;
 }

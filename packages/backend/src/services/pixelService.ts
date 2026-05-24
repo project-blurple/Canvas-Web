@@ -243,40 +243,21 @@ export async function placePixel(
   color: Pick<PaletteColor, "id" | "rgba">,
 ) {
   const placementTime = new Date();
-  let { currentCooldown, futureCooldown } = await getCooldown(
-    canvasId,
-    userId,
-    placementTime,
-  );
+  const { futureCooldown } = await getCooldown(canvasId, userId, placementTime);
 
   await prisma.$transaction(async (tx) => {
     // only update the cooldown table if the canvas has a cooldown
     if (futureCooldown) {
-      // create the cooldown if it doesn't exist already
-      if (!currentCooldown) {
-        const cooldown = await tx.cooldown.create({
-          data: {
-            user_id: userId,
-            canvas_id: canvasId,
-            cooldown_time: futureCooldown,
-          },
-        });
-        currentCooldown = cooldown.cooldown_time;
-      }
-      // Perform an update with an attempt at an optimistic query
-      const updateCooldown = await tx.cooldown.update({
-        where: {
-          user_id_canvas_id: {
-            user_id: userId,
-            canvas_id: canvasId,
-          },
-          cooldown_time: currentCooldown,
-        },
-        data: {
-          cooldown_time: futureCooldown,
-        },
-      });
-      if (!updateCooldown) {
+      const rows = await tx.$queryRaw<[{ user_id: bigint }?]>`
+        INSERT INTO cooldown (user_id, canvas_id, cooldown_time)
+        VALUES (${userId}::bigint, ${canvasId}::integer, ${futureCooldown}::timestamptz)
+        ON CONFLICT (user_id, canvas_id) DO UPDATE
+          SET cooldown_time = EXCLUDED.cooldown_time
+          WHERE cooldown.cooldown_time IS NULL
+             OR cooldown.cooldown_time <= ${placementTime}::timestamptz
+        RETURNING user_id
+      `;
+      if (rows.length === 0) {
         throw new ForbiddenError("Pixel placement is on cooldown");
       }
     }

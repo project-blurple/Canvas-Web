@@ -1,3 +1,4 @@
+export * as AuditLogRequest from "./AuditLogRequest";
 export * as BlocklistRequest from "./BlocklistRequest";
 export * as CanvasInfoRequest from "./CanvasInfoRequest";
 export * as CanvasListRequest from "./CanvasListRequest";
