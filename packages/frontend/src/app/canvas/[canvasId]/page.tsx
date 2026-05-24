@@ -45,18 +45,35 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: { canvasId?: string };
+  params: Promise<{ canvasId?: string }>;
   searchParams: Promise<NextSearchParams>;
 }): Promise<Metadata> {
-  const canvasId = params?.canvasId ? Number(params.canvasId) : undefined;
+  const resolvedParams = await params;
+
+  const canvasId =
+    resolvedParams?.canvasId && /^\d+$/.test(resolvedParams.canvasId) ?
+      Number(resolvedParams.canvasId)
+    : undefined;
+
+  if (canvasId === undefined) {
+    return {};
+  }
+
   const resolvedSearchParams = await searchParams;
   const { x, y, frameId, pixelHeight, pixelWidth } =
     extractAllSearchParamsFromRecord(resolvedSearchParams);
 
-  const [canvasInfo, frame] = await Promise.all([
-    fetchCanvasInfo(canvasId),
-    frameId ? fetchFrameById(frameId) : Promise.resolve(null),
-  ]);
+  let canvasInfo: Awaited<ReturnType<typeof fetchCanvasInfo>>;
+  let frame = null as Awaited<ReturnType<typeof fetchFrameById>> | null;
+
+  try {
+    [canvasInfo, frame] = await Promise.all([
+      fetchCanvasInfo(canvasId),
+      frameId ? fetchFrameById(frameId) : Promise.resolve(null),
+    ]);
+  } catch {
+    return {};
+  }
 
   if (frame) {
     const scale = calculateScale((frame.x1 - frame.x0) * (frame.y1 - frame.y0));
@@ -72,6 +89,8 @@ export async function generateMetadata({
       imageUrl,
     });
   }
+
+  const canvasImageUrlBase = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasInfo.id)}`;
 
   if (x && y) {
     // Zoom is a value specific to the CanvasView so we're not going to try do
@@ -103,7 +122,7 @@ export async function generateMetadata({
     });
 
     const scale = calculateScale(width * height);
-    const imageUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasInfo.id)}@${scale}x.png?${imageSearchParams.toString()}`;
+    const imageUrl = `${canvasImageUrlBase}@${scale}x.png?${imageSearchParams.toString()}`;
 
     return toMetadata({
       title: `Blurple Canvas | ${canvasInfo.name} (${x}, ${y})`,
@@ -113,7 +132,7 @@ export async function generateMetadata({
   }
 
   const scale = calculateScale(canvasInfo.width * canvasInfo.height);
-  const imageUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasInfo.id)}@${scale}x.png`;
+  const imageUrl = `${canvasImageUrlBase}@${scale}x.png`;
 
   return toMetadata({
     title: `Blurple Canvas | ${canvasInfo.name}`,
