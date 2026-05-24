@@ -8,8 +8,6 @@ settings:
 overrides:
   protobufjs: ^7.5.5
 
-packageExtensionsChecksum: sha256-XwN5Eqbxjz35fRFY8xPiCClnBKKL37fVL6l912NQzFQ=
-
 importers:
 
   .:
