@@ -46,7 +46,11 @@ frameRouter.get(
     });
     stream.on("error", (err) => {
       console.error("Error streaming frame PNG:", err);
-      if (!res.headersSent) res.sendStatus(500);
+      if (res.headersSent) {
+        res.destroy(err);
+      } else {
+        res.sendStatus(500);
+      }
     });
     stream.pipe(res);
   },

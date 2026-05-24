@@ -15,7 +15,7 @@ import {
 import sharp from "sharp";
 import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
-import { NotFoundError } from "@/errors";
+import { NotFoundError, UnprocessableError } from "@/errors";
 import { socketHandler } from "@/index";
 import {
   pixelsToRgbaBuffer,
@@ -127,7 +127,11 @@ export function getCanvasFilename(
 export async function unlockedCanvasToPng(
   unlockedCanvas: UnlockedCanvas,
 ): Promise<Buffer> {
-  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
+    unlockedCanvas.width,
+    unlockedCanvas.height,
+  );
 
   return sharp(rawBuffer, {
     raw: {
@@ -144,7 +148,11 @@ export function unlockedCanvasToPngStream(
   unlockedCanvas: UnlockedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): NodeJS.ReadableStream {
-  const rawBuffer = pixelsToRgbaBuffer(unlockedCanvas.pixels);
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
+    unlockedCanvas.width,
+    unlockedCanvas.height,
+  );
 
   const image = sharp(rawBuffer, {
     raw: {
@@ -607,8 +615,6 @@ export async function editCanvas({
 
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
-  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
-
   return canvas;
 }
 
@@ -642,7 +648,7 @@ export async function pasteCanvasData(
   }
 
   if (!canvas.event_id) {
-    throw new Error(
+    throw new UnprocessableError(
       `Canvas with ID ${canvasId} is not associated with an event`,
     );
   }

@@ -16,6 +16,13 @@ export const NoticeBodyModel = z
     canvasId: z.number().int().positive().nullable().optional(),
   })
   .superRefine(({ startAt, endAt }, ctx) => {
+    if (endAt && !startAt) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["startAt"],
+        message: "startAt must be set when endAt is set",
+      });
+    }
     if (startAt && endAt && startAt >= endAt) {
       ctx.addIssue({
         code: "custom",
