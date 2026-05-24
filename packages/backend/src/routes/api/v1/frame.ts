@@ -14,12 +14,12 @@ import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
+import { exportFrameAsStream } from "@/services/exportService";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
   deleteFrame,
   editFrame,
-  exportFrameAsStream,
   getFrameById,
   getFramesByGuildIds,
   getFramesByUserId,

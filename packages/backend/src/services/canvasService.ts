@@ -17,8 +17,11 @@ import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
+import {
+  pixelsToRgbaBuffer,
+  saveCanvasToFileSystem,
+} from "@/services/exportService";
 import { getCurrentEvent } from "./eventService";
-
 import { getEventPalette } from "./paletteService";
 import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
 
@@ -370,60 +373,6 @@ export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
   })) as { color: { rgba: PixelColor } }[];
 
   return pixels.map((pixel) => pixel.color.rgba);
-}
-
-function pixelsToRgbaBuffer(pixels: PixelColor[]): Buffer {
-  const buffer = Buffer.alloc(pixels.length * 4);
-
-  pixels.forEach((color, index) => {
-    const imageIndex = index * 4;
-    buffer[imageIndex] = color[0];
-    buffer[imageIndex + 1] = color[1];
-    buffer[imageIndex + 2] = color[2];
-    buffer[imageIndex + 3] = color[3];
-  });
-
-  return buffer;
-}
-
-async function saveCanvasToFileSystem(
-  canvas: canvas,
-  pixels: PixelColor[],
-): Promise<Partial<Record<CanvasExportScale, string>>> {
-  const rawBuffer = pixelsToRgbaBuffer(pixels);
-  const baseImage = sharp(rawBuffer, {
-    raw: {
-      width: canvas.width,
-      height: canvas.height,
-      channels: 4,
-    },
-  });
-
-  const files = await Promise.all(
-    CANVAS_EXPORT_SCALES.map(async (scale) => {
-      const path = `${config.paths.canvases}/${getCanvasFilename(
-        canvas.id,
-        true,
-        scale,
-      )}`;
-
-      await baseImage
-        .clone()
-        .resize({
-          width: canvas.width * scale,
-          height: canvas.height * scale,
-          kernel: sharp.kernel.nearest,
-        })
-        .png()
-        .toFile(path);
-
-      return [scale, path] as const;
-    }),
-  );
-
-  return Object.fromEntries(files) as Partial<
-    Record<CanvasExportScale, string>
-  >;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {

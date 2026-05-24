@@ -1,20 +1,11 @@
-import { createReadStream } from "node:fs";
-import { PassThrough } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import {
-  type CanvasExportScale,
-  type CanvasInfo,
-  DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   type Frame,
   type FrameOwnerInput,
   FrameOwnerType,
   type GuildOwnedFrame,
-  type PixelColor,
   type UserOwnedFrame,
 } from "@blurple-canvas-web/types";
-
-import sharp from "sharp";
 import { Prisma, prisma } from "@/client";
 import config from "@/config";
 import {
@@ -24,7 +15,6 @@ import {
   UnprocessableError,
 } from "@/errors";
 import { PrismaErrorCode } from "@/utils";
-import { getCanvasPng, getLockedCanvasPath } from "./canvasService";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -464,125 +454,4 @@ export async function assertMaxOwnerFramesNotExceeded({
       } on this canvas`,
     );
   }
-}
-
-export async function exportFrameAsStream({
-  frameId,
-  scale = DEFAULT_CANVAS_EXPORT_SCALE,
-}: {
-  frameId: Frame["id"];
-  scale?: CanvasExportScale;
-}): Promise<NodeJS.ReadableStream> {
-  const frame = await getFrameById(frameId);
-  return exportCanvasBoundsAsStream({
-    ...frame,
-    scale,
-  });
-}
-
-export async function exportCanvasBoundsAsStream({
-  canvasId,
-  x0,
-  y0,
-  x1,
-  y1,
-  scale = DEFAULT_CANVAS_EXPORT_SCALE,
-}: {
-  canvasId: CanvasInfo["id"];
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  scale?: CanvasExportScale;
-}): Promise<NodeJS.ReadableStream> {
-  const width = x1 - x0;
-  const height = y1 - y0;
-
-  if (width <= 0 || height <= 0) {
-    throw new BadRequestError("Invalid crop dimensions");
-  }
-
-  const cached = await getCanvasPng(canvasId);
-
-  if (cached.isLocked) {
-    const canvasPath = getLockedCanvasPath(cached.canvasPaths, scale);
-
-    if (!canvasPath) {
-      throw new Error(
-        `There is no cached canvas file for canvas ${canvasId} at ${scale}x`,
-      );
-    }
-
-    const cropX = x0 * scale;
-    const cropY = y0 * scale;
-    const cropWidth = width * scale;
-    const cropHeight = height * scale;
-
-    const fileStream = createReadStream(canvasPath);
-    const transformer = sharp()
-      .extract({
-        left: cropX,
-        top: cropY,
-        width: cropWidth,
-        height: cropHeight,
-      })
-      .png();
-
-    const output = new PassThrough();
-
-    pipeline(fileStream, transformer, output).catch((error: unknown) => {
-      output.destroy(error as Error);
-    });
-
-    return output;
-  }
-
-  const unlocked = cached;
-  const rawBuffer = pixelsToRgbaBuffer(
-    unlocked.pixels,
-    unlocked.width,
-    unlocked.height,
-  );
-
-  const cropX = x0 * scale;
-  const cropY = y0 * scale;
-  const cropWidth = width * scale;
-  const cropHeight = height * scale;
-
-  const source = sharp(rawBuffer, {
-    raw: { width: unlocked.width, height: unlocked.height, channels: 4 },
-  });
-
-  return scale === 1 ?
-      source.extract({ left: x0, top: y0, width, height }).png()
-    : source
-        .resize({
-          width: unlocked.width * scale,
-          height: unlocked.height * scale,
-          kernel: sharp.kernel.nearest,
-        })
-        .extract({
-          left: cropX,
-          top: cropY,
-          width: cropWidth,
-          height: cropHeight,
-        })
-        .png();
-}
-
-function pixelsToRgbaBuffer(
-  pixels: PixelColor[],
-  width: number,
-  height: number,
-): Buffer {
-  const buf = Buffer.alloc(width * height * 4);
-  for (let i = 0; i < pixels.length; i++) {
-    const p = pixels[i];
-    const off = i * 4;
-    buf[off] = p[0];
-    buf[off + 1] = p[1];
-    buf[off + 2] = p[2];
-    buf[off + 3] = p[3];
-  }
-  return buf;
 }
