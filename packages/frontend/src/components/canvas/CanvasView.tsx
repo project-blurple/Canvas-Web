@@ -1208,15 +1208,26 @@ export default function CanvasView({
       const container = containerRef.current;
       if (!container) return;
 
-      const { clientWidth: containerWidth, clientHeight: containerHeight } = container;
+      const { clientWidth: containerWidth, clientHeight: containerHeight } =
+        container;
       const zoom = zoomRef.current;
       const offset = offsetRef.current;
-      const padding = Math.min(ARROW_KEY_AUTO_PAN_PADDING, containerWidth / 4, containerHeight / 4);
+      const padding = Math.min(
+        ARROW_KEY_AUTO_PAN_PADDING,
+        containerWidth / 4,
+        containerHeight / 4,
+      );
 
       // Screen-space position of the pixel: canvas origin is at the container center,
       // shifted by offset, with each canvas pixel occupying zoom screen pixels.
-      const pixelScreenX = containerWidth / 2 + offset.x + (newCoords.x + 0.5 - canvas.width / 2) * zoom;
-      const pixelScreenY = containerHeight / 2 + offset.y + (newCoords.y + 0.5 - canvas.height / 2) * zoom;
+      const pixelScreenX =
+        containerWidth / 2 +
+        offset.x +
+        (newCoords.x + 0.5 - canvas.width / 2) * zoom;
+      const pixelScreenY =
+        containerHeight / 2 +
+        offset.y +
+        (newCoords.y + 0.5 - canvas.height / 2) * zoom;
 
       const isOutsidePaddedBounds =
         pixelScreenX < padding ||
@@ -1225,16 +1236,26 @@ export default function CanvasView({
         pixelScreenY > containerHeight - padding;
 
       if (isOutsidePaddedBounds) {
-        setOffset(clampOffset(
-          {
-            x: (canvas.width / 2 - newCoords.x - 0.5) * zoom,
-            y: (canvas.height / 2 - newCoords.y - 0.5) * zoom,
-          },
-          zoom,
-        ));
+        setOffset(
+          clampOffset(
+            {
+              x: (canvas.width / 2 - newCoords.x - 0.5) * zoom,
+              y: (canvas.height / 2 - newCoords.y - 0.5) * zoom,
+            },
+            zoom,
+          ),
+        );
       }
     },
-    [canvas.width, canvas.height, clampOffset, containerRef, coords, setCoords, setOffset],
+    [
+      canvas.width,
+      canvas.height,
+      clampOffset,
+      containerRef,
+      coords,
+      setCoords,
+      setOffset,
+    ],
   );
 
   const reticleOffset = calculateReticleOffset(coords);
