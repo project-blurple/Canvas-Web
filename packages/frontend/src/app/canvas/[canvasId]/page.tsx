@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import config from "@/config/clientConfig";
 import { fetchCanvasInfo, fetchFrameById } from "@/hooks/queries/serverFetch";
+import { clamp } from "@/util";
 import { extractAllSearchParamsFromRecord } from "@/util/searchParams";
 import Main from "../../../app/Main";
 import LayoutWithHeader from "../../../components/LayoutWithHeader";
@@ -70,12 +71,35 @@ export async function generateMetadata({
 
   if (x && y) {
     // Zoom is a value specific to the CanvasView so we're not going to try do
-    // the annoying maths to figure out the perfect value... 50x50 is fine
-    const height = pixelHeight ? Number.parseInt(pixelHeight, 10) : 50;
-    const width = pixelWidth ? Number.parseInt(pixelWidth, 10) : 50;
+    // the annoying maths to figure out the perfect value...
+    const height = clamp(
+      pixelHeight ?
+        Number.parseInt(pixelHeight, 10)
+      : Math.round(Math.min(50, canvasInfo.height / 2)), // smaller of 50px or half the canvas height
+      5,
+      canvasInfo.height,
+    );
+    const width = clamp(
+      pixelWidth ?
+        Number.parseInt(pixelWidth, 10)
+      : Math.round(Math.min(50, canvasInfo.width / 2)), // smaller of 50px or half the canvas width
+      5,
+      canvasInfo.width,
+    );
+
+    const x0 = Math.max(Number.parseInt(x, 10) - Math.floor(width / 2), 0);
+    const y0 = Math.max(Number.parseInt(y, 10) - Math.floor(height / 2), 0);
+    const x1 = Math.min(x0 + width, canvasInfo.width);
+    const y1 = Math.min(y0 + height, canvasInfo.height);
+    const imageSearchParams = new URLSearchParams({
+      x0: x0.toString(),
+      y0: y0.toString(),
+      x1: x1.toString(),
+      y1: y1.toString(),
+    });
+
     const scale = calculateScale(width * height);
-    const imageUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasInfo.id)}@${scale}x.png`;
-    // todo: specific region endpoint
+    const imageUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasInfo.id)}@${scale}x.png?${imageSearchParams.toString()}`;
 
     return toMetadata({
       title: `Blurple Canvas | ${canvasInfo.name} (${x}, ${y})`,

@@ -1,5 +1,6 @@
 import {
   CanvasExportParamModel,
+  CanvasExportQueryModel,
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
@@ -9,8 +10,8 @@ import {
   type DiscordUserProfile,
   EditCanvasBodyModel,
 } from "@blurple-canvas-web/types";
-
 import { type Response, Router } from "express";
+import type z from "zod";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
@@ -31,6 +32,7 @@ import {
   pasteCanvasData,
   unlockedCanvasToPngStream,
 } from "@/services/canvasService";
+import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
 
@@ -59,17 +61,23 @@ canvasRouter.get(
 
 canvasRouter.get("/current", async (_req, res) => {
   const [canvasId, cachedCanvas] = await getCurrentCanvas();
-  sendCachedCanvas(res, canvasId, cachedCanvas);
+  await sendCachedCanvas(res, canvasId, cachedCanvas);
 });
 
 canvasRouter.get(
   "/:canvasId@:scale.png",
-  validate({ params: CanvasExportParamModel }),
+  validate({ params: CanvasExportParamModel, query: CanvasExportQueryModel }),
   async (req, res) => {
     const scale = req.params.scale;
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, scale);
+    await sendCachedCanvas(
+      res,
+      req.params.canvasId,
+      cachedCanvas,
+      scale,
+      req.query,
+    );
   },
 );
 
@@ -78,7 +86,7 @@ canvasRouter.get(
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+    await sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
   },
 );
 
@@ -187,12 +195,13 @@ canvasRouter.delete(
 /**
  * Handles sending a cached canvas as a response.
  */
-function sendCachedCanvas(
+async function sendCachedCanvas(
   res: Response,
   canvasId: number,
   cachedCanvas: CachedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-): void {
+  bounds?: z.infer<typeof CanvasExportQueryModel>,
+): Promise<void> {
   if (cachedCanvas.isLocked) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);
 
@@ -206,15 +215,29 @@ function sendCachedCanvas(
     return;
   }
 
-  const filename = getCanvasFilename(canvasId, false, scale);
+  const stream =
+    bounds ?
+      await exportCanvasBoundsAsStream({
+        canvasId,
+        ...bounds,
+        scale,
+      })
+    : unlockedCanvasToPngStream(cachedCanvas, scale);
 
-  unlockedCanvasToPngStream(cachedCanvas, scale).pipe(
+  stream.on("error", (err) => {
+    console.error("Error streaming frame PNG:", err);
+    if (!res.headersSent) res.sendStatus(500);
+  });
+  stream.pipe(
     res
       .status(200)
       .type("png")
       .setHeader("Cache-Control", ["no-cache", "no-store"])
       // Needed to force Safari to not cache the image
       .setHeader("Vary", "*")
-      .setHeader("Content-Disposition", `inline; filename="${filename}"`),
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="${getCanvasFilename(canvasId, false, scale, bounds)}"`,
+      ),
   );
 }

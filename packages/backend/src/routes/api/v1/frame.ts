@@ -34,21 +34,27 @@ frameRouter.get(
   async (req, res) => {
     const scale = req.params.scale;
 
-    res.setHeader("Content-Type", "image/png");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="frame-${req.params.frameId}.png"`,
-    );
-
     const stream = await exportFrameAsStream({
       frameId: req.params.frameId,
       scale,
     });
+
     stream.on("error", (err) => {
       console.error("Error streaming frame PNG:", err);
       if (!res.headersSent) res.sendStatus(500);
     });
-    stream.pipe(res);
+    stream.pipe(
+      res
+        .status(200)
+        .type("png")
+        .setHeader("Cache-Control", ["no-cache", "no-store"])
+        // Needed to force Safari to not cache the image
+        .setHeader("Vary", "*")
+        .setHeader(
+          "Content-Disposition",
+          `inline; filename="frame-${req.params.frameId}.png"`,
+        ),
+    );
   },
 );
 

@@ -1,4 +1,5 @@
 import z from "zod";
+import { FrameBoundsModel } from "./frame.models";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
@@ -43,3 +44,5 @@ export const CanvasExportParamModel = z.object({
   canvasId: CanvasIdParamModel.shape.canvasId,
   scale: CanvasExportScaleSchema,
 });
+
+export const CanvasExportQueryModel = FrameBoundsModel.optional();
