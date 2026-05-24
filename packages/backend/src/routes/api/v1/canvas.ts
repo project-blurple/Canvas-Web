@@ -61,22 +61,22 @@ canvasRouter.get("/current", async (_req, res) => {
 });
 
 canvasRouter.get(
-  "/:canvasId",
-  validate({ params: CanvasIdParamModel }),
-  async (req, res) => {
-    const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
-  },
-);
-
-canvasRouter.get(
-  "/:canvasId/:size.png",
+  "/:canvasId@:size.png",
   validate({ params: CanvasExportParamModel }),
   async (req, res) => {
     const size = req.params.size;
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
     sendCachedCanvas(res, req.params.canvasId, cachedCanvas, size);
+  },
+);
+
+canvasRouter.get(
+  "/:canvasId",
+  validate({ params: CanvasIdParamModel }),
+  async (req, res) => {
+    const cachedCanvas = await getCanvasPng(req.params.canvasId);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
   },
 );
 

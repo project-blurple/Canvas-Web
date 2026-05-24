@@ -29,16 +29,7 @@ import { normalizeBounds } from "@/utils";
 export const frameRouter = typedRouter(Router());
 
 frameRouter.get(
-  "/:frameId",
-  validate({ params: FrameIdParamModel }),
-  async (req, res) => {
-    const frame = await getFrameById(req.params.frameId);
-    res.status(200).json(frame);
-  },
-);
-
-frameRouter.get(
-  "/:frameId/:size.png",
+  "/:frameId@:size.png",
   validate({ params: ExportFrameParamModel }),
   async (req, res) => {
     const size = req.params.size;
@@ -58,6 +49,15 @@ frameRouter.get(
       if (!res.headersSent) res.sendStatus(500);
     });
     stream.pipe(res);
+  },
+);
+
+frameRouter.get(
+  "/:frameId",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    const frame = await getFrameById(req.params.frameId);
+    res.status(200).json(frame);
   },
 );
 
