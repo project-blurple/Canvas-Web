@@ -1,5 +1,6 @@
 export const SocketEvents = {
   canvasUpdate: "canvas update",
+  noticeUpdate: "notice update",
   placePixel(canvasId: number) {
     return `place pixel ${canvasId}` as const;
   },

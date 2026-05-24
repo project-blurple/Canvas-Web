@@ -1,5 +1,6 @@
 import { NoticeBodyModel, NoticeIdParamModel } from "@blurple-canvas-web/types";
 import { Router } from "express";
+import { socketHandler } from "@/index";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
@@ -34,6 +35,7 @@ noticeRouter.post(
       resourceId: notice.id,
       metadata: req.body,
     });
+    socketHandler.broadcastNoticeUpdate();
   },
 );
 
@@ -51,6 +53,7 @@ noticeRouter.put(
       resourceId: notice.id,
       metadata: req.body,
     });
+    socketHandler.broadcastNoticeUpdate();
   },
 );
 
@@ -64,5 +67,6 @@ noticeRouter.delete(
     void audit(req, "admin", "notice.delete", {
       resourceId: req.params.noticeId,
     });
+    socketHandler.broadcastNoticeUpdate();
   },
 );
