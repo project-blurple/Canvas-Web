@@ -115,3 +115,36 @@ export function extractSearchParam(
 
   return variantUsed ? searchParams.get(variantUsed) : null;
 }
+
+function extractSearchParamFromRecord(
+  searchParams: Record<string, string | string[] | undefined> | null,
+  key: ParamKey,
+): string | null {
+  if (!searchParams) return null;
+
+  const variants = getSearchParamVariants(key);
+
+  for (const variant of variants) {
+    const value = searchParams[variant];
+    if (Array.isArray(value)) {
+      const found = value.find((v) => typeof v === "string" && v.length > 0);
+      if (found) return found;
+    } else if (typeof value === "string" && value.length > 0) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+export function extractAllSearchParamsFromRecord(
+  searchParams: Record<string, string | string[] | undefined> | null,
+): Record<ParamKey, string | null> {
+  const values = {} as Record<ParamKey, string | null>;
+
+  for (const key of Object.keys(SEARCH_PARAM_KEYS) as ParamKey[]) {
+    values[key] = extractSearchParamFromRecord(searchParams, key);
+  }
+
+  return values;
+}
