@@ -1,4 +1,16 @@
+import type { Request } from "express";
 import rateLimit from "express-rate-limit";
+
+const keyGenerator = (req: Request) => {
+  const cfConnectingIp = req.headers["cf-connecting-ip"];
+  if (cfConnectingIp) {
+    if (typeof cfConnectingIp === "string") {
+      return cfConnectingIp;
+    }
+    return cfConnectingIp[0];
+  }
+  return req.ip ?? "";
+};
 
 /**
  * Rate limiter for the pixel placement endpoint. Allows 3 requests per 30 seconds per IP address.
@@ -9,6 +21,7 @@ export const pixelPlacementLimiter = rateLimit({
   message: "You have been rate limited",
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator,
 });
 
 /**
@@ -20,6 +33,7 @@ export const frameMutationLimiter = rateLimit({
   message: "You have been rate limited",
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator,
 });
 
 /**
@@ -34,4 +48,5 @@ export const guildRefreshLimiter = rateLimit({
   message: "You have been rate limited",
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator,
 });
