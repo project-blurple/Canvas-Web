@@ -4,7 +4,7 @@ import { fetchCanvasInfo, fetchFrameById } from "@/hooks/queries/serverFetch";
 import { clamp } from "@/util";
 import {
   extractAllSearchParamsFromRecord,
-  type SearchParams,
+  type NextSearchParams,
 } from "@/util/searchParams";
 import Main from "../../../app/Main";
 import LayoutWithHeader from "../../../components/LayoutWithHeader";
@@ -46,7 +46,7 @@ export async function generateMetadata({
   searchParams,
 }: {
   params: { canvasId?: string };
-  searchParams: Promise<SearchParams>;
+  searchParams: Promise<NextSearchParams>;
 }): Promise<Metadata> {
   const canvasId = params?.canvasId ? Number(params.canvasId) : undefined;
   const resolvedSearchParams = await searchParams;
@@ -57,17 +57,6 @@ export async function generateMetadata({
     fetchCanvasInfo(canvasId),
     frameId ? fetchFrameById(frameId) : Promise.resolve(null),
   ]);
-
-  console.log({
-    resolvedSearchParams,
-    frameId,
-    frame,
-    canvasInfo,
-    x,
-    y,
-    pixelHeight,
-    pixelWidth,
-  });
 
   if (frame) {
     const scale = calculateScale((frame.x1 - frame.x0) * (frame.y1 - frame.y0));
