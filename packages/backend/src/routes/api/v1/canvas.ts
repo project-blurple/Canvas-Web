@@ -211,7 +211,7 @@ function sendCachedCanvas(
   const stream = unlockedCanvasToPngStream(cachedCanvas, scale);
 
   stream.on("error", (err) => {
-    console.error(`Error streaming canvas ${canvasId} PNG:`, err);
+    console.error(`Error streaming canvas %d PNG:`, canvasId, err);
     if (res.headersSent) {
       res.destroy(err);
     } else {
