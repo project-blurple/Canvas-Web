@@ -6,6 +6,7 @@ import type {
 } from "@blurple-canvas-web/types";
 
 import { type color, prisma } from "@/client";
+import { ConflictError } from "@/errors";
 import { getCurrentEvent } from "./eventService";
 
 type ColorSummary = Pick<color, "id" | "code" | "name" | "rgba" | "global">;
@@ -155,7 +156,7 @@ export async function assignColorToEvent({
   });
 
   if (existingParticipation) {
-    throw new Error(
+    throw new ConflictError(
       `Color with ID ${colorId} is already assigned to event with ID ${eventId}`,
     );
   }
