@@ -1,6 +1,7 @@
 export * from "./api";
 export * from "./auditLog";
 export * from "./blocklist";
+export * from "./canvasExport";
 export * from "./canvasInfo";
 export * from "./cooldown";
 export * from "./discordGuildRecord";

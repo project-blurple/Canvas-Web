@@ -3,6 +3,14 @@ import { Prisma, prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import { getFrameById } from "./frameService";
 
+vi.mock("@/index", () => ({
+  socketHandler: {
+    broadcastCanvasUpdate: vi.fn(),
+    broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
+  },
+}));
+
 describe("frameService.getFrameById", () => {
   afterEach(() => {
     vi.restoreAllMocks();

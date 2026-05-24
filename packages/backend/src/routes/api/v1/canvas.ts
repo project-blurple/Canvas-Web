@@ -1,11 +1,15 @@
 import {
+  CanvasExportParamModel,
+  type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
   type Cooldown,
   CreateCanvasBodyModel,
+  DEFAULT_CANVAS_EXPORT_SCALE,
   type DiscordUserProfile,
   EditCanvasBodyModel,
 } from "@blurple-canvas-web/types";
+
 import { type Response, Router } from "express";
 import { UnauthorizedError } from "@/errors";
 import { requireCanvasAdmin } from "@/middleware/canvasAuth";
@@ -23,8 +27,9 @@ import {
   getCanvasPng,
   getCurrentCanvas,
   getCurrentCanvasInfo,
+  getLockedCanvasPath,
   pasteCanvasData,
-  unlockedCanvasToPng,
+  unlockedCanvasToPngStream,
 } from "@/services/canvasService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
@@ -56,6 +61,17 @@ canvasRouter.get("/current", async (_req, res) => {
   const [canvasId, cachedCanvas] = await getCurrentCanvas();
   sendCachedCanvas(res, canvasId, cachedCanvas);
 });
+
+canvasRouter.get(
+  "/:canvasId@:scale.png",
+  validate({ params: CanvasExportParamModel }),
+  async (req, res) => {
+    const scale = req.params.scale;
+
+    const cachedCanvas = await getCanvasPng(req.params.canvasId);
+    sendCachedCanvas(res, req.params.canvasId, cachedCanvas, scale);
+  },
+);
 
 canvasRouter.get(
   "/:canvasId",
@@ -175,23 +191,30 @@ function sendCachedCanvas(
   res: Response,
   canvasId: number,
   cachedCanvas: CachedCanvas,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
 ): void {
   if (cachedCanvas.isLocked) {
-    res.sendFile(cachedCanvas.canvasPath);
+    const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);
+
+    if (!canvasPath) {
+      throw new Error(
+        `There is no cached canvas file for canvas ${canvasId} at ${scale}x`,
+      );
+    }
+
+    res.sendFile(canvasPath);
     return;
   }
 
-  const filename = getCanvasFilename(canvasId);
+  const filename = getCanvasFilename(canvasId, false, scale);
 
-  unlockedCanvasToPng(cachedCanvas)
-    .pack()
-    .pipe(
-      res
-        .status(200)
-        .type("png")
-        .setHeader("Cache-Control", ["no-cache", "no-store"])
-        // Needed to force Safari to not cache the image
-        .setHeader("Vary", "*")
-        .setHeader("Content-Disposition", `inline; filename="${filename}"`),
-    );
+  unlockedCanvasToPngStream(cachedCanvas, scale).pipe(
+    res
+      .status(200)
+      .type("png")
+      .setHeader("Cache-Control", ["no-cache", "no-store"])
+      // Needed to force Safari to not cache the image
+      .setHeader("Vary", "*")
+      .setHeader("Content-Disposition", `inline; filename="${filename}"`),
+  );
 }

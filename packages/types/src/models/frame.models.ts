@@ -1,6 +1,6 @@
 import z from "zod";
 import { FrameOwnerType } from "../frame";
-import { CanvasIdParamModel } from "./canvas.models";
+import { CanvasExportScaleSchema, CanvasIdParamModel } from "./canvas.models";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const FrameIdParamModel = z.object({
@@ -77,4 +77,9 @@ export const FrameGuildIdsQueryModel = z.object({
       : Array.isArray(value) ? value
       : [value],
     ),
+});
+
+export const ExportFrameParamModel = z.object({
+  frameId: FrameIdParamModel.shape.frameId,
+  scale: CanvasExportScaleSchema,
 });

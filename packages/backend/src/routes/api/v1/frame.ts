@@ -1,6 +1,7 @@
 import {
   CanvasIdParamModel,
   CreateFrameBodyModel,
+  ExportFrameParamModel,
   FrameDataParamModel,
   FrameGuildIdsQueryModel,
   FrameIdParamModel,
@@ -13,6 +14,7 @@ import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
+import { exportFrameAsStream } from "@/services/exportService";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -25,6 +27,30 @@ import {
 import { normalizeBounds } from "@/utils";
 
 export const frameRouter = typedRouter(Router());
+
+frameRouter.get(
+  "/:frameId@:scale.png",
+  validate({ params: ExportFrameParamModel }),
+  async (req, res) => {
+    const scale = req.params.scale;
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="frame-${req.params.frameId}.png"`,
+    );
+
+    const stream = await exportFrameAsStream({
+      frameId: req.params.frameId,
+      scale,
+    });
+    stream.on("error", (err) => {
+      console.error("Error streaming frame PNG:", err);
+      if (!res.headersSent) res.sendStatus(500);
+    });
+    stream.pipe(res);
+  },
+);
 
 frameRouter.get(
   "/:frameId",
