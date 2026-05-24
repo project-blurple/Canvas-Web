@@ -607,8 +607,6 @@ export async function editCanvas({
 
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
-  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
-
   return canvas;
 }
 
