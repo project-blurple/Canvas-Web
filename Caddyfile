@@ -1,16 +1,6 @@
 # 'backend' and 'frontend' here refer to the docker compose services.
-(cf_client_ip) {
-  header_up X-Forwarded-For {http.request.header.CF-Connecting-IP:{http.request.header.X-Forwarded-For:{http.request.remote.host}}}
-}
-
 localhost, canvas.projectblurple.com {
-  reverse_proxy /api/* backend:8000 {
-    import cf_client_ip
-  }
-  reverse_proxy /socket.io* backend:8000 {
-    import cf_client_ip
-  }
-  reverse_proxy /* frontend:3000 {
-    import cf_client_ip
-  }
+  reverse_proxy /api/* backend:8000
+  reverse_proxy /socket.io* backend:8000
+  reverse_proxy /* frontend:3000
 }
