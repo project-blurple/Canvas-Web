@@ -4,6 +4,7 @@ import type {
   CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
+  OptionalFrameBoundsModel,
   PixelColor,
   PlacePixelArray,
   Point,
@@ -13,6 +14,7 @@ import {
   DEFAULT_CANVAS_EXPORT_SCALE,
 } from "@blurple-canvas-web/types";
 import sharp from "sharp";
+import type z from "zod";
 import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError, UnprocessableError } from "@/errors";
@@ -112,10 +114,13 @@ export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
+  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
 ): string {
   const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
+  const boundsSuffix =
+    bounds ? `_${bounds.x0}x${bounds.y0}_${bounds.x1}x${bounds.y1}` : "";
 
-  return `blurple-canvas__${canvasId}__${isLocked ? `locked${scaleSuffix}` : `${Date.now()}${scaleSuffix}`}.png`;
+  return `blurple-canvas__${canvasId}__${isLocked ? "locked" : Date.now()}${boundsSuffix}${scaleSuffix}.png`;
 }
 
 /**
