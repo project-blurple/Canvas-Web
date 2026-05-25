@@ -374,18 +374,27 @@ export function updateCachedCanvasPixel(
   cachedCanvas.pixels[pixelIndex] = color;
 }
 
-export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
+export async function getCanvasPixels(
+  canvasId: number,
+  width: number,
+  height: number,
+): Promise<PixelColor[]> {
   const pixels = (await prisma.pixel.findMany({
     select: {
+      x: true,
+      y: true,
       color: {
         select: { rgba: true },
       },
     },
     where: { canvas_id: canvasId },
-    orderBy: [{ y: "asc" }, { x: "asc" }],
-  })) as { color: { rgba: PixelColor } }[];
+  })) as { x: number; y: number; color: { rgba: PixelColor } }[];
 
-  return pixels.map((pixel) => pixel.color.rgba);
+  const flat: PixelColor[] = new Array(width * height);
+  for (const pixel of pixels) {
+    flat[pixel.y * width + pixel.x] = pixel.color.rgba;
+  }
+  return flat;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
@@ -463,7 +472,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
       console.debug(`Cache miss for canvas ${canvasId}`);
     }
 
-    const pixels = await getCanvasPixels(canvasId);
+    const pixels = await getCanvasPixels(canvasId, canvas.width, canvas.height);
     const unlockedCanvas: UnlockedCanvas = {
       isLocked: false,
       width: canvas.width,
