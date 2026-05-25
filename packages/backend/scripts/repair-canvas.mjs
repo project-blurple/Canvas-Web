@@ -56,7 +56,10 @@ if (args.help) {
 let canvasIdFilter = null;
 if (args["canvas-id"] !== undefined) {
   const parsed = Number.parseInt(args["canvas-id"], 10);
-  if (!Number.isInteger(parsed) || String(parsed) !== args["canvas-id"].trim()) {
+  if (
+    !Number.isInteger(parsed) ||
+    String(parsed) !== args["canvas-id"].trim()
+  ) {
     throw new Error(
       `Invalid --canvas-id value: "${args["canvas-id"]}" (expected an integer)`,
     );
@@ -77,7 +80,9 @@ async function repairCanvas(canvas) {
   });
 
   if (!force && existing.length === expected) {
-    console.log(`Canvas ${canvas.id} (${canvas.name}): OK (${expected} pixels)`);
+    console.log(
+      `Canvas ${canvas.id} (${canvas.name}): OK (${expected} pixels)`,
+    );
     return 0;
   }
 
@@ -131,9 +136,9 @@ async function main() {
   }
 
   const scope =
-    canvasIdFilter === null
-      ? `${canvases.length} canvas(es)`
-      : `canvas ${canvasIdFilter}`;
+    canvasIdFilter === null ?
+      `${canvases.length} canvas(es)`
+    : `canvas ${canvasIdFilter}`;
   console.log(`Repairing ${scope}${force ? " (force mode)" : ""}\n`);
 
   let totalRepaired = 0;
