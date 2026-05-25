@@ -77,9 +77,14 @@ export async function generateMetadata({
     return {};
   }
 
+  const currentUnixTimestamp = Math.floor(Date.now() / 1000);
+  const imageSearchParams = new URLSearchParams({
+    t: currentUnixTimestamp.toString(), // Cache buster to ensure the latest image is fetched
+  });
+
   if (frame) {
     const scale = calculateScale((frame.x1 - frame.x0) * (frame.y1 - frame.y0));
-    const imageUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}@${scale}.png`;
+    const imageUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}@${scale}.png?${imageSearchParams.toString()}`;
 
     return toMetadata({
       title: `Blurple Canvas | ${frame.name}`,
@@ -116,12 +121,10 @@ export async function generateMetadata({
     const y0 = Math.max(Number.parseInt(y, 10) - Math.floor(height / 2), 0);
     const x1 = Math.min(x0 + width, canvasInfo.width);
     const y1 = Math.min(y0 + height, canvasInfo.height);
-    const imageSearchParams = new URLSearchParams({
-      x0: x0.toString(),
-      y0: y0.toString(),
-      x1: x1.toString(),
-      y1: y1.toString(),
-    });
+    imageSearchParams.set("x0", x0.toString());
+    imageSearchParams.set("y0", y0.toString());
+    imageSearchParams.set("x1", x1.toString());
+    imageSearchParams.set("y1", y1.toString());
 
     const scale = calculateScale(width * height);
     const imageUrl = `${canvasImageUrlBase}@${scale}.png?${imageSearchParams.toString()}`;
@@ -134,7 +137,7 @@ export async function generateMetadata({
   }
 
   const scale = calculateScale(canvasInfo.width * canvasInfo.height);
-  const imageUrl = `${canvasImageUrlBase}@${scale}.png`;
+  const imageUrl = `${canvasImageUrlBase}@${scale}.png?${imageSearchParams.toString()}`;
 
   return toMetadata({
     title: `Blurple Canvas | ${canvasInfo.name}`,
