@@ -77,7 +77,7 @@ export async function generateMetadata({
 
   if (frame) {
     const scale = calculateScale((frame.x1 - frame.x0) * (frame.y1 - frame.y0));
-    const imageUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}@${scale}x.png`;
+    const imageUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}@${scale}.png`;
 
     return toMetadata({
       title: `Blurple Canvas | ${frame.name}`,
@@ -122,7 +122,7 @@ export async function generateMetadata({
     });
 
     const scale = calculateScale(width * height);
-    const imageUrl = `${canvasImageUrlBase}@${scale}x.png?${imageSearchParams.toString()}`;
+    const imageUrl = `${canvasImageUrlBase}@${scale}.png?${imageSearchParams.toString()}`;
 
     return toMetadata({
       title: `Blurple Canvas | ${canvasInfo.name} (${x}, ${y})`,
@@ -132,7 +132,7 @@ export async function generateMetadata({
   }
 
   const scale = calculateScale(canvasInfo.width * canvasInfo.height);
-  const imageUrl = `${canvasImageUrlBase}@${scale}x.png`;
+  const imageUrl = `${canvasImageUrlBase}@${scale}.png`;
 
   return toMetadata({
     title: `Blurple Canvas | ${canvasInfo.name}`,
