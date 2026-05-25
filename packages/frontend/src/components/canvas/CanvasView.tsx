@@ -36,6 +36,7 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
+import { getAutoPanOffset } from "./autoPan";
 import { CanvasGrid } from "./CanvasGrid";
 import CanvasViewControls from "./CanvasViewControls";
 import {
@@ -1218,33 +1219,18 @@ export default function CanvasView({
         containerHeight / 4,
       );
 
-      // Screen-space position of the pixel: canvas origin is at the container center,
-      // shifted by offset, with each canvas pixel occupying zoom screen pixels.
-      const pixelScreenX =
-        containerWidth / 2 +
-        offset.x +
-        (newCoords.x + 0.5 - canvas.width / 2) * zoom;
-      const pixelScreenY =
-        containerHeight / 2 +
-        offset.y +
-        (newCoords.y + 0.5 - canvas.height / 2) * zoom;
+      const nextOffset = getAutoPanOffset({
+        oldCoords: coords,
+        newCoords,
+        offset,
+        container: { width: containerWidth, height: containerHeight },
+        canvas: { width: canvas.width, height: canvas.height },
+        zoom,
+        padding,
+      });
 
-      const isOutsidePaddedBounds =
-        pixelScreenX < padding ||
-        pixelScreenX > containerWidth - padding ||
-        pixelScreenY < padding ||
-        pixelScreenY > containerHeight - padding;
-
-      if (isOutsidePaddedBounds) {
-        setOffset(
-          clampOffset(
-            {
-              x: (canvas.width / 2 - newCoords.x - 0.5) * zoom,
-              y: (canvas.height / 2 - newCoords.y - 0.5) * zoom,
-            },
-            zoom,
-          ),
-        );
+      if (nextOffset.x !== offset.x || nextOffset.y !== offset.y) {
+        setOffset(clampOffset(nextOffset, zoom));
       }
     },
     [
