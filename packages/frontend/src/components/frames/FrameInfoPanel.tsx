@@ -18,7 +18,7 @@ import {
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { Button } from "../button";
+import { Button, DynamicButton } from "../button";
 import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
@@ -55,7 +55,7 @@ const ButtonWrapper = styled("div")`
     flex: 1;
   }
 `;
-  
+
 const StyledButton = styled(Button)`
   background-color: var(--discord-blurple);
   color: var(--discord-white);
