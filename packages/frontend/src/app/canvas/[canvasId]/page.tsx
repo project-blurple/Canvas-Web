@@ -30,7 +30,9 @@ function toMetadata({
     openGraph: {
       title,
       description,
+      siteName: "canvas.projectblurple.com",
       images: [{ url: imageUrl }],
+      locale: "en-US",
     },
     twitter: {
       card: "summary_large_image",
