@@ -23,11 +23,7 @@ export function useUpdateCanvasInfo(canvasId: CanvasInfo["id"]) {
       data: Partial<
         Pick<
           CanvasInfo,
-          | "name"
-          | "isLocked"
-          | "isSoftLocked"
-          | "cooldownDuration"
-          | "allColorsGlobal"
+          "name" | "placeState" | "cooldownDuration" | "allColorsGlobal"
         >
       >,
     ) => {

@@ -1,7 +1,8 @@
-import type {
-  DiscordUserProfile,
-  Palette,
-  PaletteColor,
+import {
+  CanvasPlaceState,
+  type DiscordUserProfile,
+  type Palette,
+  type PaletteColor,
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
@@ -120,12 +121,7 @@ export default function PlacePixelTab({
 }: PlacePixelTabProps) {
   const { user } = useAuthContext();
   const {
-    canvas: {
-      allColorsGlobal,
-      id: canvasId,
-      isLocked: readOnly,
-      webPlacingEnabled,
-    },
+    canvas: { allColorsGlobal, id: canvasId, placeState, webPlacingEnabled },
   } = useCanvasContext();
   const { data: initialCooldown } = useCanvasCooldown(canvasId, {
     enabled: active && Boolean(user),
@@ -201,7 +197,7 @@ export default function PlacePixelTab({
     (!selectedColor || selectedColor.global || allColorsGlobal || userInServer);
 
   const isJoinServerShown =
-    (!(canPlacePixel && user) || readOnly) &&
+    (!(canPlacePixel && user) || placeState === CanvasPlaceState.NoOne) &&
     !selectedColor?.global &&
     serverInvite;
 
@@ -294,7 +290,9 @@ export default function PlacePixelTab({
               {selectedColor?.guildName ?? "server"}
             </DynamicAnchorButton>
           )}
-          {!readOnly && isLarge && <BotPlaceCommandCard />}
+          {placeState !== CanvasPlaceState.NoOne && isLarge && (
+            <BotPlaceCommandCard />
+          )}
         </ActionPanelTabBody>
       </Form>
     </PlacePixelTabBlock>

@@ -5,6 +5,7 @@ import {
   CANVAS_EXPORT_SCALES,
   type CanvasExportScale,
   type CanvasInfo,
+  CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
   type Frame,
   type PixelColor,
@@ -127,7 +128,7 @@ export async function exportCanvasBoundsAsStream({
 
   const cached = await getCanvasPng(canvasId);
 
-  if (cached.isLocked) {
+  if (cached.placeState === CanvasPlaceState.NoOne) {
     const canvasPath = getLockedCanvasPath(cached.canvasPaths, scale);
 
     if (!canvasPath) {

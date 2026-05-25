@@ -1,7 +1,8 @@
-import type {
-  PaletteColor,
-  PixelColor,
-  Point,
+import {
+  CanvasPlaceState,
+  type PaletteColor,
+  type PixelColor,
+  type Point,
 } from "@blurple-canvas-web/types";
 
 import { type color, type Prisma, prisma } from "@/client";
@@ -49,11 +50,15 @@ export async function validatePixel(
     );
   }
 
-  if (honorLocked && canvas.locked) {
+  if (honorLocked && canvas.place_state === CanvasPlaceState.NoOne) {
     throw new ForbiddenError(`Canvas with ID ${canvasId} is locked`);
   }
 
-  if (honorLocked && canvas.soft_locked && userId !== undefined) {
+  if (
+    honorLocked &&
+    canvas.place_state === CanvasPlaceState.NoNewUsers &&
+    userId !== undefined
+  ) {
     const existingHistory = await prisma.history.findFirst({
       where: {
         canvas_id: canvasId,

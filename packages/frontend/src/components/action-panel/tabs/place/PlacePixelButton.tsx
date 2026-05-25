@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import VisuallyHidden from "@/components/VisuallyHidden";
@@ -45,17 +46,22 @@ export default function PlacePixelButton({
   const isSelected = adjustedCoords && color;
 
   const { data: userStats } = useUserStats(
-    canvas.isSoftLocked && user ? user.id : undefined,
+    canvas.placeState === CanvasPlaceState.NoNewUsers && user ?
+      user.id
+    : undefined,
     canvas.id,
   );
 
-  // The `canvas.isLocked` and `!user` cases never show as the logic is hoisted at the level above this
+  // The `canvas.placeState === CanvasPlaceState.NoOne` and `!user` cases never show as the logic is hoisted at the level above this
   let disabledMessage: string | null = null;
-  if (canvas.isLocked) {
+  if (canvas.placeState === CanvasPlaceState.NoOne) {
     disabledMessage = "Canvas can’t be modified";
   } else if (!user) {
     disabledMessage = "Sign in to place pixels";
-  } else if (canvas.isSoftLocked && userStats === null) {
+  } else if (
+    canvas.placeState === CanvasPlaceState.NoNewUsers &&
+    userStats === null
+  ) {
     disabledMessage = "You can’t place pixels on this canvas at this time";
   } else if (partnerServerJoinRequired) {
     disabledMessage = `Join ${partnerServerName ?? "the partner server"} to use this color`;

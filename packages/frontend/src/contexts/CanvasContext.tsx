@@ -3,6 +3,7 @@
 import {
   type CanvasInfo,
   type CanvasInfoRequest,
+  CanvasPlaceState,
   SocketEvents,
 } from "@blurple-canvas-web/types";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,8 +33,7 @@ const CanvasContext = createContext<CanvasContextType>({
     width: 0,
     height: 0,
     startCoordinates: [0, 0],
-    isLocked: false,
-    isSoftLocked: false,
+    placeState: CanvasPlaceState.Anyone,
     eventId: null,
     webPlacingEnabled: false,
     allColorsGlobal: false,

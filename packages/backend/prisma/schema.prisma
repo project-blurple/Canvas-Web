@@ -20,8 +20,7 @@ model blacklist {
 model canvas {
   id                Int                 @id @default(autoincrement())
   name              String
-  locked            Boolean             @default(true)
-  soft_locked       Boolean             @default(false)
+  place_state       String              @default("no_one") // no_one | no_new_users | anyone
   // It's theoretically possible to have a canvas without an event. E.g. An off-season canvas
   event_id          Int?
   event             event?              @relation(fields: [event_id], references: [id])

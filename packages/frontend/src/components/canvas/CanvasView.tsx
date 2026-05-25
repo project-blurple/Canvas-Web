@@ -2,6 +2,7 @@
 
 import {
   type CanvasInfo,
+  CanvasPlaceState,
   type Frame,
   type PlacePixelSocket,
   type Point,
@@ -771,7 +772,7 @@ export default function CanvasView({
     };
 
     // If the canvas is locked, we don't need to listen for updates.
-    if (canvas.isLocked) {
+    if (canvas.placeState === CanvasPlaceState.NoOne) {
       return;
     }
 

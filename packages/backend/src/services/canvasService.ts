@@ -11,6 +11,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import {
   CANVAS_EXPORT_SCALES,
+  CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
 } from "@blurple-canvas-web/types";
 import sharp from "sharp";
@@ -32,7 +33,7 @@ import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
  * file system.
  */
 interface LockedCanvas {
-  isLocked: true;
+  placeState: CanvasPlaceState.NoOne;
   canvasPaths: Partial<Record<CanvasExportScale, string>>;
 }
 
@@ -42,7 +43,7 @@ interface LockedCanvas {
  * most of the time to build a canvas image from scratch is fetching the pixels from the database).
  */
 interface UnlockedCanvas {
-  isLocked: false;
+  placeState: CanvasPlaceState.Anyone | CanvasPlaceState.NoNewUsers;
   width: number;
   height: number;
   pixels: PixelColor[];
@@ -96,7 +97,7 @@ export function initializeCache(): void {
     }
 
     CANVAS_CACHE.set(canvasId, {
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
       canvasPaths,
     });
   }
@@ -182,8 +183,7 @@ interface CanvasSummaryRow {
   id: number;
   name: string;
   event_id: number | null;
-  locked: boolean;
-  soft_locked: boolean;
+  place_state: CanvasPlaceState;
   last_pixel_timestamp: Date | null;
   width: number;
   height: number;
@@ -209,8 +209,7 @@ export async function getCanvases(
       c.id,
       c.name,
       c.event_id,
-      c.locked,
-      c.soft_locked,
+      c.place_state,
       c.width,
       c.height,
       c.cooldown_length,
@@ -220,7 +219,7 @@ export async function getCanvases(
       ON h.canvas_id = c.id
       AND h.erased_at IS NULL
     WHERE ${whereSql}
-    GROUP BY c.id, c.name, c.event_id, c.locked, c.soft_locked, c.width, c.height
+    GROUP BY c.id, c.name, c.event_id, c.place_state, c.width, c.height
     ORDER BY
       MAX(h.timestamp) DESC NULLS LAST,
       c.id DESC
@@ -230,8 +229,7 @@ export async function getCanvases(
     id: canvas.id,
     name: canvas.name,
     eventId: canvas.event_id,
-    isLocked: canvas.locked,
-    isSoftLocked: canvas.soft_locked,
+    placeState: canvas.place_state,
     width: canvas.width,
     height: canvas.height,
     cooldownDuration: canvas.cooldown_length,
@@ -270,8 +268,7 @@ export async function getCanvasInfo(canvasId: number): Promise<CanvasInfo> {
       width: true,
       height: true,
       start_coordinates: true,
-      locked: true,
-      soft_locked: true,
+      place_state: true,
       event_id: true,
       cooldown_length: true,
       all_colors_global: true,
@@ -345,7 +342,7 @@ export async function updateManyCachedPixels(
 ): Promise<void> {
   const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
-  if (!cachedCanvas || cachedCanvas.isLocked) {
+  if (!cachedCanvas || cachedCanvas.placeState === CanvasPlaceState.NoOne) {
     return;
   }
 
@@ -370,7 +367,7 @@ export function updateCachedCanvasPixel(
 ) {
   const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
-  if (!cachedCanvas || cachedCanvas.isLocked) {
+  if (!cachedCanvas || cachedCanvas.placeState === CanvasPlaceState.NoOne) {
     return;
   }
 
@@ -396,7 +393,7 @@ async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
   const cachedCanvas = CANVAS_CACHE.get(canvasId);
 
   try {
-    if (cachedCanvas?.isLocked) {
+    if (cachedCanvas?.placeState === CanvasPlaceState.NoOne) {
       const uniquePaths = new Set([...Object.values(cachedCanvas.canvasPaths)]);
 
       await Promise.all(
@@ -431,7 +428,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
 
     const cachedCanvas = CANVAS_CACHE.get(canvasId);
     if (cachedCanvas) {
-      if (cachedCanvas.isLocked !== canvas.locked) {
+      if (cachedCanvas.placeState !== canvas.place_state) {
         console.debug(
           `Canvas ${canvasId} lock status has changed. Updating cache...`,
         );
@@ -444,7 +441,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
         // If this is a locked canvas, verify the cache is complete. If any expected
         // export scale is missing, clear the cache and treat as a miss so we generate
         // all sizes atomically via `saveCanvasToFileSystem` below.
-        if (cachedCanvas.isLocked) {
+        if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
           const locked = cachedCanvas as LockedCanvas;
           const missing = CANVAS_EXPORT_SCALES.some(
             (s) => !locked.canvasPaths[s],
@@ -469,13 +466,13 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
 
     const pixels = await getCanvasPixels(canvasId);
     const unlockedCanvas: UnlockedCanvas = {
-      isLocked: false,
+      placeState: CanvasPlaceState.Anyone,
       width: canvas.width,
       height: canvas.height,
       pixels,
     };
 
-    if (canvas.locked) {
+    if (canvas.place_state === CanvasPlaceState.NoOne) {
       const canvasPaths = await saveCanvasToFileSystem(canvas, pixels);
       const canvasPath = getLockedCanvasPath(canvasPaths, 1);
 
@@ -486,7 +483,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
       }
 
       CANVAS_CACHE.set(canvasId, {
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         canvasPaths,
       });
 
@@ -544,7 +541,7 @@ export async function createCanvas({
       height,
       event_id: currentEventId.id,
       start_coordinates: startCoordinates,
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       cooldown_length: cooldownDuration,
       all_colors_global: allColorsGlobal,
     },
@@ -594,8 +591,7 @@ async function createCanvasPixelEntries(
 interface EditCanvasParams {
   canvasId: number;
   name?: string;
-  isLocked?: boolean;
-  isSoftLocked?: boolean;
+  placeState?: CanvasPlaceState;
   allColorsGlobal?: boolean;
   cooldownDuration?: number;
 }
@@ -603,8 +599,7 @@ interface EditCanvasParams {
 export async function editCanvas({
   canvasId,
   name,
-  isLocked,
-  isSoftLocked,
+  placeState,
   allColorsGlobal,
   cooldownDuration,
 }: EditCanvasParams) {
@@ -614,8 +609,7 @@ export async function editCanvas({
     },
     data: {
       name,
-      locked: isLocked,
-      soft_locked: isSoftLocked,
+      place_state: placeState,
       cooldown_length: cooldownDuration,
       all_colors_global: allColorsGlobal,
     },
@@ -734,8 +728,7 @@ function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
       canvas.start_coordinates[0],
       canvas.start_coordinates[1],
     ],
-    isLocked: canvas.locked,
-    isSoftLocked: canvas.soft_locked,
+    placeState: canvas.place_state as CanvasPlaceState,
     eventId: canvas.event_id,
     webPlacingEnabled: config.webPlacingEnabled,
     allColorsGlobal: canvas.all_colors_global,

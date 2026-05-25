@@ -1,4 +1,7 @@
-import type { CanvasSummary } from "@blurple-canvas-web/types";
+import {
+  CanvasPlaceState,
+  type CanvasSummary,
+} from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
@@ -139,7 +142,9 @@ export function CanvasPreviewCard({
         <EventCanvasNameWrapper>
           <EventCanvasName>{canvas.name}</EventCanvasName>
           {currentEventId === canvas.eventId && <Radio size={16} />}
-          {(canvas.isLocked || canvas.isSoftLocked) && <Lock size={16} />}
+          {[CanvasPlaceState.NoOne, CanvasPlaceState.NoNewUsers].includes(
+            canvas.placeState,
+          ) && <Lock size={16} />}
         </EventCanvasNameWrapper>
         <EventCanvasCoords>
           {canvas.width}

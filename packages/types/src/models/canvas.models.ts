@@ -1,4 +1,5 @@
 import z from "zod";
+import { CanvasPlaceState } from "../canvasInfo";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
@@ -19,8 +20,7 @@ export const CreateCanvasBodyModel = z.object({
 export const EditCanvasBodyModel = z.object({
   name: z.string().min(1).optional(),
   cooldownDuration: z.number().int().nonnegative().optional(),
-  isLocked: z.boolean().optional(),
-  isSoftLocked: z.boolean().optional(),
+  placeState: z.enum(CanvasPlaceState).optional(),
   allColorsGlobal: z.boolean().optional(),
 });
 

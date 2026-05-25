@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
@@ -69,7 +70,7 @@ describe("Canvas admin route tests", () => {
       width: 16,
       height: 16,
       start_coordinates: [1, 1],
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       event_id: 1,
       cooldown_length: 30,
       all_colors_global: true,
@@ -123,7 +124,7 @@ describe("Canvas admin route tests", () => {
       width: 32,
       height: 32,
       start_coordinates: [1, 1],
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       event_id: 1,
       cooldown_length: 45,
       all_colors_global: false,
@@ -133,7 +134,7 @@ describe("Canvas admin route tests", () => {
       name: "Updated Canvas",
       allColorsGlobal: false,
       cooldownDuration: 45,
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
     });
 
     expect(response.status).toBe(200);
@@ -143,7 +144,7 @@ describe("Canvas admin route tests", () => {
       width: 32,
       height: 32,
       start_coordinates: [1, 1],
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       event_id: 1,
       cooldown_length: 45,
       all_colors_global: false,
@@ -152,7 +153,7 @@ describe("Canvas admin route tests", () => {
       canvasId: 7,
       name: "Updated Canvas",
       cooldownDuration: 45,
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
       allColorsGlobal: false,
     });
     expect(audit).toHaveBeenCalledWith(

@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -65,7 +66,7 @@ describe("Canvas Info Tests", () => {
       name: "Unlocked Canvas",
       width: 2,
       height: 2,
-      isLocked: false,
+      placeState: CanvasPlaceState.Anyone,
       eventId: 1,
       startCoordinates: [1, 1],
     });
@@ -75,7 +76,7 @@ describe("Canvas Info Tests", () => {
       name: "Locked Canvas",
       width: 2,
       height: 2,
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
       eventId: 9,
       startCoordinates: [1, 1],
     });
@@ -191,7 +192,7 @@ describe("Create Canvas Tests", () => {
         name: canvasName,
         width: 3,
         height: 2,
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         allColorsGlobal: false,
         cooldownDuration: 15,
       }),
@@ -203,7 +204,7 @@ describe("Create Canvas Tests", () => {
         name: canvasName,
         width: 3,
         height: 2,
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         allColorsGlobal: false,
         cooldownDuration: 15,
       }),
@@ -223,7 +224,7 @@ describe("Edit Canvas Tests", () => {
     await editCanvas({
       canvasId: 1,
       name: "Edited Canvas",
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
       allColorsGlobal: true,
       cooldownDuration: 45,
     });
@@ -232,7 +233,7 @@ describe("Edit Canvas Tests", () => {
     expect(canvas).toMatchObject({
       id: 1,
       name: "Edited Canvas",
-      isLocked: true,
+      placeState: CanvasPlaceState.NoOne,
       allColorsGlobal: true,
     });
 
@@ -253,7 +254,7 @@ describe("Edit Canvas Tests", () => {
       expect.objectContaining({
         id: 1,
         name: "Edited Canvas",
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         allColorsGlobal: true,
         cooldownDuration: 45,
       }),
