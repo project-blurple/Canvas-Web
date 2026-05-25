@@ -1,4 +1,13 @@
 services:
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: migrator
+    env_file:
+      - ./packages/backend/.env
+    restart: "no"
+
   backend:
     build:
       context: .
@@ -14,6 +23,9 @@ services:
       - PORT=8000
     ports:
       - 8000:8000
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
 
   frontend:
     build:
