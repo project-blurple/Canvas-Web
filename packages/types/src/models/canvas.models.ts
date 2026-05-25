@@ -1,6 +1,6 @@
 import z from "zod";
-import { CanvasPlaceState } from "../canvasInfo";
-import { DiscordSnowflakeSchema } from "./snowflake";
+import { CanvasPlaceState } from "../canvasInfo.js";
+import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),

@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import type { CanvasInfoSchema } from "../canvasInfo";
-import type { CanvasIdParamModel } from "../models";
+import type { CanvasInfoSchema } from "../canvasInfo.js";
+import type { CanvasIdParamModel } from "../models/index.js";
 
 export type Params = z.infer<typeof CanvasIdParamModel>;
 export type ResBody = z.infer<typeof CanvasInfoSchema>;

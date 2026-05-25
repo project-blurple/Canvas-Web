@@ -53,6 +53,9 @@ jobs:
       - name: Install dependencies
         run: pnpm ci
 
+      - name: Build types
+        run: pnpm --filter types build
+
       - name: Build backend
         run: pnpm --filter backend build
 
