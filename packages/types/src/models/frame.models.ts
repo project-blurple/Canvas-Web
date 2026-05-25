@@ -1,6 +1,9 @@
 import z from "zod";
 import { FrameOwnerType } from "../frame.js";
-import { CanvasExportScaleSchema, CanvasIdParamModel } from "./canvas.models.js";
+import {
+  CanvasExportScaleSchema,
+  CanvasIdParamModel,
+} from "./canvas.models.js";
 import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const FrameIdParamModel = z.object({

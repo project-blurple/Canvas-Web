@@ -1,5 +1,8 @@
 import type { z } from "zod";
-import type { CanvasIdParamModel, LeaderboardQueryModel } from "../models/index.js";
+import type {
+  CanvasIdParamModel,
+  LeaderboardQueryModel,
+} from "../models/index.js";
 import type { Paginated } from "../pagination.js";
 import type { LeaderboardEntrySchema } from "../statistics.js";
 

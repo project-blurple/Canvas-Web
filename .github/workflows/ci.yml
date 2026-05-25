@@ -97,6 +97,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build types
+        if: matrix.package != 'types'
+        run: pnpm --filter types build
+
       - name: Build
         run: pnpm --filter ${{ matrix.package }} build
 
@@ -118,6 +122,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Build types
+        run: pnpm --filter types build
 
       - name: Run backend tests
         run: pnpm --filter @blurple-canvas-web/backend test -- --run

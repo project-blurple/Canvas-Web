@@ -1,5 +1,8 @@
 import type { z } from "zod";
-import type { CanvasIdParamModel, CanvasPasteBodyModel } from "../models/index.js";
+import type {
+  CanvasIdParamModel,
+  CanvasPasteBodyModel,
+} from "../models/index.js";
 
 export type Params = z.infer<typeof CanvasIdParamModel>;
 

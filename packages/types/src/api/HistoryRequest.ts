@@ -1,5 +1,8 @@
 import type { z } from "zod";
-import type { CanvasIdParamModel, PixelHistoryParamModel } from "../models/index.js";
+import type {
+  CanvasIdParamModel,
+  PixelHistoryParamModel,
+} from "../models/index.js";
 import type { PixelHistoryWrapperSchema } from "../pixelHistory.js";
 
 export type Params = z.infer<typeof CanvasIdParamModel> &
