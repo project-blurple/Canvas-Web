@@ -49,33 +49,22 @@ export default function PlacePixelButton({
     canvas.id,
   );
 
-  // Both these buttons never show as the logic is hoisted at the level above this
-  // My issues with having it above is that the user has no indication of why they can’t place pixels
-  if (canvas.isLocked)
-    return (
-      <DynamicButton {...props} disabled>
-        Canvas can’t be modified
-      </DynamicButton>
-    );
+  // The `canvas.isLocked` and `!user` cases never show as the logic is hoisted at the level above this
+  let disabledMessage: string | null = null;
+  if (canvas.isLocked) {
+    disabledMessage = "Canvas can’t be modified";
+  } else if (!user) {
+    disabledMessage = "Sign in to place pixels";
+  } else if (canvas.isSoftLocked && userStats === null) {
+    disabledMessage = "You can’t place pixels on this canvas at this time";
+  } else if (partnerServerJoinRequired) {
+    disabledMessage = `Join ${partnerServerName ?? "the partner server"} to use this color`;
+  }
 
-  if (!user)
+  if (disabledMessage)
     return (
       <DynamicButton {...props} disabled>
-        Sign in to place pixels
-      </DynamicButton>
-    );
-
-  if (canvas.isSoftLocked && userStats === null)
-    return (
-      <DynamicButton {...props} disabled>
-        You cannot place pixels on this canvas at this time
-      </DynamicButton>
-    );
-
-  if (partnerServerJoinRequired)
-    return (
-      <DynamicButton {...props} disabled>
-        Join {partnerServerName ?? "the partner server"} to use this color
+        {disabledMessage}
       </DynamicButton>
     );
 
