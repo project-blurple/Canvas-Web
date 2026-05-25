@@ -94,7 +94,7 @@ describe("Canvas admin route tests", () => {
       width: 16,
       height: 16,
       start_coordinates: [1, 1],
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       event_id: 1,
       cooldown_length: 30,
       all_colors_global: true,
