@@ -1,12 +1,36 @@
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  Kysely,
+  PostgresAdapter,
+  PostgresIntrospector,
+  PostgresQueryCompiler,
+} from "kysely";
+import kyselyExtension from "prisma-extension-kysely";
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
 import { Prisma, PrismaClient } from "@/client/generated/client";
+import type { DB } from "@/client/kysely/types";
 
 // biome-ignore lint/style/noNonNullAssertion: Database URL is required for tests to run
 const adapter = new PrismaPg(process.env.DATABASE_URL!);
-const prismaClient = new PrismaClient({ adapter });
+const prismaClient = new PrismaClient({ adapter }).$extends(
+  kyselyExtension({
+    kysely: (driver) =>
+      new Kysely<DB>({
+        dialect: {
+          createDriver: () => driver,
+          createAdapter: () => new PostgresAdapter(),
+          createIntrospector: (db) => new PostgresIntrospector(db),
+          createQueryCompiler: () => new PostgresQueryCompiler(),
+        },
+      }),
+  }),
+);
 
-let transactionClient: Prisma.TransactionClient | null = null;
+type ExtendedTransactionClient = Parameters<
+  Parameters<typeof prismaClient.$transaction>[0]
+>[0];
+
+let transactionClient: ExtendedTransactionClient | null = null;
 let endTestTransaction: (() => void) | null = null;
 let savePointCounter = 0;
 
@@ -41,7 +65,7 @@ const prismaProxy = new Proxy({} as InstanceType<typeof PrismaClient>, {
       return () => Promise.resolve();
     }
 
-    const value = transactionClient[prop as keyof Prisma.TransactionClient];
+    const value = transactionClient[prop as keyof ExtendedTransactionClient];
     return typeof value === "function" ? value.bind(transactionClient) : value;
   },
 });
