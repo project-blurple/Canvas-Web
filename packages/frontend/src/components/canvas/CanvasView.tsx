@@ -88,8 +88,8 @@ const CanvasWrapper = styled("div")`
     user-select: none;
   }
 
-  &:focus {
-    outline: none;
+  &:is(:focus-visible, :focus-within) {
+    outline: var(--focus-outline);
   }
 `;
 
@@ -386,14 +386,14 @@ const RETICLE_SIZE = RETICLE_ORIGINAL_SIZE * 10;
 const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 const PREVIEW_PIXEL_SIZE = 0.8 * RETICLE_ORIGINAL_SCALE * 10;
 
-const ARROW_KEY_DELTAS: Record<string, Point> = {
+const ARROW_KEY_DELTAS = {
   ArrowLeft: { x: -1, y: 0 },
   ArrowRight: { x: 1, y: 0 },
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
-};
-const ARROW_KEY_SHIFT_STEP_SIZE = 10;
-const ARROW_KEY_AUTO_PAN_PADDING = 80;
+} as const satisfies Record<string, Point>;
+const ARROW_KEY_JUMP_STEP_SIZE = 10;
+const PIXEL_SCROLL_MARGIN = 80;
 
 const pointerEvents: Map<number, PointerEvent> = new Map();
 const previousPointerEvents: Map<number, PointerEvent> = new Map();
@@ -1198,7 +1198,7 @@ export default function CanvasView({
 
       event.preventDefault();
 
-      const step = event.shiftKey ? ARROW_KEY_SHIFT_STEP_SIZE : 1;
+      const step = event.shiftKey ? ARROW_KEY_JUMP_STEP_SIZE : 1;
       const newCoords = {
         x: clamp(coords.x + delta.x * step, 0, canvas.width - 1),
         y: clamp(coords.y + delta.y * step, 0, canvas.height - 1),
@@ -1214,7 +1214,7 @@ export default function CanvasView({
       const zoom = zoomRef.current;
       const offset = offsetRef.current;
       const padding = Math.min(
-        ARROW_KEY_AUTO_PAN_PADDING,
+        PIXEL_SCROLL_MARGIN,
         containerWidth / 4,
         containerHeight / 4,
       );
