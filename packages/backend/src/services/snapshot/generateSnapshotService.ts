@@ -1,5 +1,7 @@
 import type { Prisma } from "@/client";
 import { prisma } from "@/client";
+import type { snapshot_manifest } from "@/client/snapshots";
+import { snapshotPrisma } from "@/client/snapshots";
 
 export interface GetLatestHistoryEntryInRangeParams {
   canvasId: number;
@@ -22,6 +24,13 @@ const historyEntrySelect = {
 export type LatestHistoryEntry = Prisma.historyGetPayload<{
   select: typeof historyEntrySelect;
 }>;
+
+export type LatestSnapshotForCanvas = snapshot_manifest;
+
+export interface GetLatestSnapshotForCanvasParams {
+  canvasId: number;
+  before: Date;
+}
 
 interface LatestHistoryEntryRow {
   id: bigint;
@@ -101,4 +110,22 @@ export async function getLatestHistoryEntriesInRange({
       rgba: row.color__rgba,
     },
   }));
+}
+
+/**
+ * Gets the latest snapshot manifest for a canvas before the specified cutoff, if one exists.
+ */
+export async function getLatestSnapshotForCanvas({
+  canvasId,
+  before,
+}: GetLatestSnapshotForCanvasParams): Promise<LatestSnapshotForCanvas | null> {
+  return snapshotPrisma.snapshot_manifest.findFirst({
+    where: {
+      canvas_id: canvasId,
+      snapshot_at: {
+        lt: before,
+      },
+    },
+    orderBy: [{ snapshot_at: "desc" }, { id: "desc" }],
+  });
 }

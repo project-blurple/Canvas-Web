@@ -7,6 +7,9 @@ export {
 } from "@/snapshot/paths";
 export {
   type GetLatestHistoryEntryInRangeParams as GetHistoryEntriesBetweenParams,
+  type GetLatestSnapshotForCanvasParams,
   getLatestHistoryEntriesInRange as getHistoryEntriesBetween,
+  getLatestSnapshotForCanvas,
   type LatestHistoryEntry as HistoryEntryBetween,
+  type LatestSnapshotForCanvas,
 } from "./generateSnapshotService";
