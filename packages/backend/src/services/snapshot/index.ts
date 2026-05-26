@@ -5,3 +5,8 @@ export {
   SNAPSHOT_DATABASE_URL,
   SNAPSHOT_IMAGE_ROOT,
 } from "@/snapshot/paths";
+export {
+  type GetLatestHistoryEntryInRangeParams as GetHistoryEntriesBetweenParams,
+  getLatestHistoryEntriesInRange as getHistoryEntriesBetween,
+  type LatestHistoryEntry as HistoryEntryBetween,
+} from "./generateSnapshotService";
