@@ -1,7 +1,10 @@
+import { readFile } from "node:fs/promises";
+import sharp from "sharp";
 import type { Prisma } from "@/client";
 import { prisma } from "@/client";
 import type { snapshot_manifest } from "@/client/snapshots";
 import { snapshotPrisma } from "@/client/snapshots";
+import { getCanvasInfo } from "@/services/canvasService";
 
 export interface GetLatestHistoryEntryInRangeParams {
   canvasId: number;
@@ -28,6 +31,11 @@ export type LatestHistoryEntry = Prisma.historyGetPayload<{
 export type LatestSnapshotForCanvas = snapshot_manifest;
 
 export interface GetLatestSnapshotForCanvasParams {
+  canvasId: number;
+  before: Date;
+}
+
+export interface BuildSnapshotParams {
   canvasId: number;
   before: Date;
 }
@@ -128,4 +136,81 @@ export async function getLatestSnapshotForCanvas({
     },
     orderBy: [{ snapshot_at: "desc" }, { id: "desc" }],
   });
+}
+
+async function snapshotManifestToRawBuffer(
+  snapshot: LatestSnapshotForCanvas,
+  width: number,
+  height: number,
+): Promise<Buffer> {
+  const snapshotImage = await readFile(snapshot.image_path);
+  const { data } = await sharp(snapshotImage)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+
+  const expectedLength = width * height * 4;
+  if (data.length !== expectedLength) {
+    throw new Error(
+      `Snapshot image for canvas ${snapshot.canvas_id} has invalid dimensions: expected ${width}x${height}, got ${data.length / 4} pixels`,
+    );
+  }
+
+  return data;
+}
+
+function applyHistoryEntryToRawBuffer(
+  buffer: Buffer,
+  width: number,
+  entry: LatestHistoryEntry,
+): void {
+  const index = (entry.y * width + entry.x) * 4;
+  const [red = 0, green = 0, blue = 0, alpha = 0] = entry.color.rgba;
+
+  buffer[index] = red;
+  buffer[index + 1] = green;
+  buffer[index + 2] = blue;
+  buffer[index + 3] = alpha;
+}
+
+/**
+ * Builds a snapshot for a canvas using the latest snapshot prior to the cutoff,
+ * or a blank canvas when no prior snapshot exists.
+ */
+export async function buildSnapshot({
+  canvasId,
+  before,
+}: BuildSnapshotParams): Promise<Buffer> {
+  const canvas = await getCanvasInfo(canvasId);
+  const latestSnapshot = await getLatestSnapshotForCanvas({ canvasId, before });
+
+  const from = latestSnapshot?.snapshot_at ?? new Date(0);
+  const historyEntries = await getLatestHistoryEntriesInRange({
+    canvasId,
+    from,
+    to: before,
+  });
+
+  const rawBuffer =
+    latestSnapshot ?
+      await snapshotManifestToRawBuffer(
+        latestSnapshot,
+        canvas.width,
+        canvas.height,
+      )
+    : Buffer.alloc(canvas.width * canvas.height * 4);
+
+  for (const entry of historyEntries) {
+    applyHistoryEntryToRawBuffer(rawBuffer, canvas.width, entry);
+  }
+
+  return sharp(rawBuffer, {
+    raw: {
+      width: canvas.width,
+      height: canvas.height,
+      channels: 4,
+    },
+  })
+    .png()
+    .toBuffer();
 }
