@@ -38,7 +38,6 @@ next-env.d.ts
 # Prisma generated files
 **/backend/src/client/generated/*
 **/backend/src/client/snapshots/generated/*
-**/backend/prisma/snapshots/timelapse.sqlite*
 
 
 ################################################################################

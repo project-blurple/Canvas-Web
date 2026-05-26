@@ -27,10 +27,10 @@ model snapshot_manifest {
 }
 
 model snapshot_cursor {
-  canvas_id                 Int      @id
-  last_processed_history_id BigInt   @default(0)
-  last_processed_timestamp  DateTime @default(now())
+  canvas_id                 Int       @id
+  last_processed_history_id BigInt    @default(0)
+  last_processed_timestamp  DateTime  @default(now())
   dirty_from_history_id     BigInt?
   dirty_from_timestamp      DateTime?
-  updated_at                DateTime @updatedAt
+  updated_at                DateTime  @updatedAt
 }
