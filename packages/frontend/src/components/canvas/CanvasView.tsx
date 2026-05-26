@@ -1193,7 +1193,8 @@ export default function CanvasView({
     (event: React.KeyboardEvent) => {
       if (!coords) return;
 
-      const delta = ARROW_KEY_DELTAS[event.key];
+      const delta =
+        ARROW_KEY_DELTAS[event.key as keyof typeof ARROW_KEY_DELTAS];
       if (!delta) return;
 
       event.preventDefault();
