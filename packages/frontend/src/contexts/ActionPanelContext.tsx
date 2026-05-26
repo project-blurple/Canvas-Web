@@ -1,6 +1,7 @@
 "use client";
 
-import type { PaletteColor } from "@blurple-canvas-web/types";
+import type { Cooldown, PaletteColor } from "@blurple-canvas-web/types";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   createContext,
   type Dispatch,
@@ -21,7 +22,7 @@ interface ActionPanelContextType {
   currentTab: TabKey;
   isFullscreenPanelVisible: boolean;
   setAreTabsLocked: Dispatch<SetStateAction<boolean>>;
-  setCooldownEndTime: Dispatch<SetStateAction<number | null>>;
+  setCooldownEndTime: (value: number | null) => void;
   setCurrentTab: Dispatch<SetStateAction<TabKey>>;
   setFullscreenPanelVisible: Dispatch<SetStateAction<boolean>>;
   setTempColor: Dispatch<SetStateAction<PaletteColor | null>>;
@@ -48,33 +49,24 @@ interface ActionPanelProviderProps {
 export const ActionPanelProvider = ({ children }: ActionPanelProviderProps) => {
   const { canvas } = useCanvasContext();
   const { user } = useAuthContext();
+  const queryClient = useQueryClient();
 
   const [currentTab, setCurrentTab] = useState<TabKey>("place");
   const [tempColor, setTempColor] = useState<PaletteColor | null>(null);
   const [areTabsLocked, setAreTabsLocked] = useState(false);
   const [isFullscreenPanelVisible, setFullscreenPanelVisible] = useState(false);
 
-  // Tracks the end time of the most recent pixel placement cooldown
-  const [placementCooldownEndTime, setPlacementCooldownEndTime] = useState<
-    number | null
-  >(null);
-
-  // Reset the placement cooldown during render when the canvas changes, rather
-  // than from an effect. See https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
-  const [previousCanvasId, setPreviousCanvasId] = useState(canvas.id);
-  if (previousCanvasId !== canvas.id) {
-    setPreviousCanvasId(canvas.id);
-    setPlacementCooldownEndTime(null);
-  }
-
   const { data: cooldownData } = useCanvasCooldown(canvas.id, {
     enabled: Boolean(user),
   });
 
-  // Effective cooldown: whichever of the API result or last placement expires later
-  const queryCooldownEndTime = cooldownData?.cooldownEndTime ?? null;
-  const cooldownEndTime =
-    Math.max(queryCooldownEndTime ?? 0, placementCooldownEndTime ?? 0) || null;
+  const cooldownEndTime = cooldownData?.cooldownEndTime ?? null;
+
+  const setCooldownEndTime = (value: number | null) => {
+    queryClient.setQueryData<Cooldown>(["canvasCooldown", canvas.id], {
+      cooldownEndTime: value ?? undefined,
+    });
+  };
 
   const playCooldownExpirySound = usePlayCooldownExpirySound();
 
@@ -93,7 +85,7 @@ export const ActionPanelProvider = ({ children }: ActionPanelProviderProps) => {
     currentTab,
     isFullscreenPanelVisible,
     setAreTabsLocked,
-    setCooldownEndTime: setPlacementCooldownEndTime,
+    setCooldownEndTime,
     setCurrentTab,
     setFullscreenPanelVisible,
     setTempColor,
