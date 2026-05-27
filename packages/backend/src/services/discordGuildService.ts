@@ -34,7 +34,7 @@ interface GuildPermissionsSummary {
 }
 
 interface DiscordRequestOptions {
-  endpoint: string;
+  endpoint: `/${string}`;
   authorization: `Bearer ${string}`;
 }
 
@@ -62,14 +62,11 @@ async function discordRequest<T>({
   endpoint,
   authorization,
 }: DiscordRequestOptions): Promise<T> {
-  const response = await discordApi.fetch(
-    `${DISCORD_API_BASE_URL}${endpoint}`,
-    {
-      headers: {
-        Authorization: authorization,
-      },
+  const response = await discordApi.fetch(endpoint, {
+    headers: {
+      Authorization: authorization,
     },
-  );
+  });
 
   if (response.status === 401 || response.status === 403) {
     throw new UnauthorizedError(

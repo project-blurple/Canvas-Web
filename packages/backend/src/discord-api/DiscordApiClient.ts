@@ -27,11 +27,11 @@ class DiscordApiClient {
   }
 
   async fetch(
-    input: string,
+    input: `/${string}`,
     init?: RequestInit,
     retryOptions?: RetryOptions,
   ): Promise<Response> {
-    const url = new URL(input, this.baseUrl);
+    const url = new URL(`${this.baseUrl}${input}`);
 
     const method = init?.method ?? "GET";
     if (method !== "GET") {
@@ -46,17 +46,12 @@ class DiscordApiClient {
     if (!isCacheHit) {
       logWithTag({ url, init, retryOptions });
       const response = await fetchWithRetries(url, init, retryOptions);
-      return response;
+      if (!response.ok) return response;
+      this.cache.set(cacheKey, response);
     }
 
-    const body = JSON.stringify(this.cache.get(cacheKey));
-    const options = {
-      headers: {
-        "content-type": "application/json",
-      },
-    };
-
-    return new Response(body, options);
+    // biome-ignore lint/style/noNonNullAssertion: Guarded by `this.cache.has(cacheKey)`
+    return this.cache.get(cacheKey)!.clone();
   }
 }
 
