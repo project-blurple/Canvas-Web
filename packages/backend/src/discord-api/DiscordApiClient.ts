@@ -17,6 +17,14 @@ function logCacheAccess(cacheKey: string, hit: boolean) {
   );
 }
 
+function sanitizeRequestInit(requestInit: RequestInit): RequestInit {
+  const headersInit = requestInit.headers;
+  if (headersInit === undefined) return requestInit;
+  const headers = new Headers(headersInit);
+  headers.delete("Authorization");
+  return { ...requestInit, headers };
+}
+
 class DiscordApiClient {
   declare baseUrl: string;
 
@@ -44,7 +52,11 @@ class DiscordApiClient {
     logCacheAccess(cacheKey, isCacheHit);
 
     if (!isCacheHit) {
-      logWithTag({ url, init, retryOptions });
+      logWithTag({
+        url,
+        init: init ? sanitizeRequestInit(init) : init,
+        retryOptions,
+      });
       const response = await fetchWithRetries(url, init, retryOptions);
       // 💡 Response body is single use! If logging response body, make sure to clone response
       if (!response.ok) return response;
