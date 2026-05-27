@@ -8,11 +8,9 @@ import BadRequestError from "@/errors/BadRequestError";
 import NotFoundError from "@/errors/NotFoundError";
 import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
-import fetchWithRetries from "@/utils/fetchWithRetries";
 
 const GUILD_FLAGS_CACHE_TTL_MS = 900_000; // 15 min
 
-const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
 const MANAGE_GUILD_PERMISSION = 0x20n;
 
