@@ -20,7 +20,7 @@ function logCacheAccess(cacheKey: string, hit: boolean) {
 class DiscordApiClient {
   declare baseUrl: string;
 
-  private cache = new Cache();
+  private cache = new Cache<Response>();
 
   constructor(baseUrl = "https://discord.com/api/v10") {
     this.baseUrl = baseUrl;

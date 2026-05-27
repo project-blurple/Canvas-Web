@@ -1,7 +1,7 @@
 const oneMinuteInMs = 60_000;
 
-export default class Cache {
-  declare private cache: Map<string, any>;
+export default class Cache<T = unknown> {
+  declare private cache: Map<string, T>;
   declare private timers: Map<string, ReturnType<typeof setTimeout>>;
   declare private defaultStaleTime: number;
 
@@ -18,8 +18,8 @@ export default class Cache {
     this.timers.set(key, timer);
   }
 
-  get<T = unknown>(key: string): T | undefined {
-    return this.cache.get(key) as T | undefined;
+  get(key: string): T | undefined {
+    return this.cache.get(key);
   }
 
   has(key: string): boolean {
