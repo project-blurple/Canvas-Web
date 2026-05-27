@@ -6,13 +6,7 @@ import type {
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   useActionPanelContext,
   useAuthContext,
