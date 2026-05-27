@@ -43,9 +43,10 @@ class DiscordApiClient {
   async fetch(
     input: `/${string}`,
     init?: RequestInit,
-    retryOptions?: RetryOptions,
+    options?: { retryOptions?: RetryOptions; staleTime?: number },
   ): Promise<Response> {
     const url = new URL(`${this.baseUrl}${input}`);
+    const { retryOptions, staleTime } = options ?? {};
 
     const method = init?.method ?? "GET";
     if (method !== "GET") {
@@ -69,7 +70,7 @@ class DiscordApiClient {
       const response = await fetchWithRetries(url, init, retryOptions);
       // 💡 Response body is single use! If logging response body, make sure to clone response
       if (!response.ok) return response;
-      this.cache.set(cacheKey, response);
+      this.cache.set(cacheKey, response, staleTime);
     }
 
     // biome-ignore lint/style/noNonNullAssertion: Guarded by `this.cache.has(cacheKey)`
