@@ -5,7 +5,7 @@ import Image from "next/image";
 import { CanvasPicker } from "../canvas";
 import Nav, { NavLink } from "./Nav";
 
-interface HeaderProps {
+interface HeaderProps extends React.ComponentPropsWithRef<typeof Wrapper> {
   isCanvasPage?: boolean;
 }
 
@@ -61,9 +61,12 @@ const Logo = styled(Image)(
   `,
 );
 
-export default function Header({ isCanvasPage = false }: HeaderProps) {
+export default function Header({
+  isCanvasPage = false,
+  ...props
+}: HeaderProps) {
   return (
-    <Wrapper>
+    <Wrapper {...props}>
       <CompositeLogo href="/">
         <Logo
           alt="Blurple Canvas logo"

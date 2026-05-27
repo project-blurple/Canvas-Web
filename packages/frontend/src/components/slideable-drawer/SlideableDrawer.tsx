@@ -79,9 +79,9 @@ interface SlideableDrawerProps {
   children: React.ReactNode;
 }
 
-type SlideableDrawerContextValue = {
+interface SlideableDrawerContextValue {
   isMiddleSnap: boolean;
-};
+}
 
 const SlideableDrawerContext =
   createContext<SlideableDrawerContextValue | null>(null);
