@@ -64,7 +64,7 @@ interface LatestHistoryEntryRow {
  * The range is inclusive at the start and exclusive at the end so adjacent
  * snapshot windows do not overlap.
  */
-export async function getLatestHistoryEntriesInRange({
+async function getLatestHistoryEntriesInRange({
   canvasId,
   from,
   to,
@@ -123,7 +123,7 @@ export async function getLatestHistoryEntriesInRange({
 /**
  * Gets the latest snapshot manifest for a canvas before the specified cutoff, if one exists.
  */
-export async function getLatestSnapshotForCanvas({
+async function getLatestSnapshotForCanvas({
   canvasId,
   before,
 }: GetLatestSnapshotForCanvasParams): Promise<LatestSnapshotForCanvas | null> {

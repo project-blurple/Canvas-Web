@@ -22,6 +22,12 @@ const config = {
   api: {
     port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000,
   },
+  snapshot: {
+    schedulerIntervalMs:
+      process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS ?
+        Number.parseInt(process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS, 10)
+      : 60_000,
+  },
   paths: {
     root: path.resolve(),
     canvases: path.resolve("static", "canvas"),
