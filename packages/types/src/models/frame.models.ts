@@ -14,6 +14,30 @@ const FrameBoundsModel = z.object({
   y1: z.coerce.number().int().positive(),
 });
 
+export const OptionalFrameBoundsModel = FrameBoundsModel.partial()
+  .superRefine((data, ctx) => {
+    const vals = [data.x0, data.y0, data.x1, data.y1];
+    const definedCount = vals.filter((v) => v !== undefined).length;
+    if (definedCount > 0 && definedCount < 4) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "All bounds fields (x0, y0, x1, y1) must be provided or all omitted",
+      });
+      return;
+    }
+    if (definedCount === 4) {
+      frameBoundsRefiner(data as z.infer<typeof FrameBoundsModel>, ctx);
+    }
+  })
+  .transform((data) =>
+    data.x0 === undefined ?
+      undefined
+    : (data as z.infer<typeof FrameBoundsModel>),
+  );
+
+export type FrameBoundsInput = z.infer<typeof OptionalFrameBoundsModel>;
+
 const frameBoundsRefiner = (
   { x0, y0, x1, y1 }: z.infer<typeof FrameBoundsModel>,
   ctx: z.core.$RefinementCtx,

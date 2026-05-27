@@ -19,7 +19,8 @@ export default function usePlacePixelMutation(
   const { color } = useSelectedColorContext();
 
   return useMutation<Cooldown>({
-    mutationKey: ["pixel", canvas.id, coords],
+    // TODO: figure out why coords breaks - https://github.com/project-blurple/Canvas-Web/issues/675
+    mutationKey: ["pixel", canvas.id],
     mutationFn: async () => {
       if (!coords) {
         throw new Error(
