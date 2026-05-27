@@ -146,6 +146,7 @@ export default function ComplexSearchTab({
 
   const [fromTime, setFromTime] = useState<DateTime | null>(null);
   const [toTime, setToTime] = useState<DateTime | null>(null);
+  const [isErasingHistory, setIsErasingHistory] = useState(false);
 
   const [searchParams, setSearchParams] =
     useState<ComplexPixelHistoryParams | null>(null);
@@ -220,7 +221,7 @@ export default function ComplexSearchTab({
     : 0;
 
   const boundsValid = areBoundsValid(selectedBounds);
-  const isLoading = historyQuery.isLoading;
+  const isLoading = historyQuery.isLoading || isErasingHistory;
 
   const entriesCount = historyData?.total ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
@@ -382,6 +383,7 @@ export default function ComplexSearchTab({
               usersLength={usersLength}
               params={searchParams}
               resetResults={resetResults}
+              onPendingChange={setIsErasingHistory}
             />
           </EraseWrapper>
         </ActionPanelTabBody>
