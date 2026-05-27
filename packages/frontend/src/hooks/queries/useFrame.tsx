@@ -9,6 +9,7 @@ import type {
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
+import { fetchFrameById } from "./serverFetch";
 
 interface UseUserFramesParams {
   canvasId: Frame["canvasId"];
@@ -25,19 +26,9 @@ interface UseGuildFramesParams {
 }
 
 export function useFrameById({ frameId }: UseFrameByIdParams) {
-  const getFrame = async (): Promise<FrameRequest.FrameByIdResBody | null> => {
-    if (!frameId) return null;
-
-    const response = await axios.get<FrameRequest.FrameByIdResBody>(
-      `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}`,
-    );
-
-    return response.data;
-  };
-
   return useQuery<FrameRequest.FrameByIdResBody | null>({
     queryKey: ["frame", "id", frameId],
-    queryFn: getFrame,
+    queryFn: () => fetchFrameById(frameId),
     enabled: Boolean(frameId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
