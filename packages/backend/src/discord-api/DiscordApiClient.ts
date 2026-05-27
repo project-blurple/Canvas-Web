@@ -6,6 +6,17 @@ function logWithTag(...args: Parameters<typeof console.debug>) {
   console.debug(styleText(["dim"], "[DiscordApiClient]"), ...args);
 }
 
+function logCacheAccess(cacheKey: string, hit: boolean) {
+  const color = hit ? "green" : "yellow";
+  const hitOrMiss = hit ? "HIT" : "MISS";
+  logWithTag(
+    "Cache",
+    styleText(["bold", color], hitOrMiss),
+    "for",
+    styleText(["italic"], cacheKey),
+  );
+}
+
 class DiscordApiClient {
   declare baseUrl: string;
 
@@ -29,24 +40,15 @@ class DiscordApiClient {
 
     const cacheKey = `${url.pathname}${url.search}`;
 
-    if (!this.cache.has(cacheKey)) {
-      logWithTag(
-        "Cache",
-        styleText(["bold", "yellow"], "MISS"),
-        "for",
-        styleText(["italic"], cacheKey),
-      );
+    const isCacheHit = this.cache.has(cacheKey);
+    logCacheAccess(cacheKey, isCacheHit);
+
+    if (!isCacheHit) {
       logWithTag({ url, init, retryOptions });
       const response = await fetchWithRetries(url, init, retryOptions);
       return response;
     }
 
-    logWithTag(
-      "Cache",
-      styleText(["bold", "green"], "HIT"),
-      "for",
-      styleText(["italic"], cacheKey),
-    );
     const body = JSON.stringify(this.cache.get(cacheKey));
     const options = {
       headers: {
