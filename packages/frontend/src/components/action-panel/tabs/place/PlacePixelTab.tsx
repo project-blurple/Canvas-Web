@@ -6,19 +6,21 @@ import type {
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  useActionPanelContext,
   useAuthContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import {
-  useCanvasCooldown,
-  usePalette,
-  usePlayCooldownExpirySound,
-  usePlaySound,
-} from "@/hooks";
+import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -120,22 +122,39 @@ export default function PlacePixelTab({
 }: PlacePixelTabProps) {
   const { user } = useAuthContext();
   const {
-    canvas: {
-      allColorsGlobal,
-      id: canvasId,
-      isLocked: readOnly,
-      webPlacingEnabled,
-    },
+    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
   } = useCanvasContext();
-  const { data: initialCooldown } = useCanvasCooldown(canvasId, {
-    enabled: active && Boolean(user),
-  });
+  const { cooldownEndTime, setCooldownEndTime } = useActionPanelContext();
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
-  const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [prevTimeLeft, setPrevTimeLeft] = useState(0);
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (!cooldownEndTime) return () => {};
+      const id = setInterval(onStoreChange, 1000);
+      // Stop ticking once the cooldown has expired
+      const remaining = cooldownEndTime - Date.now();
+      const stopId = setTimeout(() => clearInterval(id), remaining + 500);
+      return () => {
+        clearInterval(id);
+        clearTimeout(stopId);
+      };
+    },
+    [cooldownEndTime],
+  );
+  const getSnapshot = useCallback(
+    () =>
+      cooldownEndTime ?
+        Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+      : 0,
+    [cooldownEndTime],
+  );
+  const cooldownSeconds = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot,
+  );
 
   const { data: palette } = usePalette(eventId ?? undefined);
 
@@ -169,15 +188,6 @@ export default function PlacePixelTab({
   );
 
   const { color: selectedColor } = useSelectedColorContext();
-
-  useEffect(
-    function syncInitialCooldown() {
-      const cooldown = initialCooldown?.cooldownEndTime;
-      if (cooldown === undefined) return;
-      setCooldownSeconds(Math.ceil(cooldown / 1000));
-    },
-    [initialCooldown?.cooldownEndTime],
-  );
 
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
@@ -217,7 +227,7 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
+      if (cooldown) setCooldownEndTime(Date.now() + cooldown);
     },
   });
 
@@ -229,28 +239,6 @@ export default function PlacePixelTab({
     await mutateAsync();
     setCoords(null);
   };
-
-  useEffect(
-    function tickCountdown() {
-      if (cooldownSeconds > 0) {
-        const timerId = setTimeout(
-          () => setCooldownSeconds(cooldownSeconds - 1),
-          1000,
-        );
-        return () => clearTimeout(timerId);
-      }
-      setCooldownSeconds(0);
-    },
-    [cooldownSeconds],
-  );
-
-  useEffect(
-    function playJingleWhenCooldownExpires() {
-      if (prevTimeLeft > 0 && cooldownSeconds === 0) playCooldownExpirySound();
-      setPrevTimeLeft(cooldownSeconds);
-    },
-    [playCooldownExpirySound, prevTimeLeft, cooldownSeconds],
-  );
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>

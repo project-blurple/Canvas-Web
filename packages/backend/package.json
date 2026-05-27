@@ -41,7 +41,8 @@
     "prisma:push": "prisma db push",
     "prisma:seed": "prisma db seed --",
     "prisma:migrate": "prisma migrate deploy",
-    "db:resequence": "dotenvx run -f .env -- node scripts/resequence.mjs"
+    "db:resequence": "dotenvx run -f .env -- node scripts/resequence.mjs",
+    "db:repair-canvas": "dotenvx run -f .env -- node scripts/repair-canvas.mjs"
   },
   "dependencies": {
     "@blurple-canvas-web/types": "workspace:*",

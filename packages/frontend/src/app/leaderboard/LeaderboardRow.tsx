@@ -67,10 +67,7 @@ export function LeaderboardRowSkeleton() {
         <Skeleton width="min(24ch, 100%)" />
         <Skeleton width="min(10ch, 100%)" />
       </div>
-      <AvatarSkeleton
-        size={60}
-        sx={{ alignSelf: "center", gridRow: "1 / -1" }}
-      />
+      <AvatarSkeleton size={60} sx={{ alignSelf: "center" }} />
     </TableRow>
   );
 }
