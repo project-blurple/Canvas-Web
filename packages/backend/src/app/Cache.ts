@@ -11,22 +11,22 @@ export default class Cache<T = unknown> {
     this.defaultStaleTime = options?.defaultStaleTime ?? oneMinuteInMs;
   }
 
-  set(key: string, value: any, staleTime = this.defaultStaleTime): void {
+  public set(key: string, value: any, staleTime = this.defaultStaleTime): void {
     this.cache.set(key, value);
     if (this.timers.has(key)) clearTimeout(this.timers.get(key));
     const timer = setTimeout(() => this.delete(key), staleTime);
     this.timers.set(key, timer);
   }
 
-  get(key: string): T | undefined {
+  public get(key: string): T | undefined {
     return this.cache.get(key);
   }
 
-  has(key: string): boolean {
+  public has(key: string): boolean {
     return this.cache.has(key);
   }
 
-  invalidate(scope: string): number {
+  public invalidate(scope: string): number {
     const toDelete = Array.from(
       this.cache.keys().filter((key) => key.startsWith(scope)),
     );
@@ -34,7 +34,7 @@ export default class Cache<T = unknown> {
     return toDelete.length;
   }
 
-  clear(): void {
+  public clear(): void {
     this.cache.clear();
     for (const t of this.timers.values()) clearTimeout(t);
     this.timers.clear();
