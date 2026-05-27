@@ -1,3 +1,5 @@
+export * as AuditLogRequest from "./AuditLogRequest";
+export * as BlocklistRequest from "./BlocklistRequest";
 export * as CanvasInfoRequest from "./CanvasInfoRequest";
 export * as CanvasListRequest from "./CanvasListRequest";
 export * as EventRequest from "./EventRequest";
@@ -6,5 +8,7 @@ export * as HistoryRequest from "./HistoryRequest";
 export * as LeaderboardRequest from "./LeaderboardRequest";
 export * as NoticeRequest from "./NoticeRequest";
 export * as PaletteRequest from "./PaletteRequest";
+export * as PasteRequest from "./PasteRequest";
+export * as PlacePixelRequest from "./PlacePixelRequest";
 export * as PlacePixelSocket from "./PlacePixelSocketPayload";
 export * as UserStatsRequest from "./UserStatsRequest";

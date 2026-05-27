@@ -1,15 +1,8 @@
 "use client";
 
 import { styled } from "@mui/material";
-import Pagination from "@mui/material/Pagination";
-import PaginationItem from "@mui/material/PaginationItem";
-import {
-  ChevronFirst,
-  ChevronLast,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
 import { useId, useState } from "react";
+import Pagination from "@/components/Pagination";
 import { useCanvasContext } from "@/contexts";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
@@ -42,17 +35,6 @@ const NoContentsMessage = styled("p")`
   letter-spacing: 0.04em;
   text-align: center;
 `;
-
-const StyledPaginationItem = styled(PaginationItem)`
-  font-variant-numeric: tabular-nums;
-`;
-
-const customIconSlots = {
-  first: ChevronFirst,
-  previous: ChevronLeft,
-  next: ChevronRight,
-  last: ChevronLast,
-};
 
 export default function Leaderboard() {
   const { canvas } = useCanvasContext();
@@ -98,16 +80,9 @@ export default function Leaderboard() {
       </List>
       <Pagination
         aria-controls={listId}
-        color="primary"
         count={total ? Math.ceil(total / size) : currentPage}
         onChange={(_, value) => setPage(value)}
         page={page}
-        renderItem={(item) => (
-          <StyledPaginationItem slots={customIconSlots} {...item} />
-        )}
-        shape="rounded"
-        showFirstButton
-        showLastButton
       />
     </Wrapper>
   );

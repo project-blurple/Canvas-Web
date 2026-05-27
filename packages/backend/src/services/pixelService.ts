@@ -4,7 +4,7 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 
-import { type color, prisma } from "@/client";
+import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -55,16 +55,23 @@ export async function validatePixel(
 /**
  * Ensures that the given color exists in the DB and it is allowed to be used in the given canvas.
  *
- * Partnered (non-global) colors are only allowed when the target canvas has
- * `all_colors_global` enabled.
+ * Partnered (non-global) colors are gated by two conditions, either of which is sufficient:
+ *
+ * 1. The canvas has `all_colors_global` enabled (admin override).
+ * 2. The color is registered as a participation in the canvas's event and the
+ *    user is a member of that participation's guild (verified via the supplied
+ *    `userGuildIds` set, which the caller is expected to source from the cached
+ *    Discord guild flags).
  *
  * @param colorId - The ID of the color
  * @param canvasId - The ID of the canvas the color is being used on
+ * @param userGuildIds - Discord guild IDs the user is a member of (as decimal strings)
  * @returns The corresponding color object
  */
 export async function validateColor(
   colorId: number,
   canvasId: number,
+  userGuildIds: ReadonlySet<string>,
 ): Promise<color & { rgba: PixelColor }> {
   const [color, canvas] = await Promise.all([
     prisma.color.findFirst({
@@ -74,7 +81,7 @@ export async function validateColor(
     }) as Promise<(color & { rgba: PixelColor }) | null>,
     prisma.canvas.findFirst({
       where: { id: canvasId },
-      select: { all_colors_global: true },
+      select: { all_colors_global: true, event_id: true },
     }),
   ]);
 
@@ -83,9 +90,28 @@ export async function validateColor(
   }
 
   if (!color.global && !canvas?.all_colors_global) {
-    throw new ForbiddenError(
-      `Partnered color with ID ${colorId} is not allowed from web client`,
-    );
+    if (canvas?.event_id == null) {
+      throw new ForbiddenError(
+        `Partnered color with ID ${colorId} cannot be placed on this canvas`,
+      );
+    }
+
+    const participation = await prisma.participation.findFirst({
+      where: { color_id: colorId, event_id: canvas.event_id },
+      select: { guild_id: true },
+    });
+
+    if (!participation) {
+      throw new ForbiddenError(
+        `Partnered color with ID ${colorId} is not part of this canvas's event`,
+      );
+    }
+
+    if (!userGuildIds.has(participation.guild_id.toString())) {
+      throw new ForbiddenError(
+        `You must be a member of the partner server to use color with ID ${colorId}`,
+      );
+    }
   }
 
   return color;
@@ -98,6 +124,49 @@ export async function validateUser(userId: bigint) {
   if (await userIsBlocklisted(userId)) {
     throw new ForbiddenError("User is blocklisted");
   }
+}
+
+/**
+ * Gets the remaining cooldown time in milliseconds for the given user on the given canvas.
+ *
+ * @param canvasId - The ID of the canvas
+ * @param userId - The ID of the user
+ *
+ * @remarks
+ *
+ * Returns `null` when the canvas exists but the user has no active cooldown
+ * (either because the canvas has no cooldown configured, the user has never placed
+ * a pixel on this canvas, or their previous cooldown has already elapsed).
+ *
+ * @returns The remaining cooldown time in milliseconds, or `null` if no active cooldown
+ */
+export async function getUserCanvasCooldown(
+  canvasId: number,
+  userId: bigint,
+): Promise<number | null> {
+  const canvas = await prisma.canvas.findFirst({
+    where: { id: canvasId },
+    select: { id: true },
+  });
+
+  if (!canvas) {
+    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  }
+
+  const cooldown = await prisma.cooldown.findFirst({
+    where: {
+      user_id: userId,
+      canvas_id: canvasId,
+    },
+    select: { cooldown_time: true },
+  });
+
+  if (!cooldown?.cooldown_time) {
+    return null;
+  }
+
+  const remaining = cooldown.cooldown_time.valueOf() - Date.now();
+  return remaining > 0 ? remaining : null;
 }
 
 /**
@@ -174,40 +243,21 @@ export async function placePixel(
   color: Pick<PaletteColor, "id" | "rgba">,
 ) {
   const placementTime = new Date();
-  let { currentCooldown, futureCooldown } = await getCooldown(
-    canvasId,
-    userId,
-    placementTime,
-  );
+  const { futureCooldown } = await getCooldown(canvasId, userId, placementTime);
 
   await prisma.$transaction(async (tx) => {
     // only update the cooldown table if the canvas has a cooldown
     if (futureCooldown) {
-      // create the cooldown if it doesn't exist already
-      if (!currentCooldown) {
-        const cooldown = await tx.cooldown.create({
-          data: {
-            user_id: userId,
-            canvas_id: canvasId,
-            cooldown_time: futureCooldown,
-          },
-        });
-        currentCooldown = cooldown.cooldown_time;
-      }
-      // Perform an update with an attempt at an optimistic query
-      const updateCooldown = await tx.cooldown.update({
-        where: {
-          user_id_canvas_id: {
-            user_id: userId,
-            canvas_id: canvasId,
-          },
-          cooldown_time: currentCooldown,
-        },
-        data: {
-          cooldown_time: futureCooldown,
-        },
-      });
-      if (!updateCooldown) {
+      const rows = await tx.$queryRaw<[{ user_id: bigint }?]>`
+        INSERT INTO cooldown (user_id, canvas_id, cooldown_time)
+        VALUES (${userId}::bigint, ${canvasId}::integer, ${futureCooldown}::timestamptz)
+        ON CONFLICT (user_id, canvas_id) DO UPDATE
+          SET cooldown_time = EXCLUDED.cooldown_time
+          WHERE cooldown.cooldown_time IS NULL
+             OR cooldown.cooldown_time <= ${placementTime}::timestamptz
+        RETURNING user_id
+      `;
+      if (rows.length === 0) {
         throw new ForbiddenError("Pixel placement is on cooldown");
       }
     }
@@ -254,7 +304,7 @@ export async function placePixel(
 const COORDINATE_CHUNK_SIZE = 500;
 
 /**
- * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ * Rebuilds the current pixel state for the given coordinates after bulk history operations.
  *
  * @param canvasId - The ID of the canvas
  * @param coordinates - The coordinates that need to be refreshed
@@ -264,7 +314,7 @@ const COORDINATE_CHUNK_SIZE = 500;
  * Coordinates are processed in chunks to avoid hitting query size limits
  * and ensure predictable performance for large erasures.
  */
-export async function restorePixelsAfterHistoryDeletion(
+export async function restorePixelsAfterHistoryModification(
   canvasId: number,
   coordinates: Point[],
 ): Promise<void> {
@@ -363,19 +413,70 @@ export async function restorePixelsAfterHistoryDeletion(
     }
   }
 
-  // Broadcast and cache per-pixel
+  // Build bulk payload and update cache per-pixel
+  const pixels: { x: number; y: number; rgba: PixelColor }[] = [];
   for (const coordinate of uniqueCoordinates.values()) {
     const key = `${coordinate.x}:${coordinate.y}`;
     const latestEntry = latestByCoord.get(key);
     const pixelColor =
       (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
 
-    socketHandler.broadcastPixelPlacement(canvasId, {
-      x: coordinate.x,
-      y: coordinate.y,
-      rgba: pixelColor,
-    });
+    pixels.push({ x: coordinate.x, y: coordinate.y, rgba: pixelColor });
 
     updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
   }
+
+  if (pixels.length > 0) {
+    socketHandler.broadcastPixelBulkPlacement(canvasId, { pixels });
+  }
+}
+
+export interface BulkPlaceEntry {
+  colorId: number;
+  x: number;
+  y: number;
+}
+
+export async function createBulkPlaceEntries({
+  canvasId,
+  userId,
+  guildId,
+  timestamp,
+  entries,
+}: {
+  canvasId: number;
+  userId: bigint;
+  guildId?: bigint;
+  timestamp?: Date;
+  entries: BulkPlaceEntry[];
+}) {
+  console.log(
+    `Creating ${entries.length} history entries for canvas ${canvasId}`,
+  );
+
+  const batchSize = 10_000;
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const batch = entries.slice(i, i + batchSize);
+    console.log(
+      `Inserting batch ${i / batchSize + 1} (${batch.length} entries)`,
+    );
+
+    const data = batch.map(
+      (entry) =>
+        ({
+          canvas_id: canvasId,
+          user_id: userId,
+          guild_id: guildId,
+          color_id: entry.colorId,
+          x: entry.x,
+          y: entry.y,
+          timestamp: timestamp ?? new Date(),
+        }) as Prisma.historyCreateManyInput,
+    );
+    await prisma.history.createMany({
+      data,
+    });
+  }
+
+  await restorePixelsAfterHistoryModification(canvasId, entries);
 }

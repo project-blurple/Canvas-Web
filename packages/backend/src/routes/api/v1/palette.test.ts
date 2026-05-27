@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import {
   assignColorToEvent,
@@ -19,6 +20,10 @@ vi.mock("@/services/paletteService", () => ({
   getCurrentEventPalette: vi.fn(),
   getEventPalette: vi.fn(),
   unassignColorFromEvent: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -78,6 +83,12 @@ describe("Palette admin route tests", () => {
       global: true,
       rgba: [255, 0, 255, 255],
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "color.create",
+      expect.objectContaining({ resourceId: 1 }),
+    );
   });
 
   it("edits a color", async () => {
@@ -115,6 +126,12 @@ describe("Palette admin route tests", () => {
         rgba: [0, 255, 0, 255],
       },
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "color.update",
+      expect.objectContaining({ resourceId: 3 }),
+    );
   });
 
   it("deletes a color", async () => {
@@ -124,11 +141,14 @@ describe("Palette admin route tests", () => {
 
     const response = await request(app).delete("/api/v1/palette/5");
 
-    expect(response.status).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "Color deleted",
-    });
+    expect(response.status).toBe(204);
     expect(vi.mocked(deleteColor)).toHaveBeenCalledWith(5);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "color.delete",
+      expect.objectContaining({ resourceId: 5 }),
+    );
   });
 
   it("assigns a color to an event", async () => {
@@ -149,6 +169,14 @@ describe("Palette admin route tests", () => {
       eventId: 13,
       guildId: 123456789012345678n,
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "participation.assign",
+      expect.objectContaining({
+        resourceId: "8:13:123456789012345678",
+      }),
+    );
   });
 
   it("unassigns a color from an event", async () => {
@@ -160,13 +188,18 @@ describe("Palette admin route tests", () => {
       "/api/v1/palette/8/assign/13/123456789012345678",
     );
 
-    expect(response.status).toBe(200);
-    expect(response.body).toStrictEqual({
-      message: "Color unassigned from event",
-    });
+    expect(response.status).toBe(204);
     expect(vi.mocked(unassignColorFromEvent)).toHaveBeenCalledWith({
       eventId: 13,
       guildId: 123456789012345678n,
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "participation.unassign",
+      expect.objectContaining({
+        resourceId: "8:13:123456789012345678",
+      }),
+    );
   });
 });

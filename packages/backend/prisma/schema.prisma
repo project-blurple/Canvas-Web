@@ -39,6 +39,7 @@ model canvas {
   leaderboard       leaderboard[]
   leaderboard_guild leaderboard_guild[]
   notices           notice[]
+  canvas_stats      canvas_stats?
 }
 
 model color {
@@ -89,14 +90,16 @@ model event {
   canvases     canvas[]
   participants participation[]
   info         info[]
+  event_stats  event_stats?
 }
 
 model frame {
   id             String  @id
   canvas_id      Int
   canvas         canvas  @relation(fields: [canvas_id], references: [id])
-  owner_id       BigInt
-  is_guild_owned Boolean
+  // There is a database check that requires one of them to be set
+  owner_user_id  BigInt?
+  owner_guild_id BigInt?
   name           String
   x_0            Int
   x_1            Int
@@ -185,6 +188,7 @@ model user {
   leaderboard          leaderboard[]
   leaderboard_guild    leaderboard_guild[]
   discord_user_profile discord_user_profile?
+  audit_logs           audit_log[]
 }
 
 model session {
@@ -208,6 +212,23 @@ model notice {
   created_at DateTime  @default(now()) @db.Timestamptz(6)
 }
 
+model audit_log {
+  id            BigInt   @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  actor_id      BigInt
+  actor         user     @relation(fields: [actor_id], references: [id])
+  actor_role    String // "admin" | "moderator"
+  action        String // e.g. "notice.create", "history.delete"
+  resource_type String?
+  resource_id   String?
+  metadata      Json?
+
+  @@index([created_at(sort: Desc)])
+  @@index([actor_id, created_at(sort: Desc)])
+  @@index([action, created_at(sort: Desc)])
+  @@index([resource_type, resource_id])
+}
+
 view user_stats {
   user_id                BigInt
   user                   user     @relation(fields: [user_id], references: [id])
@@ -220,6 +241,8 @@ view user_stats {
   color_count            Int
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
+
+  @@unique([user_id, canvas_id])
 }
 
 view guild_stats {
@@ -233,6 +256,8 @@ view guild_stats {
   color_count            Int
   // place_frequency        Unsupported("interval")
   most_recent_timestamp  DateTime @db.Timestamptz(6)
+
+  @@unique([guild_id, canvas_id])
 }
 
 view leaderboard {
@@ -243,6 +268,8 @@ view leaderboard {
   discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
   total_pixels         Int
   rank                 Int
+
+  @@unique([user_id, canvas_id])
 }
 
 view leaderboard_guild {
@@ -255,18 +282,24 @@ view leaderboard_guild {
   discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
   total_pixels         Int
   rank                 Int
+
+  @@unique([user_id, canvas_id, guild_id])
 }
 
 view color_place_frequency {
   user_id          BigInt
   canvas_id        Int
   median_time_diff Unsupported("interval")
+
+  @@unique([user_id, canvas_id])
 }
 
 view color_place_frequency_guild {
   guild_id         BigInt
   canvas_id        Int
   median_time_diff Unsupported("interval")
+
+  @@unique([guild_id, canvas_id])
 }
 
 view most_frequent_color_guild {
@@ -274,6 +307,8 @@ view most_frequent_color_guild {
   canvas_id Int
   color_id  Int
   count     Int
+
+  @@unique([guild_id, canvas_id])
 }
 
 view most_frequent_color {
@@ -281,4 +316,25 @@ view most_frequent_color {
   canvas_id Int
   color_id  Int
   count     Int
+
+  @@unique([user_id, canvas_id])
+}
+
+view canvas_stats {
+  canvas_id      Int
+  canvas         canvas   @relation(fields: [canvas_id], references: [id])
+  total_users    Int
+  total_pixels   Int
+  last_placed_at DateTime @db.Timestamptz(6)
+
+  @@unique([canvas_id])
+}
+
+view event_stats {
+  event_id     Int
+  event        event @relation(fields: [event_id], references: [id])
+  total_users  Int
+  total_pixels Int
+
+  @@unique([event_id])
 }

@@ -65,7 +65,13 @@ const canvasToSelectOption = ({ id, name }: CanvasSummary) => (
   </option>
 );
 
-export default function CanvasPicker() {
+interface CanvasPickerProps {
+  shouldRedirect?: boolean;
+}
+
+export default function CanvasPicker({
+  shouldRedirect = false,
+}: CanvasPickerProps) {
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
   const { data: mainCanvas, isLoading: mainCanvasIsLoading } = useCanvasInfo();
@@ -84,7 +90,7 @@ export default function CanvasPicker() {
   const pastCanvases = canvases.filter(({ id }) => id !== currentEvent?.id);
 
   function handleChangeCanvas(event: React.ChangeEvent<HTMLSelectElement>) {
-    setCanvas(Number.parseInt(event.target.value, 10));
+    setCanvas(Number.parseInt(event.target.value, 10), shouldRedirect);
   }
 
   return (

@@ -6,6 +6,7 @@ import type {
 } from "@blurple-canvas-web/types";
 
 import { type color, prisma } from "@/client";
+import { ConflictError } from "@/errors";
 import { getCurrentEvent } from "./eventService";
 
 type ColorSummary = Pick<color, "id" | "code" | "name" | "rgba" | "global">;
@@ -15,9 +16,11 @@ type ColorSummary = Pick<color, "id" | "code" | "name" | "rgba" | "global">;
  *
  * @returns The palette for the current event
  */
-export async function getCurrentEventPalette(): Promise<PaletteColor[]> {
+export async function getCurrentEventPalette(
+  allColors = false,
+): Promise<PaletteColor[]> {
   const currentEvent = await getCurrentEvent();
-  return await getEventPalette(currentEvent.id);
+  return await getEventPalette(currentEvent.id, allColors);
 }
 
 /**
@@ -30,7 +33,19 @@ export async function getCurrentEventPalette(): Promise<PaletteColor[]> {
  */
 export async function getEventPalette(
   eventId: number,
+  allColors = false,
 ): Promise<PaletteColor[]> {
+  const where =
+    // If allColors is true, we don't need to filter the colors at all
+    allColors ? undefined : (
+      {
+        OR: [
+          { global: true },
+          { participations: { some: { event_id: eventId } } },
+        ],
+      }
+    );
+
   const eventPalette = await prisma.color.findMany({
     select: {
       id: true,
@@ -52,14 +67,7 @@ export async function getEventPalette(
       },
     },
     // Filter the colors to only include global colors or colors that are part of the event
-    where: {
-      OR: [
-        { global: true },
-        {
-          participations: { some: { event_id: eventId } },
-        },
-      ],
-    },
+    where,
   });
 
   return eventPalette.map((color) => ({
@@ -96,22 +104,15 @@ interface CreateColorParams {
   global: boolean;
 }
 
-export async function createColor({
-  code,
-  name,
-  rgba,
-  global,
-}: CreateColorParams) {
-  const color = await prisma.color.create({
+export async function createColor(params: CreateColorParams) {
+  return await prisma.color.create({
     data: {
-      code: code,
-      name: name,
-      rgba: rgba,
-      global: global,
+      code: params.code,
+      name: params.name,
+      rgba: params.rgba,
+      global: params.global,
     },
   });
-
-  return color;
 }
 
 interface EditColorParams {
@@ -120,14 +121,12 @@ interface EditColorParams {
 }
 
 export async function editColor({ colorId, data }: EditColorParams) {
-  const color = await prisma.color.update({
+  return await prisma.color.update({
     where: {
       id: colorId,
     },
     data,
   });
-
-  return color;
 }
 
 export async function deleteColor(colorId: PaletteColor["id"]) {
@@ -149,7 +148,6 @@ export async function assignColorToEvent({
   eventId,
   guildId,
 }: AssignColorToEventParams) {
-  // Check if the color is already assigned to the event
   const existingParticipation = await prisma.participation.findFirst({
     where: {
       color_id: colorId,
@@ -158,7 +156,7 @@ export async function assignColorToEvent({
   });
 
   if (existingParticipation) {
-    throw new Error(
+    throw new ConflictError(
       `Color with ID ${colorId} is already assigned to event with ID ${eventId}`,
     );
   }

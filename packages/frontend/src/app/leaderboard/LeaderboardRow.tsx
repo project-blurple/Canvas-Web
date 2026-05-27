@@ -14,7 +14,6 @@ const TableRow = styled("li")`
   display: grid;
   grid-column: 1 / -1;
   grid-template-columns: subgrid;
-  grid-template-rows: auto auto;
   padding: 1rem;
 
   @media (hover: hover) and (pointer: fine) {
@@ -26,22 +25,12 @@ const TableRow = styled("li")`
 
 const Rank = styled("div")`
   color: oklch(from currentColor l c h / 45%);
-  display: grid;
   font-variant-numeric: tabular-nums;
   font-weight: 900;
-  grid-row: 1 / -1;
-  grid-template-columns: subgrid;
   text-align: center;
   [aria-hidden="true"] {
     visibility: hidden;
   }
-`;
-
-const UsernameWrapper = styled("div")`
-  text-align: start;
-  display: grid;
-  grid-template-columns: subgrid;
-  grid-row: 1 / -1;
 `;
 
 const Username = styled("div")`
@@ -60,10 +49,11 @@ const PixelCount = styled("div")`
 
 const StyledAvatar = styled(Avatar)`
   align-self: center;
-  grid-row: 1 / -1;
 `;
 
-export interface LeaderboardRowProps {
+interface LeaderboardRowProps extends React.ComponentPropsWithRef<
+  typeof TableRow
+> {
   entry: LeaderboardEntry;
 }
 
@@ -73,29 +63,29 @@ export function LeaderboardRowSkeleton() {
       <Rank>
         <Skeleton width="2ch" />
       </Rank>
-      <UsernameWrapper>
+      <div>
         <Skeleton width="min(24ch, 100%)" />
         <Skeleton width="min(10ch, 100%)" />
-      </UsernameWrapper>
-      <AvatarSkeleton
-        size={60}
-        sx={{ alignSelf: "center", gridRow: "1 / -1" }}
-      />
+      </div>
+      <AvatarSkeleton size={60} sx={{ alignSelf: "center" }} />
     </TableRow>
   );
 }
 
-export default function LeaderboardRow({ entry }: LeaderboardRowProps) {
+export default function LeaderboardRow({
+  entry,
+  ...props
+}: LeaderboardRowProps) {
   return (
-    <TableRow>
+    <TableRow {...props}>
       <Rank>{entry.rank.toLocaleString()}</Rank>
-      <UsernameWrapper>
+      <div>
         <Username>{entry.username ?? entry.userId}</Username>
         <PixelCount>
           {entry.totalPixels.toLocaleString()}&nbsp;
           {entry.totalPixels === 1 ? "pixel" : "pixels"}
         </PixelCount>
-      </UsernameWrapper>
+      </div>
       <StyledAvatar
         profilePictureUrl={entry.profilePictureUrl}
         size={60}

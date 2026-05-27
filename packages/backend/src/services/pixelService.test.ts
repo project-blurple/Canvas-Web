@@ -1,4 +1,5 @@
 import { fail } from "node:assert";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
@@ -6,6 +7,7 @@ import seedAll, {
   seedCanvases,
   seedColors,
   seedEvents,
+  seedGuilds,
   seedUsers,
 } from "@/test";
 import { getCanvasPng } from "./canvasService";
@@ -13,7 +15,7 @@ import { createDefaultAvatarUrl } from "./discordProfileService";
 import {
   getCooldown,
   placePixel,
-  restorePixelsAfterHistoryDeletion,
+  restorePixelsAfterHistoryModification,
   validateColor,
   validatePixel,
   validateUser,
@@ -22,6 +24,7 @@ import {
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
   },
 }));
 
@@ -89,31 +92,69 @@ describe("Pixel Validation Tests", () => {
 });
 
 describe("Color Validation Tests", () => {
+  const emptyGuildIds: ReadonlySet<string> = new Set<string>();
+
   beforeEach(async () => {
     await seedEvents();
     await seedCanvases();
     await seedColors();
+    await seedGuilds();
   });
 
   it("Resolves valid color", async () => {
-    return expect(validateColor(1, 1)).resolves.not.toThrow();
+    return expect(validateColor(1, 1, emptyGuildIds)).resolves.not.toThrow();
   });
 
-  it("Rejects a non-global color when the canvas has all_colors_global=false", async () => {
-    return expect(validateColor(3, 1)).rejects.toThrow(ForbiddenError);
+  it("Rejects a non-global color when no participation exists for this event", async () => {
+    return expect(validateColor(3, 1, emptyGuildIds)).rejects.toThrow(
+      ForbiddenError,
+    );
   });
 
-  it("Resolves a non-global color when the canvas has all_colors_global=true", async () => {
+  it("Rejects a non-global color when the user is not in the partner guild", async () => {
+    await prisma.participation.create({
+      data: { color_id: 3, event_id: 1, guild_id: 1n },
+    });
+    return expect(validateColor(3, 1, emptyGuildIds)).rejects.toThrow(
+      ForbiddenError,
+    );
+  });
+
+  it("Resolves a non-global color when the canvas has all_colors_global=true regardless of guild membership", async () => {
     await prisma.canvas.update({
       where: { id: 1 },
       data: { all_colors_global: true },
     });
 
-    return expect(validateColor(3, 1)).resolves.toMatchObject({ id: 3 });
+    return expect(validateColor(3, 1, emptyGuildIds)).resolves.toMatchObject({
+      id: 3,
+    });
+  });
+
+  it("Resolves a non-global color when the user is in the partner guild", async () => {
+    await prisma.participation.create({
+      data: { color_id: 3, event_id: 1, guild_id: 1n },
+    });
+    return expect(validateColor(3, 1, new Set(["1"]))).resolves.toMatchObject({
+      id: 3,
+    });
+  });
+
+  it("Rejects a non-global color when the canvas has no event", async () => {
+    await prisma.canvas.update({
+      where: { id: 1 },
+      data: { event_id: null },
+    });
+
+    return expect(validateColor(3, 1, new Set(["1"]))).rejects.toThrow(
+      ForbiddenError,
+    );
   });
 
   it("Rejects invalid color", async () => {
-    return expect(validateColor(99, 1)).rejects.toThrow(NotFoundError);
+    return expect(validateColor(99, 1, emptyGuildIds)).rejects.toThrow(
+      NotFoundError,
+    );
   });
 });
 
@@ -257,6 +298,95 @@ describe("Place Pixel Tests", () => {
     }
     const after = await fetchCooldownPixelHistory(canvasId, userId, 1, 1);
     expect(before.history.length + 1).toEqual(after.history.length);
+  });
+
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when there is no previous cooldown", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].reason).toBeInstanceOf(ForbiddenError);
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when the cooldown has just expired", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    // Seed an already-expired cooldown record (in the past)
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: new Date(0) },
+    });
+
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect((failures[0] as PromiseRejectedResult).reason).toBeInstanceOf(
+      ForbiddenError,
+    );
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should allow a user with cooldown_time=null to place a pixel", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: null },
+    });
+
+    await expect(
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ).resolves.not.toThrow();
+
+    // Cooldown should now be set to a future time (bypass is consumed by placement)
+    const cooldown = await prisma.cooldown.findFirst({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(cooldown?.cooldown_time).not.toBeNull();
+    expect(cooldown?.cooldown_time?.getTime()).toBeGreaterThan(Date.now());
   });
 
   it("Resolves updating cached canvas pixel", async () => {
@@ -434,7 +564,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -457,7 +587,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore without any history entries
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -501,7 +631,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(
+    await restorePixelsAfterHistoryModification(
       1,
       coords.map(({ x, y }) => ({ x, y })),
     );
@@ -528,7 +658,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
 
     // Restore with empty list - should be a no-op
     await expect(
-      restorePixelsAfterHistoryDeletion(1, []),
+      restorePixelsAfterHistoryModification(1, []),
     ).resolves.not.toThrow();
 
     // Pixel should be unchanged
@@ -576,7 +706,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -624,7 +754,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -677,7 +807,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -730,7 +860,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -783,7 +913,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should chunk internally
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -817,7 +947,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore with duplicate coordinates
-    await restorePixelsAfterHistoryDeletion(1, [
+    await restorePixelsAfterHistoryModification(1, [
       { x: 0, y: 0 },
       { x: 0, y: 0 },
       { x: 0, y: 0 },

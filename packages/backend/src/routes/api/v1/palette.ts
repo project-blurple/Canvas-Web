@@ -1,13 +1,15 @@
-import { Router } from "express";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
 import {
   AssignColorParamModel,
   ColorBodyModel,
   ColorIdParamModel,
-} from "@/models/color.models";
-import { EventIdParamModel } from "@/models/event.models";
+  EventIdParamModel,
+  PaletteQueryModel,
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import {
   assignColorToEvent,
   createColor,
@@ -20,16 +22,23 @@ import {
 
 export const paletteRouter = typedRouter(Router());
 
-paletteRouter.get("/current", async (_req, res) => {
-  const palette = await getCurrentEventPalette();
-  res.status(200).json(palette);
-});
+paletteRouter.get(
+  "/current",
+  validate({ query: PaletteQueryModel }),
+  async (req, res) => {
+    const palette = await getCurrentEventPalette(req.query.allColors);
+    res.status(200).json(palette);
+  },
+);
 
 paletteRouter.get(
   "/:eventId",
-  validate({ params: EventIdParamModel }),
+  validate({ params: EventIdParamModel, query: PaletteQueryModel }),
   async (req, res) => {
-    const palette = await getEventPalette(req.params.eventId);
+    const palette = await getEventPalette(
+      req.params.eventId,
+      req.query.allColors,
+    );
     res.status(200).json(palette);
   },
 );
@@ -39,8 +48,12 @@ paletteRouter.post(
   requireCanvasAdmin,
   validate({ body: ColorBodyModel }),
   async (req, res) => {
-    await createColor(req.body);
+    const color = await createColor(req.body);
     res.status(201).json({ message: "Color created" });
+    void audit(req, "admin", "color.create", {
+      resourceId: color.id,
+      metadata: req.body,
+    });
   },
 );
 
@@ -54,6 +67,10 @@ paletteRouter.put(
       data: req.body,
     });
     res.status(200).json({ message: "Color edited" });
+    void audit(req, "admin", "color.update", {
+      resourceId: req.params.colorId,
+      metadata: req.body,
+    });
   },
 );
 
@@ -63,7 +80,10 @@ paletteRouter.delete(
   validate({ params: ColorIdParamModel }),
   async (req, res) => {
     await deleteColor(req.params.colorId);
-    res.status(200).json({ message: "Color deleted" });
+    res.status(204).end();
+    void audit(req, "admin", "color.delete", {
+      resourceId: req.params.colorId,
+    });
   },
 );
 
@@ -78,6 +98,14 @@ paletteRouter.post(
       guildId: BigInt(req.params.guildId),
     });
     res.status(200).json({ message: "Color assigned to event" });
+    void audit(req, "admin", "participation.assign", {
+      resourceId: `${req.params.colorId}:${req.params.eventId}:${req.params.guildId}`,
+      metadata: {
+        colorId: req.params.colorId,
+        eventId: req.params.eventId,
+        guildId: req.params.guildId,
+      },
+    });
   },
 );
 
@@ -86,11 +114,17 @@ paletteRouter.delete(
   requireCanvasAdmin,
   validate({ params: AssignColorParamModel }),
   async (req, res) => {
-    // Color ID isn't actually used here, but I'm not sure how else to structure the route
     await unassignColorFromEvent({
       eventId: req.params.eventId,
       guildId: BigInt(req.params.guildId),
     });
-    res.status(200).json({ message: "Color unassigned from event" });
+    res.status(204).end();
+    void audit(req, "admin", "participation.unassign", {
+      resourceId: `${req.params.colorId}:${req.params.eventId}:${req.params.guildId}`,
+      metadata: {
+        eventId: req.params.eventId,
+        guildId: req.params.guildId,
+      },
+    });
   },
 );

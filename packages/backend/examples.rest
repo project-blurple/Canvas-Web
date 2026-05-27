@@ -72,7 +72,7 @@ Content-Type: application/json
     "y": 0
   },
   "allColorsGlobal": false,
-  "cooldownLength": 30
+  "cooldownDuration": 30
 }
 
 ### Edit canvas (requires canvas admin)
@@ -82,7 +82,7 @@ Content-Type: application/json
 {
   "name": "Canvas 2023 - Updated",
   "allColorsGlobal": true,
-  "cooldownLength": 45,
+  "cooldownDuration": 45,
   "isLocked": false
 }
 

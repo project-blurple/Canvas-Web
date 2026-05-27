@@ -74,9 +74,13 @@ export default function ComplexSearchColorSelect({
   disabled,
 }: ComplexSearchColorSelectProps) {
   const { canvas } = useCanvasContext();
-  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined, {
-    select: sortPalette,
-  });
+  const { data: palette = [] } = usePalette(
+    canvas.eventId ?? undefined,
+    false,
+    {
+      select: sortPalette,
+    },
+  );
 
   const paletteById = Object.fromEntries(
     palette.map((color) => [color.id, color]),

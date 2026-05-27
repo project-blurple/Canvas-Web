@@ -34,7 +34,9 @@
     "clean": "pnpm --recursive run clean && pnpm purge",
     "prisma:push": "pnpm --filter=backend run prisma:push",
     "prisma:seed": "pnpm --filter=backend run prisma:seed --",
-    "prisma:migrate": "pnpm --filter=backend run prisma:migrate"
+    "prisma:migrate": "pnpm --filter=backend run prisma:migrate",
+    "db:resequence": "pnpm --filter=backend run db:resequence",
+    "db:repair-canvas": "pnpm --filter=backend run db:repair-canvas --"
   },
   "lint-staged": {
     "*.{css,html,md,markdown,yaml,yml}": "pnpm exec prettier --write",

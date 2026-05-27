@@ -5,6 +5,10 @@ import Image from "next/image";
 import { CanvasPicker } from "../canvas";
 import Nav, { NavLink } from "./Nav";
 
+interface HeaderProps {
+  isCanvasPage?: boolean;
+}
+
 const Wrapper = styled("header")`
   body:has(&) {
     --layout-padding-x: 2rem;
@@ -19,7 +23,6 @@ const Wrapper = styled("header")`
   background-color: var(--discord-legacy-dark-but-not-black);
   border-block-end: var(--card-border);
   display: grid;
-  font-size: 1.2rem;
   gap: 0.5rem;
   grid-template-columns: auto 1fr auto;
   justify-content: flex-end;
@@ -58,7 +61,9 @@ const Logo = styled(Image)(
   `,
 );
 
-export default function Header() {
+export default function Header({
+  isCanvasPage: isCanvasPage = false,
+}: HeaderProps) {
   return (
     <Wrapper>
       <CompositeLogo href="/">
@@ -70,7 +75,7 @@ export default function Header() {
         />
         <Wordmark>Blurple Canvas</Wordmark>
       </CompositeLogo>
-      <CanvasPicker />
+      <CanvasPicker shouldRedirect={isCanvasPage} />
       <Nav />
     </Wrapper>
   );

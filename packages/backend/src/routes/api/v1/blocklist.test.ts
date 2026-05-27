@@ -1,4 +1,5 @@
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import {
   addUsersToBlocklist,
   getBlocklist,
@@ -15,6 +16,10 @@ vi.mock("@/services/blocklistService", () => ({
   addUsersToBlocklist: vi.fn(),
   getBlocklist: vi.fn(),
   removeUsersFromBlocklist: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -65,7 +70,7 @@ describe("Blocklist route tests", () => {
     vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
     const response = await request(app)
       .get("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .expect(200);
 
     expect(response.body).toStrictEqual([
@@ -94,7 +99,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .put("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: ["1", "2"],
       })
@@ -113,6 +118,16 @@ describe("Blocklist route tests", () => {
     ]);
     expect(addUsersToBlocklist).toHaveBeenCalledTimes(1);
     expect(addUsersToBlocklist).toHaveBeenCalledWith([1n, 2n]);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "blocklist.add",
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          userIds: ["1", "2"],
+        }),
+      }),
+    );
   });
 
   it("removes users from the blocklist for a moderator", async () => {
@@ -122,7 +137,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .delete("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: "9",
       })
@@ -131,6 +146,14 @@ describe("Blocklist route tests", () => {
     expect(response.body).toStrictEqual({});
     expect(removeUsersFromBlocklist).toHaveBeenCalledTimes(1);
     expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n]);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "blocklist.remove",
+      expect.objectContaining({
+        metadata: { userIds: ["9"] },
+      }),
+    );
   });
 
   it("returns 401 when blocklist access is unauthenticated", async () => {
@@ -151,7 +174,7 @@ describe("Blocklist route tests", () => {
 
     const response = await request(app)
       .put("/api/v1/blocklist")
-      .set("X-TestUserId", "1")
+      .set("Test-User-Id", "1")
       .send({
         userId: "1",
       })

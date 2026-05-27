@@ -8,7 +8,8 @@ export function useCanvasImage(canvasId: number): HTMLImageElement | null {
     let cancelled = false;
     const image = new Image();
     image.decoding = "async";
-    image.src = `${config.apiUrl}/api/v1/canvas/${canvasId}`;
+    image.crossOrigin = "anonymous";
+    image.src = `${config.apiUrl}/api/v1/canvas/${canvasId}@1.png`;
 
     image.onload = () => {
       if (!cancelled) {

@@ -6,6 +6,7 @@
     "rootDir": "src",
     "outDir": "build",
     "noFallthroughCasesInSwitch": true,
+    "preserveWatchOutput": true,
     "types": ["vitest/globals"],
     "paths": {
       "@/*": ["./src/*"]

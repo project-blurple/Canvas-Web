@@ -1,17 +1,20 @@
-import type { DiscordUserProfile, Point } from "@blurple-canvas-web/types";
+import {
+  CanvasIdParamModel,
+  PlacePixelArrayBodyModel,
+  PlacePixelBodyModel,
+  type Point,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import { ForbiddenError, UnauthorizedError } from "@/errors";
 import { socketHandler } from "@/index";
+import { assertLoggedIn } from "@/middleware/canvasAuth";
 import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
-  PlacePixelArrayBodyModel,
-  PlacePixelBodyModel,
-} from "@/models/pixel.models";
 import { updateManyCachedPixels } from "@/services/canvasService";
+import { getCachedUserGuildFlags } from "@/services/discordGuildService";
+import { withDiscordAccessToken } from "@/services/discordTokenService";
 import {
   placePixel,
   validateColor,
@@ -67,15 +70,18 @@ pixelRouter.post(
     }
 
     const { x, y, colorId } = req.body;
-    const profile = req.user as DiscordUserProfile;
-
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
+    assertLoggedIn(req);
+    const profile = req.user;
 
     const coordinates: Point = { x, y };
+    const guildFlags = await withDiscordAccessToken(
+      req.session,
+      (accessToken) => getCachedUserGuildFlags(req.session, accessToken),
+    );
+    const userGuildIds = new Set(Object.keys(guildFlags));
+
     const [color] = await Promise.all([
-      validateColor(colorId, req.params.canvasId),
+      validateColor(colorId, req.params.canvasId, userGuildIds),
       validatePixel(req.params.canvasId, coordinates, true),
       validateUser(BigInt(profile.id)),
     ]);

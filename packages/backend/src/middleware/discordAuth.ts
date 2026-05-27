@@ -39,6 +39,7 @@ const discordStrategy = new DiscordStrategy(
         discordAccessToken: string;
         discordRefreshToken: string;
         discordGuildFlags: Awaited<ReturnType<typeof getCurrentUserGuildFlags>>;
+        discordGuildFlagsFetchedAt: number;
       },
     ) => void,
     _consume: ConsumableAPI,
@@ -65,6 +66,7 @@ const discordStrategy = new DiscordStrategy(
         discordAccessToken: accessToken,
         discordRefreshToken: refreshToken,
         discordGuildFlags: userGuildFlags,
+        discordGuildFlagsFetchedAt: Date.now(),
       });
     } catch (error) {
       done(error as Error, undefined);

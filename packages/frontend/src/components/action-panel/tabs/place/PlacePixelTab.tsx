@@ -1,15 +1,26 @@
-import type { DiscordUserProfile, Palette } from "@blurple-canvas-web/types";
+import type {
+  DiscordUserProfile,
+  Palette,
+  PaletteColor,
+} from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  useActionPanelContext,
   useAuthContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
+import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -69,9 +80,32 @@ export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
   return [mainColors, partnerColors];
 }
 
-function isUserInServer(user: DiscordUserProfile, serverId: string) {
+export function partitionPaletteByParticipation(
+  palette: Palette,
+): [Palette, Palette] {
+  const participatingColors: Palette = [];
+  const nonParticipatingColors: Palette = [];
+  for (const color of palette) {
+    (color.guildId ? participatingColors : nonParticipatingColors).push(color);
+  }
+
+  return [participatingColors, nonParticipatingColors];
+}
+
+function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
+  if (!serverId) return false;
   const guildIds = getUserGuildIds(user);
   return guildIds.includes(serverId);
+}
+
+function isColorUnavailable(
+  color: PaletteColor,
+  allColorsGlobal: boolean,
+  user: DiscordUserProfile | null | undefined,
+): boolean {
+  if (color.global || allColorsGlobal) return false;
+  if (!color.guildId) return true;
+  return !user || !isUserInServer(user, color.guildId);
 }
 
 interface PlacePixelTabProps extends React.ComponentPropsWithRef<
@@ -86,12 +120,41 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
+  const { user } = useAuthContext();
+  const {
+    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
+  } = useCanvasContext();
+  const { cooldownEndTime, setCooldownEndTime } = useActionPanelContext();
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
-  const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [prevTimeLeft, setPrevTimeLeft] = useState(0);
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (!cooldownEndTime) return () => {};
+      const id = setInterval(onStoreChange, 1000);
+      // Stop ticking once the cooldown has expired
+      const remaining = cooldownEndTime - Date.now();
+      const stopId = setTimeout(() => clearInterval(id), remaining + 500);
+      return () => {
+        clearInterval(id);
+        clearTimeout(stopId);
+      };
+    },
+    [cooldownEndTime],
+  );
+  const getSnapshot = useCallback(
+    () =>
+      cooldownEndTime ?
+        Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+      : 0,
+    [cooldownEndTime],
+  );
+  const cooldownSeconds = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot,
+  );
 
   const { data: palette } = usePalette(eventId ?? undefined);
 
@@ -126,30 +189,35 @@ export default function PlacePixelTab({
 
   const { color: selectedColor } = useSelectedColorContext();
 
-  const { user } = useAuthContext();
-  const {
-    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
-  } = useCanvasContext();
-
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
   const serverInvite =
     hasInvite ? `https://discord.gg/${inviteSlug}` : undefined;
 
+  const userInServer = Boolean(
+    user &&
+    selectedColor &&
+    !selectedColor.global &&
+    selectedColor.guildId &&
+    isUserInServer(user, selectedColor.guildId),
+  );
+
+  const partnerServerJoinRequired = Boolean(
+    selectedColor && !selectedColor.global && !allColorsGlobal && !userInServer,
+  );
+
   const canPlacePixel =
     webPlacingEnabled &&
-    (!selectedColor || selectedColor.global || allColorsGlobal);
+    (!selectedColor || selectedColor.global || allColorsGlobal || userInServer);
 
   const isJoinServerShown =
     (!(canPlacePixel && user) || readOnly) &&
     !selectedColor?.global &&
     serverInvite;
 
-  const userInServer = Boolean(
-    user &&
-    selectedColor &&
-    !selectedColor.global &&
-    isUserInServer(user, selectedColor?.guildId),
+  const isColorDisabled = useCallback(
+    (color: PaletteColor) => isColorUnavailable(color, allColorsGlobal, user),
+    [allColorsGlobal, user],
   );
 
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
@@ -159,7 +227,7 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
+      if (cooldown) setCooldownEndTime(Date.now() + cooldown);
     },
   });
 
@@ -172,41 +240,15 @@ export default function PlacePixelTab({
     setCoords(null);
   };
 
-  useEffect(
-    function tickCountdown() {
-      if (cooldownSeconds > 0) {
-        const timerId = setTimeout(
-          () => setCooldownSeconds(cooldownSeconds - 1),
-          1000,
-        );
-        return () => clearTimeout(timerId);
-      }
-      setCooldownSeconds(0);
-    },
-    [cooldownSeconds],
-  );
-
-  useEffect(
-    function playJingleWhenCooldownExpires() {
-      if (prevTimeLeft > 0 && cooldownSeconds === 0) playCooldownExpirySound();
-      setPrevTimeLeft(cooldownSeconds);
-    },
-    [playCooldownExpirySound, prevTimeLeft, cooldownSeconds],
-  );
-
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette
-              colors={mainColors}
-              disabled={isPlacing}
-              name="Main colors"
-            />
+            <NamedPalette colors={mainColors} name="Main colors" />
             <NamedPalette
               colors={partnerColors}
-              disabled={isPlacing}
+              isColorDisabled={isColorDisabled}
               name="Partner colors"
             />
           </div>
@@ -219,12 +261,15 @@ export default function PlacePixelTab({
               isUserInServer={userInServer}
             />
           )}
-          {canPlacePixel && (
+          {(canPlacePixel ||
+            (partnerServerJoinRequired && !isJoinServerShown)) && (
             <PlacePixelButton
               aria-busy={isPlacing}
               cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
               isVerbose={!isLarge}
+              partnerServerJoinRequired={partnerServerJoinRequired}
+              partnerServerName={selectedColor?.guildName ?? null}
               type="submit"
             />
           )}
@@ -246,11 +291,11 @@ export default function PlacePixelTab({
 
 interface NamedPaletteProps {
   colors: Palette | undefined;
-  disabled?: boolean | undefined;
+  isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
 }
 
-function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
+function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
   const playSound = usePlaySound("pick_color");
 
@@ -261,7 +306,7 @@ function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
       <ActionPanelPrimitives.SectionHeading>
         {name}
       </ActionPanelPrimitives.SectionHeading>
-      <Fieldset disabled={disabled}>
+      <Fieldset>
         {isLoading ?
           Array.from({ length: 12 }).map((_, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
@@ -271,6 +316,7 @@ function NamedPalette({ colors, disabled, name }: NamedPaletteProps) {
             <InteractiveSwatch
               aria-selected={color === selectedColor}
               key={color.code}
+              locked={isColorDisabled?.(color)}
               onClick={() => {
                 playSound();
                 setColor(color);
