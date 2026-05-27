@@ -1,6 +1,5 @@
 import {
   CanvasIdParamModel,
-  type DiscordUserProfile,
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
   type Point,
@@ -9,6 +8,7 @@ import { Router } from "express";
 import config from "@/config";
 import { ForbiddenError, UnauthorizedError } from "@/errors";
 import { socketHandler } from "@/index";
+import { assertLoggedIn } from "@/middleware/canvasAuth";
 import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
@@ -70,11 +70,8 @@ pixelRouter.post(
     }
 
     const { x, y, colorId } = req.body;
-    const profile = req.user as DiscordUserProfile;
-
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
+    assertLoggedIn(req);
+    const profile = req.user;
 
     const coordinates: Point = { x, y };
     const guildFlags = await withDiscordAccessToken(

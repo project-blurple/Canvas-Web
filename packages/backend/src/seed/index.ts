@@ -157,21 +157,17 @@ async function main() {
     for (const seeding of sortedSeedings) {
       switch (seeding) {
         case "guild":
-          await prisma.guild
-            .deleteMany({
-              where: { id: { not: 0 } },
-            })
-            .catch();
+          await prisma.guild.deleteMany({
+            where: { id: { not: 0 } },
+          });
           break;
         case "web_guild":
-          await prisma.guild
-            .deleteMany({
-              where: { id: 0 },
-            })
-            .catch();
+          await prisma.guild.deleteMany({
+            where: { id: 0 },
+          });
           break;
         default:
-          await prisma[seeding].deleteMany().catch();
+          await prisma[seeding].deleteMany();
       }
     }
   });

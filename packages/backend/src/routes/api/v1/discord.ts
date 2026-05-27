@@ -6,6 +6,7 @@ import passport from "passport";
 import config from "@/config";
 import { UnauthorizedError } from "@/errors";
 import ApiError from "@/errors/ApiError";
+import { assertLoggedIn } from "@/middleware/canvasAuth";
 import { guildRefreshLimiter } from "@/middleware/ratelimit";
 import {
   getCachedUserGuildFlags,
@@ -23,11 +24,7 @@ discordRouter.get("/", passport.authenticate("discord"));
 
 discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
   const { guildId } = req.params;
-  const profile = req.user as DiscordUserProfile;
-
-  if (!profile?.id) {
-    throw new UnauthorizedError("User is not authenticated");
-  }
+  assertLoggedIn(req);
 
   assertIsSnowflake(guildId, "guildId");
   const permissions = await withDiscordAccessToken(req.session, (accessToken) =>
@@ -38,11 +35,7 @@ discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
 });
 
 discordRouter.get("/guilds/permissions-map", async (req, res) => {
-  const profile = req.user as DiscordUserProfile;
-
-  if (!profile?.id) {
-    throw new UnauthorizedError("User is not authenticated");
-  }
+  assertLoggedIn(req);
 
   const guildFlags = await withDiscordAccessToken(req.session, (accessToken) =>
     getCachedUserGuildFlags(req.session, accessToken),
@@ -57,11 +50,7 @@ discordRouter.get("/guilds/permissions-map", async (req, res) => {
 
 discordRouter.post("/guilds/refresh", guildRefreshLimiter, async (req, res) => {
   try {
-    const profile = req.user as DiscordUserProfile;
-
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
+    assertLoggedIn(req);
 
     const guildFlags = await withDiscordAccessToken(
       req.session,
@@ -97,6 +86,9 @@ discordRouter.get(
     failureRedirect: `${config.frontendUrl}/signin`,
   }),
   async (req, res) => {
+    if (!req.user) {
+      throw new UnauthorizedError("User is not authenticated");
+    }
     const discordProfile = req.user as DiscordUserProfile;
     const authInfo = req.authInfo as Partial<SessionData> | undefined;
 
