@@ -25,6 +25,12 @@ function sanitizeRequestInit(requestInit: RequestInit): RequestInit {
   return { ...requestInit, headers };
 }
 
+/** @privateRemarks We only ever expect Bearer scheme, but this will also work with Basic auth */
+function getAuthToken(authHeader: string) {
+  const [, token] = authHeader.split(/\s/);
+  return token;
+}
+
 class DiscordApiClient {
   declare baseUrl: string;
 
@@ -46,7 +52,10 @@ class DiscordApiClient {
       return await fetchWithRetries(url, init, retryOptions);
     }
 
-    const cacheKey = `${url.pathname}${url.search}`;
+    const userScope = getAuthToken(
+      new Headers(init?.headers).get("Authorization"),
+    );
+    const cacheKey = `${url.pathname}${url.search}\u{200D}${userScope}`;
 
     const isCacheHit = this.cache.has(cacheKey);
     logCacheAccess(cacheKey, isCacheHit);
