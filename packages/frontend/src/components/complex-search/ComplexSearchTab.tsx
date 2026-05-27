@@ -1,5 +1,8 @@
-import type { PixelHistoryWrapper } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import type {
+  PixelHistoryOverlayPixel,
+  PixelHistoryWrapper,
+} from "@blurple-canvas-web/types";
+import { Checkbox, FormControlLabel, styled } from "@mui/material";
 import type { AxiosError } from "axios";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
@@ -90,6 +93,19 @@ const EraseWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
+function hasOverlayFilters(params: ComplexPixelHistoryParams | null): boolean {
+  if (!params) return false;
+
+  return Boolean(
+    params.fromDateTime ||
+    params.toDateTime ||
+    (params.includeUserIds?.length ?? 0) > 0 ||
+    (params.excludeUserIds?.length ?? 0) > 0 ||
+    (params.includeColors?.length ?? 0) > 0 ||
+    (params.excludeColors?.length ?? 0) > 0,
+  );
+}
+
 function areBoundsValid(bounds: ViewBounds | null): boolean {
   if (!bounds) return false;
 
@@ -118,9 +134,20 @@ const sortDirectionOptions: {
   { value: "ascending", label: "Ascending" },
 ];
 
+interface ComplexSearchTabProps extends React.ComponentPropsWithoutRef<
+  typeof ComplexSearchTabBlock
+> {
+  isSearchOverlayVisible: boolean;
+  setIsSearchOverlayVisible: (visible: boolean) => void;
+  setSearchOverlayPixels: (pixels: PixelHistoryOverlayPixel[] | null) => void;
+}
+
 export default function ComplexSearchTab({
+  isSearchOverlayVisible,
+  setIsSearchOverlayVisible,
+  setSearchOverlayPixels,
   ...props
-}: React.ComponentPropsWithoutRef<typeof ComplexSearchTabBlock>) {
+}: ComplexSearchTabProps) {
   const {
     setCanEdit,
     selectedBounds,
@@ -152,6 +179,9 @@ export default function ComplexSearchTab({
   const historyQuery = useComplexPixelHistory(canvas.id, searchParams);
   const historyData: PixelHistoryWrapper | null =
     searchParams === null ? null : (historyQuery.data ?? null);
+  const overlayFiltersActive = hasOverlayFilters(searchParams);
+  const showSearchOverlayToggle =
+    overlayFiltersActive && (historyData?.overlayPixels?.length ?? 0) > 0;
 
   useEffect(
     function initialiseBoundsFromCurrentView() {
@@ -183,11 +213,33 @@ export default function ComplexSearchTab({
     ],
   );
 
+  useEffect(
+    function synchroniseSearchOverlay() {
+      if (!props.active || !showSearchOverlayToggle) {
+        setSearchOverlayPixels(null);
+        setIsSearchOverlayVisible(false);
+        return;
+      }
+
+      setSearchOverlayPixels(historyData?.overlayPixels ?? null);
+      setIsSearchOverlayVisible(true);
+    },
+    [
+      historyData?.overlayPixels,
+      props.active,
+      setIsSearchOverlayVisible,
+      setSearchOverlayPixels,
+      showSearchOverlayToggle,
+    ],
+  );
+
   function handleSearchSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!selectedBounds) return;
 
     setCanEdit(false);
+    setSearchOverlayPixels(null);
+    setIsSearchOverlayVisible(false);
 
     setSearchParams({
       point0: {
@@ -210,6 +262,8 @@ export default function ComplexSearchTab({
   }
 
   function resetResults() {
+    setSearchOverlayPixels(null);
+    setIsSearchOverlayVisible(false);
     setSearchParams(null);
   }
 
@@ -377,6 +431,20 @@ export default function ComplexSearchTab({
       {historyData && searchParams && (
         <ActionPanelTabBody>
           <EraseWrapper>
+            {showSearchOverlayToggle && (
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={isSearchOverlayVisible}
+                    onChange={(event) =>
+                      setIsSearchOverlayVisible(event.target.checked)
+                    }
+                    size="small"
+                  />
+                }
+                label="Show search overlay"
+              />
+            )}
             <ComplexSearchEraseHistory
               entriesCount={entriesCount}
               usersLength={usersLength}

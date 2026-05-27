@@ -3,6 +3,7 @@
 import {
   type CanvasInfo,
   type Frame,
+  type PixelHistoryOverlayPixel,
   type PlacePixelSocket,
   type Point,
   SocketEvents,
@@ -15,6 +16,7 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
@@ -485,6 +487,8 @@ interface CanvasViewProps {
     typeof ActionPanel
   >;
   canvasLabel?: string;
+  searchOverlayPixels?: PixelHistoryOverlayPixel[] | null;
+  searchOverlayVisible?: boolean;
   showInvite?: boolean;
   showNotices?: boolean;
   showReticle?: boolean;
@@ -493,6 +497,8 @@ interface CanvasViewProps {
 export default function CanvasView({
   actionPanel,
   canvasLabel,
+  searchOverlayPixels = null,
+  searchOverlayVisible = false,
   showInvite = true,
   showNotices = true,
   showReticle = true,
@@ -1374,6 +1380,12 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
+        <ComplexSearchOverlay
+          canvasHeight={canvas.height}
+          canvasWidth={canvas.width}
+          pixels={searchOverlayPixels}
+          visible={searchOverlayVisible}
+        />
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay
