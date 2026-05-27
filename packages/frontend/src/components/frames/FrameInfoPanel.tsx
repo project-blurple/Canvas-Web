@@ -27,15 +27,14 @@ const FrameInfoPanelBodyShell = styled("div")`
   opacity: 1;
   overflow: hidden;
   transform: translateY(0);
-  transition-duration: 280ms;
+  transition-duration: var(--transition-duration-slow);
   transition-property: grid-template-rows, transform;
   transition-timing-function: var(--ease-out-cubic);
 
-  &[aria-hidden="true"] {
+  &[aria-expanded="false"] {
     grid-template-rows: 0fr;
-    opacity: 0;
     pointer-events: none;
-    transform: translateY(0.75rem);
+    transform: translateY(3rem);
   }
 
   > * {
@@ -100,8 +99,6 @@ function FrameInfoPanelBody({
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
 
-  const shouldCollapse = !drawerIsLarge;
-
   const frameUrl =
     selectedFrame ?
       createPixelUrl({ canvasId: canvas.id, frameId: selectedFrame.id })
@@ -112,7 +109,7 @@ function FrameInfoPanelBody({
 
   if (selectedFrame) {
     return (
-      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
@@ -142,7 +139,7 @@ function FrameInfoPanelBody({
 
   if (user) {
     return (
-      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
           <StyledButton

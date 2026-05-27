@@ -1,6 +1,6 @@
 import type { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { useElementIsLarge } from "@/hooks/useElementIsLarge";
