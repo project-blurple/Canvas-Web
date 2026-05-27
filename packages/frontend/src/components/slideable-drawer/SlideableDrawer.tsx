@@ -22,14 +22,15 @@ const DrawerWrapper = styled("div")<{ drawerHeight: number }>`
     border-radius: var(--card-border-radius);
     border: var(--card-border);
     background-color: var(--discord-legacy-not-quite-black);
-
-    position: absolute;
-    width: 100%;
+    bottom: 0;
     display: flex;
     flex-direction: column;
     gap: 0;
-    bottom: 0;
-    transition: height 0.5s ease;
+    position: absolute;
+    transition-duration: var(--transition-duration-slow);
+    transition-property: height;
+    transition-timing-function: var(--ease-out-quad);
+    width: 100%;
     &:active {
       transition: none;
     }
