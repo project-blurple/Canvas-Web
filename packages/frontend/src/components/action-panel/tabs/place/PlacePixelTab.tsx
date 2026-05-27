@@ -21,6 +21,7 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
+import { useElementIsLarge } from "@/hooks/useElementIsLarge";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -163,29 +164,7 @@ export default function PlacePixelTab({
     [palette],
   );
   // Boolean to hide certain elements when the tab is too small
-  // Current implementation is a bit jarring when things pop in and out
-  const [drawerIsLarge, setDrawerIsLarge] = useState(true);
-
-  // Get value of the rem in pixels (and only run it client-side)
-  const [remPixels, setRemPixels] = useState<number>(16);
-  useEffect(() => {
-    // This runs only in the browser after hydration
-    setRemPixels(
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
-    );
-  }, []);
-
-  const PlacePixelTabBlockRef = useCallback(
-    (elem: HTMLDivElement | null) => {
-      if (!elem) return;
-      const resizeObserver = new ResizeObserver((entries) => {
-        const height = entries[0].target.clientHeight;
-        setDrawerIsLarge(height > remPixels * 20);
-      });
-      resizeObserver.observe(elem);
-    },
-    [remPixels],
-  );
+  const [PlacePixelTabBlockRef, drawerIsLarge] = useElementIsLarge(30);
 
   const { color: selectedColor } = useSelectedColorContext();
 

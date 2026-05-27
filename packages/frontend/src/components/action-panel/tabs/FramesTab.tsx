@@ -3,6 +3,7 @@ import { styled } from "@mui/material";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
+import { useElementIsLarge } from "@/hooks/useElementIsLarge";
 import { TabPanel } from "./ActionPanelTabBody";
 
 const FramesTabBlock = styled(TabPanel)`
@@ -33,30 +34,11 @@ export default function FramesTab({
     FramePanelMode.Info,
   );
 
-  const [drawerIsLarge, setDrawerIsLarge] = useState(true);
-  const [remPixels, setRemPixels] = useState<number>(16);
+  const [FrameTabBlockRef, drawerIsLarge] = useElementIsLarge(30);
 
   useEffect(() => {
     setTabsLocked(activePanel !== FramePanelMode.Info);
   }, [activePanel, setTabsLocked]);
-
-  useEffect(() => {
-    setRemPixels(
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
-    );
-  }, []);
-
-  const FrameTabBlockRef = useCallback(
-    (elem: HTMLDivElement | null) => {
-      if (!elem) return;
-      const resizeObserver = new ResizeObserver((entries) => {
-        const height = entries[0].target.clientHeight;
-        setDrawerIsLarge(height > remPixels * 30);
-      });
-      resizeObserver.observe(elem);
-    },
-    [remPixels],
-  );
 
   const panelByMode = {
     [FramePanelMode.Info]: (
