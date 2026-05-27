@@ -1,15 +1,7 @@
 "use client";
 
 import { styled } from "@mui/material";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getMovementDelta } from "../canvas/point";
 
 const Wrapper = styled("div")`
@@ -79,16 +71,6 @@ interface SlideableDrawerProps {
   children: React.ReactNode;
 }
 
-interface SlideableDrawerContextValue {
-  isMiddleSnap: boolean;
-}
-
-const SlideableDrawerContext =
-  createContext<SlideableDrawerContextValue | null>(null);
-
-export const useSlideableDrawerContext = () =>
-  useContext(SlideableDrawerContext);
-
 export default function SlideableDrawer({ children }: SlideableDrawerProps) {
   const [maxHeight, setMaxHeight] = useState(0);
   // Needed to use custom getMovementDelta function
@@ -131,14 +113,10 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
     [remPixels],
   );
 
-  const boundsPixels = useMemo(
-    () => convertBoundToPixels(maxHeight),
-    [convertBoundToPixels, maxHeight],
-  );
-
   const snapToBounds = useCallback(
     (height: number) => {
       // Convert boundary values to pixel values
+      const boundsPixels = convertBoundToPixels(maxHeight);
       // End loop at one before the last element. Returns the nearest boundary
       for (let i = 0; i < boundsPixels.length - 1; i++) {
         if (height < (boundsPixels[i] + boundsPixels[i + 1]) / 2) {
@@ -147,13 +125,8 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
       }
       return boundsPixels[boundsPixels.length - 1];
     },
-    [boundsPixels],
+    [maxHeight, convertBoundToPixels],
   );
-
-  const isMiddleSnap = useMemo(() => {
-    if (boundsPixels.length < 3) return false;
-    return Math.abs(drawerHeight - boundsPixels[1]) < 1;
-  }, [boundsPixels, drawerHeight]);
 
   // Set the initial height
   useEffect(() => {
@@ -240,7 +213,7 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
   );
 
   return (
-    <SlideableDrawerContext.Provider value={{ isMiddleSnap }}>
+    <>
       {/* Duplicating DrawerWrapper and Wrapper as handlers are directly applied to DrawerWrapper (though it could also be possible to dynamically disable them through code) */}
       <DrawerWrapper
         drawerHeight={drawerHeight}
@@ -254,6 +227,6 @@ export default function SlideableDrawer({ children }: SlideableDrawerProps) {
         {children}
       </DrawerWrapper>
       <Wrapper>{children}</Wrapper>
-    </SlideableDrawerContext.Provider>
+    </>
   );
 }

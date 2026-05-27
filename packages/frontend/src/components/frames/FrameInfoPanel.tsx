@@ -18,7 +18,6 @@ import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { Button } from "../button";
-import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -30,7 +29,7 @@ const FrameInfoPanelBodyShell = styled("div")`
   transform: translateY(0);
   transition-duration: 280ms;
   transition-property: grid-template-rows, transform;
-  transition-timing-function: ease;
+  transition-timing-function: var(--ease-out-cubic);
 
   &[aria-hidden="true"] {
     grid-template-rows: 0fr;
@@ -71,37 +70,41 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 export default function FrameInfoPanel({
   enabled = true,
   setActivePanel,
+  drawerIsLarge,
 }: {
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
+  drawerIsLarge: boolean;
 }) {
   return (
     <>
       <FullWidthScrollView>
         <FrameList enabled={enabled} />
       </FullWidthScrollView>
-      <FrameInfoPanelBody setActivePanel={setActivePanel} />
+      <FrameInfoPanelBody
+        setActivePanel={setActivePanel}
+        drawerIsLarge={drawerIsLarge}
+      />
     </>
   );
 }
 
 function FrameInfoPanelBody({
   setActivePanel,
+  drawerIsLarge,
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
+  drawerIsLarge?: boolean;
 }) {
-  const slideableDrawerState = useSlideableDrawerContext();
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
-  const shouldCollapse = slideableDrawerState?.isMiddleSnap;
+
+  const shouldCollapse = !drawerIsLarge;
 
   const frameUrl =
     selectedFrame ?
-      createPixelUrl({
-        canvasId: canvas.id,
-        frameId: selectedFrame.id,
-      })
+      createPixelUrl({ canvasId: canvas.id, frameId: selectedFrame.id })
     : "";
 
   const userHasPermsToEditSelectedFrame =

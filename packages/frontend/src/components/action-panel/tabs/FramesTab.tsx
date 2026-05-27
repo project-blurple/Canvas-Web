@@ -1,6 +1,6 @@
 import type { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabPanel } from "./ActionPanelTabBody";
@@ -33,13 +33,38 @@ export default function FramesTab({
     FramePanelMode.Info,
   );
 
+  const [drawerIsLarge, setDrawerIsLarge] = useState(true);
+  const [remPixels, setRemPixels] = useState<number>(16);
+
   useEffect(() => {
     setTabsLocked(activePanel !== FramePanelMode.Info);
   }, [activePanel, setTabsLocked]);
 
+  useEffect(() => {
+    setRemPixels(
+      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
+    );
+  }, []);
+
+  const FrameTabBlockRef = useCallback(
+    (elem: HTMLDivElement | null) => {
+      if (!elem) return;
+      const resizeObserver = new ResizeObserver((entries) => {
+        const height = entries[0].target.clientHeight;
+        setDrawerIsLarge(height > remPixels * 30);
+      });
+      resizeObserver.observe(elem);
+    },
+    [remPixels],
+  );
+
   const panelByMode = {
     [FramePanelMode.Info]: (
-      <FrameInfoPanel setActivePanel={setActivePanel} enabled={active} />
+      <FrameInfoPanel
+        setActivePanel={setActivePanel}
+        enabled={active}
+        drawerIsLarge={drawerIsLarge}
+      />
     ),
     [FramePanelMode.Edit]: (
       <FrameEditPanel setActivePanel={setActivePanel} isCreateMode={false} />
@@ -50,7 +75,7 @@ export default function FramesTab({
   } as const satisfies Record<FramePanelMode, ReactNode>;
 
   return (
-    <FramesTabBlock active={active} {...props}>
+    <FramesTabBlock active={active} ref={FrameTabBlockRef} {...props}>
       {panelByMode[activePanel]}
     </FramesTabBlock>
   );

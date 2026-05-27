@@ -145,7 +145,7 @@ export default function PlacePixelTab({
   );
   // Boolean to hide certain elements when the tab is too small
   // Current implementation is a bit jarring when things pop in and out
-  const [isLarge, setIsLarge] = useState(true);
+  const [drawerIsLarge, setDrawerIsLarge] = useState(true);
 
   // Get value of the rem in pixels (and only run it client-side)
   const [remPixels, setRemPixels] = useState<number>(16);
@@ -161,7 +161,7 @@ export default function PlacePixelTab({
       if (!elem) return;
       const resizeObserver = new ResizeObserver((entries) => {
         const height = entries[0].target.clientHeight;
-        setIsLarge(height > remPixels * 20);
+        setDrawerIsLarge(height > remPixels * 20);
       });
       resizeObserver.observe(elem);
     },
@@ -266,7 +266,7 @@ export default function PlacePixelTab({
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>
-          {isLarge && (
+          {drawerIsLarge && (
             <ColorInfoCard
               color={selectedColor}
               invite={serverInvite}
@@ -279,7 +279,7 @@ export default function PlacePixelTab({
               aria-busy={isPlacing}
               cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
-              isVerbose={!isLarge}
+              isVerbose={!drawerIsLarge}
               partnerServerJoinRequired={partnerServerJoinRequired}
               partnerServerName={selectedColor?.guildName ?? null}
               type="submit"
@@ -294,7 +294,7 @@ export default function PlacePixelTab({
               {selectedColor?.guildName ?? "server"}
             </DynamicAnchorButton>
           )}
-          {!readOnly && isLarge && <BotPlaceCommandCard />}
+          {!readOnly && drawerIsLarge && <BotPlaceCommandCard />}
         </ActionPanelTabBody>
       </Form>
     </PlacePixelTabBlock>
