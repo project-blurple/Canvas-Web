@@ -26,15 +26,6 @@ export default class Cache {
     return this.cache.has(key);
   }
 
-  private delete(key: string): boolean {
-    const removed = this.cache.delete(key);
-    if (this.timers.has(key)) {
-      clearTimeout(this.timers.get(key));
-      this.timers.delete(key);
-    }
-    return removed;
-  }
-
   invalidate(scope: string): number {
     let deleted = 0;
     for (const key of this.cache.keys()) {
@@ -50,5 +41,14 @@ export default class Cache {
     this.cache.clear();
     for (const t of this.timers.values()) clearTimeout(t);
     this.timers.clear();
+  }
+
+  private delete(key: string): boolean {
+    const removed = this.cache.delete(key);
+    if (this.timers.has(key)) {
+      clearTimeout(this.timers.get(key));
+      this.timers.delete(key);
+    }
+    return removed;
   }
 }
