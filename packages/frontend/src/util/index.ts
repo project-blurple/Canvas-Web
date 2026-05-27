@@ -103,3 +103,9 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
   const b = Number.parseInt(hex.slice(-2), 16);
   return [r, g, b, 255];
 }
+
+export function calculateScale(pixelCount: number): number {
+  if (pixelCount <= 90_000) return 4; // 300x300
+  if (pixelCount <= 360_000) return 2; // 600x600
+  return 1;
+}

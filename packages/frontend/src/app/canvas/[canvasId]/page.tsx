@@ -1,19 +1,13 @@
 import type { Metadata } from "next";
 import config from "@/config/clientConfig";
 import { fetchCanvasInfo, fetchFrameById } from "@/hooks/queries/serverFetch";
-import { clamp } from "@/util";
+import { calculateScale, clamp } from "@/util";
 import {
   extractAllSearchParamsFromRecord,
   type NextSearchParams,
 } from "@/util/searchParams";
 import Main from "../../../app/Main";
 import LayoutWithHeader from "../../../components/LayoutWithHeader";
-
-function calculateScale(pixelCount: number): number {
-  if (pixelCount <= 90_000) return 4; // 300x300
-  if (pixelCount <= 360_000) return 2; // 600x600
-  return 1;
-}
 
 function toMetadata({
   title,

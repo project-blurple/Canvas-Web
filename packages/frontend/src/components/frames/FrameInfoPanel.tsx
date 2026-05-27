@@ -10,7 +10,7 @@ import {
   useCanvasContext,
   useSelectedFrameContext,
 } from "@/contexts";
-import { createPixelUrl, hexStringToPixelColor } from "@/util";
+import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -95,13 +95,6 @@ export default function FrameInfoPanel({
       <FrameInfoPanelBody setActivePanel={setActivePanel} />
     </>
   );
-}
-
-function calculateScale(pixelCount: number): number {
-  // TODO: this is duped from another PR, should dedupe once merged
-  if (pixelCount <= 90_000) return 4; // 300x300
-  if (pixelCount <= 360_000) return 2; // 600x600
-  return 1;
 }
 
 function FrameInfoPanelBody({
