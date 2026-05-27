@@ -74,7 +74,7 @@ const ColorChipList = styled("ul")`
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.25rem;
-  margin-block-start: 1em;
+  margin-block: 0.5em;
   overflow-x: auto;
 `;
 
