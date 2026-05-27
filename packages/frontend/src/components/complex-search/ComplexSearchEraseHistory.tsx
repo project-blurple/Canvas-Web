@@ -8,7 +8,7 @@ import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
 import type { ComplexPixelHistoryParams } from "@/hooks/queries/usePixelHistory";
-import { Button } from "../button";
+import { BasicButton, DestructiveButton } from "../button";
 import Dialog from "../Dialog";
 
 const StyledDialog = styled(Dialog)`
@@ -21,30 +21,11 @@ const StyledDialog = styled(Dialog)`
   }
 `;
 
-const StyledButton = styled(Button)`
-  background-color: var(--discord-legacy-dark-but-not-black);
-  color: var(--discord-white);
-
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      background-color: var(--discord-blurple);
-    }
-  }
-`;
-
-const RedStyledButton = styled(StyledButton)`
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      background-color: rgb(255, 0, 0);
-    }
-  }
-`;
-
-const DialogButtons = styled("div")`
+const ButtonRow = styled("div")`
   display: flex;
   gap: 0.5rem;
   justify-content: flex-end;
-  margin-top: 1rem;
+  margin-block-start: 1rem;
 `;
 
 const StyledLabel = styled("label")`
@@ -146,10 +127,10 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <RedStyledButton disabled={isDisabled} onClick={handleEraseHistory}>
+      <DestructiveButton disabled={isDisabled} onClick={handleEraseHistory}>
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </RedStyledButton>
+      </DestructiveButton>
       <StyledDialog
         open={isEraseConfirmOpen}
         onRequestClose={handleCancelErase}
@@ -173,10 +154,12 @@ export default function ComplexSearchEraseHistory({
             {`Add ${usersLength.toLocaleString()} ${usersLength !== 1 ? "users" : "user"} to blocklist`}
           </span>
         </StyledLabel>
-        <DialogButtons>
-          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
-          <RedStyledButton onClick={handleConfirmErase}>Erase</RedStyledButton>
-        </DialogButtons>
+        <ButtonRow>
+          <BasicButton onClick={handleCancelErase}>Cancel</BasicButton>
+          <DestructiveButton onClick={handleConfirmErase}>
+            Erase
+          </DestructiveButton>
+        </ButtonRow>
       </StyledDialog>
     </>
   );

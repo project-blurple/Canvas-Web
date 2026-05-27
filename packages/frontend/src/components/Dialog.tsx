@@ -6,13 +6,14 @@ const StyledDialog = styled("dialog")`
   background-color: var(--discord-legacy-not-quite-black);
   border: var(--card-border);
   margin: auto;
-  max-width: calc(100vw - 2rem);
+  max-inline-size: calc(100vw - 2rem);
+  max-inline-size: calc(100dvi - 2rem);
   padding: 1rem;
-  border-radius: 8px;
+  border-radius: var(--card-border-radius);
 
   &::backdrop {
     backdrop-filter: blur(4px);
-    background: oklch(0% 0% / 0.75);
+    background-color: oklch(0% 0% 0 / 0.75);
   }
 
   &[open] {

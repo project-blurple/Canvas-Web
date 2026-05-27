@@ -35,7 +35,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import BoundsSelect from "../BoundsSelect/BoundsSelect";
-import { Button, DynamicButton } from "../button";
+import { BasicButton, DestructiveButton, DynamicButton } from "../button";
 import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
@@ -134,25 +134,6 @@ const DialogButtons = styled("div")`
   gap: 0.5rem;
   justify-content: flex-end;
   margin-top: 1rem;
-`;
-
-const StyledButton = styled(Button)`
-  background-color: var(--discord-legacy-dark-but-not-black);
-  color: var(--discord-white);
-
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      background-color: var(--discord-blurple);
-    }
-  }
-`;
-
-const RedStyledButton = styled(StyledButton)`
-  @media (hover: hover) and (pointer: fine) {
-    :hover {
-      background-color: rgb(255, 0, 0);
-    }
-  }
 `;
 
 type GuildEntry = [string, GuildData];
@@ -733,7 +714,7 @@ export default function FrameEditPanel({
                 >
                   Save
                 </DynamicButton>
-                <RedStyledButton
+                <DestructiveButton
                   onClick={handleDeleteButtonAction}
                   type="button"
                   disabled={
@@ -741,9 +722,9 @@ export default function FrameEditPanel({
                   }
                 >
                   Delete
-                </RedStyledButton>
+                </DestructiveButton>
               </>
-            : <StyledButton
+            : <BasicButton
                 type="submit"
                 disabled={
                   !frameName ||
@@ -754,10 +735,10 @@ export default function FrameEditPanel({
                 }
               >
                 {isAtMaxFrames ? "Maximum frames created" : "Create"}
-              </StyledButton>
+              </BasicButton>
             }
           </ButtonRow>
-          <StyledButton
+          <BasicButton
             onClick={handleBackAction}
             type="button"
             disabled={
@@ -767,7 +748,7 @@ export default function FrameEditPanel({
             }
           >
             Back
-          </StyledButton>
+          </BasicButton>
         </ActionPanelTabBody>
       </form>
       <StyledDialog
@@ -782,13 +763,13 @@ export default function FrameEditPanel({
           back and discard them?
         </p>
         <DialogButtons>
-          <StyledButton
+          <BasicButton
             type="button"
             onClick={() => setIsBackConfirmOpen(false)}
           >
             Keep editing
-          </StyledButton>
-          <RedStyledButton
+          </BasicButton>
+          <DestructiveButton
             type="button"
             onClick={() => {
               setIsBackConfirmOpen(false);
@@ -796,7 +777,7 @@ export default function FrameEditPanel({
             }}
           >
             Discard
-          </RedStyledButton>
+          </DestructiveButton>
         </DialogButtons>
       </StyledDialog>
       <StyledDialog
@@ -811,15 +792,15 @@ export default function FrameEditPanel({
           continue?
         </p>
         <DialogButtons>
-          <StyledButton
+          <BasicButton
             type="button"
             onClick={() => setIsDeleteConfirmOpen(false)}
           >
             Cancel
-          </StyledButton>
-          <RedStyledButton type="button" onClick={handleDeleteAction}>
+          </BasicButton>
+          <DestructiveButton type="button" onClick={handleDeleteAction}>
             Delete
-          </RedStyledButton>
+          </DestructiveButton>
         </DialogButtons>
       </StyledDialog>
     </>

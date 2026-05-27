@@ -3,7 +3,7 @@ import { css, styled } from "@mui/material";
 import { X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
-import { Button } from "@/components/button";
+import { BasicButton, Button } from "@/components/button";
 import NumberField from "@/components/NumberField";
 import { useCanvasList } from "@/hooks";
 import {
@@ -60,11 +60,6 @@ const ContentWrapper = styled("div")`
 const NoticeContent = styled("span")`
   font-size: 1rem;
   line-height: 1.5;
-`;
-
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-white);
 `;
 
 const ButtonWrapper = styled("div")`
@@ -303,22 +298,19 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         <ContentAsMarkdown content={notice.content} />
       </ContentWrapper>
       <ButtonWrapper>
-        <StyledButton
+        <BasicButton
           onClick={() => setIsEditMode(true)}
           disabled={isTogglingActivate}
         >
           Edit
-        </StyledButton>
+        </BasicButton>
         {isActive ?
-          <StyledButton
-            onClick={deactivateNotice}
-            disabled={isTogglingActivate}
-          >
+          <BasicButton onClick={deactivateNotice} disabled={isTogglingActivate}>
             Deactivate
-          </StyledButton>
-        : <StyledButton onClick={activateNotice} disabled={isTogglingActivate}>
+          </BasicButton>
+        : <BasicButton onClick={activateNotice} disabled={isTogglingActivate}>
             Activate
-          </StyledButton>
+          </BasicButton>
         }
       </ButtonWrapper>
     </NoticeWrapper>
@@ -511,10 +503,10 @@ function EditModeNotice({
       </ContentWrapper>
 
       <ButtonWrapper>
-        <StyledButton type="submit" disabled={isSaving || isDeleting}>
+        <BasicButton type="submit" disabled={isSaving || isDeleting}>
           {mode === "create" ? "Create" : "Save"}
-        </StyledButton>
-        <StyledButton
+        </BasicButton>
+        <BasicButton
           type="button"
           onClick={() => {
             setIsEditMode(false);
@@ -523,15 +515,15 @@ function EditModeNotice({
           disabled={isSaving || isDeleting}
         >
           Cancel
-        </StyledButton>
+        </BasicButton>
         {mode === "edit" && (
-          <StyledButton
+          <BasicButton
             type="button"
             onClick={deleteNotice}
             disabled={isSaving || isDeleting}
           >
             Delete
-          </StyledButton>
+          </BasicButton>
         )}
       </ButtonWrapper>
     </NoticeForm>
