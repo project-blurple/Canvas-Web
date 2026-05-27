@@ -27,14 +27,11 @@ export default class Cache<T = unknown> {
   }
 
   invalidate(scope: string): number {
-    let deleted = 0;
-    for (const key of this.cache.keys()) {
-      if (key.startsWith(scope)) {
-        void this.delete(key);
-        deleted++;
-      }
-    }
-    return deleted;
+    const toDelete = Array.from(
+      this.cache.keys().filter((key) => key.startsWith(scope)),
+    );
+    for (const key of toDelete) this.delete(key);
+    return toDelete.length;
   }
 
   clear(): void {
