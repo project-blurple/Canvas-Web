@@ -1,6 +1,6 @@
 import { styled } from "@mui/material";
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 
 const StyledDialog = styled("dialog")`
   background-color: var(--discord-legacy-not-quite-black);
@@ -33,26 +33,36 @@ export default function Dialog({
   ...props
 }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const openRef = useRef(open);
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
+  openRef.current = open;
 
-    if (open) {
-      if (!dialog.open) {
-        dialog.showModal();
-      }
+  function setDialogRef(dialog: HTMLDialogElement | null) {
+    dialogRef.current = dialog;
+
+    if (!dialog) {
       return;
     }
 
-    if (dialog.open) {
+    if (open && !dialog.open) {
+      dialog.showModal();
+      return;
+    }
+
+    if (!open && dialog.open) {
       dialog.close();
     }
-  }, [open]);
+  }
 
   function handleCancel(event: React.SyntheticEvent<HTMLDialogElement>) {
     event.preventDefault();
     onRequestClose();
+  }
+
+  function handleClose() {
+    if (openRef.current) {
+      onRequestClose();
+    }
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDialogElement>) {
@@ -71,7 +81,8 @@ export default function Dialog({
 
   return (
     <StyledDialog
-      ref={dialogRef}
+      ref={setDialogRef}
+      onClose={handleClose}
       onCancel={handleCancel}
       onPointerDown={handlePointerDown}
       {...props}
