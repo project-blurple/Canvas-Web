@@ -127,6 +127,11 @@ const StyledDialog = styled(Dialog)`
     font-size: 1.5rem;
     font-weight: 600;
   }
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 const DialogButtons = styled("div")`

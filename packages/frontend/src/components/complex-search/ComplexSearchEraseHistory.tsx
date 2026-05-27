@@ -19,6 +19,11 @@ const StyledDialog = styled(Dialog)`
     font-size: 1.5rem;
     font-weight: 600;
   }
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
 `;
 
 const ButtonRow = styled("div")`
@@ -134,21 +139,17 @@ export default function ComplexSearchEraseHistory({
       <StyledDialog
         open={isEraseConfirmOpen}
         onRequestClose={handleCancelErase}
-        aria-labelledby="erase-history-dialog-title"
-        aria-describedby="erase-history-dialog-description"
       >
         <h2 id="erase-history-dialog-title">Erase history?</h2>
         <p id="erase-history-dialog-description">
           Delete {entriesCount.toLocaleString()} history&nbsp;
           {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
         </p>
-        <StyledLabel aria-disabled={entriesCount === 0}>
+        <StyledLabel>
           <input
             type="checkbox"
             ref={blockWhileEraseRef}
-            defaultChecked={false}
             disabled={entriesCount === 0}
-            aria-disabled={entriesCount === 0}
           />
           <span>
             {`Add ${usersLength.toLocaleString()} ${usersLength !== 1 ? "users" : "user"} to blocklist`}

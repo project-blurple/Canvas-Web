@@ -15,11 +15,6 @@ const StyledDialog = styled("dialog")`
     backdrop-filter: blur(4px);
     background-color: oklch(0% 0% 0 / 0.75);
   }
-
-  &[open] {
-    display: flex;
-    flex-direction: column;
-  }
 `;
 
 export type DialogProps = Omit<

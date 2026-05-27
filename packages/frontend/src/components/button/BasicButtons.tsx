@@ -17,6 +17,10 @@ export const BasicButton = styled(Button)`
   }
 `;
 
+export const BasicHighlightButton = styled(BasicButton)`
+  background-color: var(--discord-blurple);
+`;
+
 export const DestructiveButton = styled(BasicButton)`
   @media (hover: hover) and (pointer: fine) {
     :hover {

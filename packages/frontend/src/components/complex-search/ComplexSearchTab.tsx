@@ -9,7 +9,6 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { DynamicButton } from "@/components/button";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
@@ -20,6 +19,7 @@ import {
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
 import { durationFormatNarrow } from "@/util/intl";
+import { BasicHighlightButton } from "../button/BasicButtons";
 import {
   BoundsSelect,
   ComplexSearchColorSelect,
@@ -274,11 +274,14 @@ export default function ComplexSearchTab({
                 setToTime={setToTime}
                 disabled={isLoading}
               />
-              <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
+              <BasicHighlightButton
+                type="submit"
+                disabled={!boundsValid || isLoading}
+              >
                 {!historyQuery.isLoading ?
                   `Search (${pixelsInBounds.toLocaleString()} pixel${pixelsInBounds !== 1 ? "s" : ""})`
                 : "Searching..."}
-              </DynamicButton>
+              </BasicHighlightButton>
             </Form>
           </search>
         </ActionPanelTabBody>

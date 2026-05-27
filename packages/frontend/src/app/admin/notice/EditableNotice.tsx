@@ -3,7 +3,7 @@ import { css, styled } from "@mui/material";
 import { X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
-import { BasicButton, Button } from "@/components/button";
+import { BasicButton } from "@/components/button";
 import NumberField from "@/components/NumberField";
 import { useCanvasList } from "@/hooks";
 import {

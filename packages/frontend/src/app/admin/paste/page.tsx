@@ -11,7 +11,7 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { BasicButton, Button } from "@/components/button";
+import { BasicButton } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
