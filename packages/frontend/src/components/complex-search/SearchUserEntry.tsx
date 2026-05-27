@@ -97,6 +97,36 @@ interface SearchUserEntryProps {
   colorById: Map<PaletteColor["id"], PaletteColor>;
 }
 
+export type SearchUserSortBy = "entryCount" | "startTimestamp" | "endTimestamp";
+
+export type SearchUserSortDirection = "ascending" | "descending";
+
+function sortUsers(
+  [, summaryA]: [string, PixelHistoryUserSummary],
+  [, summaryB]: [string, PixelHistoryUserSummary],
+  sortBy: SearchUserSortBy,
+  sortDirection: SearchUserSortDirection,
+) {
+  const directionMultiplier = sortDirection === "ascending" ? -1 : 1;
+
+  switch (sortBy) {
+    case "startTimestamp":
+      return (
+        (new Date(summaryB.firstPlaced).getTime() -
+          new Date(summaryA.firstPlaced).getTime()) *
+        directionMultiplier
+      );
+    case "endTimestamp":
+      return (
+        (new Date(summaryB.lastPlaced).getTime() -
+          new Date(summaryA.lastPlaced).getTime()) *
+        directionMultiplier
+      );
+    default:
+      return (summaryB.count - summaryA.count) * directionMultiplier;
+  }
+}
+
 function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
   const colors = Object.entries(summary.colors)
     .map(([colorId, count]) => {
@@ -147,11 +177,19 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
   );
 }
 
-interface SearchUserEntriesProps {
+interface SearchUserEntriesProps extends React.ComponentPropsWithRef<
+  typeof UserWrapper
+> {
   users: PixelHistoryWrapper["users"];
+  sortBy?: SearchUserSortBy;
+  sortDirection?: SearchUserSortDirection;
 }
 
-export default function SearchUserEntries({ users }: SearchUserEntriesProps) {
+export default function SearchUserEntries({
+  users,
+  sortBy = "entryCount",
+  sortDirection = "descending",
+}: SearchUserEntriesProps) {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
@@ -162,8 +200,8 @@ export default function SearchUserEntries({ users }: SearchUserEntriesProps) {
 
   if (!users) return null;
 
-  const sortedUsers = Object.entries(users).sort(
-    (a, b) => b[1].count - a[1].count,
+  const sortedUsers = Object.entries(users).sort((a, b) =>
+    sortUsers(a, b, sortBy, sortDirection),
   );
 
   return (

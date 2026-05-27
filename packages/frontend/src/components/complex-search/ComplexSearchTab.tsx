@@ -27,7 +27,10 @@ import {
   ComplexSearchUserSelect,
 } from "../complex-search";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
-import SearchUserEntries from "./SearchUserEntry";
+import SearchUserEntries, {
+  type SearchUserSortBy,
+  type SearchUserSortDirection,
+} from "./SearchUserEntry";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -43,9 +46,42 @@ const Form = styled("form")`
   }
 `;
 
+const ResultsHeader = styled("div")`
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+`;
+
 const Summary = styled("p")`
   opacity: 60%;
   margin-block: 1em;
+`;
+
+const SortSelect = styled("select")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 0.5rem;
+  border: var(--card-border);
+  color: white;
+  inline-size: max-content;
+  padding: 0.25rem 0.25rem;
+
+  cursor: pointer;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      outline: var(--focus-outline);
+    }
+  }
+
+  &:has(:focus-visible) {
+    outline: var(--focus-outline);
+  }
+`;
+
+const SortControlRow = styled("div")`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 `;
 
 const EraseWrapper = styled("div")`
@@ -68,6 +104,20 @@ function areBoundsValid(bounds: ViewBounds | null): boolean {
 
 export type SearchFilterMode = "include" | "exclude";
 
+const sortOptions: { value: SearchUserSortBy; label: string }[] = [
+  { value: "entryCount", label: "Entry count" },
+  { value: "startTimestamp", label: "Start timestamp" },
+  { value: "endTimestamp", label: "End timestamp" },
+];
+
+const sortDirectionOptions: {
+  value: SearchUserSortDirection;
+  label: string;
+}[] = [
+  { value: "descending", label: "Descending" },
+  { value: "ascending", label: "Ascending" },
+];
+
 export default function ComplexSearchTab({
   ...props
 }: React.ComponentPropsWithoutRef<typeof ComplexSearchTabBlock>) {
@@ -89,6 +139,10 @@ export default function ComplexSearchTab({
   const [selectedUserIds, setSelectedUserIds] = useState<bigint[]>([]);
   const [userFilterMode, setUserFilterMode] =
     useState<SearchFilterMode>("include");
+
+  const [sortBy, setSortBy] = useState<SearchUserSortBy>("entryCount");
+  const [sortDirection, setSortDirection] =
+    useState<SearchUserSortDirection>("descending");
 
   const [fromTime, setFromTime] = useState<DateTime | null>(null);
   const [toTime, setToTime] = useState<DateTime | null>(null);
@@ -171,6 +225,16 @@ export default function ComplexSearchTab({
   const entriesCount = historyData?.total ?? 0;
   const usersLength = Object.keys(historyData?.users ?? {}).length;
 
+  function handleSortChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    setSortBy(event.target.value as SearchUserSortBy);
+  }
+
+  function handleSortDirectionChange(
+    event: React.ChangeEvent<HTMLSelectElement>,
+  ) {
+    setSortDirection(event.target.value as SearchUserSortDirection);
+  }
+
   const Results: React.FC = () => {
     if (historyQuery.status === "error") {
       const { status } = historyQuery.error as AxiosError;
@@ -208,26 +272,53 @@ export default function ComplexSearchTab({
             <ActionPanelPrimitives.SectionHeading>
               Search results
             </ActionPanelPrimitives.SectionHeading>
-            <Summary>
-              <strong>
-                {entriesCount.toLocaleString()}&nbsp;
-                {entriesCount === 1 ? "entry" : "entries"}
-              </strong>
-              {" from "}
-              <strong>
-                {usersLength.toLocaleString()}&nbsp;
-                {usersLength === 1 ? "user" : "users"}{" "}
-              </strong>
-              (
-              {durationFormatNarrow?.format({
-                milliseconds: Math.max(
-                  0,
-                  historyQuery.data?.executionDurationMs ?? 0,
-                ),
-              })}
-              )
-            </Summary>
-            <SearchUserEntries users={historyData.users} />
+            <ResultsHeader>
+              <Summary>
+                <strong>
+                  {entriesCount.toLocaleString()}&nbsp;
+                  {entriesCount === 1 ? "entry" : "entries"}
+                </strong>
+                {" from "}
+                <strong>
+                  {usersLength.toLocaleString()}&nbsp;
+                  {usersLength === 1 ? "user" : "users"}{" "}
+                </strong>
+                (
+                {durationFormatNarrow?.format({
+                  milliseconds: Math.max(
+                    0,
+                    historyQuery.data?.executionDurationMs ?? 0,
+                  ),
+                })}
+                )
+              </Summary>
+              <SortControlRow>
+                <SortSelect value={sortBy} onChange={handleSortChange}>
+                  {sortOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </SortSelect>
+                <SortSelect
+                  aria-label="Sort direction"
+                  value={sortDirection}
+                  onChange={handleSortDirectionChange}
+                >
+                  {sortDirectionOptions.map(({ value, label }) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </SortSelect>
+              </SortControlRow>
+            </ResultsHeader>
+            <SearchUserEntries
+              users={historyData.users}
+              sortBy={sortBy}
+              sortDirection={sortDirection}
+              style={{ gridArea: "--results" }}
+            />
           </div>
         </ActionPanelTabBody>
       );
