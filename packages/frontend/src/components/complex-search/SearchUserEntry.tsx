@@ -24,7 +24,7 @@ const UserCard = styled("li")`
   border-radius: 0.75rem;
   border: var(--card-border);
   display: grid;
-  grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list";
+  grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list" "--timestamp --timestamp";
   grid-template-columns: 1fr auto;
   padding: 0.75rem;
 `;
@@ -78,6 +78,19 @@ const ColorChipList = styled("ul")`
   overflow-x: auto;
 `;
 
+const TimestampRow = styled("div")`
+  display: flex;
+  grid-area: --timestamp;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+const Timestamp = styled("time")`
+  font-size: 0.75rem;
+  margin-block-start: 0.5em;
+  opacity: 0.75;
+`;
+
 interface SearchUserEntryProps {
   userId: bigint;
   summary: PixelHistoryUserSummary;
@@ -126,6 +139,10 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
           {summary.userProfile?.username}’s user ID. Click to copy.
         </VisuallyHidden>
       </UserIdButton>
+      <TimestampRow>
+        <Timestamp>{new Date(summary.firstPlaced).toLocaleString()}</Timestamp>
+        <Timestamp>{new Date(summary.lastPlaced).toLocaleString()}</Timestamp>
+      </TimestampRow>
     </UserCard>
   );
 }
