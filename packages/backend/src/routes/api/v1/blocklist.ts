@@ -1,4 +1,7 @@
-import { BlocklistBodyModel } from "@blurple-canvas-web/types";
+import {
+  BlocklistBodyModel,
+  BlocklistDeleteBodyModel,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import { requireCanvasModerator } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
@@ -36,12 +39,15 @@ blocklistRouter.put(
 
 blocklistRouter.delete(
   "/",
-  validate({ body: BlocklistBodyModel }),
+  validate({ body: BlocklistDeleteBodyModel }),
   async (req, res) => {
-    await removeUsersFromBlocklist(req.body);
+    await removeUsersFromBlocklist(
+      req.body.userIds,
+      req.body.shouldRestoreHistoryForCanvasId ?? [],
+    );
     res.status(204).send();
     void audit(req, "moderator", "blocklist.remove", {
-      metadata: { userIds: req.body.map((id) => id.toString()) },
+      metadata: { userIds: req.body.userIds.map((id) => id.toString()) },
     });
   },
 );
