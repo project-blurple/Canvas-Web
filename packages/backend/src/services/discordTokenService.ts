@@ -68,6 +68,7 @@ function requestDiscordTokenRefresh(
   });
 }
 
+/** @internal Exported only for testing */
 async function doRefreshDiscordAccessToken(
   session: DiscordTokenSession,
 ): Promise<string> {

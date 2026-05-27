@@ -374,6 +374,7 @@ export function updateCachedCanvasPixel(
   cachedCanvas.pixels[pixelIndex] = color;
 }
 
+/** @internal Exported only for testing */
 export async function getCanvasPixels(
   canvasId: number,
   width: number,

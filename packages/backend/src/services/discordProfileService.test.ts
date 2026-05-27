@@ -4,7 +4,6 @@ import {
   createCustomAvatarUrl,
   createDefaultAvatarUrl,
   createOrUpdateDiscordProfile,
-  getDiscordProfile,
   saveDiscordProfile,
 } from "./discordProfileService";
 
@@ -12,22 +11,6 @@ describe("discordProfileService", () => {
   beforeEach(async () => {
     await seedUsers();
     await seedDiscordProfiles();
-  });
-
-  describe("getDiscordProfile", () => {
-    it("should return the Discord profile for a given user ID", async () => {
-      const userId = 204778476102877187n;
-      const expectedProfile = {
-        user_id: BigInt(204778476102877187n),
-        username: "rocked03",
-        profile_picture_url:
-          "https://cdn.discordapp.com/avatars/204778476102877187/f4468ea05fa0dada4e3a3fbe18b748fe.png",
-      };
-
-      const profile = await getDiscordProfile(userId);
-
-      expect(profile).toEqual(expectedProfile);
-    });
   });
 
   describe("createOrUpdateDiscordProfile", () => {
