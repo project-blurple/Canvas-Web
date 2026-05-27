@@ -1,5 +1,6 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import type { NextFunction, Request, Response } from "express";
+import config from "@/config";
 import { ForbiddenError, UnauthorizedError } from "@/errors";
 import {
   isCanvasAdmin,
@@ -52,6 +53,11 @@ export async function requireCanvasModerator(
   try {
     assertLoggedIn(req);
 
+    if (config.bypassAuth) {
+      next();
+      return;
+    }
+
     const userIsCanvasModerator = await withDiscordAccessToken(
       req.session,
       isCanvasModerator,
@@ -76,6 +82,11 @@ export async function requireCanvasAdmin(
 ) {
   try {
     assertLoggedIn(req);
+
+    if (config.bypassAuth) {
+      next();
+      return;
+    }
 
     const userIsCanvasAdmin = await withDiscordAccessToken(
       req.session,

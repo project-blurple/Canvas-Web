@@ -39,6 +39,8 @@ pnpm prisma:seed --seedings web_guild
 pnpm dev # Start the API locally with hot reloading
 ```
 
+If you need to bypass Discord moderator/admin authorization while developing locally, set `BYPASS_AUTH=true` in `.env`. This disables those checks entirely and should never be used outside development.
+
 ### Building
 
 You can transpile the API to JavaScript using:

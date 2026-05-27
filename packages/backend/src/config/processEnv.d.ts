@@ -13,6 +13,7 @@ declare namespace NodeJS {
     DISCORD_MANAGEMENT_GUILD_ID?: string;
     DISCORD_MODERATOR_ROLE_ID?: string;
 
+    BYPASS_AUTH?: string;
     BOT_PLACING_ENABLED?: string;
   }
 }

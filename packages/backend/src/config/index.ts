@@ -30,6 +30,7 @@ const config = {
   // having a random secret would mess with persistent sessions
   expressSessionSecret:
     process.env.EXPRESS_SESSION_SECRET || "change the secret in production",
+  bypassAuth: process.env.BYPASS_AUTH === "true",
   discord: {
     clientId: requiredEnv("DISCORD_CLIENT_ID"),
     clientSecret: requiredEnv("DISCORD_CLIENT_SECRET"),
@@ -59,6 +60,35 @@ const config = {
   botApiKey: process.env.BOT_API_KEY,
   databaseUrl: requiredEnv("DATABASE_URL"),
 } as const;
+
+if (config.bypassAuth) {
+  console.warn(
+    [
+      "",
+      "######################################################################",
+      "#                                                                    #",
+      "#       __          __     _____  _   _ _____ _   _  _____           #",
+      String.raw`#       \ \        / /\   |  __ \| \ | |_   _| \ | |/ ____|          #`,
+      String.raw`#        \ \  /\  / /  \  | |__) |  \| | | | |  \| | |  __           #`,
+      String.raw`#         \ \/  \/ / /\ \ |  _  /| .   | | | | .   | | |_ |          #`,
+      String.raw`#          \  /\  / ____ \| | \ \| |\  |_| |_| |\  | |__| |          #`,
+      String.raw`#           \/  \/_/    \_\_|  \_\_| \_|_____|_| \_|\_____|          #`,
+      "#                                                                    #",
+      "#  WARNING: BYPASS AUTH IS ENABLED                                   #",
+      "#                                                                    #",
+      "#  Canvas moderator and admin authorization checks are DISABLED.     #",
+      "#  This must only be used for local development.                     #",
+      "#  Do not deploy with BYPASS_AUTH=true.                              #",
+      "#                                                                    #",
+      "######################################################################",
+      "",
+    ].join("\n"),
+  );
+
+  if (config.environment === "production") {
+    throw new Error("bypassAuth cannot be enabled in production");
+  }
+}
 
 if (!fs.existsSync(config.paths.canvases)) {
   console.debug(`Creating canvases directory at ${config.paths.canvases}`);
