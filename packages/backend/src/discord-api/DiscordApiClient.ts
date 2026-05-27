@@ -46,6 +46,7 @@ class DiscordApiClient {
     if (!isCacheHit) {
       logWithTag({ url, init, retryOptions });
       const response = await fetchWithRetries(url, init, retryOptions);
+      // 💡 Response body is single use! If logging response body, make sure to clone response
       if (!response.ok) return response;
       this.cache.set(cacheKey, response);
     }
