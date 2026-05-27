@@ -134,13 +134,13 @@ function FrameInfoPanelBody({
       );
 
       if (selectedFrame.owner.type === FrameOwnerType.System) {
-        const baseUrl = `${config.apiUrl}/api/v1/canvas/${canvas.id}@${scale}.png`;
+        const baseUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/frame/${encodeURIComponent(selectedFrame.id)}@${scale}.png`;
 
         const isWholeCanvas =
-          selectedFrame.x0 === 0 &&
-          selectedFrame.y0 === 0 &&
-          selectedFrame.x1 === canvas.width - 1 &&
-          selectedFrame.y1 === canvas.height - 1;
+          selectedFrame.x0 <= 0 &&
+          selectedFrame.y0 <= 0 &&
+          selectedFrame.x1 >= canvas.width - 1 &&
+          selectedFrame.y1 >= canvas.height - 1;
 
         if (isWholeCanvas) {
           return baseUrl;
@@ -188,7 +188,7 @@ function FrameInfoPanelBody({
               <DynamicButton
                 color={color}
                 disabled={!frameUrl}
-                style={{ width: "100%" }}
+                style={{ inlineSize: "100%" }}
               >
                 Download
               </DynamicButton>
