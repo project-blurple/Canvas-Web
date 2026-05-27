@@ -53,7 +53,7 @@ class DiscordApiClient {
 
     if (!isCacheHit) {
       logWithTag({
-        url,
+        url: url.toString(),
         init: init ? sanitizeRequestInit(init) : init,
         retryOptions,
       });
