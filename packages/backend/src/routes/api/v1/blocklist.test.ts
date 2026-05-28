@@ -145,7 +145,7 @@ describe("Blocklist route tests", () => {
 
     expect(response.body).toStrictEqual({});
     expect(removeUsersFromBlocklist).toHaveBeenCalledTimes(1);
-    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n]);
+    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n], []);
     expect(audit).toHaveBeenCalledWith(
       expect.anything(),
       "moderator",
@@ -154,6 +154,24 @@ describe("Blocklist route tests", () => {
         metadata: { userIds: ["9"] },
       }),
     );
+  });
+
+  it("passes the restore flag when removing users from the blocklist", async () => {
+    const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
+    vi.mocked(removeUsersFromBlocklist).mockResolvedValueOnce(undefined);
+
+    await request(app)
+      .delete("/api/v1/blocklist")
+      .set("Test-User-Id", "1")
+      .send({
+        userId: ["9", "10"],
+        shouldRestoreHistoryForCanvasId: [1],
+      })
+      .type("json")
+      .expect(204);
+
+    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n, 10n], [1]);
   });
 
   it("returns 401 when blocklist access is unauthenticated", async () => {

@@ -24,7 +24,7 @@ const UserCard = styled("li")`
   border-radius: 0.75rem;
   border: var(--card-border);
   display: grid;
-  grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list";
+  grid-template-areas: "--username --entry-count" "--user-id --user-id" "--color-list --color-list" "--timestamp --timestamp";
   grid-template-columns: 1fr auto;
   padding: 0.75rem;
 `;
@@ -74,14 +74,57 @@ const ColorChipList = styled("ul")`
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.25rem;
-  margin-block-start: 1em;
+  margin-block: 0.5em;
   overflow-x: auto;
+`;
+
+const TimestampRow = styled("div")`
+  display: flex;
+  grid-area: --timestamp;
+  justify-content: space-between;
+  width: 100%;
+`;
+
+const Timestamp = styled("time")`
+  font-size: 0.75rem;
+  margin-block-start: 0.5em;
+  opacity: 0.75;
 `;
 
 interface SearchUserEntryProps {
   userId: bigint;
   summary: PixelHistoryUserSummary;
   colorById: Map<PaletteColor["id"], PaletteColor>;
+}
+
+export type SearchUserSortBy = "entryCount" | "startTimestamp" | "endTimestamp";
+
+export type SearchUserSortDirection = "ascending" | "descending";
+
+function sortUsers(
+  [, summaryA]: [string, PixelHistoryUserSummary],
+  [, summaryB]: [string, PixelHistoryUserSummary],
+  sortBy: SearchUserSortBy,
+  sortDirection: SearchUserSortDirection,
+) {
+  const directionMultiplier = sortDirection === "ascending" ? -1 : 1;
+
+  switch (sortBy) {
+    case "startTimestamp":
+      return (
+        (new Date(summaryB.firstPlaced).getTime() -
+          new Date(summaryA.firstPlaced).getTime()) *
+        directionMultiplier
+      );
+    case "endTimestamp":
+      return (
+        (new Date(summaryB.lastPlaced).getTime() -
+          new Date(summaryA.lastPlaced).getTime()) *
+        directionMultiplier
+      );
+    default:
+      return (summaryB.count - summaryA.count) * directionMultiplier;
+  }
 }
 
 function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
@@ -126,15 +169,27 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
           {summary.userProfile?.username}’s user ID. Click to copy.
         </VisuallyHidden>
       </UserIdButton>
+      <TimestampRow>
+        <Timestamp>{new Date(summary.firstPlaced).toLocaleString()}</Timestamp>
+        <Timestamp>{new Date(summary.lastPlaced).toLocaleString()}</Timestamp>
+      </TimestampRow>
     </UserCard>
   );
 }
 
-interface SearchUserEntriesProps {
+interface SearchUserEntriesProps extends React.ComponentPropsWithRef<
+  typeof UserWrapper
+> {
   users: PixelHistoryWrapper["users"];
+  sortBy?: SearchUserSortBy;
+  sortDirection?: SearchUserSortDirection;
 }
 
-export default function SearchUserEntries({ users }: SearchUserEntriesProps) {
+export default function SearchUserEntries({
+  users,
+  sortBy = "entryCount",
+  sortDirection = "descending",
+}: SearchUserEntriesProps) {
   const { canvas } = useCanvasContext();
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
@@ -145,8 +200,8 @@ export default function SearchUserEntries({ users }: SearchUserEntriesProps) {
 
   if (!users) return null;
 
-  const sortedUsers = Object.entries(users).sort(
-    (a, b) => b[1].count - a[1].count,
+  const sortedUsers = Object.entries(users).sort((a, b) =>
+    sortUsers(a, b, sortBy, sortDirection),
   );
 
   return (
