@@ -27,11 +27,13 @@ async function encodeMp4FromImages({
   frameRate,
   backgroundColor,
   cropBounds,
+  scale,
 }: {
   imagePaths: string[];
   frameRate: number;
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
+  scale: CanvasExportScale;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
 
@@ -48,10 +50,12 @@ async function encodeMp4FromImages({
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}@${backgroundAlpha}`;
   const baseFilterGraph =
     "[1:v][0:v]scale2ref[bg][fg];[bg][fg]overlay=shortest=1:format=auto";
-  const filterGraph =
+  const cropFilter =
     cropBounds ?
-      `${baseFilterGraph},crop=${cropBounds.x1 - cropBounds.x0}:${cropBounds.y1 - cropBounds.y0}:${cropBounds.x0}:${cropBounds.y0}`
-    : baseFilterGraph;
+      `,crop=${cropBounds.x1 - cropBounds.x0}:${cropBounds.y1 - cropBounds.y0}:${cropBounds.x0}:${cropBounds.y0}`
+    : "";
+  const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
+  const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
 
   return await new Promise<Buffer>((resolve, reject) => {
     const proc = spawn(
@@ -146,7 +150,6 @@ export async function generateTimelapse({
 }: generateTimelapseParams): Promise<Buffer> {
   // Intentionally not implemented yet in this first iteration.
   void endHoldDurationMs;
-  void scale;
 
   if (!Number.isFinite(frameRate) || frameRate <= 0) {
     throw new Error("frameRate must be a positive number");
@@ -191,8 +194,8 @@ export async function generateTimelapse({
     const isFullCanvasBounds =
       clampedBounds.x0 === 0 &&
       clampedBounds.y0 === 0 &&
-      clampedBounds.x1 === canvas.width &&
-      clampedBounds.y1 === canvas.height;
+      clampedBounds.x1 === canvas.width - 1 &&
+      clampedBounds.y1 === canvas.height - 1;
 
     if (!isFullCanvasBounds) {
       cropBounds = clampedBounds;
@@ -204,5 +207,6 @@ export async function generateTimelapse({
     frameRate,
     backgroundColor,
     cropBounds,
+    scale,
   });
 }
