@@ -13,6 +13,42 @@ function requiredEnv(key: keyof NodeJS.ProcessEnv): string {
   return value;
 }
 
+function parseBooleanEnv(value: string | undefined): boolean {
+  return value === "true";
+}
+
+function parseCanvasAllowlistEnv(value: string | undefined): number[] {
+  if (!value) {
+    return [];
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error(`Invalid SNAPSHOTS_AVAILABLE_FOR_CANVASES value: ${value}`);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(
+      "SNAPSHOTS_AVAILABLE_FOR_CANVASES must be a JSON array of canvas ids",
+    );
+  }
+
+  const canvasIds = new Set<number>();
+  for (const entry of parsed) {
+    if (typeof entry !== "number" || !Number.isInteger(entry) || entry <= 0) {
+      throw new Error(
+        "SNAPSHOTS_AVAILABLE_FOR_CANVASES must contain only positive integer canvas ids",
+      );
+    }
+
+    canvasIds.add(entry);
+  }
+
+  return [...canvasIds];
+}
+
 const config = {
   /**
    * In development mode, secure cookies are not used for sending the profile. This is because
@@ -23,6 +59,10 @@ const config = {
     port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000,
   },
   snapshot: {
+    generateSnapshots: parseBooleanEnv(process.env.GENERATE_SNAPSHOTS),
+    availableForCanvases: parseCanvasAllowlistEnv(
+      process.env.SNAPSHOTS_AVAILABLE_FOR_CANVASES,
+    ),
     schedulerIntervalMs:
       process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS ?
         Number.parseInt(process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS, 10)

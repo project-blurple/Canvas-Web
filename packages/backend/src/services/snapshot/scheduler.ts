@@ -5,6 +5,10 @@ import { type snapshot_cursor, snapshotPrisma } from "@/client/snapshots";
 import config from "@/config";
 import { getSnapshotImagePath } from "@/snapshot/paths";
 import { buildSnapshot } from "./generateSnapshotService";
+import {
+  isSnapshotAvailableForCanvas,
+  isSnapshotGenerationEnabled,
+} from "./snapshotPolicy";
 
 const SNAPSHOT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -66,6 +70,10 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   processed: number;
   skipped: number;
 }> {
+  if (!isSnapshotGenerationEnabled()) {
+    return { processed: 0, skipped: 0 };
+  }
+
   const now = new Date();
   const cutoff = getWindowCutoff(now);
 
@@ -90,6 +98,11 @@ export async function runSnapshotSchedulerCycle(): Promise<{
 
   for (const window of readyWindows) {
     const canvasId = window.canvas_id;
+
+    if (!isSnapshotAvailableForCanvas(canvasId)) {
+      skipped += 1;
+      continue;
+    }
 
     // Decide generation based solely on window + cursor state (cursor map loaded above).
     const cursor = cursorByCanvas.get(canvasId) ?? null;
@@ -161,6 +174,10 @@ export async function runSnapshotSchedulerCycle(): Promise<{
 }
 
 export function startSnapshotScheduler(): () => void {
+  if (!isSnapshotGenerationEnabled()) {
+    return () => undefined;
+  }
+
   const tick = () => {
     if (isRunning) {
       return;
