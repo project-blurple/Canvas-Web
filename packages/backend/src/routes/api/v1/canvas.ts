@@ -191,7 +191,6 @@ canvasRouter.delete(
 
 canvasRouter.post(
   "/:canvasId/timelapse",
-  requireCanvasAdmin,
   validate({
     params: CanvasIdParamModel,
     body: CanvasTimelapseBodyModel,
@@ -261,7 +260,7 @@ async function sendCachedCanvas(
 
 async function sendCanvasTimelapseAsMp4Stream({
   res,
-  query: { canvasId, start, end, bounds, scale },
+  query: { canvasId, start, end, bounds },
 }: {
   res: Response;
   query: {
@@ -269,7 +268,6 @@ async function sendCanvasTimelapseAsMp4Stream({
     start?: Date;
     end?: Date;
     bounds?: FrameBoundsInput;
-    scale: CanvasExportScale;
   };
 }): Promise<void> {
   const buffer = await generateTimelapse({
@@ -277,7 +275,6 @@ async function sendCanvasTimelapseAsMp4Stream({
     start: start ?? new Date(0),
     end: end ?? new Date(),
     bounds,
-    scale,
   });
 
   res

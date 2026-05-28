@@ -7,7 +7,7 @@ import {
   type PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
-import { type Bounds, clamp, normalizeBounds } from "@/utils";
+import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "./canvasService";
 import { getSnapshots } from "./snapshot/snapshotService";
 
@@ -162,7 +162,7 @@ export async function generateTimelapse({
   bounds,
   frameRate = 30,
   endHoldDurationMs = 2000,
-  scale = DEFAULT_CANVAS_EXPORT_SCALE,
+  scale,
   backgroundColor = [35, 39, 42, 255],
 }: generateTimelapseParams): Promise<Buffer> {
   // Intentionally not implemented yet in this first iteration.
@@ -189,10 +189,10 @@ export async function generateTimelapse({
   const imagePaths = orderedSnapshots.map((s) => s.image_path);
 
   let cropBounds: Bounds | undefined;
+  const canvas = await getCanvasInfo(canvasId);
 
   if (bounds) {
     const normalizedBounds = normalizeBounds(bounds);
-    const canvas = await getCanvasInfo(canvasId);
 
     const clampedBounds: Bounds = {
       x0: clamp(normalizedBounds.x0, 0, canvas.width - 1),
@@ -219,12 +219,18 @@ export async function generateTimelapse({
     }
   }
 
+  const autoScale = calculateScale(
+    cropBounds ?
+      (cropBounds.x1 - cropBounds.x0) * (cropBounds.y1 - cropBounds.y0)
+    : canvas.width * canvas.height,
+  );
+
   return await encodeMp4FromImages({
     imagePaths,
     frameRate,
     backgroundColor,
     cropBounds,
     endHoldDurationMs,
-    scale,
+    scale: scale ?? autoScale,
   });
 }
