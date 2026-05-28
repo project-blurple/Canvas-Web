@@ -6,6 +6,6 @@ export default defineConfig({
     path: "migrations",
   },
   datasource: {
-    url: "file:./snapshots.sqlite",
+    url: "file:../../data/snapshots/snapshots.sqlite",
   },
 });
