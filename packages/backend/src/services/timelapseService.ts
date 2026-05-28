@@ -90,6 +90,9 @@ async function readCachedTimelapse(filePath: string): Promise<Buffer | null> {
   }
 }
 
+// Map of cacheKey -> Promise resolving to generated Buffer for in-flight requests
+const inFlightTimelapses = new Map<string, Promise<Buffer>>();
+
 async function getSnapshotCursorUpdatedAt(
   canvasId: CanvasInfo["id"],
 ): Promise<Date | null> {
@@ -387,63 +390,81 @@ async function getOrCreateTimelapseFromCache(
     }
   }
 
-  // Generate new timelapse
-  const generatedBuffer = await encodeMp4FromImages({
-    imagePaths,
-    ...cacheParams,
-  });
-
-  await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
-
-  let fileSizeBytes: number;
-
-  try {
-    fileSizeBytes = await writeCachedTimelapseFile({
-      finalPath: timelapseFilePath,
-      buffer: generatedBuffer,
-    });
-
-    await snapshotPrisma.timelapse_manifest.upsert({
-      where: { cache_key: cacheKey },
-      create: {
-        canvas_id: canvasId,
-        requested_start_at: cacheParams.requestedStartAt,
-        requested_end_at: cacheParams.requestedEndAt,
-        effective_start_at: cacheParams.effectiveStartAt,
-        effective_end_at: cacheParams.effectiveEndAt,
-        bounds_x0: cacheParams.cropBounds?.x0 ?? null,
-        bounds_y0: cacheParams.cropBounds?.y0 ?? null,
-        bounds_x1: cacheParams.cropBounds?.x1 ?? null,
-        bounds_y1: cacheParams.cropBounds?.y1 ?? null,
-        scale: cacheParams.scale,
-        frame_rate: cacheParams.frameRate,
-        end_hold_duration_ms: cacheParams.endHoldDurationMs,
-        background_color: JSON.stringify(cacheParams.backgroundColor),
-        cache_key: cacheKey,
-        file_path: timelapseFilePath,
-        file_size_bytes: fileSizeBytes,
-      },
-      update: {
-        requested_start_at: cacheParams.requestedStartAt,
-        requested_end_at: cacheParams.requestedEndAt,
-        effective_start_at: cacheParams.effectiveStartAt,
-        effective_end_at: cacheParams.effectiveEndAt,
-        bounds_x0: cacheParams.cropBounds?.x0 ?? null,
-        bounds_y0: cacheParams.cropBounds?.y0 ?? null,
-        bounds_x1: cacheParams.cropBounds?.x1 ?? null,
-        bounds_y1: cacheParams.cropBounds?.y1 ?? null,
-        scale: cacheParams.scale,
-        frame_rate: cacheParams.frameRate,
-        end_hold_duration_ms: cacheParams.endHoldDurationMs,
-        background_color: JSON.stringify(cacheParams.backgroundColor),
-        file_path: timelapseFilePath,
-        file_size_bytes: fileSizeBytes,
-      },
-    });
-  } catch (error) {
-    await unlink(timelapseFilePath).catch(() => undefined);
-    throw error;
+  // Coalesce concurrent identical requests: if a generation is already in-flight,
+  // attach to that Promise and return its result instead of starting another.
+  const existingInFlight = inFlightTimelapses.get(cacheKey);
+  if (existingInFlight) {
+    return await existingInFlight;
   }
 
-  return generatedBuffer;
+  const generationPromise = (async () => {
+    // Perform the actual generation, write to disk atomically, and upsert manifest.
+    const generatedBuffer = await encodeMp4FromImages({
+      imagePaths,
+      ...cacheParams,
+    });
+
+    await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
+
+    let fileSizeBytes: number;
+
+    try {
+      fileSizeBytes = await writeCachedTimelapseFile({
+        finalPath: timelapseFilePath,
+        buffer: generatedBuffer,
+      });
+
+      await snapshotPrisma.timelapse_manifest.upsert({
+        where: { cache_key: cacheKey },
+        create: {
+          canvas_id: canvasId,
+          requested_start_at: cacheParams.requestedStartAt,
+          requested_end_at: cacheParams.requestedEndAt,
+          effective_start_at: cacheParams.effectiveStartAt,
+          effective_end_at: cacheParams.effectiveEndAt,
+          bounds_x0: cacheParams.cropBounds?.x0 ?? null,
+          bounds_y0: cacheParams.cropBounds?.y0 ?? null,
+          bounds_x1: cacheParams.cropBounds?.x1 ?? null,
+          bounds_y1: cacheParams.cropBounds?.y1 ?? null,
+          scale: cacheParams.scale,
+          frame_rate: cacheParams.frameRate,
+          end_hold_duration_ms: cacheParams.endHoldDurationMs,
+          background_color: JSON.stringify(cacheParams.backgroundColor),
+          cache_key: cacheKey,
+          file_path: timelapseFilePath,
+          file_size_bytes: fileSizeBytes,
+        },
+        update: {
+          requested_start_at: cacheParams.requestedStartAt,
+          requested_end_at: cacheParams.requestedEndAt,
+          effective_start_at: cacheParams.effectiveStartAt,
+          effective_end_at: cacheParams.effectiveEndAt,
+          bounds_x0: cacheParams.cropBounds?.x0 ?? null,
+          bounds_y0: cacheParams.cropBounds?.y0 ?? null,
+          bounds_x1: cacheParams.cropBounds?.x1 ?? null,
+          bounds_y1: cacheParams.cropBounds?.y1 ?? null,
+          scale: cacheParams.scale,
+          frame_rate: cacheParams.frameRate,
+          end_hold_duration_ms: cacheParams.endHoldDurationMs,
+          background_color: JSON.stringify(cacheParams.backgroundColor),
+          file_path: timelapseFilePath,
+          file_size_bytes: fileSizeBytes,
+        },
+      });
+    } catch (error) {
+      await unlink(timelapseFilePath).catch(() => undefined);
+      throw error;
+    }
+
+    return generatedBuffer;
+  })();
+
+  inFlightTimelapses.set(cacheKey, generationPromise);
+
+  try {
+    const result = await generationPromise;
+    return result;
+  } finally {
+    inFlightTimelapses.delete(cacheKey);
+  }
 }
