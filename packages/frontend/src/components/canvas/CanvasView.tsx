@@ -1195,7 +1195,11 @@ export default function CanvasView({
    */
   const handleCanvasClick = useCallback(
     (event: PointerEvent): void => {
-      if (!(event.currentTarget instanceof HTMLElement) || !event.isPrimary)
+      if (
+        !(event.currentTarget instanceof HTMLElement) ||
+        !event.isPrimary ||
+        event.button !== 0
+      )
         return;
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
