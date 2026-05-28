@@ -1,5 +1,6 @@
 import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
+import { restorePixelHistoryEntries } from "./historyService";
 
 interface BlocklistRow {
   user_id: bigint;
@@ -47,8 +48,19 @@ export async function addUsersToBlocklist(userIds: Iterable<bigint>) {
   });
 }
 
-export async function removeUsersFromBlocklist(userIds: Iterable<bigint>) {
+export async function removeUsersFromBlocklist(
+  userIds: Iterable<bigint>,
+  shouldRestoreHistoryForCanvasId: number[] = [],
+) {
   const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
+
+  if (shouldRestoreHistoryForCanvasId.length > 0 && userIdsArray.length > 0) {
+    await restorePixelHistoryEntries(
+      userIdsArray,
+      shouldRestoreHistoryForCanvasId,
+    );
+  }
+
   await prisma.blacklist.deleteMany({
     where: {
       user_id: {
