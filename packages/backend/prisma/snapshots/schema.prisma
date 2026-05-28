@@ -31,3 +31,27 @@ model snapshot_cursor {
   dirty_from_timestamp     DateTime?
   updated_at               DateTime  @updatedAt
 }
+
+model timelapse_manifest {
+  id                   Int       @id @default(autoincrement())
+  canvas_id            Int
+  requested_start_at   DateTime?
+  requested_end_at     DateTime?
+  effective_start_at   DateTime
+  effective_end_at     DateTime
+  bounds_x0            Int?
+  bounds_y0            Int?
+  bounds_x1            Int?
+  bounds_y1            Int?
+  scale                Int
+  frame_rate           Int
+  end_hold_duration_ms Int
+  background_color     String
+  cache_key            String    @unique
+  file_path            String
+  file_size_bytes      Int?
+  created_at           DateTime  @default(now())
+  updated_at           DateTime  @updatedAt
+
+  @@index([canvas_id, effective_start_at, effective_end_at])
+}
