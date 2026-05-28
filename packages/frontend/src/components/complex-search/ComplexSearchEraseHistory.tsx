@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
@@ -47,6 +47,7 @@ interface ComplexSearchEraseHistoryProps {
   usersLength: number;
   params: ComplexPixelHistoryParams;
   resetResults: () => void;
+  onPendingChange: (isPending: boolean) => void;
 }
 
 export default function ComplexSearchEraseHistory({
@@ -54,6 +55,7 @@ export default function ComplexSearchEraseHistory({
   usersLength,
   params,
   resetResults,
+  onPendingChange,
 }: ComplexSearchEraseHistoryProps) {
   const { canvas } = useCanvasContext();
   const { data: currentEvent } = useEventInfo();
@@ -89,6 +91,10 @@ export default function ComplexSearchEraseHistory({
     },
     onSuccess: invalidateHistoryQueries,
   });
+
+  useEffect(() => {
+    onPendingChange(eraseHistoryMutation.isPending);
+  }, [eraseHistoryMutation.isPending, onPendingChange]);
 
   const { mutateAsync: eraseHistory } = eraseHistoryMutation;
 

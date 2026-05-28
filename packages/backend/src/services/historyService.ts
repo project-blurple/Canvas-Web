@@ -112,6 +112,12 @@ interface PixelHistoryRowRawResultWithCount {
   total_count: bigint;
 }
 
+interface RestoredHistoryRow {
+  canvas_id: number;
+  x: number;
+  y: number;
+}
+
 function mapPixelHistoryEntry(history: PixelHistoryRow) {
   return {
     id: history.id.toString(),
@@ -558,4 +564,47 @@ export async function deletePixelHistoryEntries(
     const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
     await addUsersToBlocklist(authorIds);
   }
+}
+
+export async function restorePixelHistoryEntries(
+  userIds: Iterable<bigint>,
+  canvasIds: Iterable<number>,
+): Promise<void> {
+  const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
+  const canvasIdsArray =
+    Array.isArray(canvasIds) ? canvasIds : Array.from(canvasIds);
+
+  if (userIdsArray.length === 0 || canvasIdsArray.length === 0) {
+    return;
+  }
+
+  const restoredEntries = await prisma.$transaction(async (tx) => {
+    const rows = await tx.$queryRaw<RestoredHistoryRow[]>`
+      UPDATE history
+      SET erased_at = NULL
+      WHERE user_id = ANY(${userIdsArray})
+        AND canvas_id = ANY(${canvasIdsArray})
+        AND erased_at IS NOT NULL
+      RETURNING canvas_id, x, y
+    `;
+
+    return rows;
+  });
+
+  if (restoredEntries.length === 0) {
+    return;
+  }
+
+  const coordinatesByCanvas = new Map<number, Point[]>();
+  for (const entry of restoredEntries) {
+    const coordinates = coordinatesByCanvas.get(entry.canvas_id) ?? [];
+    coordinates.push({ x: entry.x, y: entry.y });
+    coordinatesByCanvas.set(entry.canvas_id, coordinates);
+  }
+
+  await Promise.all(
+    Array.from(coordinatesByCanvas.entries(), async ([canvasId, coordinates]) =>
+      restorePixelsAfterHistoryModification(canvasId, coordinates),
+    ),
+  );
 }

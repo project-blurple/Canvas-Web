@@ -11,6 +11,7 @@ import {
 import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
+import { useCanvasContext } from "@/contexts";
 import { useBlocklist, useBlocklistMutations } from "@/hooks/queries";
 import { BlocklistFooterSection } from "./BlocklistTabFooter";
 
@@ -153,6 +154,7 @@ const BlocklistTabBlock = styled(TabPanel)`
 export default function BlocklistTab(
   props: React.ComponentPropsWithoutRef<typeof BlocklistTabBlock>,
 ) {
+  const { canvas } = useCanvasContext();
   const { data: blocklist = [], isLoading } = useBlocklist();
   const { handleAdd, handleRemove } = useBlocklistMutations();
 
@@ -160,6 +162,7 @@ export default function BlocklistTab(
   const [searchQuery, setSearchQuery] = useState("");
   const [userIdsToBlock, setUserIdsToBlock] = useState<bigint[]>([]);
   const [selectionResetKey, setSelectionResetKey] = useState(0);
+  const [shouldRestoreHistory, setShouldRestoreHistory] = useState(false);
   const selectionFormId = useId();
 
   const existingBlocklistIdStrings = useMemo(
@@ -191,10 +194,14 @@ export default function BlocklistTab(
     const userIds = readSelectedUsers(form);
     if (userIds.size === 0) return;
 
-    handleRemove(userIds).then((success) => {
+    const shouldRestoreHistoryForCanvasId =
+      shouldRestoreHistory ? [canvas.id] : [];
+
+    handleRemove(userIds, shouldRestoreHistoryForCanvasId).then((success) => {
       if (success) {
         setSelectedUsers(new Set());
         setSelectionResetKey((value) => value + 1);
+        setShouldRestoreHistory(false);
       }
     });
   }
@@ -309,6 +316,8 @@ export default function BlocklistTab(
           existingBlocklistIdStrings={existingBlocklistIdStrings}
           onBlock={handleBlockWithReset}
           selectionFormId={selectionFormId}
+          shouldRestoreHistory={shouldRestoreHistory}
+          onShouldRestoreHistoryChange={setShouldRestoreHistory}
         />
       </ActionPanelTabBody>
     </BlocklistTabBlock>

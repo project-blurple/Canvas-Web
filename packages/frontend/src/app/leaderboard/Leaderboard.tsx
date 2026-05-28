@@ -73,11 +73,9 @@ export default function Leaderboard() {
           ))
         : isLeaderboardEmpty ?
           <NoContentsMessage>No leaderboard found</NoContentsMessage>
-        : entries?.map(
-            (
-              entry: any, // ToDo: re-apply types
-            ) => <LeaderboardRow key={entry.userId} entry={entry} />,
-          )
+        : entries?.map((entry) => (
+            <LeaderboardRow key={entry.userId} entry={entry} />
+          ))
         }
       </List>
       <Pagination

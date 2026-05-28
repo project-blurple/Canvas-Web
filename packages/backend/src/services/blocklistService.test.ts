@@ -7,6 +7,14 @@ import {
   userIsBlocklisted,
 } from "./blocklistService";
 
+const { restorePixelHistoryEntriesMock } = vi.hoisted(() => ({
+  restorePixelHistoryEntriesMock: vi.fn(),
+}));
+
+vi.mock("./historyService", () => ({
+  restorePixelHistoryEntries: restorePixelHistoryEntriesMock,
+}));
+
 describe("blocklistService", () => {
   beforeEach(async () => {
     await seedUsers();
@@ -60,6 +68,12 @@ describe("blocklistService", () => {
       await removeUsersFromBlocklist(new Set([1n]));
 
       await expect(userIsBlocklisted(1n)).resolves.toBe(false);
+    });
+
+    it("restores pixel history before removing users when requested", async () => {
+      await removeUsersFromBlocklist(new Set([1n]), [1]);
+
+      expect(restorePixelHistoryEntriesMock).toHaveBeenCalledWith([1n], [1]);
     });
   });
 });
