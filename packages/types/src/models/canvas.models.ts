@@ -1,5 +1,5 @@
 import z from "zod";
-import { OptionalFrameBoundsModel } from "./frame.models";
+import { OptionalFrameBoundsModel } from "./bounds.models";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
