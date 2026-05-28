@@ -75,6 +75,8 @@ interface BlocklistFooterSectionProps {
   existingBlocklistIdStrings: Set<string>;
   onBlock: (userIds: Iterable<bigint>) => Promise<boolean>;
   selectionFormId: string;
+  shouldRestoreHistory: boolean;
+  onShouldRestoreHistoryChange: (value: boolean) => void;
 }
 
 interface BlocklistAddSectionProps {
@@ -87,6 +89,8 @@ interface BlocklistAddSectionProps {
 interface BlocklistRemoveSectionProps {
   selectedUsers: Set<bigint>;
   selectionFormId: string;
+  shouldRestoreHistory: boolean;
+  onShouldRestoreHistoryChange: (value: boolean) => void;
 }
 
 function parseUserIds(value: string): bigint[] {
@@ -229,19 +233,34 @@ function BlocklistAddSection({
 function BlocklistRemoveSection({
   selectedUsers,
   selectionFormId,
+  shouldRestoreHistory,
+  onShouldRestoreHistoryChange,
 }: BlocklistRemoveSectionProps) {
   const isRemoving =
     useIsMutating({ mutationKey: ["blocklist", "remove"] }) > 0;
 
   return (
-    <StyledButton
-      form={selectionFormId}
-      type="submit"
-      disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
-    >
-      Remove {selectedUsers.size} user
-      {selectedUsers.size !== 1 ? "s" : ""} from blocklist
-    </StyledButton>
+    <BlocklistAddWrapper>
+      <label>
+        <input
+          checked={shouldRestoreHistory}
+          disabled={Boolean(isRemoving)}
+          onChange={(event) =>
+            onShouldRestoreHistoryChange(event.currentTarget.checked)
+          }
+          type="checkbox"
+        />{" "}
+        Restore erased pixel history
+      </label>
+      <StyledButton
+        form={selectionFormId}
+        type="submit"
+        disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
+      >
+        Remove {selectedUsers.size} user
+        {selectedUsers.size !== 1 ? "s" : ""} from blocklist
+      </StyledButton>
+    </BlocklistAddWrapper>
   );
 }
 
@@ -252,19 +271,23 @@ export function BlocklistFooterSection({
   existingBlocklistIdStrings,
   onBlock,
   selectionFormId,
+  shouldRestoreHistory,
+  onShouldRestoreHistoryChange,
 }: BlocklistFooterSectionProps) {
   return (
     <BlocklistFooter>
       {selectedUsers.size === 0 ?
         <BlocklistAddSection
-          userIdsToBlock={userIdsToBlock}
-          onUserIdsToBlockChange={onUserIdsToBlockChange}
           existingBlocklistIdStrings={existingBlocklistIdStrings}
+          userIdsToBlock={userIdsToBlock}
           onBlock={onBlock}
+          onUserIdsToBlockChange={onUserIdsToBlockChange}
         />
       : <BlocklistRemoveSection
           selectedUsers={selectedUsers}
           selectionFormId={selectionFormId}
+          shouldRestoreHistory={shouldRestoreHistory}
+          onShouldRestoreHistoryChange={onShouldRestoreHistoryChange}
         />
       }
     </BlocklistFooter>
