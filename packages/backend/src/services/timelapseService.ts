@@ -27,12 +27,14 @@ async function encodeMp4FromImages({
   frameRate,
   backgroundColor,
   cropBounds,
+  endHoldDurationMs,
   scale,
 }: {
   imagePaths: string[];
   frameRate: number;
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
+  endHoldDurationMs: number;
   scale: CanvasExportScale;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
@@ -56,6 +58,10 @@ async function encodeMp4FromImages({
     : "";
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
+  const endHoldFrameCount =
+    endHoldDurationMs > 0 ?
+      Math.max(0, Math.ceil((endHoldDurationMs * frameRate) / 1000))
+    : 0;
 
   return await new Promise<Buffer>((resolve, reject) => {
     const proc = spawn(
@@ -122,10 +128,21 @@ async function encodeMp4FromImages({
     // Stream each image file into ffmpeg stdin sequentially.
     (async () => {
       try {
+        let lastFrameBuffer: Buffer | undefined;
+
         for (const p of imagePaths) {
           const buf = await readFile(p);
+          lastFrameBuffer = buf;
           if (!proc.stdin.write(buf)) {
             await new Promise((res) => proc.stdin.once("drain", res));
+          }
+        }
+
+        if (lastFrameBuffer && endHoldFrameCount > 0) {
+          for (let index = 0; index < endHoldFrameCount; index += 1) {
+            if (!proc.stdin.write(lastFrameBuffer)) {
+              await new Promise((res) => proc.stdin.once("drain", res));
+            }
           }
         }
 
@@ -207,6 +224,7 @@ export async function generateTimelapse({
     frameRate,
     backgroundColor,
     cropBounds,
+    endHoldDurationMs,
     scale,
   });
 }
