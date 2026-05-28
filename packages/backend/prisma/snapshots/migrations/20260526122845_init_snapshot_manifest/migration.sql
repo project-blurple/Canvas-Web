@@ -20,7 +20,8 @@ CREATE TABLE "snapshot_cursor" (
 );
 
 -- CreateIndex
-CREATE INDEX "snapshot_manifest_canvas_id_snapshot_at_idx" ON "snapshot_manifest"("canvas_id", "snapshot_at");
+CREATE INDEX "snapshot_manifest_canvas_id_snapshot_at_idx"
+ON "snapshot_manifest"("canvas_id", "snapshot_at");
 
--- CreateIndex
-CREATE UNIQUE INDEX "snapshot_manifest_canvas_id_history_end_id_key" ON "snapshot_manifest"("canvas_id", "history_end_id");
+CREATE UNIQUE INDEX "snapshot_manifest_canvas_id_snapshot_at_key"
+ON "snapshot_manifest"("canvas_id", "snapshot_at");
