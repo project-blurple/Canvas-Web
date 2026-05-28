@@ -1,5 +1,6 @@
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { snapshotPrisma } from "@/client/snapshots";
+import { isSnapshotAvailableForCanvas } from "./snapshotPolicy";
 
 export async function getSnapshots({
   canvasId,
@@ -10,6 +11,10 @@ export async function getSnapshots({
   from?: Date;
   to?: Date;
 }) {
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    return [];
+  }
+
   return await snapshotPrisma.snapshot_manifest.findMany({
     where: {
       canvas_id: canvasId,
