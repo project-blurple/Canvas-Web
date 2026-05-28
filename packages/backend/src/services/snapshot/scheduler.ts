@@ -193,6 +193,12 @@ export function startSnapshotScheduler(): () => void {
       });
   };
 
+  console.log(
+    "Starting snapshot scheduler with interval",
+    config.snapshot.schedulerIntervalMs,
+    "ms",
+  );
+
   tick();
 
   timer = setInterval(tick, config.snapshot.schedulerIntervalMs);

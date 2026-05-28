@@ -70,6 +70,7 @@
   "devDependencies": {
     "@testcontainers/postgresql": "^11.14.0",
     "@tsconfig/node24": "^24.0.4",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
