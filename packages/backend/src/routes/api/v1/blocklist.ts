@@ -47,7 +47,11 @@ blocklistRouter.delete(
     );
     res.status(204).send();
     void audit(req, "moderator", "blocklist.remove", {
-      metadata: { userIds: req.body.userIds.map((id) => id.toString()) },
+      metadata: {
+        userIds: req.body.userIds.map((id) => id.toString()),
+        shouldRestoreHistoryForCanvasId:
+          req.body.shouldRestoreHistoryForCanvasId,
+      },
     });
   },
 );
