@@ -36,8 +36,8 @@ interface generateTimelapseParams {
 
 interface TimelapseCacheParams {
   canvasId: CanvasInfo["id"];
-  requestedStartAt: Date | undefined;
-  requestedEndAt: Date | undefined;
+  requestedStartAt?: Date | undefined;
+  requestedEndAt?: Date | undefined;
   effectiveStartAt: Date;
   effectiveEndAt: Date;
   cropBounds: Bounds | undefined;
@@ -343,18 +343,30 @@ export async function generateTimelapse({
 
   /// Check cache, return if exists
 
-  const cacheKey = buildTimelapseCacheKey({
-    canvasId,
-    requestedStartAt: start,
-    requestedEndAt: end,
-    effectiveStartAt,
-    effectiveEndAt,
-    cropBounds,
-    frameRate,
-    endHoldDurationMs,
-    scale: resolvedScale,
-    backgroundColor,
-  });
+  return await getOrCreateTimelapseFromCache(
+    {
+      canvasId,
+      requestedStartAt: start,
+      requestedEndAt: end,
+      effectiveStartAt,
+      effectiveEndAt,
+      cropBounds,
+      frameRate,
+      endHoldDurationMs,
+      scale: resolvedScale,
+      backgroundColor,
+    },
+    imagePaths,
+  );
+}
+
+async function getOrCreateTimelapseFromCache(
+  cacheParams: TimelapseCacheParams,
+  imagePaths: string[],
+): Promise<Buffer> {
+  const canvasId = cacheParams.canvasId;
+
+  const cacheKey = buildTimelapseCacheKey(cacheParams);
   const timelapseFileName = `${cacheKey}.mp4`;
   const timelapseFilePath = getTimelapseVideoPath(canvasId, timelapseFileName);
   const currentCursorUpdatedAt = await getSnapshotCursorUpdatedAt(canvasId);
@@ -370,19 +382,15 @@ export async function generateTimelapse({
   ) {
     const cachedBuffer = await readCachedTimelapse(existingCache.file_path);
     if (cachedBuffer) {
+      // Return from cache
       return cachedBuffer;
     }
   }
 
-  /// Generate timelapse
-
+  // Generate new timelapse
   const generatedBuffer = await encodeMp4FromImages({
     imagePaths,
-    frameRate,
-    backgroundColor,
-    cropBounds,
-    endHoldDurationMs,
-    scale: resolvedScale,
+    ...cacheParams,
   });
 
   await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
@@ -399,35 +407,35 @@ export async function generateTimelapse({
       where: { cache_key: cacheKey },
       create: {
         canvas_id: canvasId,
-        requested_start_at: start,
-        requested_end_at: end,
-        effective_start_at: effectiveStartAt,
-        effective_end_at: effectiveEndAt,
-        bounds_x0: cropBounds?.x0 ?? null,
-        bounds_y0: cropBounds?.y0 ?? null,
-        bounds_x1: cropBounds?.x1 ?? null,
-        bounds_y1: cropBounds?.y1 ?? null,
-        scale: resolvedScale,
-        frame_rate: frameRate,
-        end_hold_duration_ms: endHoldDurationMs,
-        background_color: JSON.stringify(backgroundColor),
+        requested_start_at: cacheParams.requestedStartAt,
+        requested_end_at: cacheParams.requestedEndAt,
+        effective_start_at: cacheParams.effectiveStartAt,
+        effective_end_at: cacheParams.effectiveEndAt,
+        bounds_x0: cacheParams.cropBounds?.x0 ?? null,
+        bounds_y0: cacheParams.cropBounds?.y0 ?? null,
+        bounds_x1: cacheParams.cropBounds?.x1 ?? null,
+        bounds_y1: cacheParams.cropBounds?.y1 ?? null,
+        scale: cacheParams.scale,
+        frame_rate: cacheParams.frameRate,
+        end_hold_duration_ms: cacheParams.endHoldDurationMs,
+        background_color: JSON.stringify(cacheParams.backgroundColor),
         cache_key: cacheKey,
         file_path: timelapseFilePath,
         file_size_bytes: fileSizeBytes,
       },
       update: {
-        requested_start_at: start,
-        requested_end_at: end,
-        effective_start_at: effectiveStartAt,
-        effective_end_at: effectiveEndAt,
-        bounds_x0: cropBounds?.x0 ?? null,
-        bounds_y0: cropBounds?.y0 ?? null,
-        bounds_x1: cropBounds?.x1 ?? null,
-        bounds_y1: cropBounds?.y1 ?? null,
-        scale: resolvedScale,
-        frame_rate: frameRate,
-        end_hold_duration_ms: endHoldDurationMs,
-        background_color: JSON.stringify(backgroundColor),
+        requested_start_at: cacheParams.requestedStartAt,
+        requested_end_at: cacheParams.requestedEndAt,
+        effective_start_at: cacheParams.effectiveStartAt,
+        effective_end_at: cacheParams.effectiveEndAt,
+        bounds_x0: cacheParams.cropBounds?.x0 ?? null,
+        bounds_y0: cacheParams.cropBounds?.y0 ?? null,
+        bounds_x1: cacheParams.cropBounds?.x1 ?? null,
+        bounds_y1: cacheParams.cropBounds?.y1 ?? null,
+        scale: cacheParams.scale,
+        frame_rate: cacheParams.frameRate,
+        end_hold_duration_ms: cacheParams.endHoldDurationMs,
+        background_color: JSON.stringify(cacheParams.backgroundColor),
         file_path: timelapseFilePath,
         file_size_bytes: fileSizeBytes,
       },
