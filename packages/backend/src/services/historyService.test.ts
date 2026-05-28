@@ -7,14 +7,16 @@ import {
   restorePixelHistoryEntries,
 } from "./historyService";
 
+const { updateCachedCanvasPixelMock } = vi.hoisted(() => ({
+  updateCachedCanvasPixelMock: vi.fn(),
+}));
+
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
     broadcastPixelBulkPlacement: vi.fn(),
   },
 }));
-
-const updateCachedCanvasPixelMock = vi.fn();
 
 vi.mock("./canvasService", () => ({
   updateCachedCanvasPixel: updateCachedCanvasPixelMock,
@@ -203,13 +205,33 @@ describe("restorePixelHistoryEntries", () => {
       data: { id: 1n, invite: "test-guild" },
     });
     await prisma.user.createMany({
-      data: [{ id: 1n }, { id: 2n }],
+      data: [{ id: 1n }, { id: 2n }, { id: 9n }],
+    });
+    await prisma.discord_user_profile.create({
+      data: {
+        username: "test_user_9",
+        profile_picture_url: "https://example.com/avatar9.png",
+        user: {
+          connect: { id: 9n },
+        },
+      },
     });
     await prisma.canvas.create({
       data: {
         id: 1,
         event_id: 1,
         name: "Test Canvas",
+        width: 2,
+        height: 2,
+        locked: false,
+        cooldown_length: 0,
+      },
+    });
+    await prisma.canvas.create({
+      data: {
+        id: 2,
+        event_id: 1,
+        name: "Test Canvas 2",
         width: 2,
         height: 2,
         locked: false,
@@ -300,7 +322,10 @@ describe("restorePixelHistoryEntries", () => {
     await restorePixelHistoryEntries([9n], [1]);
 
     const restoredHistory = await prisma.history.findMany({
-      where: { user_id: 9n },
+      where: {
+        user_id: 9n,
+        canvas_id: 1,
+      },
       orderBy: [{ x: "asc" }, { y: "asc" }],
     });
 

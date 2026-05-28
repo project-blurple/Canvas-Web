@@ -7,7 +7,9 @@ import {
   userIsBlocklisted,
 } from "./blocklistService";
 
-const restorePixelHistoryEntriesMock = vi.fn();
+const { restorePixelHistoryEntriesMock } = vi.hoisted(() => ({
+  restorePixelHistoryEntriesMock: vi.fn(),
+}));
 
 vi.mock("./historyService", () => ({
   restorePixelHistoryEntries: restorePixelHistoryEntriesMock,
