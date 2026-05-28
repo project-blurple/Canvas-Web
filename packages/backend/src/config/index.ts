@@ -13,6 +13,25 @@ function requiredEnv(key: keyof NodeJS.ProcessEnv): string {
   return value;
 }
 
+const BYPASS_AUTH_BANNER = String.raw`
+######################################################################
+#                                                                    #
+#       __          __     _____  _   _ _____ _   _  _____           #
+#       \ \        / /\   |  __ \| \ | |_   _| \ | |/ ____|          #
+#        \ \  /\  / /  \  | |__) |  \| | | | |  \| | |  __           #
+#         \ \/  \/ / /\ \ |  _  /| .   | | | | .   | | |_ |          #
+#          \  /\  / ____ \| | \ \| |\  |_| |_| |\  | |__| |          #
+#           \/  \/_/    \_\_|  \_\_| \_|_____|_| \_|\_____|          #
+#                                                                    #
+#  WARNING: BYPASS AUTH IS ENABLED                                   #
+#                                                                    #
+#  Canvas moderator and admin authorization checks are DISABLED.     #
+#  This must only be used for local development.                     #
+#  Do not deploy with BYPASS_AUTH=true.                              #
+#                                                                    #
+######################################################################
+`.trim();
+
 const config = {
   /**
    * In development mode, secure cookies are not used for sending the profile. This is because
@@ -62,31 +81,10 @@ const config = {
 } as const;
 
 if (config.bypassAuth) {
-  console.warn(
-    [
-      "",
-      "######################################################################",
-      "#                                                                    #",
-      "#       __          __     _____  _   _ _____ _   _  _____           #",
-      String.raw`#       \ \        / /\   |  __ \| \ | |_   _| \ | |/ ____|          #`,
-      String.raw`#        \ \  /\  / /  \  | |__) |  \| | | | |  \| | |  __           #`,
-      String.raw`#         \ \/  \/ / /\ \ |  _  /| .   | | | | .   | | |_ |          #`,
-      String.raw`#          \  /\  / ____ \| | \ \| |\  |_| |_| |\  | |__| |          #`,
-      String.raw`#           \/  \/_/    \_\_|  \_\_| \_|_____|_| \_|\_____|          #`,
-      "#                                                                    #",
-      "#  WARNING: BYPASS AUTH IS ENABLED                                   #",
-      "#                                                                    #",
-      "#  Canvas moderator and admin authorization checks are DISABLED.     #",
-      "#  This must only be used for local development.                     #",
-      "#  Do not deploy with BYPASS_AUTH=true.                              #",
-      "#                                                                    #",
-      "######################################################################",
-      "",
-    ].join("\n"),
-  );
+  console.warn(`\n${BYPASS_AUTH_BANNER}\n`);
 
-  if (config.environment === "production") {
-    throw new Error("bypassAuth cannot be enabled in production");
+  if (config.environment !== "development") {
+    throw new Error("bypassAuth can only be enabled in development");
   }
 }
 
