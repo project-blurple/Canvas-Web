@@ -9,7 +9,7 @@ export const PrismaErrorCode = {
   RecordNotFound: "P2025",
 } as const;
 
-interface Bounds {
+export interface Bounds {
   x0: number;
   y0: number;
   x1: number;

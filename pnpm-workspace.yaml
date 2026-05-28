@@ -11,11 +11,5 @@ overrides:
   protobufjs: ^7.5.5
 
 allowBuilds:
-  "@prisma/engines": false
-  better-sqlite3: true
-  cpu-features: false
-  esbuild: false
-  prisma: false
-  protobufjs: false
-  sharp: false
-  ssh2: false
+  better-sqlite3: set this to true or false
+  ffmpeg-static: true
