@@ -131,7 +131,7 @@ export async function runSnapshotSchedulerCycle(): Promise<{
     );
 
     // Build snapshot (this function will read latest snapshot and history as needed).
-    const image = await buildSnapshot({
+    const { image, lastIncludedHistoryAt } = await buildSnapshot({
       canvasId,
       before: window.bucket_end,
     });
@@ -142,6 +142,7 @@ export async function runSnapshotSchedulerCycle(): Promise<{
       snapshotAt: window.bucket_end,
       image,
       historyCount: window.history_count,
+      lastIncludedHistoryAt,
     });
 
     // Update or create the cursor: set last_processed_timestamp and clear dirty when applicable.
