@@ -198,7 +198,19 @@ export async function buildSnapshot({
         canvas.width,
         canvas.height,
       )
-    : Buffer.alloc(canvas.width * canvas.height * 4);
+    : (() => {
+        const buffer = Buffer.alloc(canvas.width * canvas.height * 4);
+
+        for (let index = 0; index < buffer.length; index += 4) {
+          // Blank pixel background color
+          buffer[index] = 88;
+          buffer[index + 1] = 101;
+          buffer[index + 2] = 242;
+          buffer[index + 3] = 127;
+        }
+
+        return buffer;
+      })();
 
   for (const entry of historyEntries) {
     applyHistoryEntryToRawBuffer(rawBuffer, canvas.width, entry);

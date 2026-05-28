@@ -168,6 +168,12 @@ export async function runSnapshotSchedulerCycle(): Promise<{
     processed += 1;
   }
 
+  if (processed > 0) {
+    console.log(
+      `Snapshot scheduler cycle completed. Processed ${processed} ${processed === 1 ? "snapshot" : "snapshots"}, skipped ${skipped} ${skipped === 1 ? "window" : "windows"}.`,
+    );
+  }
+
   return { processed, skipped };
 }
 
