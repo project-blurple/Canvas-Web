@@ -7,7 +7,8 @@ import {
   type PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
-import type { Bounds } from "@/utils";
+import { type Bounds, clamp, normalizeBounds } from "@/utils";
+import { getCanvasInfo } from "./canvasService";
 import { getSnapshots } from "./snapshot/snapshotService";
 
 interface generateTimelapseParams {
@@ -25,10 +26,12 @@ async function encodeMp4FromImages({
   imagePaths,
   frameRate,
   backgroundColor,
+  cropBounds,
 }: {
   imagePaths: string[];
   frameRate: number;
   backgroundColor: PaletteColor["rgba"];
+  cropBounds?: Bounds;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
 
@@ -43,6 +46,12 @@ async function encodeMp4FromImages({
   const ffmpegBackgroundColor = `#${r.toString(16).padStart(2, "0")}${g
     .toString(16)
     .padStart(2, "0")}${b.toString(16).padStart(2, "0")}@${backgroundAlpha}`;
+  const baseFilterGraph =
+    "[1:v][0:v]scale2ref[bg][fg];[bg][fg]overlay=shortest=1:format=auto";
+  const filterGraph =
+    cropBounds ?
+      `${baseFilterGraph},crop=${cropBounds.x1 - cropBounds.x0}:${cropBounds.y1 - cropBounds.y0}:${cropBounds.x0}:${cropBounds.y0}`
+    : baseFilterGraph;
 
   return await new Promise<Buffer>((resolve, reject) => {
     const proc = spawn(
@@ -62,7 +71,7 @@ async function encodeMp4FromImages({
         "-i",
         `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
         "-filter_complex",
-        "[1:v][0:v]scale2ref[bg][fg];[bg][fg]overlay=shortest=1:format=auto",
+        filterGraph,
         "-an",
         "-c:v",
         "libx264",
@@ -136,7 +145,6 @@ export async function generateTimelapse({
   backgroundColor = [35, 39, 42, 255],
 }: generateTimelapseParams): Promise<Buffer> {
   // Intentionally not implemented yet in this first iteration.
-  void bounds;
   void endHoldDurationMs;
   void scale;
 
@@ -160,5 +168,41 @@ export async function generateTimelapse({
 
   const imagePaths = orderedSnapshots.map((s) => s.image_path);
 
-  return await encodeMp4FromImages({ imagePaths, frameRate, backgroundColor });
+  let cropBounds: Bounds | undefined;
+
+  if (bounds) {
+    const normalizedBounds = normalizeBounds(bounds);
+    const canvas = await getCanvasInfo(canvasId);
+
+    const clampedBounds: Bounds = {
+      x0: clamp(normalizedBounds.x0, 0, canvas.width - 1),
+      y0: clamp(normalizedBounds.y0, 0, canvas.height - 1),
+      x1: clamp(normalizedBounds.x1, 0, canvas.width - 1),
+      y1: clamp(normalizedBounds.y1, 0, canvas.height - 1),
+    };
+
+    const cropWidth = clampedBounds.x1 - clampedBounds.x0;
+    const cropHeight = clampedBounds.y1 - clampedBounds.y0;
+
+    if (cropWidth <= 0 || cropHeight <= 0) {
+      throw new Error("Bounds are invalid after normalization and clamping");
+    }
+
+    const isFullCanvasBounds =
+      clampedBounds.x0 === 0 &&
+      clampedBounds.y0 === 0 &&
+      clampedBounds.x1 === canvas.width &&
+      clampedBounds.y1 === canvas.height;
+
+    if (!isFullCanvasBounds) {
+      cropBounds = clampedBounds;
+    }
+  }
+
+  return await encodeMp4FromImages({
+    imagePaths,
+    frameRate,
+    backgroundColor,
+    cropBounds,
+  });
 }

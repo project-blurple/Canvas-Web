@@ -24,3 +24,10 @@ export function normalizeBounds({ x0, y0, x1, y1 }: Bounds): Bounds {
     y1: Math.max(y0, y1),
   };
 }
+
+/**
+ * Return the value clamped so that it is within the range [min, max].
+ */
+export function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
