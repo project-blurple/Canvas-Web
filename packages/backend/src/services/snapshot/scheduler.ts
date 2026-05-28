@@ -37,11 +37,13 @@ async function persistSnapshot({
   snapshotAt,
   image,
   historyCount,
+  lastIncludedHistoryAt,
 }: {
   canvasId: number;
   snapshotAt: Date;
   image: Buffer;
   historyCount: number;
+  lastIncludedHistoryAt?: Date | null;
 }): Promise<void> {
   const filePath = getSnapshotImagePath(
     canvasId,
@@ -62,10 +64,12 @@ async function persistSnapshot({
       snapshot_at: snapshotAt,
       history_count: historyCount,
       image_path: filePath,
+      last_included_history_at: lastIncludedHistoryAt,
     },
     update: {
       history_count: historyCount,
       image_path: filePath,
+      last_included_history_at: lastIncludedHistoryAt,
     },
   });
 }

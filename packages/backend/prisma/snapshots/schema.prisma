@@ -11,14 +11,15 @@ datasource db_snapshot {
 }
 
 model snapshot_manifest {
-  id              Int      @id @default(autoincrement())
-  canvas_id       Int
-  snapshot_at     DateTime
-  history_count   Int      @default(0)
-  image_path      String
-  file_size_bytes Int?
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id                       Int      @id @default(autoincrement())
+  canvas_id                Int
+  snapshot_at              DateTime
+  history_count            Int      @default(0)
+  last_included_history_at DateTime
+  image_path               String
+  file_size_bytes          Int?
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
 
   @@unique([canvas_id, snapshot_at])
   @@index([canvas_id, snapshot_at])

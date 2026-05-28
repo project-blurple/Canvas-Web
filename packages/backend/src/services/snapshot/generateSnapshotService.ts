@@ -180,7 +180,10 @@ function applyHistoryEntryToRawBuffer(
 export async function buildSnapshot({
   canvasId,
   before,
-}: BuildSnapshotParams): Promise<Buffer> {
+}: BuildSnapshotParams): Promise<{
+  image: Buffer;
+  lastIncludedHistoryAt: Date | null;
+}> {
   const canvas = await getCanvasInfo(canvasId);
   const latestSnapshot = await getLatestSnapshotForCanvas({ canvasId, before });
 
@@ -190,6 +193,11 @@ export async function buildSnapshot({
     from,
     to: before,
   });
+
+  const lastIncludedHistoryAt =
+    historyEntries.length > 0 ?
+      new Date(Math.max(...historyEntries.map((e) => e.timestamp.getTime())))
+    : null;
 
   const rawBuffer =
     latestSnapshot ?
@@ -216,7 +224,7 @@ export async function buildSnapshot({
     applyHistoryEntryToRawBuffer(rawBuffer, canvas.width, entry);
   }
 
-  return sharp(rawBuffer, {
+  const image = await sharp(rawBuffer, {
     raw: {
       width: canvas.width,
       height: canvas.height,
@@ -225,4 +233,6 @@ export async function buildSnapshot({
   })
     .png()
     .toBuffer();
+
+  return { image, lastIncludedHistoryAt };
 }
