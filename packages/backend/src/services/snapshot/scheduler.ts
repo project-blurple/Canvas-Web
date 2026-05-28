@@ -43,7 +43,7 @@ async function persistSnapshot({
   snapshotAt: Date;
   image: Buffer;
   historyCount: number;
-  lastIncludedHistoryAt?: Date | null;
+  lastIncludedHistoryAt: Date;
 }): Promise<void> {
   const filePath = getSnapshotImagePath(
     canvasId,

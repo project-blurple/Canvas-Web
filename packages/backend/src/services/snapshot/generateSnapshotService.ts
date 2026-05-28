@@ -182,7 +182,7 @@ export async function buildSnapshot({
   before,
 }: BuildSnapshotParams): Promise<{
   image: Buffer;
-  lastIncludedHistoryAt: Date | null;
+  lastIncludedHistoryAt: Date;
 }> {
   const canvas = await getCanvasInfo(canvasId);
   const latestSnapshot = await getLatestSnapshotForCanvas({ canvasId, before });
@@ -197,7 +197,7 @@ export async function buildSnapshot({
   const lastIncludedHistoryAt =
     historyEntries.length > 0 ?
       new Date(Math.max(...historyEntries.map((e) => e.timestamp.getTime())))
-    : null;
+    : from;
 
   const rawBuffer =
     latestSnapshot ?
