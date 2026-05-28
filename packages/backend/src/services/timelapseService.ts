@@ -4,6 +4,7 @@ import {
   type CanvasExportScale,
   type CanvasInfo,
   DEFAULT_CANVAS_EXPORT_SCALE,
+  type PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
 import type { Bounds } from "@/utils";
@@ -17,14 +18,17 @@ interface generateTimelapseParams {
   frameRate?: number;
   endHoldDurationMs?: number;
   scale?: CanvasExportScale;
+  backgroundColor?: PaletteColor["rgba"];
 }
 
 async function encodeMp4FromImages({
   imagePaths,
   frameRate,
+  backgroundColor,
 }: {
   imagePaths: string[];
   frameRate: number;
+  backgroundColor: PaletteColor["rgba"];
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
 
@@ -34,6 +38,11 @@ async function encodeMp4FromImages({
 
   const outputChunks: Buffer[] = [];
   let stdErr = "";
+  const [r, g, b, a] = backgroundColor;
+  const backgroundAlpha = Math.max(0, Math.min(1, a / 255));
+  const ffmpegBackgroundColor = `#${r.toString(16).padStart(2, "0")}${g
+    .toString(16)
+    .padStart(2, "0")}${b.toString(16).padStart(2, "0")}@${backgroundAlpha}`;
 
   return await new Promise<Buffer>((resolve, reject) => {
     const proc = spawn(
@@ -48,6 +57,12 @@ async function encodeMp4FromImages({
         String(frameRate),
         "-i",
         "pipe:0",
+        "-f",
+        "lavfi",
+        "-i",
+        `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
+        "-filter_complex",
+        "[1:v][0:v]scale2ref[bg][fg];[bg][fg]overlay=shortest=1:format=auto",
         "-an",
         "-c:v",
         "libx264",
@@ -118,6 +133,7 @@ export async function generateTimelapse({
   frameRate = 30,
   endHoldDurationMs = 2000,
   scale = DEFAULT_CANVAS_EXPORT_SCALE,
+  backgroundColor = [35, 39, 42, 255],
 }: generateTimelapseParams): Promise<Buffer> {
   // Intentionally not implemented yet in this first iteration.
   void bounds;
@@ -144,5 +160,5 @@ export async function generateTimelapse({
 
   const imagePaths = orderedSnapshots.map((s) => s.image_path);
 
-  return await encodeMp4FromImages({ imagePaths, frameRate });
+  return await encodeMp4FromImages({ imagePaths, frameRate, backgroundColor });
 }
