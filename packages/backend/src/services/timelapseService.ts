@@ -1,11 +1,24 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import {
+  mkdir,
+  readFile,
+  rename,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import type {
   CanvasExportScale,
   CanvasInfo,
   PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
+import { snapshotPrisma } from "@/client/snapshots";
+import {
+  getTimelapseCanvasDirectory,
+  getTimelapseVideoPath,
+} from "@/snapshot/paths";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "./canvasService";
 import { getSnapshots } from "./snapshot/snapshotService";
@@ -19,6 +32,99 @@ interface generateTimelapseParams {
   endHoldDurationMs?: number;
   scale?: CanvasExportScale;
   backgroundColor?: PaletteColor["rgba"];
+}
+
+interface TimelapseCacheParams {
+  canvasId: CanvasInfo["id"];
+  requestedStartAt: Date | undefined;
+  requestedEndAt: Date | undefined;
+  effectiveStartAt: Date;
+  effectiveEndAt: Date;
+  cropBounds: Bounds | undefined;
+  frameRate: number;
+  endHoldDurationMs: number;
+  scale: CanvasExportScale;
+  backgroundColor: PaletteColor["rgba"];
+}
+
+function buildTimelapseCacheKey({
+  canvasId,
+  effectiveStartAt,
+  effectiveEndAt,
+  cropBounds,
+  frameRate,
+  endHoldDurationMs,
+  scale,
+  backgroundColor,
+}: TimelapseCacheParams): string {
+  return createHash("sha256")
+    .update(
+      JSON.stringify({
+        canvasId,
+        effectiveStartAt: effectiveStartAt.toISOString(),
+        effectiveEndAt: effectiveEndAt.toISOString(),
+        bounds:
+          cropBounds ?
+            {
+              x0: cropBounds.x0,
+              y0: cropBounds.y0,
+              x1: cropBounds.x1,
+              y1: cropBounds.y1,
+            }
+          : null,
+        frameRate,
+        endHoldDurationMs,
+        scale,
+        backgroundColor,
+      }),
+    )
+    .digest("hex");
+}
+
+async function readCachedTimelapse(filePath: string): Promise<Buffer | null> {
+  try {
+    await stat(filePath);
+    return await readFile(filePath);
+  } catch {
+    return null;
+  }
+}
+
+async function getSnapshotCursorUpdatedAt(
+  canvasId: CanvasInfo["id"],
+): Promise<Date | null> {
+  const cursor = await snapshotPrisma.snapshot_cursor.findUnique({
+    where: { canvas_id: canvasId },
+    select: { updated_at: true },
+  });
+
+  return cursor?.updated_at ?? null;
+}
+
+async function writeCachedTimelapseFile({
+  finalPath,
+  buffer,
+}: {
+  finalPath: string;
+  buffer: Buffer;
+}): Promise<number> {
+  const tempPath = `${finalPath}.tmp-${process.pid}-${Date.now()}`;
+  await writeFile(tempPath, buffer);
+
+  try {
+    await unlink(finalPath);
+  } catch {
+    // File may not exist yet; that's fine.
+  }
+
+  try {
+    await rename(tempPath, finalPath);
+    const fileStats = await stat(finalPath);
+    return fileStats.size;
+  } catch (error) {
+    await unlink(tempPath).catch(() => undefined);
+    throw error;
+  }
 }
 
 async function encodeMp4FromImages({
@@ -166,6 +272,8 @@ export async function generateTimelapse({
 }: generateTimelapseParams): Promise<Buffer> {
   // TODO: Configurable speed
 
+  /// Validate parameters
+
   if (!Number.isFinite(frameRate) || frameRate <= 0) {
     throw new Error("frameRate must be a positive number");
   }
@@ -185,6 +293,14 @@ export async function generateTimelapse({
   );
 
   const imagePaths = orderedSnapshots.map((s) => s.image_path);
+  const effectiveStartAt = orderedSnapshots[0]?.snapshot_at;
+  const effectiveEndAt = orderedSnapshots.at(-1)?.snapshot_at;
+
+  if (!effectiveStartAt || !effectiveEndAt) {
+    throw new Error(
+      `Could not determine canonical snapshot bounds for canvas ${canvasId}`,
+    );
+  }
 
   let cropBounds: Bounds | undefined;
   const canvas = await getCanvasInfo(canvasId);
@@ -217,18 +333,109 @@ export async function generateTimelapse({
     }
   }
 
-  const autoScale = calculateScale(
-    cropBounds ?
-      (cropBounds.x1 - cropBounds.x0) * (cropBounds.y1 - cropBounds.y0)
-    : canvas.width * canvas.height,
-  );
+  const resolvedScale =
+    scale ??
+    calculateScale(
+      cropBounds ?
+        (cropBounds.x1 - cropBounds.x0) * (cropBounds.y1 - cropBounds.y0)
+      : canvas.width * canvas.height,
+    );
 
-  return await encodeMp4FromImages({
+  /// Check cache, return if exists
+
+  const cacheKey = buildTimelapseCacheKey({
+    canvasId,
+    requestedStartAt: start,
+    requestedEndAt: end,
+    effectiveStartAt,
+    effectiveEndAt,
+    cropBounds,
+    frameRate,
+    endHoldDurationMs,
+    scale: resolvedScale,
+    backgroundColor,
+  });
+  const timelapseFileName = `${cacheKey}.mp4`;
+  const timelapseFilePath = getTimelapseVideoPath(canvasId, timelapseFileName);
+  const currentCursorUpdatedAt = await getSnapshotCursorUpdatedAt(canvasId);
+
+  const existingCache = await snapshotPrisma.timelapse_manifest.findUnique({
+    where: { cache_key: cacheKey },
+  });
+
+  if (
+    existingCache &&
+    currentCursorUpdatedAt &&
+    existingCache.updated_at >= currentCursorUpdatedAt
+  ) {
+    const cachedBuffer = await readCachedTimelapse(existingCache.file_path);
+    if (cachedBuffer) {
+      return cachedBuffer;
+    }
+  }
+
+  /// Generate timelapse
+
+  const generatedBuffer = await encodeMp4FromImages({
     imagePaths,
     frameRate,
     backgroundColor,
     cropBounds,
     endHoldDurationMs,
-    scale: scale ?? autoScale,
+    scale: resolvedScale,
   });
+
+  await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
+
+  let fileSizeBytes: number;
+
+  try {
+    fileSizeBytes = await writeCachedTimelapseFile({
+      finalPath: timelapseFilePath,
+      buffer: generatedBuffer,
+    });
+
+    await snapshotPrisma.timelapse_manifest.upsert({
+      where: { cache_key: cacheKey },
+      create: {
+        canvas_id: canvasId,
+        requested_start_at: start,
+        requested_end_at: end,
+        effective_start_at: effectiveStartAt,
+        effective_end_at: effectiveEndAt,
+        bounds_x0: cropBounds?.x0 ?? null,
+        bounds_y0: cropBounds?.y0 ?? null,
+        bounds_x1: cropBounds?.x1 ?? null,
+        bounds_y1: cropBounds?.y1 ?? null,
+        scale: resolvedScale,
+        frame_rate: frameRate,
+        end_hold_duration_ms: endHoldDurationMs,
+        background_color: JSON.stringify(backgroundColor),
+        cache_key: cacheKey,
+        file_path: timelapseFilePath,
+        file_size_bytes: fileSizeBytes,
+      },
+      update: {
+        requested_start_at: start,
+        requested_end_at: end,
+        effective_start_at: effectiveStartAt,
+        effective_end_at: effectiveEndAt,
+        bounds_x0: cropBounds?.x0 ?? null,
+        bounds_y0: cropBounds?.y0 ?? null,
+        bounds_x1: cropBounds?.x1 ?? null,
+        bounds_y1: cropBounds?.y1 ?? null,
+        scale: resolvedScale,
+        frame_rate: frameRate,
+        end_hold_duration_ms: endHoldDurationMs,
+        background_color: JSON.stringify(backgroundColor),
+        file_path: timelapseFilePath,
+        file_size_bytes: fileSizeBytes,
+      },
+    });
+  } catch (error) {
+    await unlink(timelapseFilePath).catch(() => undefined);
+    throw error;
+  }
+
+  return generatedBuffer;
 }

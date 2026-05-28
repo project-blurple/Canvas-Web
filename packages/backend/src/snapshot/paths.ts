@@ -5,6 +5,11 @@ export const SNAPSHOT_IMAGE_ROOT = resolve(
   "static",
   "snapshots",
 );
+export const TIMELAPSE_VIDEO_ROOT = resolve(
+  process.cwd(),
+  "static",
+  "timelapse",
+);
 export const SNAPSHOT_DATABASE_PATH = resolve(
   process.cwd(),
   "data",
@@ -22,4 +27,15 @@ export function getSnapshotImagePath(
   filename: string,
 ): string {
   return resolve(getSnapshotCanvasDirectory(canvasId), filename);
+}
+
+export function getTimelapseCanvasDirectory(canvasId: number): string {
+  return resolve(TIMELAPSE_VIDEO_ROOT, String(canvasId));
+}
+
+export function getTimelapseVideoPath(
+  canvasId: number,
+  filename: string,
+): string {
+  return resolve(getTimelapseCanvasDirectory(canvasId), filename);
 }

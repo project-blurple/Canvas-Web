@@ -1,6 +1,7 @@
-# Cached canvas images
+# Cached canvas data
 **/backend/static/canvas
 **/backend/static/snapshots
+**/backend/static/timelapse
 **/backend/data/snapshots
 
 # Generated code
