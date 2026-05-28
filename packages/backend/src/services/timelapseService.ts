@@ -1,10 +1,9 @@
 import { spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import {
-  type CanvasExportScale,
-  type CanvasInfo,
-  DEFAULT_CANVAS_EXPORT_SCALE,
-  type PaletteColor,
+import type {
+  CanvasExportScale,
+  CanvasInfo,
+  PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
@@ -165,8 +164,7 @@ export async function generateTimelapse({
   scale,
   backgroundColor = [35, 39, 42, 255],
 }: generateTimelapseParams): Promise<Buffer> {
-  // Intentionally not implemented yet in this first iteration.
-  void endHoldDurationMs;
+  // TODO: Configurable speed
 
   if (!Number.isFinite(frameRate) || frameRate <= 0) {
     throw new Error("frameRate must be a positive number");
