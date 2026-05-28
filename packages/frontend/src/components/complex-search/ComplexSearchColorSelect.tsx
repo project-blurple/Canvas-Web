@@ -8,6 +8,7 @@ import DynamicButton from "@/components/button/DynamicButton";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { rgbaToCssColor } from "@/util/color";
+import ColorPreview from "../ColorPreview";
 import type { SearchFilterMode } from "./ComplexSearchTab";
 
 const SelectedColorChips = styled("div")`
@@ -18,14 +19,6 @@ const SelectedColorChips = styled("div")`
 
 const ListItem = styled("li")`
   gap: 0.5rem;
-`;
-
-const ColorPreview = styled("div")`
-  background-color: currentColor;
-  border-radius: calc(infinity * 1px);
-  border: var(--card-border);
-  height: 1em;
-  width: 1em;
 `;
 
 const ChipColorPreview = styled(ColorPreview)`
