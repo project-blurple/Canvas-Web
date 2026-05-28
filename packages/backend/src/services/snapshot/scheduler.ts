@@ -37,15 +37,11 @@ async function persistSnapshot({
   snapshotAt,
   image,
   historyCount,
-  firstHistoryId,
-  lastHistoryId,
 }: {
   canvasId: number;
   snapshotAt: Date;
   image: Buffer;
   historyCount: number;
-  firstHistoryId: bigint;
-  lastHistoryId: bigint;
 }): Promise<void> {
   const filePath = getSnapshotImagePath(
     canvasId,
@@ -54,12 +50,20 @@ async function persistSnapshot({
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, image);
 
-  await snapshotPrisma.snapshot_manifest.create({
-    data: {
+  await snapshotPrisma.snapshot_manifest.upsert({
+    where: {
+      canvas_id_snapshot_at: {
+        canvas_id: canvasId,
+        snapshot_at: snapshotAt,
+      },
+    },
+    create: {
       canvas_id: canvasId,
       snapshot_at: snapshotAt,
-      history_start_id: firstHistoryId,
-      history_end_id: lastHistoryId,
+      history_count: historyCount,
+      image_path: filePath,
+    },
+    update: {
       history_count: historyCount,
       image_path: filePath,
     },
@@ -134,8 +138,6 @@ export async function runSnapshotSchedulerCycle(): Promise<{
       snapshotAt: window.bucket_end,
       image,
       historyCount: window.history_count,
-      firstHistoryId: BigInt(0),
-      lastHistoryId: BigInt(0),
     });
 
     // Update or create the cursor: set last_processed_timestamp and clear dirty when applicable.
@@ -149,8 +151,6 @@ export async function runSnapshotSchedulerCycle(): Promise<{
         where: { canvas_id: canvasId },
         data: {
           last_processed_timestamp: snapshotAt,
-          dirty_from_history_id:
-            shouldClearDirty ? null : cursor.dirty_from_history_id,
           dirty_from_timestamp:
             shouldClearDirty ? null : cursor.dirty_from_timestamp,
         },
@@ -159,9 +159,7 @@ export async function runSnapshotSchedulerCycle(): Promise<{
       await snapshotPrisma.snapshot_cursor.create({
         data: {
           canvas_id: canvasId,
-          last_processed_history_id: BigInt(0),
           last_processed_timestamp: snapshotAt,
-          dirty_from_history_id: null,
           dirty_from_timestamp: null,
         },
       });

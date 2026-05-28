@@ -11,26 +11,22 @@ datasource db_snapshot {
 }
 
 model snapshot_manifest {
-  id               Int      @id @default(autoincrement())
-  canvas_id        Int
-  snapshot_at      DateTime
-  history_start_id BigInt
-  history_end_id   BigInt
-  history_count    Int      @default(0)
-  image_path       String
-  file_size_bytes  Int?
-  created_at       DateTime @default(now())
-  updated_at       DateTime @updatedAt
+  id              Int      @id @default(autoincrement())
+  canvas_id       Int
+  snapshot_at     DateTime
+  history_count   Int      @default(0)
+  image_path      String
+  file_size_bytes Int?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
-  @@unique([canvas_id, history_end_id])
+  @@unique([canvas_id, snapshot_at])
   @@index([canvas_id, snapshot_at])
 }
 
 model snapshot_cursor {
-  canvas_id                 Int       @id
-  last_processed_history_id BigInt    @default(0)
-  last_processed_timestamp  DateTime  @default(now())
-  dirty_from_history_id     BigInt?
-  dirty_from_timestamp      DateTime?
-  updated_at                DateTime  @updatedAt
+  canvas_id                Int       @id
+  last_processed_timestamp DateTime  @default(now())
+  dirty_from_timestamp     DateTime?
+  updated_at               DateTime  @updatedAt
 }
