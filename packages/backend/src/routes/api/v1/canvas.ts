@@ -3,6 +3,7 @@ import {
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
+  CanvasTimelapseBodyModel,
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -32,6 +33,7 @@ import {
 } from "@/services/canvasService";
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
+import { generateTimelapse } from "@/services/timelapseService";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = typedRouter(Router());
@@ -187,6 +189,21 @@ canvasRouter.delete(
   },
 );
 
+canvasRouter.post(
+  "/:canvasId/timelapse",
+  requireCanvasAdmin,
+  validate({
+    params: CanvasIdParamModel,
+    body: CanvasTimelapseBodyModel,
+  }),
+  async (req, res) => {
+    await sendCanvasTimelapseAsMp4Stream({
+      res,
+      query: { ...req.params, ...req.body },
+    });
+  },
+);
+
 /**
  * Handles sending a cached canvas as a response.
  */
@@ -240,4 +257,35 @@ async function sendCachedCanvas(
         `inline; filename="${getCanvasFilename(canvasId, false, scale, bounds)}"`,
       ),
   );
+}
+
+async function sendCanvasTimelapseAsMp4Stream({
+  res,
+  query: { canvasId, start, end, bounds, scale },
+}: {
+  res: Response;
+  query: {
+    canvasId: number;
+    start?: Date;
+    end?: Date;
+    bounds?: FrameBoundsInput;
+    scale: CanvasExportScale;
+  };
+}): Promise<void> {
+  const buffer = await generateTimelapse({
+    canvasId,
+    start: start ?? new Date(0),
+    end: end ?? new Date(),
+    bounds,
+    scale,
+  });
+
+  res
+    .status(200)
+    .type("mp4")
+    .setHeader(
+      "Content-Disposition",
+      `inline; filename="canvas-${canvasId}-timelapse.mp4"`,
+    )
+    .send(buffer);
 }

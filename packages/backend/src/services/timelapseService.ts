@@ -11,8 +11,8 @@ import { getSnapshots } from "./snapshot/snapshotService";
 
 interface generateTimelapseParams {
   canvasId: CanvasInfo["id"];
-  from?: Date;
-  to?: Date;
+  start?: Date;
+  end?: Date;
   bounds?: Bounds;
   frameRate?: number;
   endHoldDurationMs?: number;
@@ -112,8 +112,8 @@ async function encodeMp4FromImages({
 
 export async function generateTimelapse({
   canvasId,
-  from,
-  to,
+  start,
+  end,
   bounds,
   frameRate = 30,
   endHoldDurationMs = 2000,
@@ -130,8 +130,8 @@ export async function generateTimelapse({
 
   const snapshots = await getSnapshots({
     canvasId,
-    from,
-    to,
+    from: start,
+    to: end,
   });
 
   if (snapshots.length === 0) {
