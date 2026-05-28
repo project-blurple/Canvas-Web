@@ -7,11 +7,11 @@ export const SNAPSHOT_IMAGE_ROOT = resolve(
 );
 export const SNAPSHOT_DATABASE_PATH = resolve(
   process.cwd(),
-  "prisma",
+  "data",
   "snapshots",
   "snapshots.sqlite",
 );
-export const SNAPSHOT_DATABASE_URL = "file:./prisma/snapshots/snapshots.sqlite";
+export const SNAPSHOT_DATABASE_URL = "file:./data/snapshots/snapshots.sqlite";
 
 export function getSnapshotCanvasDirectory(canvasId: number): string {
   return resolve(SNAPSHOT_IMAGE_ROOT, String(canvasId));

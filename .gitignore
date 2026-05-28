@@ -1,6 +1,7 @@
 # Cached canvas images
 **/backend/static/canvas
 **/backend/static/snapshots
+**/backend/data/snapshots
 
 # Generated code
 **/node_modules/

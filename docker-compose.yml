@@ -7,6 +7,7 @@ services:
         PORT: 8000
     volumes:
       - ./packages/backend/static:/app/static
+      - backend_snapshot_data:/app/data/snapshots
     env_file:
       - ./packages/backend/.env
     environment:
@@ -49,3 +50,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  backend_snapshot_data:
