@@ -29,7 +29,7 @@ function getWindowCutoff(now: Date): Date {
 }
 
 function getSnapshotFilename(snapshotAt: Date): string {
-  return `snapshot-${snapshotAt.getTime()}.png`;
+  return `snapshot-${snapshotAt.getTime()}.webp`;
 }
 
 async function persistSnapshot({
