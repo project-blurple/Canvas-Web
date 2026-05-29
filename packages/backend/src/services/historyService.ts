@@ -12,6 +12,7 @@ import {
   restorePixelsAfterHistoryModification,
   validatePixel,
 } from "./pixelService";
+import { setSnapshotDirtyTimestamp } from "./snapshot/snapshotService";
 
 interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
@@ -123,6 +124,7 @@ interface RestoredHistoryRow {
   canvas_id: number;
   x: number;
   y: number;
+  timestamp: Date;
 }
 
 function mapPixelHistoryEntry(history: PixelHistoryRow) {
@@ -568,13 +570,14 @@ export async function deletePixelHistoryEntries(
     user_id: bigint;
     x: number;
     y: number;
+    timestamp: Date;
   }
 
   const deletedEntries = await prisma.$queryRaw<DeletedEntry[]>`
     UPDATE history h
     SET erased_at = ${erasedAt}
     WHERE ${whereSql}
-    RETURNING id, user_id, x, y
+    RETURNING id, user_id, x, y, timestamp
   `;
 
   if (deletedEntries.length === 0) return;
@@ -592,6 +595,11 @@ export async function deletePixelHistoryEntries(
     params.canvasId,
     coordinatesUpdated,
   );
+
+  const earliestEntryTimestamp = deletedEntries.reduce((earliest, entry) => {
+    return entry.timestamp < earliest ? entry.timestamp : earliest;
+  }, deletedEntries[0].timestamp);
+  await setSnapshotDirtyTimestamp(params.canvasId, earliestEntryTimestamp);
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
@@ -618,7 +626,7 @@ export async function restorePixelHistoryEntries(
       WHERE user_id = ANY(${userIdsArray})
         AND canvas_id = ANY(${canvasIdsArray})
         AND erased_at IS NOT NULL
-      RETURNING canvas_id, x, y
+      RETURNING canvas_id, x, y, timestamp
     `;
 
     return rows;
@@ -629,15 +637,33 @@ export async function restorePixelHistoryEntries(
   }
 
   const coordinatesByCanvas = new Map<number, Point[]>();
+  const earliestEntryTimestampsByCanvas = new Map<number, Date>();
   for (const entry of restoredEntries) {
     const coordinates = coordinatesByCanvas.get(entry.canvas_id) ?? [];
     coordinates.push({ x: entry.x, y: entry.y });
     coordinatesByCanvas.set(entry.canvas_id, coordinates);
+
+    if (!earliestEntryTimestampsByCanvas.has(entry.canvas_id)) {
+      earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
+    } else {
+      const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id)!;
+      if (entry.timestamp < existing) {
+        earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
+      }
+    }
   }
 
   await Promise.all(
-    Array.from(coordinatesByCanvas.entries(), async ([canvasId, coordinates]) =>
-      restorePixelsAfterHistoryModification(canvasId, coordinates),
+    Array.from(
+      coordinatesByCanvas.entries(),
+      async ([canvasId, coordinates]) => {
+        restorePixelsAfterHistoryModification(canvasId, coordinates);
+
+        await setSnapshotDirtyTimestamp(
+          canvasId,
+          earliestEntryTimestampsByCanvas.get(canvasId)!,
+        );
+      },
     ),
   );
 }
