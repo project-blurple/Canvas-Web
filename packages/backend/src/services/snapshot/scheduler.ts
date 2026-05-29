@@ -101,6 +101,21 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   const cursorByCanvas = new Map<number, snapshot_cursor>();
   for (const c of cursors) cursorByCanvas.set(c.canvas_id, c);
 
+  for (const canvasId in config.snapshot.availableForCanvases) {
+    const canvasIdNum = Number.parseInt(canvasId, 10);
+
+    if (!cursorByCanvas.has(canvasIdNum)) {
+      const newCursor = await snapshotPrisma.snapshot_cursor.create({
+        data: {
+          canvas_id: canvasIdNum,
+          last_processed_timestamp: new Date(0),
+          dirty_from_timestamp: null,
+        },
+      });
+      cursorByCanvas.set(canvasIdNum, newCursor);
+    }
+  }
+
   let processed = 0;
   let skipped = 0;
 
