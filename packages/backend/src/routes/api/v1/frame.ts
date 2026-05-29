@@ -13,6 +13,7 @@ import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { getCanvasInfo } from "@/services/canvasService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import { exportFrameAsStream } from "@/services/exportService";
 import {
@@ -24,6 +25,7 @@ import {
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
+import { generateTimelapse } from "@/services/timelapseService";
 import { normalizeBounds } from "@/utils";
 
 export const frameRouter = typedRouter(Router());
@@ -59,6 +61,35 @@ frameRouter.get(
           `inline; filename="frame-${req.params.frameId}.png"`,
         ),
     );
+  },
+);
+
+frameRouter.get(
+  "/:frameId.mp4",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    const frame = await getFrameById(req.params.frameId);
+    const canvas = await getCanvasInfo(frame.canvasId);
+    if (!canvas.isLocked) {
+      res.status(400).json({
+        error: "Timelapse generation is only available for locked canvases",
+      });
+      return;
+    }
+
+    const buffer = await generateTimelapse({
+      canvasId: frame.canvasId,
+      bounds: { ...frame },
+    });
+
+    res
+      .status(200)
+      .type("mp4")
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${frame.canvasId}-frame-${frame.id}-timelapse.mp4"`,
+      )
+      .send(buffer);
   },
 );
 
