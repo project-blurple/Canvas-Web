@@ -8,6 +8,8 @@ import {
   unlink,
   writeFile,
 } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import type {
   CanvasExportScale,
   CanvasInfo,
@@ -321,6 +323,72 @@ async function extractTimelapseLastFrameBuffer({
   return lastFrameBuffer;
 }
 
+async function streamImagePathsToFfmpegStdin({
+  stdin,
+  imagePaths,
+}: {
+  stdin: NodeJS.WritableStream;
+  imagePaths: string[];
+}): Promise<void> {
+  for (const imagePath of imagePaths) {
+    const imageBuffer = await readFile(imagePath);
+    if (!stdin.write(imageBuffer)) {
+      await new Promise((resolve) => stdin.once("drain", resolve));
+    }
+  }
+
+  stdin.end();
+}
+
+function buildMainVideoEncodeArgs({
+  frameRate,
+  ffmpegBackgroundColor,
+  filterGraph,
+  outputPath,
+  outputFormat,
+}: {
+  frameRate: number;
+  ffmpegBackgroundColor: string;
+  filterGraph: string;
+  outputPath: string;
+  outputFormat: "mp4" | "webm";
+}): string[] {
+  return [
+    // general flags: suppress banner, only show errors
+    "-hide_banner",
+    "-loglevel",
+    "error",
+
+    // INPUT (pipe): image2pipe reads raw image files streamed into stdin
+    "-f",
+    "image2pipe",
+    "-framerate",
+    String(frameRate),
+    "-i",
+    "pipe:0",
+
+    // INPUT (lavfi): a small solid-color background input used with scale2ref
+    "-f",
+    "lavfi",
+    "-i",
+    `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
+
+    // FILTER: composite the streamed images over the generated background,
+    // apply optional crop and scale (the `filterGraph` variable contains this)
+    "-filter_complex",
+    filterGraph,
+
+    // output options
+    "-an",
+    "-c:v",
+    outputFormat === "webm" ? "libvpx-vp9" : "libx264",
+    ...(outputFormat === "webm" ? ["-lossless", "1", "-pix_fmt", "yuv444p"] : ["-pix_fmt", "yuv420p", "-movflags", "frag_keyframe+empty_moov"]),
+    "-f",
+    outputFormat,
+    outputPath,
+  ];
+}
+
 async function appendTimelapseEndCardTail({
   timelapseBuffer,
   frameRate,
@@ -538,78 +606,59 @@ async function encodeMainVideoFromImages({
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
 
-  const outputOptions =
-    raw ?
-      [
-        "-c:v",
-        "libvpx-vp9",
-        "-lossless",
-        "1",
-        "-pix_fmt",
-        "yuv444p", // full colour, no subsampling
-        "-f",
-        "webm",
-        "pipe:1",
-      ]
-    : [
-        "-an",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-movflags",
-        "frag_keyframe+empty_moov",
-        "-f",
-        "mp4",
-        "pipe:1",
-      ];
+  const mainVideoBuffer = raw ? await (async () => {
+    const tempOutputPath = join(
+      tmpdir(),
+      `${process.pid}-${Date.now()}.webm`,
+    );
 
-  const mainVideoBuffer = await runFfmpegProcess({
+    try {
+      await runFfmpegProcess({
+        ffmpegPath,
+        args: buildMainVideoEncodeArgs({
+          frameRate,
+          ffmpegBackgroundColor,
+          filterGraph,
+          outputPath: tempOutputPath,
+          outputFormat: "webm",
+        }),
+        captureStdout: false,
+        onProcess: async (proc) => {
+          const stdin = proc.stdin;
+          if (!stdin) {
+            throw new Error("ffmpeg did not expose stdin");
+          }
+
+          await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
+        },
+      });
+
+      const outputBuffer = await readFile(tempOutputPath);
+      if (!outputBuffer.length) {
+        throw new Error("ffmpeg produced empty output");
+      }
+
+      return outputBuffer;
+    } finally {
+      await unlink(tempOutputPath).catch(() => undefined);
+    }
+  })() : await runFfmpegProcess({
     ffmpegPath,
-    args: [
-      // general flags: suppress banner, only show errors
-      "-hide_banner",
-      "-loglevel",
-      "error",
-
-      // INPUT (pipe): image2pipe reads raw image files streamed into stdin
-      "-f",
-      "image2pipe",
-      "-framerate",
-      String(frameRate),
-      "-i",
-      "pipe:0",
-
-      // INPUT (lavfi): a small solid-color background input used with scale2ref
-      "-f",
-      "lavfi",
-      "-i",
-      `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
-
-      // FILTER: composite the streamed images over the generated background,
-      // apply optional crop and scale (the `filterGraph` variable contains this)
-      "-filter_complex",
+    args: buildMainVideoEncodeArgs({
+      frameRate,
+      ffmpegBackgroundColor,
       filterGraph,
-
-      // output options
-      ...outputOptions,
-    ],
+      outputPath: "pipe:1",
+      outputFormat: "mp4",
+    }),
     captureStdout: true,
     onProcess: async (proc) => {
-      // Stream each image file into ffmpeg stdin sequentially.
       const stdin = proc.stdin;
       if (!stdin) {
         throw new Error("ffmpeg did not expose stdin");
       }
 
-      for (const p of imagePaths) {
-        const buf = await readFile(p);
-        if (!stdin.write(buf)) {
-          await new Promise((res) => stdin.once("drain", res));
-        }
-      }
-
-      stdin.end();
+      await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
     },
   });
 
