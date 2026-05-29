@@ -33,6 +33,7 @@ import {
   useIsFullscreenAvailable,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
+import { useSnapshots } from "@/hooks/queries/useSnapshots";
 import { useCanvasTimelineVideo } from "@/hooks/useCanvasImage";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
@@ -542,6 +543,7 @@ export default function CanvasView({
   } = useCanvasViewContext();
   const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
+  const { data: snapshots } = useSnapshots(canvas.id);
   const sourceImage = useCanvasImage(canvas.id);
   const sourceVideo = useCanvasTimelineVideo(canvas.id);
 
@@ -559,20 +561,7 @@ export default function CanvasView({
 
   const timelineFps = 30;
   const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
-  const [totalTimelineFrames, setTotalTimelineFrames] = useState(0);
-
-  function handleTimelineMetadata() {
-    const video = videoRef.current;
-    setTotalTimelineFrames(
-      video ? Math.floor(video.duration * timelineFps) : 0,
-    );
-    console.log(
-      "video duration",
-      video?.duration,
-      "total frames",
-      totalTimelineFrames,
-    );
-  }
+  const totalTimelineFrames = snapshots?.length ?? 0;
 
   function handleTimelineTimeUpdate() {
     const video = videoRef.current;
@@ -1447,7 +1436,6 @@ export default function CanvasView({
                 ref={videoRef}
                 src={sourceVideo.src}
                 crossOrigin="anonymous"
-                onLoadedMetadata={handleTimelineMetadata}
                 onTimeUpdate={handleTimelineTimeUpdate}
                 onLoadedData={(_event) => handleLoadVideo()}
                 style={{
