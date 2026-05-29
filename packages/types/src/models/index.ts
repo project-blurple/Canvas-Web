@@ -1,6 +1,5 @@
 export * from "./auditLog.models";
 export * from "./blocklist.models";
-export * from "./bounds.models";
 export * from "./canvas.models";
 export * from "./color.models";
 export * from "./event.models";

@@ -3,7 +3,6 @@ import {
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
-  CanvasTimelapseBodyModel,
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -193,13 +192,11 @@ canvasRouter.post(
   "/:canvasId/timelapse",
   validate({
     params: CanvasIdParamModel,
-    body: CanvasTimelapseBodyModel,
   }),
   async (req, res) => {
-    // TODO: Ratelimit
     await sendCanvasTimelapseAsMp4Stream({
       res,
-      query: { ...req.params, ...req.body },
+      canvasId: req.params.canvasId,
     });
   },
 );
@@ -261,22 +258,12 @@ async function sendCachedCanvas(
 
 async function sendCanvasTimelapseAsMp4Stream({
   res,
-  query: { canvasId, start, end, bounds },
+  canvasId,
 }: {
   res: Response;
-  query: {
-    canvasId: number;
-    start?: Date;
-    end?: Date;
-    bounds?: FrameBoundsInput;
-  };
+  canvasId: number;
 }): Promise<void> {
-  const buffer = await generateTimelapse({
-    canvasId,
-    start: start ?? new Date(0),
-    end: end ?? new Date(),
-    bounds,
-  });
+  const buffer = await generateTimelapse({ canvasId });
 
   res
     .status(200)

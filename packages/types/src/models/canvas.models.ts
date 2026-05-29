@@ -1,5 +1,4 @@
 import z from "zod";
-import { OptionalFrameBoundsModel } from "./bounds.models";
 import { DiscordSnowflakeSchema } from "./snowflake";
 
 export const CanvasIdParamModel = z.object({
@@ -43,10 +42,4 @@ export const CanvasExportScaleSchema = z.preprocess(
 export const CanvasExportParamModel = z.object({
   canvasId: CanvasIdParamModel.shape.canvasId,
   scale: CanvasExportScaleSchema,
-});
-
-export const CanvasTimelapseBodyModel = z.object({
-  start: z.coerce.date().optional(),
-  end: z.coerce.date().optional(),
-  bounds: OptionalFrameBoundsModel,
 });
