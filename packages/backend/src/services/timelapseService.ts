@@ -44,6 +44,7 @@ interface generateTimelapseParams {
   showEndCard?: boolean;
   scale?: CanvasExportScale;
   backgroundColor?: PaletteColor["rgba"];
+  raw?: boolean;
 }
 
 interface TimelapseCacheParams {
@@ -60,6 +61,7 @@ interface TimelapseCacheParams {
   showEndCard: boolean;
   scale: CanvasExportScale;
   backgroundColor: PaletteColor["rgba"];
+  raw: boolean;
 }
 
 function buildTimelapseCacheKey({
@@ -72,6 +74,7 @@ function buildTimelapseCacheKey({
   showEndCard,
   scale,
   backgroundColor,
+  raw,
 }: TimelapseCacheParams): string {
   return createHash("sha256")
     .update(
@@ -93,6 +96,7 @@ function buildTimelapseCacheKey({
         showEndCard,
         scale,
         backgroundColor,
+        raw,
       }),
     )
     .digest("hex");
@@ -505,12 +509,14 @@ async function encodeMainVideoFromImages({
   backgroundColor,
   cropBounds,
   scale,
+  raw,
 }: {
   imagePaths: string[];
   frameRate: number;
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
   scale: CanvasExportScale;
+  raw: boolean;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
 
@@ -531,6 +537,32 @@ async function encodeMainVideoFromImages({
     : "";
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
+
+  const outputOptions =
+    raw ?
+      [
+        "-c:v",
+        "libvpx-vp9",
+        "-lossless",
+        "1",
+        "-pix_fmt",
+        "yuv444p", // full colour, no subsampling
+        "-f",
+        "webm",
+        "pipe:1",
+      ]
+    : [
+        "-an",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "frag_keyframe+empty_moov",
+        "-f",
+        "mp4",
+        "pipe:1",
+      ];
 
   const mainVideoBuffer = await runFfmpegProcess({
     ffmpegPath,
@@ -559,17 +591,8 @@ async function encodeMainVideoFromImages({
       "-filter_complex",
       filterGraph,
 
-      // output options: no audio, encode to H.264, use yuv420p, write fragmented mp4 to stdout
-      "-an",
-      "-c:v",
-      "libx264",
-      "-pix_fmt",
-      "yuv420p",
-      "-movflags",
-      "frag_keyframe+empty_moov",
-      "-f",
-      "mp4",
-      "pipe:1",
+      // output options
+      ...outputOptions,
     ],
     captureStdout: true,
     onProcess: async (proc) => {
@@ -607,8 +630,15 @@ export async function generateTimelapse({
   showEndCard = true,
   scale,
   backgroundColor = [35, 39, 42, 255],
+  raw = false,
 }: generateTimelapseParams): Promise<Buffer> {
   // TODO: Configurable speed
+
+  if (raw) {
+    endHoldDurationMs = null;
+    scale = 1;
+    showEndCard = false;
+  }
 
   /// Validate parameters
 
@@ -696,6 +726,7 @@ export async function generateTimelapse({
       showEndCard,
       scale: resolvedScale,
       backgroundColor,
+      raw,
     },
     imagePaths,
   );
@@ -756,10 +787,10 @@ async function getOrCreateTimelapseFromCache(
       backgroundColor: cacheParams.backgroundColor,
       cropBounds: cacheParams.cropBounds,
       scale: cacheParams.scale,
+      raw: cacheParams.raw,
     });
 
-    if (!cacheParams.cropBounds) {
-      // Only saving the raw timelapse for full canvas timelapses, not frames
+    if (cacheParams.raw) {
       const existingRaw = await snapshotPrisma.timelapse_manifest.findUnique({
         where: { cache_key: rawCacheKey },
       });
@@ -793,12 +824,7 @@ async function getOrCreateTimelapseFromCache(
           throw err;
         }
       }
-    }
 
-    const isNotRaw =
-      cacheParams.endHoldDurationMs !== null || cacheParams.showEndCard;
-    if (!isNotRaw) {
-      // If the requested timelapse is the same as the raw timelapse, return it directly without caching again
       return rawBuffer;
     }
 

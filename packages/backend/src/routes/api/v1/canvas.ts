@@ -94,9 +94,7 @@ canvasRouter.get(
       raw ?
         {
           canvasId: req.params.canvasId,
-          showEndCard: false,
-          endHoldDurationMs: null,
-          scale: 1,
+          raw: true,
         }
       : { canvasId: req.params.canvasId },
     );
