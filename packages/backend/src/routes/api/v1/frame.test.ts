@@ -31,6 +31,10 @@ vi.mock("@/services/frameService", () => ({
   getFramesByUserId: vi.fn(),
 }));
 
+vi.mock("@/services/canvasService", () => ({
+  getCanvasInfo: vi.fn(),
+}));
+
 vi.mock("@/services/discordGuildService", () => ({
   isCanvasModerator: vi.fn(),
   isCanvasAdmin: vi.fn(),
@@ -38,6 +42,10 @@ vi.mock("@/services/discordGuildService", () => ({
 
 vi.mock("@/services/exportService", () => ({
   exportFrameAsStream: vi.fn(),
+}));
+
+vi.mock("@/services/timelapseService", () => ({
+  generateTimelapse: vi.fn(),
 }));
 
 const TEST_USER_SNOWFLAKE = "123456789012345678";
