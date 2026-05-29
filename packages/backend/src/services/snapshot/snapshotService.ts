@@ -47,3 +47,13 @@ export async function getSnapshots({
 
   return manifests;
 }
+
+export async function setSnapshotDirtyTimestamp(
+  canvasId: CanvasInfo["id"],
+  timestamp: Date,
+) {
+  await snapshotPrisma.snapshot_cursor.update({
+    where: { canvas_id: canvasId },
+    data: { dirty_from_timestamp: timestamp },
+  });
+}
