@@ -793,7 +793,8 @@ async function getOrCreateTimelapseFromCache(
   const canvasId = cacheParams.canvasId;
 
   const cacheKey = buildTimelapseCacheKey(cacheParams);
-  const timelapseFileName = `${cacheKey}.mp4`;
+  const timelapseFileName =
+    cacheParams.raw ? `${cacheKey}.webm` : `${cacheKey}.mp4`;
   const timelapseFilePath = getTimelapseVideoPath(canvasId, timelapseFileName);
   const currentCursorUpdatedAt = await getSnapshotCursorUpdatedAt(canvasId);
 
@@ -832,7 +833,7 @@ async function getOrCreateTimelapseFromCache(
       showEndCard: false,
     };
     const rawCacheKey = buildTimelapseCacheKey(rawCacheParams);
-    const rawFileName = `${rawCacheKey}.mp4`;
+    const rawFileName = `${rawCacheKey}.webm`;
     const rawFilePath = getTimelapseVideoPath(canvasId, rawFileName);
 
     const rawBuffer = await encodeMainVideoFromImages({
