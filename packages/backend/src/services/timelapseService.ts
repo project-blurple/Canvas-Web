@@ -382,7 +382,9 @@ function buildMainVideoEncodeArgs({
     "-an",
     "-c:v",
     outputFormat === "webm" ? "libvpx-vp9" : "libx264",
-    ...(outputFormat === "webm" ? ["-lossless", "1", "-pix_fmt", "yuv444p"] : ["-pix_fmt", "yuv420p", "-movflags", "frag_keyframe+empty_moov"]),
+    ...(outputFormat === "webm" ?
+      ["-lossless", "1", "-pix_fmt", "yuv444p"]
+    : ["-pix_fmt", "yuv420p", "-movflags", "frag_keyframe+empty_moov"]),
     "-f",
     outputFormat,
     outputPath,
@@ -606,23 +608,55 @@ async function encodeMainVideoFromImages({
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
 
-  const mainVideoBuffer = raw ? await (async () => {
-    const tempOutputPath = join(
-      tmpdir(),
-      `${process.pid}-${Date.now()}.webm`,
-    );
+  const mainVideoBuffer =
+    raw ?
+      await (async () => {
+        const tempOutputPath = join(
+          tmpdir(),
+          `${process.pid}-${Date.now()}.webm`,
+        );
 
-    try {
-      await runFfmpegProcess({
+        try {
+          await runFfmpegProcess({
+            ffmpegPath,
+            args: buildMainVideoEncodeArgs({
+              frameRate,
+              ffmpegBackgroundColor,
+              filterGraph,
+              outputPath: tempOutputPath,
+              outputFormat: "webm",
+            }),
+            captureStdout: false,
+            onProcess: async (proc) => {
+              const stdin = proc.stdin;
+              if (!stdin) {
+                throw new Error("ffmpeg did not expose stdin");
+              }
+
+              await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
+            },
+          });
+
+          const outputBuffer = await readFile(tempOutputPath);
+          if (!outputBuffer.length) {
+            throw new Error("ffmpeg produced empty output");
+          }
+
+          return outputBuffer;
+        } finally {
+          await unlink(tempOutputPath).catch(() => undefined);
+        }
+      })()
+    : await runFfmpegProcess({
         ffmpegPath,
         args: buildMainVideoEncodeArgs({
           frameRate,
           ffmpegBackgroundColor,
           filterGraph,
-          outputPath: tempOutputPath,
-          outputFormat: "webm",
+          outputPath: "pipe:1",
+          outputFormat: "mp4",
         }),
-        captureStdout: false,
+        captureStdout: true,
         onProcess: async (proc) => {
           const stdin = proc.stdin;
           if (!stdin) {
@@ -632,35 +666,6 @@ async function encodeMainVideoFromImages({
           await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
         },
       });
-
-      const outputBuffer = await readFile(tempOutputPath);
-      if (!outputBuffer.length) {
-        throw new Error("ffmpeg produced empty output");
-      }
-
-      return outputBuffer;
-    } finally {
-      await unlink(tempOutputPath).catch(() => undefined);
-    }
-  })() : await runFfmpegProcess({
-    ffmpegPath,
-    args: buildMainVideoEncodeArgs({
-      frameRate,
-      ffmpegBackgroundColor,
-      filterGraph,
-      outputPath: "pipe:1",
-      outputFormat: "mp4",
-    }),
-    captureStdout: true,
-    onProcess: async (proc) => {
-      const stdin = proc.stdin;
-      if (!stdin) {
-        throw new Error("ffmpeg did not expose stdin");
-      }
-
-      await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
-    },
-  });
 
   if (!mainVideoBuffer) {
     throw new Error("ffmpeg produced empty output");
@@ -840,38 +845,27 @@ async function getOrCreateTimelapseFromCache(
     });
 
     if (cacheParams.raw) {
-      const existingRaw = await snapshotPrisma.timelapse_manifest.findUnique({
-        where: { cache_key: rawCacheKey },
-      });
-      if (
-        !(
-          existingRaw &&
-          currentCursorUpdatedAt &&
-          existingRaw.updated_at >= currentCursorUpdatedAt
-        )
-      ) {
-        try {
-          const rawSize = await writeCachedTimelapseFile({
-            finalPath: rawFilePath,
-            buffer: rawBuffer,
-          });
+      try {
+        const rawSize = await writeCachedTimelapseFile({
+          finalPath: rawFilePath,
+          buffer: rawBuffer,
+        });
 
-          const rawManifest = buildTimelapseManifestRecord(
-            cacheParams,
-            rawCacheKey,
-            rawFilePath,
-            rawSize,
-          );
+        const rawManifest = buildTimelapseManifestRecord(
+          cacheParams,
+          rawCacheKey,
+          rawFilePath,
+          rawSize,
+        );
 
-          await snapshotPrisma.timelapse_manifest.upsert({
-            where: { cache_key: rawCacheKey },
-            create: rawManifest,
-            update: rawManifest,
-          });
-        } catch (err) {
-          await unlink(rawFilePath).catch(() => undefined);
-          throw err;
-        }
+        await snapshotPrisma.timelapse_manifest.upsert({
+          where: { cache_key: rawCacheKey },
+          create: rawManifest,
+          update: rawManifest,
+        });
+      } catch (err) {
+        await unlink(rawFilePath).catch(() => undefined);
+        throw err;
       }
 
       return rawBuffer;
