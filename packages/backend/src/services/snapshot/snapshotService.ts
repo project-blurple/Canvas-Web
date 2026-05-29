@@ -61,3 +61,19 @@ export async function setSnapshotDirtyTimestamp(
     update: { dirty_from_timestamp: timestamp },
   });
 }
+
+export async function getSnapshotManifest(
+  canvasId: CanvasInfo["id"],
+  snapshotAt: Date,
+) {
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    return null;
+  }
+
+  return snapshotPrisma.snapshot_manifest.findFirst({
+    where: {
+      canvas_id: canvasId,
+      snapshot_at: snapshotAt,
+    },
+  });
+}

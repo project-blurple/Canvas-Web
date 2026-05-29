@@ -11,4 +11,5 @@ export * as PaletteRequest from "./PaletteRequest";
 export * as PasteRequest from "./PasteRequest";
 export * as PlacePixelRequest from "./PlacePixelRequest";
 export * as PlacePixelSocket from "./PlacePixelSocketPayload";
+export * as SnapshotRequest from "./SnapshotRequest";
 export * as UserStatsRequest from "./UserStatsRequest";

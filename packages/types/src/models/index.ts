@@ -8,4 +8,5 @@ export * from "./guild.models";
 export * from "./history.models";
 export * from "./notice.models";
 export * from "./pixel.models";
+export * from "./snapshot.models";
 export * from "./snowflake";
