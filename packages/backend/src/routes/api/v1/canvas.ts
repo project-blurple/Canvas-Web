@@ -33,10 +33,12 @@ import {
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
 import { pixelRouter } from "./pixel";
+import { snapshotRouter } from "./snapshot";
 
 export const canvasRouter = typedRouter(Router());
 
 canvasRouter.use("/:canvasId/pixel", pixelRouter);
+canvasRouter.use("/:canvasId/snapshots", snapshotRouter);
 
 canvasRouter.get("/", async (_req, res) => {
   const canvases = await getCanvases();
