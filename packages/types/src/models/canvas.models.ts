@@ -43,3 +43,7 @@ export const CanvasExportParamModel = z.object({
   canvasId: CanvasIdParamModel.shape.canvasId,
   scale: CanvasExportScaleSchema,
 });
+
+export const CanvasTimelapseParamModel = z.object({
+  raw: z.coerce.boolean().optional(),
+});

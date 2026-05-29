@@ -3,6 +3,7 @@ import {
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
+  CanvasTimelapseParamModel,
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -84,20 +85,29 @@ canvasRouter.get(
   "/:canvasId.mp4",
   validate({
     params: CanvasIdParamModel,
+    query: CanvasTimelapseParamModel,
   }),
   async (req, res) => {
-    const canvas = await getCanvasInfo(req.params.canvasId);
-    if (!canvas.isLocked) {
-      res.status(400).json({
-        error: "Timelapse generation is only available for locked canvases",
-      });
-      return;
-    }
+    const raw = req.query.raw || false;
 
-    await sendCanvasTimelapseAsMp4Stream({
-      res,
-      canvasId: req.params.canvasId,
-    });
+    const buffer = await generateTimelapse(
+      raw ?
+        {
+          canvasId: req.params.canvasId,
+          showEndCard: false,
+          endHoldDurationMs: null,
+          scale: 1,
+        }
+      : { canvasId: req.params.canvasId },
+    );
+    res
+      .status(200)
+      .type("mp4")
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.mp4"`,
+      )
+      .send(buffer);
   },
 );
 

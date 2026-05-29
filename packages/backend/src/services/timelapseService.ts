@@ -40,7 +40,8 @@ interface generateTimelapseParams {
   end?: Date;
   bounds?: Bounds;
   frameRate?: number;
-  endHoldDurationMs?: number;
+  endHoldDurationMs?: number | null;
+  showEndCard?: boolean;
   scale?: CanvasExportScale;
   backgroundColor?: PaletteColor["rgba"];
 }
@@ -55,7 +56,8 @@ interface TimelapseCacheParams {
   effectiveEndAt: Date;
   cropBounds: Bounds | undefined;
   frameRate: number;
-  endHoldDurationMs: number;
+  endHoldDurationMs: number | null;
+  showEndCard: boolean;
   scale: CanvasExportScale;
   backgroundColor: PaletteColor["rgba"];
 }
@@ -67,6 +69,7 @@ function buildTimelapseCacheKey({
   cropBounds,
   frameRate,
   endHoldDurationMs,
+  showEndCard,
   scale,
   backgroundColor,
 }: TimelapseCacheParams): string {
@@ -87,11 +90,39 @@ function buildTimelapseCacheKey({
           : null,
         frameRate,
         endHoldDurationMs,
+        showEndCard,
         scale,
         backgroundColor,
       }),
     )
     .digest("hex");
+}
+
+function buildTimelapseManifestRecord(
+  cacheParams: TimelapseCacheParams,
+  cacheKey: string,
+  filePath: string,
+  fileSize: number,
+) {
+  return {
+    canvas_id: cacheParams.canvasId,
+    requested_start_at: cacheParams.requestedStartAt,
+    requested_end_at: cacheParams.requestedEndAt,
+    effective_start_at: cacheParams.effectiveStartAt,
+    effective_end_at: cacheParams.effectiveEndAt,
+    bounds_x0: cacheParams.cropBounds?.x0 ?? null,
+    bounds_y0: cacheParams.cropBounds?.y0 ?? null,
+    bounds_x1: cacheParams.cropBounds?.x1 ?? null,
+    bounds_y1: cacheParams.cropBounds?.y1 ?? null,
+    scale: cacheParams.scale,
+    frame_rate: cacheParams.frameRate,
+    end_hold_duration_ms: cacheParams.endHoldDurationMs ?? 0,
+    show_end_card: cacheParams.showEndCard,
+    background_color: JSON.stringify(cacheParams.backgroundColor),
+    cache_key: cacheKey,
+    file_path: filePath,
+    file_size_bytes: fileSize,
+  } as const;
 }
 
 async function readCachedTimelapse(filePath: string): Promise<Buffer | null> {
@@ -467,23 +498,18 @@ async function appendTimelapseEndCardTail({
   }
 }
 
-async function encodeMp4FromImages({
+// Encode the main frames-only video from images (no appended end-card/tail).
+async function encodeMainVideoFromImages({
   imagePaths,
   frameRate,
   backgroundColor,
   cropBounds,
-  endHoldDurationMs,
-  canvasWidth,
-  canvasHeight,
   scale,
 }: {
   imagePaths: string[];
   frameRate: number;
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
-  endHoldDurationMs: number;
-  canvasWidth: number;
-  canvasHeight: number;
   scale: CanvasExportScale;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
@@ -568,20 +594,7 @@ async function encodeMp4FromImages({
     throw new Error("ffmpeg produced empty output");
   }
 
-  const videoDimensions = getTimelapseVideoDimensions({
-    canvasWidth,
-    canvasHeight,
-    cropBounds,
-    scale,
-  });
-
-  return await appendTimelapseEndCardTail({
-    timelapseBuffer: mainVideoBuffer,
-    frameRate,
-    videoWidth: videoDimensions.width,
-    videoHeight: videoDimensions.height,
-    endHoldDurationMs,
-  });
+  return mainVideoBuffer;
 }
 
 export async function generateTimelapse({
@@ -591,6 +604,7 @@ export async function generateTimelapse({
   bounds,
   frameRate = 30,
   endHoldDurationMs = 2000,
+  showEndCard = true,
   scale,
   backgroundColor = [35, 39, 42, 255],
 }: generateTimelapseParams): Promise<Buffer> {
@@ -679,6 +693,7 @@ export async function generateTimelapse({
       cropBounds,
       frameRate,
       endHoldDurationMs,
+      showEndCard,
       scale: resolvedScale,
       backgroundColor,
     },
@@ -721,58 +736,107 @@ async function getOrCreateTimelapseFromCache(
   }
 
   const generationPromise = (async () => {
-    // Perform the actual generation, write to disk atomically, and upsert manifest.
-    const generatedBuffer = await encodeMp4FromImages({
-      imagePaths,
-      ...cacheParams,
-    });
-
     await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
 
-    let fileSizeBytes: number;
+    // Ensure a raw frames-only timelapse (end_hold_duration_ms = 0) is generated
+    // and cached before producing the augmented timelapse. This lets callers
+    // request the raw variant later without re-encoding the frames.
+    const rawCacheParams: TimelapseCacheParams = {
+      ...cacheParams,
+      endHoldDurationMs: null,
+      showEndCard: false,
+    };
+    const rawCacheKey = buildTimelapseCacheKey(rawCacheParams);
+    const rawFileName = `${rawCacheKey}.mp4`;
+    const rawFilePath = getTimelapseVideoPath(canvasId, rawFileName);
+
+    const rawBuffer = await encodeMainVideoFromImages({
+      imagePaths,
+      frameRate: cacheParams.frameRate,
+      backgroundColor: cacheParams.backgroundColor,
+      cropBounds: cacheParams.cropBounds,
+      scale: cacheParams.scale,
+    });
+
+    if (!cacheParams.cropBounds) {
+      // Only saving the raw timelapse for full canvas timelapses, not frames
+      const existingRaw = await snapshotPrisma.timelapse_manifest.findUnique({
+        where: { cache_key: rawCacheKey },
+      });
+      if (
+        !(
+          existingRaw &&
+          currentCursorUpdatedAt &&
+          existingRaw.updated_at >= currentCursorUpdatedAt
+        )
+      ) {
+        try {
+          const rawSize = await writeCachedTimelapseFile({
+            finalPath: rawFilePath,
+            buffer: rawBuffer,
+          });
+
+          const rawManifest = buildTimelapseManifestRecord(
+            cacheParams,
+            rawCacheKey,
+            rawFilePath,
+            rawSize,
+          );
+
+          await snapshotPrisma.timelapse_manifest.upsert({
+            where: { cache_key: rawCacheKey },
+            create: rawManifest,
+            update: rawManifest,
+          });
+        } catch (err) {
+          await unlink(rawFilePath).catch(() => undefined);
+          throw err;
+        }
+      }
+    }
+
+    const isNotRaw =
+      cacheParams.endHoldDurationMs !== null || cacheParams.showEndCard;
+    if (!isNotRaw) {
+      // If the requested timelapse is the same as the raw timelapse, return it directly without caching again
+      return rawBuffer;
+    }
+
+    const videoDimensions = getTimelapseVideoDimensions({
+      canvasWidth: cacheParams.canvasWidth,
+      canvasHeight: cacheParams.canvasHeight,
+      cropBounds: cacheParams.cropBounds,
+      scale: cacheParams.scale,
+    });
+
+    const generatedBuffer =
+      cacheParams.showEndCard && cacheParams.endHoldDurationMs !== null ?
+        await appendTimelapseEndCardTail({
+          timelapseBuffer: rawBuffer,
+          frameRate: cacheParams.frameRate,
+          videoWidth: videoDimensions.width,
+          videoHeight: videoDimensions.height,
+          endHoldDurationMs: cacheParams.endHoldDurationMs ?? 0,
+        })
+      : rawBuffer;
 
     try {
-      fileSizeBytes = await writeCachedTimelapseFile({
+      const fileSizeBytes = await writeCachedTimelapseFile({
         finalPath: timelapseFilePath,
         buffer: generatedBuffer,
       });
 
+      const manifestRecord = buildTimelapseManifestRecord(
+        cacheParams,
+        cacheKey,
+        timelapseFilePath,
+        fileSizeBytes,
+      );
+
       await snapshotPrisma.timelapse_manifest.upsert({
         where: { cache_key: cacheKey },
-        create: {
-          canvas_id: canvasId,
-          requested_start_at: cacheParams.requestedStartAt,
-          requested_end_at: cacheParams.requestedEndAt,
-          effective_start_at: cacheParams.effectiveStartAt,
-          effective_end_at: cacheParams.effectiveEndAt,
-          bounds_x0: cacheParams.cropBounds?.x0 ?? null,
-          bounds_y0: cacheParams.cropBounds?.y0 ?? null,
-          bounds_x1: cacheParams.cropBounds?.x1 ?? null,
-          bounds_y1: cacheParams.cropBounds?.y1 ?? null,
-          scale: cacheParams.scale,
-          frame_rate: cacheParams.frameRate,
-          end_hold_duration_ms: cacheParams.endHoldDurationMs,
-          background_color: JSON.stringify(cacheParams.backgroundColor),
-          cache_key: cacheKey,
-          file_path: timelapseFilePath,
-          file_size_bytes: fileSizeBytes,
-        },
-        update: {
-          requested_start_at: cacheParams.requestedStartAt,
-          requested_end_at: cacheParams.requestedEndAt,
-          effective_start_at: cacheParams.effectiveStartAt,
-          effective_end_at: cacheParams.effectiveEndAt,
-          bounds_x0: cacheParams.cropBounds?.x0 ?? null,
-          bounds_y0: cacheParams.cropBounds?.y0 ?? null,
-          bounds_x1: cacheParams.cropBounds?.x1 ?? null,
-          bounds_y1: cacheParams.cropBounds?.y1 ?? null,
-          scale: cacheParams.scale,
-          frame_rate: cacheParams.frameRate,
-          end_hold_duration_ms: cacheParams.endHoldDurationMs,
-          background_color: JSON.stringify(cacheParams.backgroundColor),
-          file_path: timelapseFilePath,
-          file_size_bytes: fileSizeBytes,
-        },
+        create: manifestRecord,
+        update: manifestRecord,
       });
     } catch (error) {
       await unlink(timelapseFilePath).catch(() => undefined);
