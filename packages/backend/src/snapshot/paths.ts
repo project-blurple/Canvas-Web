@@ -10,6 +10,12 @@ export const TIMELAPSE_VIDEO_ROOT = resolve(
   "static",
   "timelapse",
 );
+export const TIMELAPSE_ENDCARD_IMAGE_PATH = resolve(
+  process.cwd(),
+  "static",
+  "constant",
+  "timelapse-endcard.png",
+);
 export const SNAPSHOT_DATABASE_PATH = resolve(
   process.cwd(),
   "data",

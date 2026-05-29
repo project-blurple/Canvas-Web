@@ -14,14 +14,25 @@ import type {
   PaletteColor,
 } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
+import sharp from "sharp";
 import { snapshotPrisma } from "@/client/snapshots";
 import {
   getTimelapseCanvasDirectory,
   getTimelapseVideoPath,
+  TIMELAPSE_ENDCARD_IMAGE_PATH as TIMELAPSE_END_CARD_IMAGE_PATH,
 } from "@/snapshot/paths";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "./canvasService";
 import { getSnapshots } from "./snapshot/snapshotService";
+
+const END_CARD_TRANSITION_DURATION_MS = 1_000;
+const END_CARD_DISPLAY_DURATION_MS = 5_000;
+const END_CARD_BACKGROUND_COLOR = {
+  r: 88,
+  g: 101,
+  b: 242,
+  alpha: 1,
+} as const;
 
 interface generateTimelapseParams {
   canvasId: CanvasInfo["id"];
@@ -36,6 +47,8 @@ interface generateTimelapseParams {
 
 interface TimelapseCacheParams {
   canvasId: CanvasInfo["id"];
+  canvasWidth: number;
+  canvasHeight: number;
   requestedStartAt?: Date | undefined;
   requestedEndAt?: Date | undefined;
   effectiveStartAt: Date;
@@ -130,12 +143,338 @@ async function writeCachedTimelapseFile({
   }
 }
 
+async function runFfmpegProcess({
+  ffmpegPath,
+  args,
+  captureStdout = false,
+  onProcess,
+}: {
+  ffmpegPath: string;
+  args: string[];
+  captureStdout?: boolean;
+  onProcess: (proc: ReturnType<typeof spawn>) => Promise<void>;
+}): Promise<Buffer | undefined> {
+  let outputChunks: Buffer[] | undefined;
+  if (captureStdout) {
+    outputChunks = [];
+  }
+  let stdErr = "";
+
+  return await new Promise<Buffer | undefined>((resolve, reject) => {
+    const proc = spawn(ffmpegPath, args, {
+      stdio: ["pipe", captureStdout ? "pipe" : "ignore", "pipe"],
+    });
+
+    if (!proc.stdin || !proc.stderr) {
+      reject(new Error("ffmpeg did not expose the expected stdio pipes"));
+      return;
+    }
+
+    proc.stdout?.on("data", (chunk: Buffer) => outputChunks?.push(chunk));
+    proc.stderr.on("data", (chunk: Buffer) => {
+      stdErr += chunk.toString("utf8");
+    });
+
+    proc.on("error", (err) => {
+      reject(new Error(`Failed to start ffmpeg: ${err.message}`));
+    });
+
+    proc.on("close", (code: number | null) => {
+      if (code !== 0) {
+        reject(
+          new Error(
+            `ffmpeg exited with code ${code}${stdErr ? `: ${stdErr.trim()}` : ""}`,
+          ),
+        );
+        return;
+      }
+
+      resolve(captureStdout ? Buffer.concat(outputChunks ?? []) : undefined);
+    });
+
+    void onProcess(proc).catch((error) => {
+      proc.stdin?.destroy();
+      reject(error instanceof Error ? error : new Error(String(error)));
+    });
+  });
+}
+
+function getTimelapseVideoDimensions({
+  canvasWidth,
+  canvasHeight,
+  cropBounds,
+  scale,
+}: {
+  canvasWidth: number;
+  canvasHeight: number;
+  cropBounds: Bounds | undefined;
+  scale: CanvasExportScale;
+}): { width: number; height: number } {
+  const sourceWidth = cropBounds ? cropBounds.x1 - cropBounds.x0 : canvasWidth;
+  const sourceHeight =
+    cropBounds ? cropBounds.y1 - cropBounds.y0 : canvasHeight;
+
+  return {
+    width: Math.trunc((sourceWidth * scale) / 2) * 2,
+    height: Math.trunc((sourceHeight * scale) / 2) * 2,
+  };
+}
+
+async function createTimelapseEndCardBuffer({
+  width,
+  height,
+}: {
+  width: number;
+  height: number;
+}): Promise<Buffer> {
+  const sourceBuffer = await readFile(TIMELAPSE_END_CARD_IMAGE_PATH);
+
+  return await sharp(sourceBuffer)
+    .resize({
+      width,
+      height,
+      fit: "contain",
+      position: "centre",
+      background: END_CARD_BACKGROUND_COLOR,
+    })
+    .png()
+    .toBuffer();
+}
+
+async function extractTimelapseLastFrameBuffer({
+  timelapsePath,
+  frameRate,
+}: {
+  timelapsePath: string;
+  frameRate: number;
+}): Promise<Buffer> {
+  const ffmpegPath = ffmpegStatic;
+
+  if (!ffmpegPath) {
+    throw new Error("ffmpeg-static did not provide a binary path");
+  }
+
+  const lastFrameSeekSeconds = Math.max(1 / frameRate, 0.001);
+  const lastFrameBuffer = await runFfmpegProcess({
+    ffmpegPath,
+    args: [
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-sseof",
+      `-${lastFrameSeekSeconds}`,
+      "-i",
+      timelapsePath,
+      "-frames:v",
+      "1",
+      "-c:v",
+      "png",
+      "-f",
+      "image2pipe",
+      "pipe:1",
+    ],
+    captureStdout: true,
+    onProcess: async () => undefined,
+  });
+
+  if (!lastFrameBuffer) {
+    throw new Error(
+      "ffmpeg produced empty output while extracting the final frame",
+    );
+  }
+
+  return lastFrameBuffer;
+}
+
+async function appendTimelapseEndCardTail({
+  timelapseBuffer,
+  frameRate,
+  videoWidth,
+  videoHeight,
+  endHoldDurationMs,
+}: {
+  timelapseBuffer: Buffer;
+  frameRate: number;
+  videoWidth: number;
+  videoHeight: number;
+  endHoldDurationMs: number;
+}): Promise<Buffer> {
+  const ffmpegPath = ffmpegStatic;
+
+  if (!ffmpegPath) {
+    throw new Error("ffmpeg-static did not provide a binary path");
+  }
+
+  const tempPrefix = `${process.pid}-${Date.now()}`;
+  const tempTimelapsePath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.timelapse-${tempPrefix}.mp4`;
+  const tempTailPath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.tail-${tempPrefix}.mp4`;
+  const tempLastFramePath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.last-frame-${tempPrefix}.png`;
+  const tempEndCardPath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.end-card-${tempPrefix}.png`;
+  const transitionDurationSeconds = END_CARD_TRANSITION_DURATION_MS / 1000;
+  const endCardDisplayDurationSeconds = END_CARD_DISPLAY_DURATION_MS / 1000;
+  const endHoldDurationSeconds = endHoldDurationMs / 1000;
+
+  try {
+    await writeFile(tempTimelapsePath, timelapseBuffer);
+    await writeFile(
+      tempLastFramePath,
+      await extractTimelapseLastFrameBuffer({
+        timelapsePath: tempTimelapsePath,
+        frameRate,
+      }),
+    );
+    await writeFile(
+      tempEndCardPath,
+      await createTimelapseEndCardBuffer({
+        width: videoWidth,
+        height: videoHeight,
+      }),
+    );
+    await runFfmpegProcess({
+      ffmpegPath,
+      // Build a temporary "tail" video containing:
+      // 1) a hold of the final timelapse frame for `endHoldDurationSeconds`
+      // 2) a transition pair (last frame -> end-card) each `transitionDurationSeconds` long
+      // 3) a hold of the end-card for `endCardDisplayDurationSeconds`
+      // The inputs are passed as four looped inputs and the filter graph composes them
+      args: [
+        // General flags: hide the banner and only print errors
+        "-hide_banner",
+        "-loglevel",
+        "error",
+
+        // INPUT 0: loop the extracted final frame -> used as the initial hold segment
+        "-loop",
+        "1",
+        "-framerate",
+        String(frameRate),
+        "-t",
+        String(endHoldDurationSeconds),
+        "-i",
+        tempLastFramePath,
+
+        // INPUT 1: loop the extracted final frame again -> used as the first half of the cross-fade
+        "-loop",
+        "1",
+        "-framerate",
+        String(frameRate),
+        "-t",
+        String(transitionDurationSeconds),
+        "-i",
+        tempLastFramePath,
+
+        // INPUT 2: loop the generated end-card -> used as the second half of the cross-fade
+        "-loop",
+        "1",
+        "-framerate",
+        String(frameRate),
+        "-t",
+        String(transitionDurationSeconds),
+        "-i",
+        tempEndCardPath,
+
+        // INPUT 3: loop the generated end-card -> used as the post-fade hold
+        "-loop",
+        "1",
+        "-framerate",
+        String(frameRate),
+        "-t",
+        String(endCardDisplayDurationSeconds),
+        "-i",
+        tempEndCardPath,
+
+        // FILTER: create named segments, xfade the two short segments, then concat hold+transition+endHold
+        "-filter_complex",
+        [
+          "[0:v]setpts=PTS-STARTPTS[hold]", // normalize pts for the hold segment
+          "[1:v]setpts=PTS-STARTPTS[lastFade]", // normalize pts for first fade input
+          "[2:v]setpts=PTS-STARTPTS[endFade]", // normalize pts for second fade input
+          "[3:v]setpts=PTS-STARTPTS[endHold]", // normalize pts for end-card hold
+          // xfade: linear opacity fade between the two short segments (duration, offset=0)
+          `[lastFade][endFade]xfade=transition=fade:duration=${transitionDurationSeconds}:offset=0[transition]`,
+          // concat: join hold, the produced transition, and the end-card hold into one stream
+          "[hold][transition][endHold]concat=n=3:v=1:a=0[v]",
+          "[v]format=yuv420p[vout]",
+        ].join(";"),
+
+        // map the composed stream to output, disable audio, encode to H.264 and write file
+        "-map",
+        "[vout]",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        // produce a fragmented MP4 suitable for streaming/writing quickly
+        "-movflags",
+        "frag_keyframe+empty_moov",
+        "-f",
+        "mp4",
+        tempTailPath,
+      ],
+      onProcess: async () => undefined,
+    });
+
+    const tailBuffer = await runFfmpegProcess({
+      ffmpegPath,
+      // Concatenate the previously-generated main timelapse file and the tail file,
+      // writing the combined MP4 to stdout for capture.
+      args: [
+        // general flags
+        "-hide_banner",
+        "-loglevel",
+        "error",
+
+        // INPUT 0: the main timelapse we just wrote
+        "-i",
+        tempTimelapsePath,
+        // INPUT 1: the tail we produced above
+        "-i",
+        tempTailPath,
+
+        // FILTER: normalize pts and concat main + tail into a single video stream
+        "-filter_complex",
+        "[0:v]setpts=PTS-STARTPTS[main];[1:v]setpts=PTS-STARTPTS[tail];[main][tail]concat=n=2:v=1:a=0[v]",
+
+        // map, disable audio, encode, and emit to stdout (pipe:1) for capture
+        "-map",
+        "[v]",
+        "-an",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "frag_keyframe+empty_moov",
+        "-f",
+        "mp4",
+        "pipe:1",
+      ],
+      captureStdout: true,
+      onProcess: async () => undefined,
+    });
+
+    if (!tailBuffer) {
+      throw new Error("ffmpeg produced empty output");
+    }
+
+    return tailBuffer;
+  } finally {
+    await unlink(tempTimelapsePath).catch(() => undefined);
+    await unlink(tempTailPath).catch(() => undefined);
+    await unlink(tempLastFramePath).catch(() => undefined);
+    await unlink(tempEndCardPath).catch(() => undefined);
+  }
+}
+
 async function encodeMp4FromImages({
   imagePaths,
   frameRate,
   backgroundColor,
   cropBounds,
   endHoldDurationMs,
+  canvasWidth,
+  canvasHeight,
   scale,
 }: {
   imagePaths: string[];
@@ -143,6 +482,8 @@ async function encodeMp4FromImages({
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
   endHoldDurationMs: number;
+  canvasWidth: number;
+  canvasHeight: number;
   scale: CanvasExportScale;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
@@ -151,8 +492,6 @@ async function encodeMp4FromImages({
     throw new Error("ffmpeg-static did not provide a binary path");
   }
 
-  const outputChunks: Buffer[] = [];
-  let stdErr = "";
   const [r, g, b, a] = backgroundColor;
   const backgroundAlpha = Math.max(0, Math.min(1, a / 255));
   const ffmpegBackgroundColor = `#${r.toString(16).padStart(2, "0")}${g
@@ -166,100 +505,82 @@ async function encodeMp4FromImages({
     : "";
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
-  const endHoldFrameCount =
-    endHoldDurationMs > 0 ?
-      Math.max(0, Math.ceil((endHoldDurationMs * frameRate) / 1000))
-    : 0;
 
-  return await new Promise<Buffer>((resolve, reject) => {
-    const proc = spawn(
-      ffmpegPath,
-      [
-        "-hide_banner",
-        "-loglevel",
-        "error",
-        "-f",
-        "image2pipe",
-        "-framerate",
-        String(frameRate),
-        "-i",
-        "pipe:0",
-        "-f",
-        "lavfi",
-        "-i",
-        `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
-        "-filter_complex",
-        filterGraph,
-        "-an",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-movflags",
-        "frag_keyframe+empty_moov",
-        "-f",
-        "mp4",
-        "pipe:1",
-      ],
-      { stdio: ["pipe", "pipe", "pipe"] },
-    );
+  const mainVideoBuffer = await runFfmpegProcess({
+    ffmpegPath,
+    args: [
+      // general flags: suppress banner, only show errors
+      "-hide_banner",
+      "-loglevel",
+      "error",
 
-    proc.stdout.on("data", (chunk: Buffer) => outputChunks.push(chunk));
-    proc.stderr.on(
-      "data",
-      (chunk: Buffer) => (stdErr += chunk.toString("utf8")),
-    );
+      // INPUT (pipe): image2pipe reads raw image files streamed into stdin
+      "-f",
+      "image2pipe",
+      "-framerate",
+      String(frameRate),
+      "-i",
+      "pipe:0",
 
-    proc.on("error", (err) =>
-      reject(new Error(`Failed to start ffmpeg: ${err.message}`)),
-    );
+      // INPUT (lavfi): a small solid-color background input used with scale2ref
+      "-f",
+      "lavfi",
+      "-i",
+      `color=c=${ffmpegBackgroundColor}:s=16x16:r=${frameRate}`,
 
-    proc.on("close", (code: number | null) => {
-      if (code !== 0) {
-        reject(
-          new Error(
-            `ffmpeg exited with code ${code}${stdErr ? `: ${stdErr.trim()}` : ""}`,
-          ),
-        );
-        return;
+      // FILTER: composite the streamed images over the generated background,
+      // apply optional crop and scale (the `filterGraph` variable contains this)
+      "-filter_complex",
+      filterGraph,
+
+      // output options: no audio, encode to H.264, use yuv420p, write fragmented mp4 to stdout
+      "-an",
+      "-c:v",
+      "libx264",
+      "-pix_fmt",
+      "yuv420p",
+      "-movflags",
+      "frag_keyframe+empty_moov",
+      "-f",
+      "mp4",
+      "pipe:1",
+    ],
+    captureStdout: true,
+    onProcess: async (proc) => {
+      // Stream each image file into ffmpeg stdin sequentially.
+      const stdin = proc.stdin;
+      if (!stdin) {
+        throw new Error("ffmpeg did not expose stdin");
       }
 
-      const out = Buffer.concat(outputChunks);
-      if (out.length === 0) {
-        reject(new Error("ffmpeg produced empty output"));
-        return;
-      }
-
-      resolve(out);
-    });
-
-    // Stream each image file into ffmpeg stdin sequentially.
-    (async () => {
-      try {
-        let lastFrameBuffer: Buffer | undefined;
-
-        for (const p of imagePaths) {
-          const buf = await readFile(p);
-          lastFrameBuffer = buf;
-          if (!proc.stdin.write(buf)) {
-            await new Promise((res) => proc.stdin.once("drain", res));
-          }
+      for (const p of imagePaths) {
+        const buf = await readFile(p);
+        if (!stdin.write(buf)) {
+          await new Promise((res) => stdin.once("drain", res));
         }
-
-        if (lastFrameBuffer && endHoldFrameCount > 0) {
-          for (let index = 0; index < endHoldFrameCount; index += 1) {
-            if (!proc.stdin.write(lastFrameBuffer)) {
-              await new Promise((res) => proc.stdin.once("drain", res));
-            }
-          }
-        }
-
-        proc.stdin.end();
-      } catch (err) {
-        proc.stdin.destroy();
-        reject(err as Error);
       }
-    })();
+
+      stdin.end();
+    },
+  });
+
+  if (!mainVideoBuffer) {
+    throw new Error("ffmpeg produced empty output");
+  }
+
+  const videoDimensions = getTimelapseVideoDimensions({
+    canvasWidth,
+    canvasHeight,
+    cropBounds,
+    scale,
+  });
+
+  return await appendTimelapseEndCardTail({
+    timelapseBuffer: mainVideoBuffer,
+    frameRate,
+    videoWidth: videoDimensions.width,
+    videoHeight: videoDimensions.height,
+    endHoldDurationMs,
   });
 }
 
@@ -349,6 +670,8 @@ export async function generateTimelapse({
   return await getOrCreateTimelapseFromCache(
     {
       canvasId,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
       requestedStartAt: start,
       requestedEndAt: end,
       effectiveStartAt,
