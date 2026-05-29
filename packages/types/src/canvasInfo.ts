@@ -14,6 +14,7 @@ export const CanvasInfoSchema = z.object({
   webPlacingEnabled: z.boolean(),
   allColorsGlobal: z.boolean(),
   cooldownDuration: z.number().int().nonnegative().nullable(),
+  timelineEnabled: z.boolean(),
 });
 
 export type CanvasInfo = z.infer<typeof CanvasInfoSchema>;

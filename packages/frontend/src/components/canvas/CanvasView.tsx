@@ -33,6 +33,7 @@ import {
   useIsFullscreenAvailable,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
+import { useCanvasTimelineVideo } from "@/hooks/useCanvasImage";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
@@ -159,6 +160,11 @@ const InviteButton = styled(Button)`
   }
 `;
 
+const TimelineSlider = styled("input")`
+  position: absolute;
+  z-index: 1;
+`;
+
 const BaseFullscreenButton = styled(Button, {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
@@ -258,6 +264,11 @@ const CanvasImageWrapper = styled("div", {
   img:not(:first-child) {
     inset: 0;
     position: absolute;
+  }
+
+  video {
+    image-rendering: pixelated;
+    pointer-events: none;
   }
 `;
 
@@ -504,6 +515,7 @@ export default function CanvasView({
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
@@ -531,12 +543,60 @@ export default function CanvasView({
   const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
+  const sourceVideo = useCanvasTimelineVideo(canvas.id);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLaunching, setIsLaunching] = useState(true);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [isLaunchingImage, setIsLaunchingImage] = useState(true);
+  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
+  const [isLaunchingVideo, setIsLaunchingVideo] = useState(true);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
+
+  const timelineIsEnabled = canvas.timelineEnabled && canvas.isLocked;
+
+  // -- Timeline stuff start --
+
+  const timelineFps = 30;
+  const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
+  const [totalTimelineFrames, setTotalTimelineFrames] = useState(0);
+
+  function handleTimelineMetadata() {
+    const video = videoRef.current;
+    setTotalTimelineFrames(
+      video ? Math.floor(video.duration * timelineFps) : 0,
+    );
+    console.log(
+      "video duration",
+      video?.duration,
+      "total frames",
+      totalTimelineFrames,
+    );
+  }
+
+  function handleTimelineTimeUpdate() {
+    const video = videoRef.current;
+    if (!video) return;
+    setCurrentTimelineFrame(Math.floor(video.currentTime * timelineFps));
+  }
+
+  function handleTimelineSeek(frame: number) {
+    const video = videoRef.current;
+    if (!video) return;
+    video.currentTime = frame / timelineFps;
+  }
+
+  function handleTimelineSlider(event: React.ChangeEvent<HTMLInputElement>) {
+    const frame = parseInt(event.target.value, 10);
+    handleTimelineSeek(frame);
+  }
+
+  const handleLoadVideo = useCallback((): void => {
+    setIsLoadingVideo(false);
+    setIsLaunchingVideo(false);
+  }, []);
+
+  // -- Timeline stuff end --
 
   const [initialZoom, setInitialZoom] = useState(1);
   const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
@@ -672,8 +732,8 @@ export default function CanvasView({
       }
 
       setVelocity(ORIGIN);
-      setIsLoading(false);
-      setIsLaunching(false);
+      setIsLoadingImage(false);
+      setIsLaunchingImage(false);
       clearOverlay();
     },
     [canvas.id, initialFrameFromSearchParams],
@@ -700,7 +760,7 @@ export default function CanvasView({
   useEffect(() => {
     // Stops placing pixels from reloading the canvas
     if (currentCanvasIDRef.current === canvas.id) return;
-    setIsLoading(true);
+    setIsLoadingImage(true);
     if (sourceImage) {
       handleLoadImage(sourceImage);
     }
@@ -1302,6 +1362,16 @@ export default function CanvasView({
           </a>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
+      {timelineIsEnabled && (
+        <TimelineSlider
+          type="range"
+          min="0"
+          max={totalTimelineFrames}
+          value={currentTimelineFrame}
+          onChange={handleTimelineSlider}
+          onPointerDown={(event) => event.stopPropagation()}
+        />
+      )}
       <div
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
@@ -1363,22 +1433,40 @@ export default function CanvasView({
           />
         )}
         <CanvasImageWrapper
-          aria-busy={isLaunching || isLoading}
+          aria-busy={isLaunchingImage || isLoadingImage}
           ref={canvasImageWrapperRef}
-          isLoading={isLoading}
-          isLaunching={isLaunching}
+          isLoading={timelineIsEnabled ? isLoadingVideo : isLoadingImage}
+          isLaunching={timelineIsEnabled ? isLaunchingVideo : isLaunchingImage}
           id="canvas-image-wrapper"
         >
-          {/* biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art */}
-          <img
-            alt="Active Blurple Canvas"
-            onLoad={(event) => handleLoadImage(event.currentTarget)}
-            ref={imageRef}
-            src={sourceImage?.src}
-            crossOrigin="anonymous"
-            // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
-            style={{ minWidth: canvas.width, minHeight: canvas.height }}
-          />
+          {
+            timelineIsEnabled && sourceVideo ?
+              // biome-ignore lint/a11y/useMediaCaption: No audio or captions
+              <video
+                // autoPlay
+                ref={videoRef}
+                src={sourceVideo.src}
+                crossOrigin="anonymous"
+                onLoadedMetadata={handleTimelineMetadata}
+                onTimeUpdate={handleTimelineTimeUpdate}
+                onLoadedData={(_event) => handleLoadVideo()}
+                style={{
+                  minWidth: canvas.width,
+                  minHeight: canvas.height,
+                }}
+              />
+              // biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art
+            : <img
+                alt="Active Blurple Canvas"
+                onLoad={(event) => handleLoadImage(event.currentTarget)}
+                ref={imageRef}
+                src={sourceImage?.src}
+                crossOrigin="anonymous"
+                // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
+                style={{ minWidth: canvas.width, minHeight: canvas.height }}
+              />
+
+          }
         </CanvasImageWrapper>
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
@@ -1397,7 +1485,7 @@ export default function CanvasView({
           {actionPanel}
         </FullscreenPanelOverlay>
       )}
-      {isLoading && (
+      {(timelineIsEnabled ? isLoadingVideo : isLoadingImage) && (
         <CanvasIcon
           loading
           size={128}

@@ -9,7 +9,7 @@ export function useCanvasImage(canvasId: number): HTMLImageElement | null {
     const image = new Image();
     image.decoding = "async";
     image.crossOrigin = "anonymous";
-    image.src = `${config.apiUrl}/api/v1/canvas/${canvasId}@1.png`;
+    image.src = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}@1.png`;
 
     image.onload = () => {
       if (!cancelled) {
@@ -29,4 +29,37 @@ export function useCanvasImage(canvasId: number): HTMLImageElement | null {
   }, [canvasId]);
 
   return sourceImage;
+}
+
+export function useCanvasTimelineVideo(
+  canvasId: number,
+): HTMLVideoElement | null {
+  const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
+    null,
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
+    video.src = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}.mp4?raw=true`;
+
+    video.onloadeddata = () => {
+      if (!cancelled) {
+        setVideoElement(video);
+      }
+    };
+
+    video.onerror = () => {
+      if (!cancelled) {
+        setVideoElement(null);
+      }
+    };
+
+    return () => {
+      cancelled = true;
+    };
+  }, [canvasId]);
+
+  return videoElement;
 }
