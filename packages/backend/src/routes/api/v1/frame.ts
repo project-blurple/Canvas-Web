@@ -22,6 +22,7 @@ import {
   deleteFrame,
   editFrame,
   getFrameById,
+  getFramePlacementTimestamps,
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
@@ -77,8 +78,12 @@ frameRouter.get(
       return;
     }
 
+    const { start, end } = await getFramePlacementTimestamps(frame.id);
+
     const buffer = await generateTimelapse({
       canvasId: frame.canvasId,
+      start,
+      end,
       bounds: { ...frame },
     });
 

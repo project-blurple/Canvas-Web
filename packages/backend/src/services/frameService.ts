@@ -455,3 +455,51 @@ export async function assertMaxOwnerFramesNotExceeded({
     );
   }
 }
+
+interface FramePlacementTimestampRow {
+  start_at: Date;
+  end_at: Date;
+}
+
+export async function getFramePlacementTimestamps(frameId: string): Promise<{
+  start: Date;
+  end: Date;
+}> {
+  const rows = await prisma.$queryRaw<FramePlacementTimestampRow[]>`
+    WITH frame_bounds AS (
+      SELECT
+        id,
+        canvas_id,
+        x_0,
+        y_0,
+        x_1,
+        y_1
+      FROM frame
+      WHERE id ILIKE ${frameId}
+      LIMIT 1
+    )
+    SELECT
+      MIN(h.timestamp) AS start_at,
+      MAX(h.timestamp) AS end_at
+    FROM frame_bounds fb
+    INNER JOIN history h
+      ON h.canvas_id = fb.canvas_id
+      AND h.erased_at IS NULL
+      AND h.x >= fb.x_0
+      AND h.x < fb.x_1
+      AND h.y >= fb.y_0
+      AND h.y < fb.y_1
+    GROUP BY fb.id
+  `;
+
+  const [row] = rows;
+
+  if (!row) {
+    throw new NotFoundError("Frame not found or has no placement history");
+  }
+
+  return {
+    start: row.start_at,
+    end: row.end_at,
+  };
+}
