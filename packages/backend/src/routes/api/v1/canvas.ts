@@ -81,6 +81,27 @@ canvasRouter.get(
 );
 
 canvasRouter.get(
+  "/:canvasId.mp4",
+  validate({
+    params: CanvasIdParamModel,
+  }),
+  async (req, res) => {
+    const canvas = await getCanvasInfo(req.params.canvasId);
+    if (!canvas.isLocked) {
+      res.status(400).json({
+        error: "Timelapse generation is only available for locked canvases",
+      });
+      return;
+    }
+
+    await sendCanvasTimelapseAsMp4Stream({
+      res,
+      canvasId: req.params.canvasId,
+    });
+  },
+);
+
+canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
@@ -184,19 +205,6 @@ canvasRouter.delete(
 
     void audit(req, "admin", "canvas.clearCache", {
       resourceId: req.params.canvasId,
-    });
-  },
-);
-
-canvasRouter.post(
-  "/:canvasId/timelapse",
-  validate({
-    params: CanvasIdParamModel,
-  }),
-  async (req, res) => {
-    await sendCanvasTimelapseAsMp4Stream({
-      res,
-      canvasId: req.params.canvasId,
     });
   },
 );
