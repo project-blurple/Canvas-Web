@@ -231,7 +231,7 @@ export async function buildSnapshot({
       channels: 4,
     },
   })
-    .png()
+    .webp({ lossless: true })
     .toBuffer();
 
   return { image, lastIncludedHistoryAt };
