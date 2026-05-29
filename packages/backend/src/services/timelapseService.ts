@@ -19,7 +19,7 @@ import { snapshotPrisma } from "@/client/snapshots";
 import {
   getTimelapseCanvasDirectory,
   getTimelapseVideoPath,
-  TIMELAPSE_ENDCARD_IMAGE_PATH as TIMELAPSE_END_CARD_IMAGE_PATH,
+  TIMELAPSE_END_CARD_IMAGE_PATH,
 } from "@/snapshot/paths";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "./canvasService";
