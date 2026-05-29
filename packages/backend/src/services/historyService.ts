@@ -657,7 +657,7 @@ export async function restorePixelHistoryEntries(
     Array.from(
       coordinatesByCanvas.entries(),
       async ([canvasId, coordinates]) => {
-        restorePixelsAfterHistoryModification(canvasId, coordinates);
+        await restorePixelsAfterHistoryModification(canvasId, coordinates);
 
         await setSnapshotDirtyTimestamp(
           canvasId,
