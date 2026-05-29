@@ -390,8 +390,8 @@ async function appendTimelapseEndCardTail({
           "[1:v]setpts=PTS-STARTPTS[lastFade]", // normalize pts for first fade input
           "[2:v]setpts=PTS-STARTPTS[endFade]", // normalize pts for second fade input
           "[3:v]setpts=PTS-STARTPTS[endHold]", // normalize pts for end-card hold
-          // xfade: linear opacity fade between the two short segments (duration, offset=0)
-          `[lastFade][endFade]xfade=transition=fade:duration=${transitionDurationSeconds}:offset=0[transition]`,
+          // xfade: ease the opacity blend between the two short segments using a smoothstep curve
+          `[lastFade][endFade]xfade=transition=custom:duration=${transitionDurationSeconds}:offset=0:expr='A*(3*P*P-2*P*P*P)+B*(1-(3*P*P-2*P*P*P))'[transition]`,
           // concat: join hold, the produced transition, and the end-card hold into one stream
           "[hold][transition][endHold]concat=n=3:v=1:a=0[v]",
           "[v]format=yuv420p[vout]",
