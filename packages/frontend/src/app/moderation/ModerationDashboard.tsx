@@ -1,4 +1,6 @@
+import type { PixelHistoryOverlayPixel } from "@blurple-canvas-web/types";
 import styled from "@emotion/styled";
+import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useId, useState } from "react";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import { CanvasView } from "@/components/canvas";
@@ -23,18 +25,31 @@ const ModTabBar = styled(ActionPanelPrimitives.TabBar)`
 `;
 
 export default function ModerationDashboard() {
+  const [searchOverlayPixels, setSearchOverlayPixels] = useState<
+    PixelHistoryOverlayPixel[] | null
+  >(null);
+  const [isSearchOverlayVisible, setIsSearchOverlayVisible] = useState(false);
+
+  const actionPanel = (
+    <ModerationDashboardActionPanel
+      isSearchOverlayVisible={isSearchOverlayVisible}
+      setIsSearchOverlayVisible={setIsSearchOverlayVisible}
+      setSearchOverlayPixels={setSearchOverlayPixels}
+    />
+  );
+
   return (
     <DashboardWrapper>
       <CanvasView
-        actionPanel={<ModerationDashboardActionPanel />}
+        actionPanel={actionPanel}
         canvasLabel="Moderation dashboard"
+        searchOverlayPixels={searchOverlayPixels}
+        searchOverlayVisible={isSearchOverlayVisible}
         showInvite={false}
         showNotices={false}
         showReticle={false}
       />
-      <SlideableDrawer>
-        <ModerationDashboardActionPanel />
-      </SlideableDrawer>
+      <SlideableDrawer>{actionPanel}</SlideableDrawer>
     </DashboardWrapper>
   );
 }
@@ -43,7 +58,17 @@ type TabKey = "search" | "blocklist";
 
 const Tab = ActionPanelPrimitives.GenericTab<TabKey>;
 
-function ModerationDashboardActionPanel() {
+function ModerationDashboardActionPanel({
+  isSearchOverlayVisible,
+  setIsSearchOverlayVisible,
+  setSearchOverlayPixels,
+}: {
+  isSearchOverlayVisible: boolean;
+  setIsSearchOverlayVisible: Dispatch<SetStateAction<boolean>>;
+  setSearchOverlayPixels: Dispatch<
+    SetStateAction<PixelHistoryOverlayPixel[] | null>
+  >;
+}) {
   const [currentTab, setCurrentTab] = useState<TabKey>("search");
   const [areTabsLocked] = useState(false);
 
@@ -61,6 +86,9 @@ function ModerationDashboardActionPanel() {
     if (areTabsLocked) return;
 
     setShowSelectedBounds(!(currentTab === "search" && newTab !== "search"));
+    if (newTab !== "search") {
+      setIsSearchOverlayVisible(false);
+    }
 
     setCurrentTab(newTab);
   };
@@ -87,7 +115,13 @@ function ModerationDashboardActionPanel() {
           Blocklist
         </Tab>
       </ModTabBar>
-      <ComplexSearchTab active={currentTab === "search"} id={searchTabId} />
+      <ComplexSearchTab
+        active={currentTab === "search"}
+        id={searchTabId}
+        isSearchOverlayVisible={isSearchOverlayVisible}
+        setIsSearchOverlayVisible={setIsSearchOverlayVisible}
+        setSearchOverlayPixels={setSearchOverlayPixels}
+      />
       <BlocklistTab active={currentTab === "blocklist"} id={blocklistTabId} />
     </ActionPanelPrimitives.Root>
   );
