@@ -15,16 +15,35 @@ export async function getSnapshots({
     return [];
   }
 
-  return await snapshotPrisma.snapshot_manifest.findMany({
-    where: {
-      canvas_id: canvasId,
-      snapshot_at: {
-        gte: from,
-        lte: to,
-      },
-    },
-    orderBy: {
-      snapshot_at: "desc",
-    },
+  const where =
+    from || to ?
+      {
+        canvas_id: canvasId,
+        last_included_history_at: {
+          ...(from ? { gte: from } : {}),
+          ...(to ? { lte: to } : {}),
+        },
+      }
+    : { canvas_id: canvasId };
+
+  const manifests = await snapshotPrisma.snapshot_manifest.findMany({
+    where,
+    orderBy: { last_included_history_at: "desc" },
   });
+
+  if (to) {
+    const extra = await snapshotPrisma.snapshot_manifest.findFirst({
+      where: {
+        canvas_id: canvasId,
+        last_included_history_at: { gt: to },
+      },
+      orderBy: { last_included_history_at: "asc" },
+    });
+
+    if (extra && !manifests.some((manifest) => manifest.id === extra.id)) {
+      manifests.unshift(extra);
+    }
+  }
+
+  return manifests;
 }
