@@ -52,8 +52,12 @@ export async function setSnapshotDirtyTimestamp(
   canvasId: CanvasInfo["id"],
   timestamp: Date,
 ) {
-  await snapshotPrisma.snapshot_cursor.update({
+  await snapshotPrisma.snapshot_cursor.upsert({
     where: { canvas_id: canvasId },
-    data: { dirty_from_timestamp: timestamp },
+    create: {
+      canvas_id: canvasId,
+      dirty_from_timestamp: timestamp,
+    },
+    update: { dirty_from_timestamp: timestamp },
   });
 }
