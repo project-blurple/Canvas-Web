@@ -28,7 +28,9 @@ interface TimelineContextType {
   handleTimelineTimeUpdate: () => void;
   isLaunchingTimeline: boolean;
   isLoadingTimeline: boolean;
+  isPlaying: boolean;
   setCurrentTimelineFrame: Dispatch<SetStateAction<number>>;
+  setIsPlaying: Dispatch<SetStateAction<boolean>>;
   setTimelineIsActive: Dispatch<SetStateAction<boolean>>;
   sourceVideo: HTMLVideoElement | null;
   timelineFps: number;
@@ -47,7 +49,9 @@ const TimelineContext = createContext<TimelineContextType>({
   handleTimelineTimeUpdate: () => {},
   isLaunchingTimeline: false,
   isLoadingTimeline: false,
+  isPlaying: false,
   setCurrentTimelineFrame: () => {},
+  setIsPlaying: () => {},
   setTimelineIsActive: () => {},
   sourceVideo: null,
   timelineFps: TIMELINE_FPS,
@@ -75,6 +79,7 @@ export const TimelineProvider = ({
   const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(true);
   const [isLaunchingTimeline, setIsLaunchingTimeline] = useState(true);
+  const [isPlaying, setIsPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timelineSeekTimeoutRef = useRef<number | null>(null);
   const timelineLastSeekCommitRef = useRef(0);
@@ -90,6 +95,7 @@ export const TimelineProvider = ({
     setCurrentTimelineFrame(0);
     setIsLoadingTimeline(true);
     setIsLaunchingTimeline(true);
+    setIsPlaying(false);
     timelineLastSeekCommitRef.current = 0;
 
     if (timelineSeekTimeoutRef.current !== null) {
@@ -105,6 +111,12 @@ export const TimelineProvider = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (!timelineIsActive) {
+      setIsPlaying(false);
+    }
+  }, [timelineIsActive]);
 
   const handleTimelineTimeUpdate = useCallback(() => {
     const video = videoRef.current;
@@ -159,6 +171,7 @@ export const TimelineProvider = ({
     (value: SetStateAction<boolean>) => {
       setTimelineIsActive((currentIsActive) => {
         if (!timelineIsAvailable) return false;
+
         return typeof value === "function" ? value(currentIsActive) : value;
       });
     },
@@ -174,7 +187,9 @@ export const TimelineProvider = ({
       handleTimelineTimeUpdate,
       isLaunchingTimeline,
       isLoadingTimeline,
+      isPlaying,
       setCurrentTimelineFrame,
+      setIsPlaying,
       setTimelineIsActive: setTimelineIsActiveWithCheck,
       sourceVideo,
       timelineFps,
@@ -192,6 +207,7 @@ export const TimelineProvider = ({
       handleTimelineTimeUpdate,
       isLaunchingTimeline,
       isLoadingTimeline,
+      isPlaying,
       setTimelineIsActiveWithCheck,
       sourceVideo,
       timelineIsActive,

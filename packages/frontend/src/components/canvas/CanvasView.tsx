@@ -541,6 +541,8 @@ export default function CanvasView({
   const {
     handleLoadVideo,
     handleTimelineTimeUpdate,
+    isPlaying,
+    setIsPlaying,
     isLaunchingTimeline,
     isLoadingTimeline,
     sourceVideo,
@@ -582,6 +584,28 @@ export default function CanvasView({
     const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
     return isProbablyWebKit && isNotChromium;
   }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !timelineIsActive || !sourceVideo) {
+      return;
+    }
+
+    if (isPlaying) {
+      void video.play().catch(() => {
+        setIsPlaying(false);
+      });
+      return;
+    }
+
+    video.pause();
+  }, [
+    isPlaying,
+    setIsPlaying,
+    sourceVideo,
+    timelineIsActive,
+    videoRef.current,
+  ]);
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -1401,6 +1425,7 @@ export default function CanvasView({
                 crossOrigin="anonymous"
                 onTimeUpdate={handleTimelineTimeUpdate}
                 onLoadedData={(_event) => handleLoadVideo()}
+                onEnded={() => setIsPlaying(false)}
                 style={{
                   minWidth: canvas.width,
                   minHeight: canvas.height,

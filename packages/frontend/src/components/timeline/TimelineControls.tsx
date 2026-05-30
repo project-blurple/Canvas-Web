@@ -4,7 +4,10 @@ import {
   ChevronLast,
   ChevronLeft,
   ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
   type LucideIcon,
+  Pause,
   Play,
 } from "lucide-react";
 import { useCanvasContext, useTimelineContext } from "@/contexts";
@@ -58,6 +61,8 @@ export default function TimelineControls() {
   const {
     currentTimelineFrame,
     handleTimelineSeek,
+    isPlaying,
+    setIsPlaying,
     timelineIsAvailable,
     timelineIsActive,
     setTimelineIsActive,
@@ -122,25 +127,40 @@ export default function TimelineControls() {
             Timeline controls
           </ActionPanelPrimitives.SectionHeading>
           <ControlsContent>
-            <ButtonRow>
-              <ControlsButton
-                icon={ChevronFirst}
-                onClick={() => seekBy24Hours(-1)}
-              />
-              <ControlsButton
-                icon={ChevronLeft}
-                onClick={() => seekByFrameOffset(-1)}
-              />
-              <ControlsButton icon={Play} />
-              <ControlsButton
-                icon={ChevronRight}
-                onClick={() => seekByFrameOffset(1)}
-              />
-              <ControlsButton
-                icon={ChevronLast}
-                onClick={() => seekBy24Hours(1)}
-              />
-            </ButtonRow>
+            {!isPlaying ?
+              <ButtonRow>
+                <ControlsButton
+                  icon={ChevronFirst}
+                  onClick={() => seekBy24Hours(-1)}
+                />
+                <ControlsButton
+                  icon={ChevronLeft}
+                  onClick={() => seekByFrameOffset(-1)}
+                />
+                <ControlsButton
+                  icon={Play}
+                  onClick={() => setIsPlaying(true)}
+                />
+                <ControlsButton
+                  icon={ChevronRight}
+                  onClick={() => seekByFrameOffset(1)}
+                />
+                <ControlsButton
+                  icon={ChevronLast}
+                  onClick={() => seekBy24Hours(1)}
+                />
+              </ButtonRow>
+            : <ButtonRow>
+                <ControlsButton icon={ChevronsLeft} onClick={() => {}} />
+                <ControlsButton icon={ChevronLeft} onClick={() => {}} />
+                <ControlsButton
+                  icon={Pause}
+                  onClick={() => setIsPlaying(false)}
+                />
+                <ControlsButton icon={ChevronRight} onClick={() => {}} />
+                <ControlsButton icon={ChevronsRight} onClick={() => {}} />
+              </ButtonRow>
+            }
             <Button onClick={() => setTimelineIsActive(false)}>
               Disable timeline
             </Button>
