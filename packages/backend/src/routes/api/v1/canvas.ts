@@ -100,7 +100,7 @@ canvasRouter.get(
     );
     res
       .status(200)
-      .type("mp4")
+      .type(raw ? "webm" : "mp4")
       .setHeader(
         "Content-Disposition",
         `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.mp4"`,
