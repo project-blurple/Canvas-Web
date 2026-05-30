@@ -2,16 +2,13 @@
 
 import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams, useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { createContext, useContext, useEffect } from "react";
 import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
-import { useSelectedColorContext } from "./SelectedColorContext";
-import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 interface CanvasContextType {
   canvas: CanvasInfo;
-  setCanvas: (canvasId: CanvasInfo["id"]) => Promise<void>;
 }
 
 const CanvasContext = createContext<CanvasContextType>({
@@ -27,7 +24,6 @@ const CanvasContext = createContext<CanvasContextType>({
     allColorsGlobal: false,
     cooldownDuration: 0,
   },
-  setCanvas: async () => {},
 });
 
 interface CanvasProviderProps {
@@ -39,7 +35,6 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const params = useParams();
 
@@ -53,9 +48,6 @@ export const CanvasProvider = ({
     queryFn: () => fetchCanvasInfo(canvasId),
     initialData: canvasId === mainCanvasInfo.id ? mainCanvasInfo : undefined,
   });
-
-  const { setColor } = useSelectedColorContext();
-  const { setFrame } = useSelectedFrameContext();
 
   useEffect(() => {
     const onCanvasUpdate = (_canvas: CanvasInfo) => {
@@ -89,22 +81,8 @@ export const CanvasProvider = ({
     };
   }, [canvasId]);
 
-  const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
-    async (newCanvasId: CanvasInfo["id"]) => {
-      setColor(null);
-      setFrame(null);
-      router.push(`/canvas/${encodeURIComponent(newCanvasId)}`);
-    },
-    [router, setColor, setFrame],
-  );
-
   return (
-    <CanvasContext.Provider
-      value={{
-        canvas: activeCanvas,
-        setCanvas: setCanvasById,
-      }}
-    >
+    <CanvasContext.Provider value={{ canvas: activeCanvas }}>
       {children}
     </CanvasContext.Provider>
   );
