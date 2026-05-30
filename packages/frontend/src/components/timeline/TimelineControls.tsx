@@ -44,7 +44,7 @@ const ButtonRow = styled("div")`
   }
 `;
 
-const TIMELINE_PLAYBACK_SPEEDS = [1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8] as const;
+const TIMELINE_PLAYBACK_SPEEDS = [1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8, 16] as const;
 
 type TimelinePlaybackDirection = "forward" | "reverse";
 type TimelinePlaybackSpeed = (typeof TIMELINE_PLAYBACK_SPEEDS)[number];
@@ -93,12 +93,11 @@ export default function TimelineControls() {
     handleTimelineSeek(clampFrame(currentTimelineFrame + offset));
   };
 
-  const seekBy24Hours = (direction: -1 | 1) => {
+  const seekByDuration = (direction: -1 | 1, durationMs: number) => {
     if (!currentSnapshot || !snapshots) return;
 
     const targetSnapshotAt =
-      new Date(currentSnapshot.snapshotAt).getTime() +
-      direction * 24 * 60 * 60 * 1000;
+      new Date(currentSnapshot.snapshotAt).getTime() + direction * durationMs;
 
     let selectedIndex = currentTimelineFrame;
 
@@ -183,7 +182,11 @@ export default function TimelineControls() {
             <ButtonRow>
               <ControlsButton
                 icon={ChevronFirst}
-                onClick={() => seekBy24Hours(-1)}
+                onClick={() => seekByDuration(-1, 24 * 60 * 60 * 1000)}
+              />
+              <ControlsButton
+                icon={ChevronsLeft}
+                onClick={() => seekByDuration(-1, 1 * 60 * 60 * 1000)}
               />
               <ControlsButton
                 icon={ChevronLeft}
@@ -194,8 +197,12 @@ export default function TimelineControls() {
                 onClick={() => seekByFrameOffset(1)}
               />
               <ControlsButton
+                icon={ChevronsRight}
+                onClick={() => seekByDuration(1, 1 * 60 * 60 * 1000)}
+              />
+              <ControlsButton
                 icon={ChevronLast}
-                onClick={() => seekBy24Hours(1)}
+                onClick={() => seekByDuration(1, 24 * 60 * 60 * 1000)}
               />
             </ButtonRow>
             <ButtonRow>
@@ -221,7 +228,7 @@ export default function TimelineControls() {
               />
             </ButtonRow>
             <Button onClick={() => setTimelineIsActive(false)}>
-              Disable timeline
+              Exit timeline
             </Button>
           </ControlsContent>
         </div>
