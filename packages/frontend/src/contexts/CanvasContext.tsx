@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  type CanvasInfo,
-  type CanvasInfoRequest,
-  SocketEvents,
-} from "@blurple-canvas-web/types";
+import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -15,7 +10,7 @@ import {
   useEffect,
   useState,
 } from "react";
-import config from "@/config/clientConfig";
+import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
@@ -92,10 +87,11 @@ export const CanvasProvider = ({
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
-      const response = await axios.get<CanvasInfoRequest.ResBody>(
-        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
-      );
-      setActiveCanvas(response.data);
+      const canvasInfo = await queryClient.fetchQuery({
+        queryKey: ["canvasInfo", canvasId],
+        queryFn: () => fetchCanvasInfo(canvasId),
+      });
+      setActiveCanvas(canvasInfo);
       setColor(null);
       setFrame(null);
 
@@ -121,7 +117,14 @@ export const CanvasProvider = ({
         socket.connect();
       }
     },
-    [activeCanvas.id, router, setColor, setFrame, mainCanvasInfo.id],
+    [
+      activeCanvas.id,
+      mainCanvasInfo.id,
+      queryClient,
+      router,
+      setColor,
+      setFrame,
+    ],
   );
 
   return (
