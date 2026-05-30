@@ -20,6 +20,13 @@ import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
 
+function buildSocketAuth<T extends CanvasInfo["id"]>(canvasId: T) {
+  return {
+    canvasId,
+    pixelTimestamp: new Date().toISOString(),
+  };
+}
+
 interface CanvasContextType {
   canvas: CanvasInfo;
   setCanvas: (canvasId: CanvasInfo["id"], redirect?: boolean) => Promise<void>;
@@ -58,10 +65,7 @@ export const CanvasProvider = ({
   const { setFrame } = useSelectedFrameContext();
 
   useEffect(() => {
-    socket.auth = {
-      canvasId: mainCanvasInfo.id,
-      pixelTimestamp: new Date().toISOString(),
-    };
+    socket.auth = buildSocketAuth(mainCanvasInfo.id);
     socket.connect();
 
     return () => {
@@ -108,10 +112,7 @@ export const CanvasProvider = ({
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
       // already been placed.
-      socket.auth = {
-        canvasId,
-        pixelTimestamp: new Date().toISOString(),
-      };
+      socket.auth = buildSocketAuth(canvasId);
 
       if (canvasId !== activeCanvas.id) {
         if (socket.connected) {
