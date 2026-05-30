@@ -20,6 +20,19 @@ import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
 
+function useSubscribeToCanvasUpdates() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const onCanvasUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
+      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
+    };
+
+    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
+    return () => void socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
+  }, [queryClient]);
+}
+
 interface CanvasContextType {
   canvas: CanvasInfo;
   setCanvas: (canvasId: CanvasInfo["id"], redirect?: boolean) => Promise<void>;
@@ -51,7 +64,6 @@ export const CanvasProvider = ({
   mainCanvasInfo,
 }: CanvasProviderProps) => {
   const router = useRouter();
-  const queryClient = useQueryClient();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
 
   const { setColor } = useSelectedColorContext();
@@ -63,28 +75,10 @@ export const CanvasProvider = ({
       pixelTimestamp: new Date().toISOString(),
     };
     socket.connect();
-
-    return () => {
-      socket.disconnect();
-    };
+    return () => void socket.disconnect();
   }, [mainCanvasInfo.id]);
 
-  useEffect(() => {
-    const onCanvasUpdate = (canvas: CanvasInfo) => {
-      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
-      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
-
-      if (canvas.id === activeCanvas.id) {
-        setActiveCanvas(canvas);
-      }
-    };
-
-    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
-
-    return () => {
-      socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
-    };
-  }, [activeCanvas.id, queryClient]);
+  useSubscribeToCanvasUpdates();
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
