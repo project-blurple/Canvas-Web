@@ -17,6 +17,7 @@ import {
   SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
+  TimelineProvider,
 } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
@@ -117,13 +118,15 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
           <SelectedColorProvider>
             <SelectedFrameProvider>
               <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <ActionPanelProvider>
-                  <CanvasViewProvider>
-                    <SelectedBoundsProvider>
-                      <AppProviders>{children}</AppProviders>
-                    </SelectedBoundsProvider>
-                  </CanvasViewProvider>
-                </ActionPanelProvider>
+                <TimelineProvider>
+                  <ActionPanelProvider>
+                    <CanvasViewProvider>
+                      <SelectedBoundsProvider>
+                        <AppProviders>{children}</AppProviders>
+                      </SelectedBoundsProvider>
+                    </CanvasViewProvider>
+                  </ActionPanelProvider>
+                </TimelineProvider>
               </CanvasProvider>
             </SelectedFrameProvider>
           </SelectedColorProvider>

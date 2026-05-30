@@ -26,6 +26,7 @@ import {
   useSelectedBoundsContext,
   useSelectedColorContext,
   useSelectedFrameContext,
+  useTimelineContext,
 } from "@/contexts";
 import {
   useCanvasImage,
@@ -33,8 +34,6 @@ import {
   useIsFullscreenAvailable,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
-import { useSnapshots } from "@/hooks/queries/useSnapshots";
-import { useCanvasTimelineVideo } from "@/hooks/useCanvasImage";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
@@ -512,7 +511,6 @@ export default function CanvasView({
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
@@ -539,87 +537,22 @@ export default function CanvasView({
   } = useCanvasViewContext();
   const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
-  const { data: snapshots } = useSnapshots(canvas.id);
   const sourceImage = useCanvasImage(canvas.id);
-  const sourceVideo = useCanvasTimelineVideo(canvas.id);
+  const {
+    handleLoadVideo,
+    handleTimelineTimeUpdate,
+    isLaunchingTimeline,
+    isLoadingTimeline,
+    sourceVideo,
+    timelineIsEnabled,
+    videoRef,
+  } = useTimelineContext();
 
   const [isLoadingImage, setIsLoadingImage] = useState(true);
   const [isLaunchingImage, setIsLaunchingImage] = useState(true);
-  const [isLoadingVideo, setIsLoadingVideo] = useState(true);
-  const [isLaunchingVideo, setIsLaunchingVideo] = useState(true);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
-
-  const timelineIsEnabled = canvas.timelineEnabled && canvas.isLocked;
-
-  // -- Timeline stuff start --
-
-  const timelineFps = 30;
-  const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
-  const totalTimelineFrames = snapshots?.length ?? 0;
-  const timelineSliderThumbPosition =
-    totalTimelineFrames > 0 ?
-      clamp((currentTimelineFrame / totalTimelineFrames) * 100, 0, 100)
-    : 0;
-
-  const timelineSeekTimeoutRef = useRef<number | null>(null);
-  const timelineLastSeekCommitRef = useRef(0);
-  const timelineSeekCommitIntervalMs = 1000 / 15;
-
-  useEffect(() => {
-    return () => {
-      if (timelineSeekTimeoutRef.current !== null) {
-        window.clearTimeout(timelineSeekTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  function handleTimelineTimeUpdate() {
-    const video = videoRef.current;
-    if (!video) return;
-    setCurrentTimelineFrame(Math.floor(video.currentTime * timelineFps));
-  }
-
-  function handleTimelineSeek(frame: number) {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const commitSeek = () => {
-      timelineLastSeekCommitRef.current = performance.now();
-      video.currentTime = frame / timelineFps;
-    };
-
-    const elapsedSinceLastCommit =
-      performance.now() - timelineLastSeekCommitRef.current;
-
-    if (timelineSeekTimeoutRef.current !== null) {
-      window.clearTimeout(timelineSeekTimeoutRef.current);
-    }
-
-    if (elapsedSinceLastCommit >= timelineSeekCommitIntervalMs) {
-      commitSeek();
-      return;
-    }
-
-    timelineSeekTimeoutRef.current = window.setTimeout(() => {
-      timelineSeekTimeoutRef.current = null;
-      commitSeek();
-    }, timelineSeekCommitIntervalMs - elapsedSinceLastCommit);
-  }
-
-  function handleTimelineSlider(event: React.ChangeEvent<HTMLInputElement>) {
-    const frame = parseInt(event.target.value, 10);
-    setCurrentTimelineFrame(frame);
-    handleTimelineSeek(frame);
-  }
-
-  const handleLoadVideo = useCallback((): void => {
-    setIsLoadingVideo(false);
-    setIsLaunchingVideo(false);
-  }, []);
-
-  // -- Timeline stuff end --
 
   const [initialZoom, setInitialZoom] = useState(1);
   const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
@@ -1376,12 +1309,7 @@ export default function CanvasView({
         </FullscreenPanelButton>
       )}
       {timelineIsEnabled ?
-        <TimelineSlider
-          timelineSliderThumbPosition={timelineSliderThumbPosition}
-          max={totalTimelineFrames}
-          value={currentTimelineFrame}
-          onChange={handleTimelineSlider}
-        />
+        <TimelineSlider />
       : showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
@@ -1455,8 +1383,10 @@ export default function CanvasView({
         <CanvasImageWrapper
           aria-busy={isLaunchingImage || isLoadingImage}
           ref={canvasImageWrapperRef}
-          isLoading={timelineIsEnabled ? isLoadingVideo : isLoadingImage}
-          isLaunching={timelineIsEnabled ? isLaunchingVideo : isLaunchingImage}
+          isLoading={timelineIsEnabled ? isLoadingTimeline : isLoadingImage}
+          isLaunching={
+            timelineIsEnabled ? isLaunchingTimeline : isLaunchingImage
+          }
           id="canvas-image-wrapper"
         >
           {
@@ -1504,7 +1434,7 @@ export default function CanvasView({
           {actionPanel}
         </FullscreenPanelOverlay>
       )}
-      {(timelineIsEnabled ? isLoadingVideo : isLoadingImage) && (
+      {(timelineIsEnabled ? isLoadingTimeline : isLoadingImage) && (
         <CanvasIcon
           loading
           size={128}
