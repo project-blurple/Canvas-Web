@@ -29,9 +29,11 @@ interface TimelineContextType {
   isLaunchingTimeline: boolean;
   isLoadingTimeline: boolean;
   setCurrentTimelineFrame: Dispatch<SetStateAction<number>>;
+  setTimelineIsActive: Dispatch<SetStateAction<boolean>>;
   sourceVideo: HTMLVideoElement | null;
   timelineFps: number;
-  timelineIsEnabled: boolean;
+  timelineIsActive: boolean;
+  timelineIsAvailable: boolean;
   timelineSliderThumbPosition: number;
   totalTimelineFrames: number;
   videoRef: RefObject<HTMLVideoElement | null>;
@@ -46,9 +48,11 @@ const TimelineContext = createContext<TimelineContextType>({
   isLaunchingTimeline: false,
   isLoadingTimeline: false,
   setCurrentTimelineFrame: () => {},
+  setTimelineIsActive: () => {},
   sourceVideo: null,
   timelineFps: TIMELINE_FPS,
-  timelineIsEnabled: false,
+  timelineIsActive: false,
+  timelineIsAvailable: false,
   timelineSliderThumbPosition: 0,
   totalTimelineFrames: 0,
   videoRef: { current: null },
@@ -61,7 +65,11 @@ export const TimelineProvider = ({
 }) => {
   const { canvas } = useCanvasContext();
   const { data: snapshots } = useSnapshots(canvas.id);
-  const sourceVideo = useCanvasTimelineVideo(canvas.id);
+
+  const [timelineIsActive, setTimelineIsActive] = useState(false);
+  const timelineIsAvailable = canvas.timelineEnabled && canvas.isLocked;
+
+  const sourceVideo = useCanvasTimelineVideo(canvas.id, timelineIsActive);
 
   const timelineFps = TIMELINE_FPS;
   const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
@@ -72,7 +80,6 @@ export const TimelineProvider = ({
   const timelineLastSeekCommitRef = useRef(0);
 
   const totalTimelineFrames = snapshots?.length ?? 0;
-  const timelineIsEnabled = canvas.timelineEnabled && canvas.isLocked;
   const timelineSliderThumbPosition =
     totalTimelineFrames > 0 ?
       clamp((currentTimelineFrame / totalTimelineFrames) * 100, 0, 100)
@@ -147,6 +154,16 @@ export const TimelineProvider = ({
     setIsLaunchingTimeline(false);
   }, []);
 
+  const setTimelineIsActiveWithCheck = useCallback(
+    (value: SetStateAction<boolean>) => {
+      setTimelineIsActive((currentIsActive) => {
+        if (!timelineIsAvailable) return false;
+        return typeof value === "function" ? value(currentIsActive) : value;
+      });
+    },
+    [timelineIsAvailable],
+  );
+
   const value = useMemo(
     () => ({
       currentTimelineFrame,
@@ -157,9 +174,11 @@ export const TimelineProvider = ({
       isLaunchingTimeline,
       isLoadingTimeline,
       setCurrentTimelineFrame,
+      setTimelineIsActive: setTimelineIsActiveWithCheck,
       sourceVideo,
       timelineFps,
-      timelineIsEnabled,
+      timelineIsActive,
+      timelineIsAvailable,
       timelineSliderThumbPosition,
       totalTimelineFrames,
       videoRef,
@@ -172,8 +191,10 @@ export const TimelineProvider = ({
       handleTimelineTimeUpdate,
       isLaunchingTimeline,
       isLoadingTimeline,
+      setTimelineIsActiveWithCheck,
       sourceVideo,
-      timelineIsEnabled,
+      timelineIsActive,
+      timelineIsAvailable,
       timelineSliderThumbPosition,
       totalTimelineFrames,
     ],

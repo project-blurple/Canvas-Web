@@ -33,33 +33,34 @@ export function useCanvasImage(canvasId: number): HTMLImageElement | null {
 
 export function useCanvasTimelineVideo(
   canvasId: number,
+  enabled = true,
 ): HTMLVideoElement | null {
   const [videoElement, setVideoElement] = useState<HTMLVideoElement | null>(
     null,
   );
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     let cancelled = false;
     const video = document.createElement("video");
     video.crossOrigin = "anonymous";
     video.src = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}.mp4?raw=true`;
 
     video.onloadeddata = () => {
-      if (!cancelled) {
-        setVideoElement(video);
-      }
+      if (!cancelled) setVideoElement(video);
     };
 
     video.onerror = () => {
-      if (!cancelled) {
-        setVideoElement(null);
-      }
+      if (!cancelled) setVideoElement(null);
     };
 
     return () => {
       cancelled = true;
     };
-  }, [canvasId]);
+  }, [canvasId, enabled]);
 
   return videoElement;
 }

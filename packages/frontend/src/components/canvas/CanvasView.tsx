@@ -544,7 +544,7 @@ export default function CanvasView({
     isLaunchingTimeline,
     isLoadingTimeline,
     sourceVideo,
-    timelineIsEnabled,
+    timelineIsActive,
     videoRef,
   } = useTimelineContext();
 
@@ -1268,6 +1268,10 @@ export default function CanvasView({
     }
   }, [containerRef]);
 
+  const isCanvasLoading = timelineIsActive ? isLoadingTimeline : isLoadingImage;
+  const isCanvasLaunching =
+    timelineIsActive ? isLaunchingTimeline : isLaunchingImage;
+
   return (
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
@@ -1308,7 +1312,7 @@ export default function CanvasView({
           : <PanelRightOpen />}
         </FullscreenPanelButton>
       )}
-      {timelineIsEnabled ?
+      {timelineIsActive ?
         <TimelineSlider />
       : showInvite ?
         config.discordServerInvite &&
@@ -1383,14 +1387,12 @@ export default function CanvasView({
         <CanvasImageWrapper
           aria-busy={isLaunchingImage || isLoadingImage}
           ref={canvasImageWrapperRef}
-          isLoading={timelineIsEnabled ? isLoadingTimeline : isLoadingImage}
-          isLaunching={
-            timelineIsEnabled ? isLaunchingTimeline : isLaunchingImage
-          }
+          isLoading={isCanvasLoading}
+          isLaunching={isCanvasLaunching}
           id="canvas-image-wrapper"
         >
           {
-            timelineIsEnabled && sourceVideo ?
+            timelineIsActive && sourceVideo ?
               // biome-ignore lint/a11y/useMediaCaption: No audio or captions
               <video
                 // autoPlay
@@ -1434,7 +1436,7 @@ export default function CanvasView({
           {actionPanel}
         </FullscreenPanelOverlay>
       )}
-      {(timelineIsEnabled ? isLoadingTimeline : isLoadingImage) && (
+      {isCanvasLoading && (
         <CanvasIcon
           loading
           size={128}
