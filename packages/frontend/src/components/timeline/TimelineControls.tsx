@@ -6,9 +6,13 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
+  FastForward,
   type LucideIcon,
   Pause,
   Play,
+  Rewind,
+  StepBack,
+  StepForward,
 } from "lucide-react";
 import { useCanvasContext, useTimelineContext } from "@/contexts";
 import { useSnapshots } from "@/hooks/queries/useSnapshots";
@@ -176,49 +180,46 @@ export default function TimelineControls() {
             Timeline controls
           </ActionPanelPrimitives.SectionHeading>
           <ControlsContent>
-            {!isPlaying ?
-              <ButtonRow>
-                <ControlsButton
-                  icon={ChevronFirst}
-                  onClick={() => seekBy24Hours(-1)}
-                />
-                <ControlsButton
-                  icon={ChevronLeft}
-                  onClick={() => seekByFrameOffset(-1)}
-                />
-                <ControlsButton icon={Play} onClick={handlePlay} />
-                <ControlsButton
-                  icon={ChevronRight}
-                  onClick={() => seekByFrameOffset(1)}
-                />
-                <ControlsButton
-                  icon={ChevronLast}
-                  onClick={() => seekBy24Hours(1)}
-                />
-              </ButtonRow>
-            : <ButtonRow>
-                <ControlsButton
-                  icon={ChevronsLeft}
-                  onClick={() => setPlaybackForChevron("reverse", true)}
-                />
-                <ControlsButton
-                  icon={ChevronLeft}
-                  onClick={() => setPlaybackForChevron("reverse", false)}
-                />
-                <ControlsButton
-                  icon={Pause}
-                  onClick={() => setIsPlaying(false)}
-                />
-                <ControlsButton
-                  icon={ChevronRight}
-                  onClick={() => setPlaybackForChevron("forward", false)}
-                />
-                <ControlsButton
-                  icon={ChevronsRight}
-                  onClick={() => setPlaybackForChevron("forward", true)}
-                />
-              </ButtonRow>
-            }
+            <ButtonRow>
+              <ControlsButton
+                icon={ChevronFirst}
+                onClick={() => seekBy24Hours(-1)}
+              />
+              <ControlsButton
+                icon={ChevronLeft}
+                onClick={() => seekByFrameOffset(-1)}
+              />
+              <ControlsButton
+                icon={ChevronRight}
+                onClick={() => seekByFrameOffset(1)}
+              />
+              <ControlsButton
+                icon={ChevronLast}
+                onClick={() => seekBy24Hours(1)}
+              />
+            </ButtonRow>
+            <ButtonRow>
+              <ControlsButton
+                icon={Rewind}
+                onClick={() => setPlaybackForChevron("reverse", true)}
+              />
+              <ControlsButton
+                icon={StepBack}
+                onClick={() => setPlaybackForChevron("reverse", false)}
+              />
+              <ControlsButton
+                icon={isPlaying ? Pause : Play}
+                onClick={isPlaying ? () => setIsPlaying(false) : handlePlay}
+              />
+              <ControlsButton
+                icon={StepForward}
+                onClick={() => setPlaybackForChevron("forward", false)}
+              />
+              <ControlsButton
+                icon={FastForward}
+                onClick={() => setPlaybackForChevron("forward", true)}
+              />
+            </ButtonRow>
             <Button onClick={() => setTimelineIsActive(false)}>
               Disable timeline
             </Button>
