@@ -1,4 +1,4 @@
-import { css, styled } from "@mui/material";
+import { css, styled, useMediaQuery, useTheme } from "@mui/material";
 import {
   Clock1,
   Clock2,
@@ -23,19 +23,27 @@ const TimelineSliderWrapper = styled("div")`
   background-color: oklch(
     from var(--discord-legacy-dark-but-not-black) l c h / 80%
   );
-  border-radius: 0.5rem 0.5rem 1rem 1rem;
   border: oklch(from var(--discord-white) l c h / 12%) 3px solid;
   box-shadow: 0 0 10px rgba(0 0 0 / 25%);
   display: flex;
   flex-direction: row;
   gap: 0.5rem;
-  inset-block-end: 0.5rem;
   inset-inline-end: 0.5rem;
   justify-content: center;
   padding-inline: 1rem;
   position: absolute;
   width: calc(100% - 1rem);
   z-index: 1;
+
+  ${({ theme }) => theme.breakpoints.up("md")} {
+    border-radius: 0.5rem 0.5rem 1rem 1rem;
+    inset-block-end: 0.5rem;
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    inset-block-start: 0.5rem;
+    border-radius: 0.5rem;
+  }
 `;
 
 const timelineSliderTrackStyles = css`
@@ -188,6 +196,9 @@ export default function TimelineSlider() {
   const { canvas } = useCanvasContext();
   const { data: snapshots } = useSnapshots(canvas.id);
 
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const currentSnapshot =
     snapshots?.[Math.min(currentTimelineFrame, totalTimelineFrames - 1)];
 
@@ -213,9 +224,11 @@ export default function TimelineSlider() {
     <TimelineSliderWrapper onPointerDown={(event) => event.stopPropagation()}>
       {currentSnapshot && (
         <DateTimeWrapper>
-          <ClockIconSyncedToTime
-            hour={(currentDatetime?.getHours() ?? 0) % 12 || 12}
-          />
+          {!isMobile && (
+            <ClockIconSyncedToTime
+              hour={(currentDatetime?.getHours() ?? 0) % 12 || 12}
+            />
+          )}
           <DateTimeTextWrapper>
             <TimeText>{currentTime}</TimeText>
             <DateText>{currentDate}</DateText>
