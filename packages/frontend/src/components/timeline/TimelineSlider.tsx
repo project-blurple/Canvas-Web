@@ -14,6 +14,7 @@ import {
   Clock12,
   GripVertical,
 } from "lucide-react";
+import { useState } from "react";
 import { useCanvasContext, useTimelineContext } from "@/contexts";
 import { useSnapshots } from "@/hooks/queries/useSnapshots";
 
@@ -67,8 +68,11 @@ const TimelineSliderInput = styled("input")`
   background: transparent;
   outline: none;
 
-  width: 100%;
+  cursor: grab;
   padding-block: 0.5rem;
+  touch-action: none;
+  user-select: none;
+  width: 100%;
 
   &::-webkit-slider-runnable-track {
     ${timelineSliderTrackStyles}
@@ -89,13 +93,12 @@ const TimelineSliderInput = styled("input")`
   }
 `;
 
-const TimelineSliderThumb = styled("div")`
+const TimelineSliderThumb = styled("button")`
   align-items: center;
   background-color: var(--discord-blurple);
   border-radius: 0.25rem;
   border: 2px solid oklch(from var(--discord-white) l c h / 20%);
   box-shadow: 0 0 10px rgba(0 0 0 / 35%);
-  cursor: grabbing;
   display: flex;
   height: 2rem;
   justify-content: center;
@@ -108,6 +111,14 @@ const TimelineSliderThumb = styled("div")`
 
   & > svg {
     color: oklch(from var(--discord-white) l c h / 55%);
+  }
+
+  &:hover {
+    cursor: grab;
+  }
+
+  &:active {
+    cursor: grabbing;
   }
 `;
 
@@ -167,6 +178,7 @@ function ClockIconSyncedToTime({ hour }: { hour: number }) {
 }
 
 export default function TimelineSlider() {
+  const [isDragging, setIsDragging] = useState(false);
   const {
     currentTimelineFrame,
     handleTimelineSlider,
@@ -217,6 +229,24 @@ export default function TimelineSlider() {
           max={totalTimelineFrames}
           value={currentTimelineFrame}
           onChange={handleTimelineSlider}
+          onPointerDown={(e) => {
+            setIsDragging(true);
+            try {
+              (e.currentTarget as HTMLInputElement).setPointerCapture(
+                e.pointerId,
+              );
+            } catch {}
+          }}
+          onPointerUp={(e) => {
+            setIsDragging(false);
+            try {
+              (e.currentTarget as HTMLInputElement).releasePointerCapture(
+                e.pointerId,
+              );
+            } catch {}
+          }}
+          onLostPointerCapture={() => setIsDragging(false)}
+          style={{ cursor: isDragging ? "grabbing" : undefined }}
         />
         <TimelineSliderThumb
           style={{ left: `${timelineSliderThumbPosition}%` }}
