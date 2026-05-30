@@ -3,6 +3,7 @@
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
@@ -165,7 +166,7 @@ interface CanvasSettingsFormProps {
   isSaving: boolean;
   onSavingChange: (isSaving: boolean) => void;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
-  onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
+  onSaved: (canvasId: CanvasInfo["id"]) => void | Promise<void>;
 }
 
 function CanvasSettingsForm({
@@ -401,9 +402,10 @@ function CanvasSettingsForm({
 }
 
 function AdminCanvasTab() {
+  const router = useRouter();
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
-  const { canvas: activeCanvas, setCanvas } = useCanvasContext();
+  const { canvas: activeCanvas } = useCanvasContext();
   const { data: event, isLoading: eventIsLoading } = useEventInfo();
   const [mode, setMode] = useState<FormMode>("edit");
   const [saveConfirmation, setSaveConfirmation] = useState<{
@@ -518,7 +520,7 @@ function AdminCanvasTab() {
                   key={canvasItem.id}
                   disabled={isCanvasSelectionDisabled}
                   onClick={() => {
-                    setCanvas(canvasItem.id, false);
+                    router.push(`/canvas/${canvasItem.id}/admin/canvas`);
                     setMode("edit");
                   }}
                   aria-current={
@@ -536,12 +538,12 @@ function AdminCanvasTab() {
               isSaving={isSaving}
               onSavingChange={setIsSaving}
               onFormValuesChange={setFormValues}
-              onSaved={async (canvasId) => {
+              onSaved={(savedCanvasId) => {
                 setSaveConfirmation({
-                  canvasId,
+                  canvasId: savedCanvasId,
                   values: formValues,
                 });
-                await setCanvas(canvasId, false);
+                router.push(`/canvas/${savedCanvasId}/admin/canvas`);
               }}
             />
             {mode !== "create" && (

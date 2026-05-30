@@ -1,10 +1,7 @@
-import LayoutWithHeader from "../components/LayoutWithHeader";
-import Main from "./Main";
+import { redirect } from "next/navigation";
+import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 
 export default async function Page() {
-  return (
-    <LayoutWithHeader isCanvasPage>
-      <Main />
-    </LayoutWithHeader>
-  );
+  const canvasInfo = await fetchCanvasInfo();
+  redirect(`/canvas/${canvasInfo.id}`);
 }

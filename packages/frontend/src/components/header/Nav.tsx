@@ -9,6 +9,7 @@ import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { useAuthContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 
 const Links = styled("ul")`
   display: none;
@@ -78,19 +79,23 @@ interface LinkInfo {
 
 export default function Nav() {
   const { user } = useAuthContext();
+  const { canvas } = useCanvasContext();
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const isOpen = anchorElement !== null;
 
   const isAdmin = user?.isCanvasAdmin;
   const isModerator = user?.isCanvasModerator;
+  const canvasId = canvas.id;
 
   const links: LinkInfo[] = [
-    { href: "/leaderboard", label: "Leaderboard" },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
-    ...(isModerator ? [{ href: "/moderation", label: "Moderation" }] : []),
+    { href: `/canvas/${canvasId}/leaderboard`, label: "Leaderboard" },
+    ...(isAdmin ? [{ href: `/canvas/${canvasId}/admin`, label: "Admin" }] : []),
+    ...(isModerator ?
+      [{ href: `/canvas/${canvasId}/moderation`, label: "Moderation" }]
+    : []),
     { href: "/settings", label: "Settings" },
     user ?
-      { href: "/me", label: user.username }
+      { href: `/canvas/${canvasId}/@me`, label: user.username }
     : { href: "/signin", label: "Sign in" },
   ];
 
