@@ -128,11 +128,11 @@ export default function TimelineControls() {
   const handlePlay = () => {
     const lastFrame = clampFrame(totalTimelineFrames - 1);
 
-    if (playbackDirection === "forward" && currentTimelineFrame === lastFrame) {
+    if (playbackDirection === "forward" && currentTimelineFrame >= lastFrame) {
       handleTimelineSeek(0);
     } else if (
       playbackDirection === "reverse" &&
-      currentTimelineFrame === 0 &&
+      currentTimelineFrame <= 0 &&
       totalTimelineFrames > 0
     ) {
       handleTimelineSeek(lastFrame);
@@ -146,13 +146,13 @@ export default function TimelineControls() {
 
   const setPlaybackForChevron = (
     direction: TimelinePlaybackDirection,
-    isDoubleChevron: boolean,
+    isFastForward: boolean,
   ) => {
     const isSameDirection = playbackDirection === direction;
     const currentSpeedIndex = getSpeedIndex(playbackSpeed);
     const nextSpeedIndex =
-      isSameDirection ? currentSpeedIndex + (isDoubleChevron ? 1 : -1)
-      : isDoubleChevron ? 4
+      isSameDirection ? currentSpeedIndex + (isFastForward ? 1 : -1)
+      : isFastForward ? 4
       : 3;
 
     const clampedSpeedIndex = Math.min(
