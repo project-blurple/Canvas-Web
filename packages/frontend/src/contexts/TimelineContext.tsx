@@ -19,6 +19,10 @@ import { useCanvasContext } from "./CanvasContext";
 
 const TIMELINE_FPS = 30;
 const TIMELINE_SEEK_COMMIT_INTERVAL_MS = 1000 / 15;
+const TIMELINE_PLAYBACK_SPEEDS = [1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8] as const;
+
+type TimelinePlaybackDirection = "forward" | "reverse";
+type TimelinePlaybackSpeed = (typeof TIMELINE_PLAYBACK_SPEEDS)[number];
 
 interface TimelineContextType {
   currentTimelineFrame: number;
@@ -29,8 +33,12 @@ interface TimelineContextType {
   isLaunchingTimeline: boolean;
   isLoadingTimeline: boolean;
   isPlaying: boolean;
+  playbackDirection: TimelinePlaybackDirection;
+  playbackSpeed: TimelinePlaybackSpeed;
   setCurrentTimelineFrame: Dispatch<SetStateAction<number>>;
   setIsPlaying: Dispatch<SetStateAction<boolean>>;
+  setPlaybackDirection: Dispatch<SetStateAction<TimelinePlaybackDirection>>;
+  setPlaybackSpeed: Dispatch<SetStateAction<TimelinePlaybackSpeed>>;
   setTimelineIsActive: Dispatch<SetStateAction<boolean>>;
   sourceVideo: HTMLVideoElement | null;
   timelineFps: number;
@@ -50,8 +58,12 @@ const TimelineContext = createContext<TimelineContextType>({
   isLaunchingTimeline: false,
   isLoadingTimeline: false,
   isPlaying: false,
+  playbackDirection: "forward",
+  playbackSpeed: 1,
   setCurrentTimelineFrame: () => {},
   setIsPlaying: () => {},
+  setPlaybackDirection: () => {},
+  setPlaybackSpeed: () => {},
   setTimelineIsActive: () => {},
   sourceVideo: null,
   timelineFps: TIMELINE_FPS,
@@ -80,6 +92,9 @@ export const TimelineProvider = ({
   const [isLoadingTimeline, setIsLoadingTimeline] = useState(true);
   const [isLaunchingTimeline, setIsLaunchingTimeline] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playbackDirection, setPlaybackDirection] =
+    useState<TimelinePlaybackDirection>("forward");
+  const [playbackSpeed, setPlaybackSpeed] = useState<TimelinePlaybackSpeed>(1);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const timelineSeekTimeoutRef = useRef<number | null>(null);
   const timelineLastSeekCommitRef = useRef(0);
@@ -96,6 +111,8 @@ export const TimelineProvider = ({
     setIsLoadingTimeline(true);
     setIsLaunchingTimeline(true);
     setIsPlaying(false);
+    setPlaybackDirection("forward");
+    setPlaybackSpeed(1);
     timelineLastSeekCommitRef.current = 0;
 
     if (timelineSeekTimeoutRef.current !== null) {
@@ -188,8 +205,12 @@ export const TimelineProvider = ({
       isLaunchingTimeline,
       isLoadingTimeline,
       isPlaying,
+      playbackDirection,
+      playbackSpeed,
       setCurrentTimelineFrame,
       setIsPlaying,
+      setPlaybackDirection,
+      setPlaybackSpeed,
       setTimelineIsActive: setTimelineIsActiveWithCheck,
       sourceVideo,
       timelineFps,
@@ -208,6 +229,8 @@ export const TimelineProvider = ({
       isLaunchingTimeline,
       isLoadingTimeline,
       isPlaying,
+      playbackDirection,
+      playbackSpeed,
       setTimelineIsActiveWithCheck,
       sourceVideo,
       timelineIsActive,

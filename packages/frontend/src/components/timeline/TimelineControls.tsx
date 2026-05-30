@@ -40,6 +40,11 @@ const ButtonRow = styled("div")`
   }
 `;
 
+const TIMELINE_PLAYBACK_SPEEDS = [1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8] as const;
+
+type TimelinePlaybackDirection = "forward" | "reverse";
+type TimelinePlaybackSpeed = (typeof TIMELINE_PLAYBACK_SPEEDS)[number];
+
 interface ControlsButtonProps extends React.ComponentPropsWithRef<
   typeof NarrowButton
 > {
@@ -62,7 +67,11 @@ export default function TimelineControls() {
     currentTimelineFrame,
     handleTimelineSeek,
     isPlaying,
+    playbackDirection,
+    playbackSpeed,
     setIsPlaying,
+    setPlaybackDirection,
+    setPlaybackSpeed,
     timelineIsAvailable,
     timelineIsActive,
     setTimelineIsActive,
@@ -116,6 +125,46 @@ export default function TimelineControls() {
     handleTimelineSeek(clampFrame(selectedIndex));
   };
 
+  const handlePlay = () => {
+    const lastFrame = clampFrame(totalTimelineFrames - 1);
+
+    if (playbackDirection === "forward" && currentTimelineFrame === lastFrame) {
+      handleTimelineSeek(0);
+    } else if (
+      playbackDirection === "reverse" &&
+      currentTimelineFrame === 0 &&
+      totalTimelineFrames > 0
+    ) {
+      handleTimelineSeek(lastFrame);
+    }
+
+    setIsPlaying(true);
+  };
+
+  const getSpeedIndex = (speed: TimelinePlaybackSpeed) =>
+    TIMELINE_PLAYBACK_SPEEDS.indexOf(speed);
+
+  const setPlaybackForChevron = (
+    direction: TimelinePlaybackDirection,
+    isDoubleChevron: boolean,
+  ) => {
+    const isSameDirection = playbackDirection === direction;
+    const currentSpeedIndex = getSpeedIndex(playbackSpeed);
+    const nextSpeedIndex =
+      isSameDirection ? currentSpeedIndex + (isDoubleChevron ? 1 : -1)
+      : isDoubleChevron ? 4
+      : 3;
+
+    const clampedSpeedIndex = Math.min(
+      Math.max(nextSpeedIndex, 0),
+      TIMELINE_PLAYBACK_SPEEDS.length - 1,
+    );
+
+    setPlaybackDirection(direction);
+    setPlaybackSpeed(TIMELINE_PLAYBACK_SPEEDS[clampedSpeedIndex]);
+    setIsPlaying(true);
+  };
+
   if (!timelineIsAvailable) return null;
 
   return (
@@ -137,10 +186,7 @@ export default function TimelineControls() {
                   icon={ChevronLeft}
                   onClick={() => seekByFrameOffset(-1)}
                 />
-                <ControlsButton
-                  icon={Play}
-                  onClick={() => setIsPlaying(true)}
-                />
+                <ControlsButton icon={Play} onClick={handlePlay} />
                 <ControlsButton
                   icon={ChevronRight}
                   onClick={() => seekByFrameOffset(1)}
@@ -151,14 +197,26 @@ export default function TimelineControls() {
                 />
               </ButtonRow>
             : <ButtonRow>
-                <ControlsButton icon={ChevronsLeft} onClick={() => {}} />
-                <ControlsButton icon={ChevronLeft} onClick={() => {}} />
+                <ControlsButton
+                  icon={ChevronsLeft}
+                  onClick={() => setPlaybackForChevron("reverse", true)}
+                />
+                <ControlsButton
+                  icon={ChevronLeft}
+                  onClick={() => setPlaybackForChevron("reverse", false)}
+                />
                 <ControlsButton
                   icon={Pause}
                   onClick={() => setIsPlaying(false)}
                 />
-                <ControlsButton icon={ChevronRight} onClick={() => {}} />
-                <ControlsButton icon={ChevronsRight} onClick={() => {}} />
+                <ControlsButton
+                  icon={ChevronRight}
+                  onClick={() => setPlaybackForChevron("forward", false)}
+                />
+                <ControlsButton
+                  icon={ChevronsRight}
+                  onClick={() => setPlaybackForChevron("forward", true)}
+                />
               </ButtonRow>
             }
             <Button onClick={() => setTimelineIsActive(false)}>

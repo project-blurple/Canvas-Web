@@ -542,11 +542,15 @@ export default function CanvasView({
     handleLoadVideo,
     handleTimelineTimeUpdate,
     isPlaying,
+    playbackDirection,
+    playbackSpeed,
     setIsPlaying,
+    setCurrentTimelineFrame,
     isLaunchingTimeline,
     isLoadingTimeline,
     sourceVideo,
     timelineIsActive,
+    timelineFps,
     videoRef,
   } = useTimelineContext();
 
@@ -585,26 +589,82 @@ export default function CanvasView({
     return isProbablyWebKit && isNotChromium;
   }, []);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: playback is intentionally driven by mutable video state.
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !timelineIsActive || !sourceVideo) {
-      return;
-    }
+    if (!video || !timelineIsActive || !sourceVideo) return;
 
-    if (isPlaying) {
-      void video.play().catch(() => {
-        setIsPlaying(false);
-      });
+    if (!isPlaying) {
+      video.pause();
       return;
     }
 
     video.pause();
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const waitForSeeked = () =>
+      new Promise<void>((resolve) => {
+        const handleSeeked = () => {
+          video.removeEventListener("seeked", handleSeeked);
+          resolve();
+        };
+
+        video.addEventListener("seeked", handleSeeked);
+      });
+
+    const stepPlayback = async () => {
+      if (cancelled) return;
+
+      const directionMultiplier = playbackDirection === "forward" ? 1 : -1;
+      const nextTimeDelta = playbackSpeed / timelineFps;
+      const rawNextTime =
+        video.currentTime + nextTimeDelta * directionMultiplier;
+      const maxTime = Number.isFinite(video.duration) ? video.duration : null;
+      const nextTime =
+        maxTime !== null ? clamp(rawNextTime, 0, maxTime) : rawNextTime;
+
+      if (nextTime === video.currentTime) {
+        setIsPlaying(false);
+        return;
+      }
+
+      setCurrentTimelineFrame(Math.floor(nextTime * timelineFps));
+      video.currentTime = nextTime;
+
+      await waitForSeeked();
+
+      if (cancelled) return;
+
+      if ((maxTime !== null && nextTime >= maxTime) || nextTime <= 0) {
+        setIsPlaying(false);
+        return;
+      }
+
+      timeoutId = window.setTimeout(
+        stepPlayback,
+        1000 / (timelineFps * playbackSpeed),
+      );
+    };
+
+    timeoutId = window.setTimeout(stepPlayback, 0);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
   }, [
     isPlaying,
+    playbackDirection,
+    playbackSpeed,
+    setCurrentTimelineFrame,
     setIsPlaying,
     sourceVideo,
     timelineIsActive,
-    videoRef.current,
+    timelineFps,
   ]);
 
   const canvasSearchParams = useCanvasSearchParams();
