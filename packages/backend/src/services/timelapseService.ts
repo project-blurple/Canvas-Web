@@ -25,6 +25,7 @@ import {
 } from "@/snapshot/paths";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "./canvasService";
+import { isSnapshotAvailableForCanvas } from "./snapshot";
 import { getSnapshots } from "./snapshot/snapshotService";
 
 const END_CARD_TRANSITION_DURATION_MS = 1_000;
@@ -687,6 +688,10 @@ export async function generateTimelapse({
   raw = false,
 }: generateTimelapseParams): Promise<Buffer> {
   // TODO: Configurable speed
+
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    throw new Error(`Snapshots are not available for canvas ${canvasId}`);
+  }
 
   if (raw) {
     endHoldDurationMs = null;
