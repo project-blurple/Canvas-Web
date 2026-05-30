@@ -1,4 +1,5 @@
 import { css, styled } from "@mui/material";
+import { GripVertical } from "lucide-react";
 
 const TimelineSliderWrapper = styled("div")`
   align-items: center;
@@ -32,7 +33,7 @@ const timelineSliderThumbStyles = css`
 `;
 
 const TimelineSliderInputWrapper = styled("div")`
-  width: calc(100% - 2rem);
+  width: calc(100% - 4rem);
   padding-block: 0.5rem;
   position: relative;
   display: flex;
@@ -70,17 +71,25 @@ const TimelineSliderInput = styled("input")`
 `;
 
 const TimelineSliderThumb = styled("div")`
+  align-items: center;
   background-color: var(--discord-blurple);
   border-radius: 0.25rem;
   border: 2px solid oklch(from var(--discord-white) l c h / 20%);
   box-shadow: 0 0 10px rgba(0 0 0 / 35%);
+  cursor: grabbing;
+  display: flex;
   height: 2rem;
+  justify-content: center;
   left: 0;
   pointer-events: none;
   position: absolute;
   top: 50%;
   transform: translate(-50%, -50%);
   width: 1.5rem;
+
+  & > svg {
+    color: oklch(from var(--discord-white) l c h / 55%);
+  }
 `;
 
 interface TimelineSliderProps extends React.ComponentPropsWithRef<
@@ -94,17 +103,14 @@ export default function TimelineSlider({
   ...props
 }: TimelineSliderProps) {
   return (
-    <TimelineSliderWrapper>
+    <TimelineSliderWrapper onPointerDown={(event) => event.stopPropagation()}>
       <TimelineSliderInputWrapper>
-        <TimelineSliderInput
-          type="range"
-          min="0"
-          onPointerDown={(event) => event.stopPropagation()}
-          {...props}
-        />
+        <TimelineSliderInput type="range" min="0" {...props} />
         <TimelineSliderThumb
           style={{ left: `${timelineSliderThumbPosition}%` }}
-        />
+        >
+          <GripVertical />
+        </TimelineSliderThumb>
       </TimelineSliderInputWrapper>
     </TimelineSliderWrapper>
   );
