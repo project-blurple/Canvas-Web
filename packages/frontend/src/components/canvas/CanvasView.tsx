@@ -42,6 +42,7 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
+import TimelineSlider from "../timeline/TimelineSlider";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
@@ -159,12 +160,6 @@ const InviteButton = styled(Button)`
     inset-block-start: 0.5rem;
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
-`;
-
-const TimelineSlider = styled("input")`
-  position: absolute;
-  z-index: 1;
-  width: 100%;
 `;
 
 const BaseFullscreenButton = styled(Button, {
@@ -563,6 +558,10 @@ export default function CanvasView({
   const timelineFps = 30;
   const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
   const totalTimelineFrames = snapshots?.length ?? 0;
+  const timelineSliderThumbPosition =
+    totalTimelineFrames > 0 ?
+      clamp((currentTimelineFrame / totalTimelineFrames) * 100, 0, 100)
+    : 0;
 
   const timelineSeekTimeoutRef = useRef<number | null>(null);
   const timelineLastSeekCommitRef = useRef(0);
@@ -1376,7 +1375,14 @@ export default function CanvasView({
           : <PanelRightOpen />}
         </FullscreenPanelButton>
       )}
-      {showInvite ?
+      {timelineIsEnabled ?
+        <TimelineSlider
+          timelineSliderThumbPosition={timelineSliderThumbPosition}
+          max={totalTimelineFrames}
+          value={currentTimelineFrame}
+          onChange={handleTimelineSlider}
+        />
+      : showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
           <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
@@ -1386,16 +1392,6 @@ export default function CanvasView({
           </a>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
-      {timelineIsEnabled && (
-        <TimelineSlider
-          type="range"
-          min="0"
-          max={totalTimelineFrames}
-          value={currentTimelineFrame}
-          onChange={handleTimelineSlider}
-          onPointerDown={(event) => event.stopPropagation()}
-        />
-      )}
       <div
         id="canvas-pan-and-zoom"
         ref={canvasPanAndZoomRef}
