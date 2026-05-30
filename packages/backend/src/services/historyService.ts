@@ -646,8 +646,8 @@ export async function restorePixelHistoryEntries(
     if (!earliestEntryTimestampsByCanvas.has(entry.canvas_id)) {
       earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
     } else {
-      const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id)!;
-      if (entry.timestamp < existing) {
+      const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id);
+      if (existing && entry.timestamp < existing) {
         earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
       }
     }
@@ -659,10 +659,11 @@ export async function restorePixelHistoryEntries(
       async ([canvasId, coordinates]) => {
         await restorePixelsAfterHistoryModification(canvasId, coordinates);
 
-        await setSnapshotDirtyTimestamp(
-          canvasId,
-          earliestEntryTimestampsByCanvas.get(canvasId)!,
-        );
+        const earliestEntryTimestamp =
+          earliestEntryTimestampsByCanvas.get(canvasId);
+        if (earliestEntryTimestamp) {
+          await setSnapshotDirtyTimestamp(canvasId, earliestEntryTimestamp);
+        }
       },
     ),
   );

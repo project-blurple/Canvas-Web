@@ -61,9 +61,7 @@ const Logo = styled(Image)(
   `,
 );
 
-export default function Header({
-  isCanvasPage: isCanvasPage = false,
-}: HeaderProps) {
+export default function Header({ isCanvasPage = false }: HeaderProps) {
   return (
     <Wrapper>
       <CompositeLogo href="/">

@@ -37,6 +37,7 @@ const CanvasContext = createContext<CanvasContextType>({
     webPlacingEnabled: false,
     allColorsGlobal: false,
     cooldownDuration: 0,
+    timelineEnabled: false,
   },
   setCanvas: async () => {},
 });
