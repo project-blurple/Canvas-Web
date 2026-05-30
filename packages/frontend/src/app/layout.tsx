@@ -8,19 +8,10 @@ import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config/clientConfig";
-import {
-  ActionPanelProvider,
-  AuthProvider,
-  CanvasProvider,
-  CanvasViewProvider,
-  QueryClientProvider,
-  SelectedBoundsProvider,
-  SelectedColorProvider,
-  SelectedFrameProvider,
-} from "@/contexts";
+import serverConfig from "@/config/serverConfig";
+import { AuthProvider, CanvasProvider, QueryClientProvider } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
-import serverConfig from "@/config/serverConfig";
 import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
@@ -114,19 +105,9 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider>
       <QueryClientProvider>
         <AuthProvider profile={profile}>
-          <SelectedColorProvider>
-            <SelectedFrameProvider>
-              <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <ActionPanelProvider>
-                  <CanvasViewProvider>
-                    <SelectedBoundsProvider>
-                      <AppProviders>{children}</AppProviders>
-                    </SelectedBoundsProvider>
-                  </CanvasViewProvider>
-                </ActionPanelProvider>
-              </CanvasProvider>
-            </SelectedFrameProvider>
-          </SelectedColorProvider>
+          <CanvasProvider mainCanvasInfo={canvasInfo}>
+            <AppProviders>{children}</AppProviders>
+          </CanvasProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>

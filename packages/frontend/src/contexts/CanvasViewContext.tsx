@@ -53,12 +53,6 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
-  const [prevCanvasId, setPrevCanvasId] = useState(canvas.id);
-
-  if (prevCanvasId !== canvas.id) {
-    setSelectedCoords(null);
-    setPrevCanvasId(canvas.id);
-  }
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {

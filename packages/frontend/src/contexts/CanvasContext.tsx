@@ -16,9 +16,14 @@ import {
   useState,
 } from "react";
 import config from "@/config/clientConfig";
+import {
+  ActionPanelProvider,
+  CanvasViewProvider,
+  SelectedBoundsProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
 import { socket } from "@/socket";
-import { useSelectedColorContext } from "./SelectedColorContext";
-import { useSelectedFrameContext } from "./SelectedFrameContext";
 
 function useSubscribeToCanvasUpdates() {
   const queryClient = useQueryClient();
@@ -66,9 +71,6 @@ export const CanvasProvider = ({
   const router = useRouter();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
 
-  const { setColor } = useSelectedColorContext();
-  const { setFrame } = useSelectedFrameContext();
-
   useEffect(() => {
     socket.auth = {
       canvasId: mainCanvasInfo.id,
@@ -86,8 +88,6 @@ export const CanvasProvider = ({
         `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
       );
       setActiveCanvas(response.data);
-      setColor(null);
-      setFrame(null);
 
       if (redirect) {
         const url = new URL(window.location.href);
@@ -114,7 +114,7 @@ export const CanvasProvider = ({
         socket.connect();
       }
     },
-    [activeCanvas.id, router, setColor, setFrame, mainCanvasInfo.id],
+    [activeCanvas.id, router, mainCanvasInfo.id],
   );
 
   return (
@@ -124,7 +124,17 @@ export const CanvasProvider = ({
         setCanvas: setCanvasById,
       }}
     >
-      {children}
+      <SelectedColorProvider key={activeCanvas.id}>
+        <SelectedFrameProvider key={activeCanvas.id}>
+          <ActionPanelProvider>
+            <CanvasViewProvider key={activeCanvas.id}>
+              <SelectedBoundsProvider key={activeCanvas.id}>
+                {children}
+              </SelectedBoundsProvider>
+            </CanvasViewProvider>
+          </ActionPanelProvider>
+        </SelectedFrameProvider>
+      </SelectedColorProvider>
     </CanvasContext.Provider>
   );
 };
