@@ -152,7 +152,8 @@ export const TimelineProvider = ({
   const handleLoadVideo = useCallback((): void => {
     setIsLoadingTimeline(false);
     setIsLaunchingTimeline(false);
-  }, []);
+    handleTimelineSeek(totalTimelineFrames - 1);
+  }, [handleTimelineSeek, totalTimelineFrames]);
 
   const setTimelineIsActiveWithCheck = useCallback(
     (value: SetStateAction<boolean>) => {

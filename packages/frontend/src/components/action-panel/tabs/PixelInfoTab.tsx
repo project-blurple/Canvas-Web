@@ -3,7 +3,12 @@ import { styled } from "@mui/material";
 import { useId, useState } from "react";
 import { ButtonSupplement } from "@/components/button";
 import Pagination from "@/components/Pagination";
-import { useCanvasContext, useCanvasViewContext } from "@/contexts";
+import TimelineControls from "@/components/timeline/TimelineControls";
+import {
+  useCanvasContext,
+  useCanvasViewContext,
+  useTimelineContext,
+} from "@/contexts";
 import {
   type PixelHistoryParams,
   usePixelHistory,
@@ -203,6 +208,7 @@ export default function PixelInfoTab({
           </TooltipDynamicButton>
         )}
       </ActionPanelTabBody>
+      <TimelineControls />
     </PixelInfoTabBlock>
   );
 }
