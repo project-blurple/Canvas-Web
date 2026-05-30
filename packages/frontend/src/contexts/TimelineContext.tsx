@@ -47,6 +47,7 @@ interface TimelineContextType {
   timelineSliderThumbPosition: number;
   totalTimelineFrames: number;
   videoRef: RefObject<HTMLVideoElement | null>;
+  currentTimelineTimestamp: Date | null;
 }
 
 const TimelineContext = createContext<TimelineContextType>({
@@ -72,6 +73,7 @@ const TimelineContext = createContext<TimelineContextType>({
   timelineSliderThumbPosition: 0,
   totalTimelineFrames: 0,
   videoRef: { current: null },
+  currentTimelineTimestamp: null,
 });
 
 export const TimelineProvider = ({
@@ -104,6 +106,18 @@ export const TimelineProvider = ({
     totalTimelineFrames > 0 ?
       clamp((currentTimelineFrame / totalTimelineFrames) * 100, 0, 100)
     : 0;
+
+  const currentTimelineTimestamp: Date | null =
+    (
+      snapshots &&
+      totalTimelineFrames > 0 &&
+      currentTimelineFrame >= 0 &&
+      currentTimelineFrame < totalTimelineFrames
+    ) ?
+      (new Date(snapshots[currentTimelineFrame]?.lastIncludedHistoryAt) ??
+      new Date(snapshots[currentTimelineFrame]?.snapshotAt) ??
+      null)
+    : null;
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset timeline state when the active canvas changes.
   useEffect(() => {
@@ -198,6 +212,7 @@ export const TimelineProvider = ({
   const value = useMemo(
     () => ({
       currentTimelineFrame,
+      currentTimelineTimestamp,
       handleLoadVideo,
       handleTimelineSeek,
       handleTimelineSlider,
@@ -222,6 +237,7 @@ export const TimelineProvider = ({
     }),
     [
       currentTimelineFrame,
+      currentTimelineTimestamp,
       handleLoadVideo,
       handleTimelineSeek,
       handleTimelineSlider,

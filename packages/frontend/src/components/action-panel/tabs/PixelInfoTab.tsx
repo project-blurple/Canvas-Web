@@ -111,6 +111,7 @@ export default function PixelInfoTab({
   const { data, isLoading } = usePixelHistory(canvasId, historyParams, {
     enabled: active,
   });
+  const { currentTimelineTimestamp, timelineIsActive } = useTimelineContext();
 
   if (
     point &&
@@ -123,8 +124,17 @@ export default function PixelInfoTab({
   if (historyParams !== null && historyParams?.page !== page)
     setHistoryParams((prev) => (prev ? { ...prev, page } : null));
 
-  const pixelHistory = data?.entries ?? [];
+  const rawPixelHistory = data?.entries ?? [];
   const truePage = data?.page ?? 1;
+
+  const pixelHistory =
+    timelineIsActive && currentTimelineTimestamp ?
+      rawPixelHistory.filter((record) => {
+        const recordTime = new Date(record.timestamp);
+        const timelineTime = currentTimelineTimestamp;
+        return recordTime <= timelineTime;
+      })
+    : rawPixelHistory;
 
   const pixelUrl =
     (adjustedCoords &&
