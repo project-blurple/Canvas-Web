@@ -164,6 +164,7 @@ const InviteButton = styled(Button)`
 const TimelineSlider = styled("input")`
   position: absolute;
   z-index: 1;
+  width: 100%;
 `;
 
 const BaseFullscreenButton = styled(Button, {
@@ -563,6 +564,18 @@ export default function CanvasView({
   const [currentTimelineFrame, setCurrentTimelineFrame] = useState(0);
   const totalTimelineFrames = snapshots?.length ?? 0;
 
+  const timelineSeekTimeoutRef = useRef<number | null>(null);
+  const timelineLastSeekCommitRef = useRef(0);
+  const timelineSeekCommitIntervalMs = 1000 / 15;
+
+  useEffect(() => {
+    return () => {
+      if (timelineSeekTimeoutRef.current !== null) {
+        window.clearTimeout(timelineSeekTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function handleTimelineTimeUpdate() {
     const video = videoRef.current;
     if (!video) return;
@@ -572,11 +585,33 @@ export default function CanvasView({
   function handleTimelineSeek(frame: number) {
     const video = videoRef.current;
     if (!video) return;
-    video.currentTime = frame / timelineFps;
+
+    const commitSeek = () => {
+      timelineLastSeekCommitRef.current = performance.now();
+      video.currentTime = frame / timelineFps;
+    };
+
+    const elapsedSinceLastCommit =
+      performance.now() - timelineLastSeekCommitRef.current;
+
+    if (timelineSeekTimeoutRef.current !== null) {
+      window.clearTimeout(timelineSeekTimeoutRef.current);
+    }
+
+    if (elapsedSinceLastCommit >= timelineSeekCommitIntervalMs) {
+      commitSeek();
+      return;
+    }
+
+    timelineSeekTimeoutRef.current = window.setTimeout(() => {
+      timelineSeekTimeoutRef.current = null;
+      commitSeek();
+    }, timelineSeekCommitIntervalMs - elapsedSinceLastCommit);
   }
 
   function handleTimelineSlider(event: React.ChangeEvent<HTMLInputElement>) {
     const frame = parseInt(event.target.value, 10);
+    setCurrentTimelineFrame(frame);
     handleTimelineSeek(frame);
   }
 
