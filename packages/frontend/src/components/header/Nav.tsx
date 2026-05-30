@@ -8,8 +8,7 @@ import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
-import { useAuthContext } from "@/contexts";
-import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useAuthContext, useCanvasContext } from "@/contexts";
 
 const Links = styled("ul")`
   display: none;
