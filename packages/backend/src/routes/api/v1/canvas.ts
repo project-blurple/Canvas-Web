@@ -103,7 +103,7 @@ canvasRouter.get(
       .type(raw ? "webm" : "mp4")
       .setHeader(
         "Content-Disposition",
-        `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.mp4"`,
+        `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.${raw ? "webm" : "mp4"}"`,
       )
       .send(buffer);
   },
@@ -270,23 +270,4 @@ async function sendCachedCanvas(
         `inline; filename="${getCanvasFilename(canvasId, false, scale, bounds)}"`,
       ),
   );
-}
-
-async function sendCanvasTimelapseAsMp4Stream({
-  res,
-  canvasId,
-}: {
-  res: Response;
-  canvasId: number;
-}): Promise<void> {
-  const buffer = await generateTimelapse({ canvasId });
-
-  res
-    .status(200)
-    .type("mp4")
-    .setHeader(
-      "Content-Disposition",
-      `inline; filename="canvas-${canvasId}-timelapse.mp4"`,
-    )
-    .send(buffer);
 }
