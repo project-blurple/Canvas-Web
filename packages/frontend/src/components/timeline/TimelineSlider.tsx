@@ -1,6 +1,7 @@
 import { css, styled } from "@mui/material";
 import { GripVertical } from "lucide-react";
-import { useTimelineContext } from "@/contexts";
+import { useCanvasContext, useTimelineContext } from "@/contexts";
+import { useSnapshots } from "@/hooks/queries/useSnapshots";
 
 const TimelineSliderWrapper = styled("div")`
   align-items: center;
@@ -12,10 +13,11 @@ const TimelineSliderWrapper = styled("div")`
   box-shadow: 0 0 10px rgba(0 0 0 / 25%);
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  gap: 1rem;
   inset-block-end: 0.5rem;
   inset-inline-end: 0.5rem;
   justify-content: center;
+  padding-inline: 1rem;
   position: absolute;
   width: calc(100% - 1rem);
   z-index: 1;
@@ -35,13 +37,13 @@ const timelineSliderThumbStyles = css`
 `;
 
 const TimelineSliderInputWrapper = styled("div")`
-  width: 100%;
-  padding-block: 0.5rem;
-  margin-inline: 2rem;
-  position: relative;
-  display: flex;
   align-items: center;
+  display: flex;
   justify-content: center;
+  margin-inline: 1rem;
+  padding-block: 0.5rem;
+  position: relative;
+  width: 100%;
 `;
 
 const TimelineSliderInput = styled("input")`
@@ -95,6 +97,29 @@ const TimelineSliderThumb = styled("div")`
   }
 `;
 
+const DateTimeWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 10rem;
+`;
+
+const DateTimeTextWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  justify-content: center;
+  text-align: center;
+`;
+
+const DateText = styled("span")`
+  font-size: 0.75rem;
+`;
+
+const TimeText = styled("span")`
+  font-size: 0.875rem;
+`;
+
 export default function TimelineSlider() {
   const {
     currentTimelineFrame,
@@ -102,10 +127,39 @@ export default function TimelineSlider() {
     timelineSliderThumbPosition,
     totalTimelineFrames,
   } = useTimelineContext();
+  const { canvas } = useCanvasContext();
+  const { data: snapshots } = useSnapshots(canvas.id);
+
+  const currentSnapshot = snapshots?.[currentTimelineFrame];
+
+  const currentDatetime =
+    currentSnapshot ? new Date(currentSnapshot.snapshotAt) : null;
+  const currentDate =
+    currentDatetime ?
+      currentDatetime.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      })
+    : "";
+  const currentTime =
+    currentDatetime ?
+      currentDatetime.toLocaleTimeString(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "";
 
   return (
     <TimelineSliderWrapper onPointerDown={(event) => event.stopPropagation()}>
-      <span>Test</span>
+      {currentSnapshot && (
+        <DateTimeWrapper>
+          <DateTimeTextWrapper>
+            <TimeText>{currentTime}</TimeText>
+            <DateText>{currentDate}</DateText>
+          </DateTimeTextWrapper>
+        </DateTimeWrapper>
+      )}
       <TimelineSliderInputWrapper>
         <TimelineSliderInput
           type="range"

@@ -28,7 +28,7 @@ export async function getSnapshots({
 
   const manifests = await snapshotPrisma.snapshot_manifest.findMany({
     where,
-    orderBy: { last_included_history_at: "desc" },
+    orderBy: { last_included_history_at: "asc" },
   });
 
   if (to) {
@@ -41,7 +41,7 @@ export async function getSnapshots({
     });
 
     if (extra && !manifests.some((manifest) => manifest.id === extra.id)) {
-      manifests.unshift(extra);
+      manifests.push(extra);
     }
   }
 
