@@ -3,5 +3,5 @@ import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 
 export default async function Page() {
   const canvasInfo = await fetchCanvasInfo();
-  redirect(`/canvas/${canvasInfo.id}`);
+  redirect(`/canvas/${encodeURIComponent(canvasInfo.id)}`);
 }
