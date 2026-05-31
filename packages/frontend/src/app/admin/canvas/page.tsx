@@ -295,18 +295,19 @@ function CanvasSettingsForm({
         const response = await createPromise;
         await onSaved(response.data.id);
       } else {
-        const updatePromise = updateCanvasInfo.mutateAsync({
-          allColorsGlobal: formValues.allColorsGlobal,
-          cooldownDuration: formValues.cooldownDuration,
-          isLocked: formValues.isLocked,
-          name: formValues.name,
-        });
-
-        toast.promise(updatePromise, {
-          loading: "Saving changes...",
-          success: "Changes saved!",
-          error: "Failed to save changes. Please try again.",
-        });
+        toast.promise(
+          updateCanvasInfo.mutateAsync({
+            allColorsGlobal: formValues.allColorsGlobal,
+            cooldownDuration: formValues.cooldownDuration,
+            isLocked: formValues.isLocked,
+            name: formValues.name,
+          }),
+          {
+            loading: "Saving changes...",
+            success: "Changes saved!",
+            error: "Failed to save changes. Please try again.",
+          },
+        );
 
         await onSaved(activeCanvas.id);
       }

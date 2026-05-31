@@ -119,9 +119,7 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
     const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
-    const erasePromise = performErase(shouldBlockAuthors);
-
-    toast.promise(erasePromise, {
+    toast.promise(performErase(shouldBlockAuthors), {
       loading: `Erasing ${entriesCount.toLocaleString()} history ${
         entriesCount !== 1 ? "entries" : "entry"
       }...`,
@@ -130,12 +128,6 @@ export default function ComplexSearchEraseHistory({
       }${shouldBlockAuthors && " and blocked their authors"}.`,
       error: `Failed to erase history.`,
     });
-
-    try {
-      await erasePromise;
-    } catch (error) {
-      console.error(error);
-    }
   }
 
   function handleCancelErase() {

@@ -394,23 +394,26 @@ export default function FrameEditPanel({
   const handleSaveAction = async () => {
     if (!frameId || !frameBounds) return;
 
-    const savePromise = saveFrameMutation.mutateAsync({
-      id: frameId,
-      name: frameName,
-      bounds: frameBounds,
-    });
-
-    toast.promise(savePromise, {
-      loading: "Saving frame changes...",
-      success: "Frame saved",
-      error: (error) =>
-        (error as { response?: { status?: number } }).response?.status === 401 ?
-          "Your session has expired. Please log in again."
-        : "Failed to save frame changes",
-    });
-
     try {
-      await savePromise;
+      toast.promise(
+        saveFrameMutation.mutateAsync({
+          id: frameId,
+          name: frameName,
+          bounds: frameBounds,
+        }),
+        {
+          loading: "Saving frame changes...",
+          success: "Frame saved",
+          error: (error) =>
+            (
+              (error as { response?: { status?: number } }).response?.status ===
+              401
+            ) ?
+              "Your session has expired. Please log in again."
+            : "Failed to save frame changes",
+        },
+      );
+
       setSelectedFrame(null);
       closeEditor();
     } catch (error) {
@@ -422,17 +425,19 @@ export default function FrameEditPanel({
     setIsDeleteConfirmOpen(false);
     if (!frameId) return;
 
-    toast.promise(deleteFrameMutation.mutateAsync(frameId), {
-      loading: "Deleting frame...",
-      success: "Frame deleted",
-      error: (error) =>
-        (error as { response?: { status?: number } }).response?.status === 401 ?
-          "Your session has expired. Please log in again."
-        : "Failed to delete frame",
-    });
-
     try {
-      await deleteFrameMutation.mutateAsync(frameId);
+      toast.promise(deleteFrameMutation.mutateAsync(frameId), {
+        loading: "Deleting frame...",
+        success: "Frame deleted",
+        error: (error) =>
+          (
+            (error as { response?: { status?: number } }).response?.status ===
+            401
+          ) ?
+            "Your session has expired. Please log in again."
+          : "Failed to delete frame",
+      });
+
       setSelectedFrame(null);
       closeEditor();
     } catch (error) {
@@ -441,17 +446,18 @@ export default function FrameEditPanel({
   };
 
   const handleCreateAction = async () => {
-    toast.promise(createFrameMutation.mutateAsync(), {
-      loading: "Creating frame...",
-      success: "Frame created",
-      error: (error) =>
-        (error as { response?: { status?: number } }).response?.status === 401 ?
-          "Your session has expired. Please log in again."
-        : "Failed to create frame",
-    });
-
     try {
-      await createFrameMutation.mutateAsync();
+      toast.promise(createFrameMutation.mutateAsync(), {
+        loading: "Creating frame...",
+        success: "Frame created",
+        error: (error) =>
+          (
+            (error as { response?: { status?: number } }).response?.status ===
+            401
+          ) ?
+            "Your session has expired. Please log in again."
+          : "Failed to create frame",
+      });
       closeEditor();
     } catch (error) {
       console.error(error);
