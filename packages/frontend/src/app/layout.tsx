@@ -20,6 +20,8 @@ import {
 } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { Toaster } from "sonner";
 import serverConfig from "@/config/serverConfig";
 import { AppProviders } from "./providers";
 
@@ -120,7 +122,28 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                 <ActionPanelProvider>
                   <CanvasViewProvider>
                     <SelectedBoundsProvider>
-                      <AppProviders>{children}</AppProviders>
+                      <AppProviders>
+                        {children}
+                        <Toaster
+                          closeButton={true}
+                          expand={true}
+                          position="bottom-left"
+                          theme="dark"
+                          toastOptions={{
+                            style: {
+                              background:
+                                "var(--discord-legacy-not-quite-black)",
+                              boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
+                            },
+                          }}
+                          icons={{
+                            success: <CircleCheck />,
+                            info: <Info />,
+                            warning: <TriangleAlert />,
+                            error: <CircleAlert />,
+                          }}
+                        />
+                      </AppProviders>
                     </SelectedBoundsProvider>
                   </CanvasViewProvider>
                 </ActionPanelProvider>
