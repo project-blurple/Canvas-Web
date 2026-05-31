@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { toast } from "sonner";
 import config from "@/config/clientConfig";
+import { isUnauthorizedError } from "@/util";
 
 export function useBlocklist() {
   const getBlocklist = async (): Promise<BlocklistRequest.BlocklistResBody> => {
@@ -66,7 +67,7 @@ export function useBlocklistMutations() {
       loading: `Adding ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist…`,
       success: `Added ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist`,
       error: (error) =>
-        (error as { response?: { status?: number } }).response?.status === 401 ?
+        isUnauthorizedError(error) ?
           "Your session has expired. Please log in again."
         : "Failed to add users to blocklist",
     });
@@ -86,10 +87,7 @@ export function useBlocklistMutations() {
         loading: `Removing ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist…`,
         success: `Removed ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist`,
         error: (error) =>
-          (
-            (error as { response?: { status?: number } }).response?.status ===
-            401
-          ) ?
+          isUnauthorizedError(error) ?
             "Your session has expired. Please log in again."
           : "Failed to remove users from blocklist",
       },

@@ -38,6 +38,7 @@ import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
 import {
   hexStringToPixelColor,
+  isUnauthorizedError,
   normalizeFrameBounds,
   type ViewBounds,
 } from "@/util";
@@ -405,10 +406,7 @@ export default function FrameEditPanel({
           loading: "Saving frame changes…",
           success: "Frame saved",
           error: (error) =>
-            (
-              (error as { response?: { status?: number } }).response?.status ===
-              401
-            ) ?
+            isUnauthorizedError(error) ?
               "Your session has expired. Please log in again."
             : "Failed to save frame changes",
         },
@@ -430,10 +428,7 @@ export default function FrameEditPanel({
         loading: "Deleting frame…",
         success: "Frame deleted",
         error: (error) =>
-          (
-            (error as { response?: { status?: number } }).response?.status ===
-            401
-          ) ?
+          isUnauthorizedError(error) ?
             "Your session has expired. Please log in again."
           : "Failed to delete frame",
       });
@@ -451,10 +446,7 @@ export default function FrameEditPanel({
         loading: "Creating frame…",
         success: "Frame created",
         error: (error) =>
-          (
-            (error as { response?: { status?: number } }).response?.status ===
-            401
-          ) ?
+          isUnauthorizedError(error) ?
             "Your session has expired. Please log in again."
           : "Failed to create frame",
       });
