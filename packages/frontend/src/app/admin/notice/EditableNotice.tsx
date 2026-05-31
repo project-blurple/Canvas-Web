@@ -367,17 +367,21 @@ function EditModeNotice({
     };
 
     if (mode === "create") {
-      toast.promise(createNoticeMutation.mutateAsync(data), {
+      const createPromise = createNoticeMutation.mutateAsync(data);
+      toast.promise(createPromise, {
         loading: "Creating notice...",
         success: "Notice created",
         error: "Failed to create notice",
       });
+      await createPromise;
     } else {
-      toast.promise(modifyNoticeMutation.mutateAsync(data), {
+      const modifyPromise = modifyNoticeMutation.mutateAsync(data);
+      toast.promise(modifyPromise, {
         loading: "Saving notice...",
         success: "Notice saved",
         error: "Failed to save notice",
       });
+      await modifyPromise;
     }
     setIsEditMode(false);
     onComplete?.();
@@ -386,11 +390,13 @@ function EditModeNotice({
   async function deleteNotice() {
     if (mode === "create") return;
 
-    toast.promise(deleteNoticeMutation.mutateAsync(), {
+    const deletePromise = deleteNoticeMutation.mutateAsync();
+    toast.promise(deletePromise, {
       loading: "Deleting notice...",
       success: "Notice deleted",
       error: "Failed to delete notice",
     });
+    await deletePromise;
     setIsEditMode(false);
     onComplete?.();
   }

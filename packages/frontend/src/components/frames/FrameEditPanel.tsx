@@ -395,65 +395,56 @@ export default function FrameEditPanel({
   const handleSaveAction = async () => {
     if (!frameId || !frameBounds) return;
 
-    try {
-      toast.promise(
-        saveFrameMutation.mutateAsync({
-          id: frameId,
-          name: frameName,
-          bounds: frameBounds,
-        }),
-        {
-          loading: "Saving frame changes…",
-          success: "Frame saved",
-          error: (error) =>
-            isUnauthorizedError(error) ?
-              "Your session has expired. Please log in again."
-            : "Failed to save frame changes",
-        },
-      );
+    const savePromise = saveFrameMutation.mutateAsync({
+      id: frameId,
+      name: frameName,
+      bounds: frameBounds,
+    });
+    toast.promise(savePromise, {
+      loading: "Saving frame changes…",
+      success: "Frame saved",
+      error: (error) =>
+        isUnauthorizedError(error) ?
+          "Your session has expired. Please log in again."
+        : "Failed to save frame changes",
+    });
 
-      setSelectedFrame(null);
-      closeEditor();
-    } catch (error) {
-      console.error(error);
-    }
+    await savePromise;
+    setSelectedFrame(null);
+    closeEditor();
   };
 
   const handleDeleteAction = async () => {
     setIsDeleteConfirmOpen(false);
     if (!frameId) return;
 
-    try {
-      toast.promise(deleteFrameMutation.mutateAsync(frameId), {
-        loading: "Deleting frame…",
-        success: "Frame deleted",
-        error: (error) =>
-          isUnauthorizedError(error) ?
-            "Your session has expired. Please log in again."
-          : "Failed to delete frame",
-      });
+    const deletePromise = deleteFrameMutation.mutateAsync(frameId);
+    toast.promise(deletePromise, {
+      loading: "Deleting frame…",
+      success: "Frame deleted",
+      error: (error) =>
+        isUnauthorizedError(error) ?
+          "Your session has expired. Please log in again."
+        : "Failed to delete frame",
+    });
+    await deletePromise;
 
-      setSelectedFrame(null);
-      closeEditor();
-    } catch (error) {
-      console.error(error);
-    }
+    setSelectedFrame(null);
+    closeEditor();
   };
 
   const handleCreateAction = async () => {
-    try {
-      toast.promise(createFrameMutation.mutateAsync(), {
-        loading: "Creating frame…",
-        success: "Frame created",
-        error: (error) =>
-          isUnauthorizedError(error) ?
-            "Your session has expired. Please log in again."
-          : "Failed to create frame",
-      });
-      closeEditor();
-    } catch (error) {
-      console.error(error);
-    }
+    const createPromise = createFrameMutation.mutateAsync();
+    toast.promise(createPromise, {
+      loading: "Creating frame…",
+      success: "Frame created",
+      error: (error) =>
+        isUnauthorizedError(error) ?
+          "Your session has expired. Please log in again."
+        : "Failed to create frame",
+    });
+    await createPromise;
+    closeEditor();
   };
 
   useEffect(
