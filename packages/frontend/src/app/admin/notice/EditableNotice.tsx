@@ -3,6 +3,7 @@ import { css, styled } from "@mui/material";
 import { X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/button";
 import NumberField from "@/components/NumberField";
 import { useCanvasList } from "@/hooks";
@@ -235,46 +236,42 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
 
   const isActive = isNoticeActive(notice);
 
-  const [isTogglingActivate, setIsTogglingActivate] = useState(false);
-
   async function activateNotice() {
-    setIsTogglingActivate(true);
-    try {
-      const now = new Date();
-      const endAt =
-        notice.endAt && new Date(notice.endAt) > now ? notice.endAt : null;
+    const now = new Date();
+    const endAt =
+      notice.endAt && new Date(notice.endAt) > now ? notice.endAt : null;
 
-      await modifyNoticeMutation.mutateAsync({
+    toast.promise(
+      modifyNoticeMutation.mutateAsync({
         ...notice,
         endAt,
         startAt: now.toISOString(),
-      });
-    } catch (err) {
-      console.error("Failed to activate notice", err);
-    } finally {
-      setIsTogglingActivate(false);
-    }
+      }),
+      {
+        loading: "Activating notice...",
+        success: "Notice activated",
+        error: "Failed to activate notice",
+      },
+    );
   }
 
   async function deactivateNotice() {
-    setIsTogglingActivate(true);
-    try {
-      const now = new Date();
-      const startAt =
-        notice.startAt && new Date(notice.startAt) > now ?
-          null
-        : notice.startAt;
+    const now = new Date();
+    const startAt =
+      notice.startAt && new Date(notice.startAt) > now ? null : notice.startAt;
 
-      await modifyNoticeMutation.mutateAsync({
+    toast.promise(
+      modifyNoticeMutation.mutateAsync({
         ...notice,
         endAt: now.toISOString(),
         startAt,
-      });
-    } catch (err) {
-      console.error("Failed to deactivate notice", err);
-    } finally {
-      setIsTogglingActivate(false);
-    }
+      }),
+      {
+        loading: "Deactivating notice...",
+        success: "Notice deactivated",
+        error: "Failed to deactivate notice",
+      },
+    );
   }
 
   return (
@@ -305,18 +302,21 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
       <ButtonWrapper>
         <StyledButton
           onClick={() => setIsEditMode(true)}
-          disabled={isTogglingActivate}
+          disabled={modifyNoticeMutation.isPending}
         >
           Edit
         </StyledButton>
         {isActive ?
           <StyledButton
             onClick={deactivateNotice}
-            disabled={isTogglingActivate}
+            disabled={modifyNoticeMutation.isPending}
           >
             Deactivate
           </StyledButton>
-        : <StyledButton onClick={activateNotice} disabled={isTogglingActivate}>
+        : <StyledButton
+            onClick={activateNotice}
+            disabled={modifyNoticeMutation.isPending}
+          >
             Activate
           </StyledButton>
         }
@@ -348,54 +348,51 @@ function EditModeNotice({
     notice?.canvasId ?? null,
   );
   const [, setPreviewTick] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+
+  const isPending =
+    modifyNoticeMutation.isPending ||
+    createNoticeMutation.isPending ||
+    deleteNoticeMutation.isPending;
 
   async function saveChanges() {
-    setIsSaving(true);
-    try {
-      const data = {
-        type,
-        header: headerRef.current?.value ?? null,
-        content: contentRef.current?.value ?? null,
-        persisted: isPersisted,
-        priority,
-        startAt,
-        endAt,
-        canvasId: selectedCanvasId,
-      };
+    const data = {
+      type,
+      header: headerRef.current?.value ?? null,
+      content: contentRef.current?.value ?? null,
+      persisted: isPersisted,
+      priority,
+      startAt,
+      endAt,
+      canvasId: selectedCanvasId,
+    };
 
-      if (mode === "create") {
-        await createNoticeMutation.mutateAsync(data);
-      } else {
-        await modifyNoticeMutation.mutateAsync(data);
-      }
-
-      setIsEditMode(false);
-      onComplete?.();
-    } catch (err) {
-      console.error(
-        mode === "create" ? "Failed to create notice" : "Failed to save notice",
-        err,
-      );
-    } finally {
-      setIsSaving(false);
+    if (mode === "create") {
+      toast.promise(createNoticeMutation.mutateAsync(data), {
+        loading: "Creating notice...",
+        success: "Notice created",
+        error: "Failed to create notice",
+      });
+    } else {
+      toast.promise(modifyNoticeMutation.mutateAsync(data), {
+        loading: "Saving notice...",
+        success: "Notice saved",
+        error: "Failed to save notice",
+      });
     }
+    setIsEditMode(false);
+    onComplete?.();
   }
 
   async function deleteNotice() {
     if (mode === "create") return;
 
-    setIsDeleting(true);
-    try {
-      await deleteNoticeMutation.mutateAsync();
-      setIsEditMode(false);
-      onComplete?.();
-    } catch (err) {
-      console.error("Failed to delete notice", err);
-    } finally {
-      setIsDeleting(false);
-    }
+    toast.promise(deleteNoticeMutation.mutateAsync(), {
+      loading: "Deleting notice...",
+      success: "Notice deleted",
+      error: "Failed to delete notice",
+    });
+    setIsEditMode(false);
+    onComplete?.();
   }
 
   function handleInput() {
@@ -511,7 +508,7 @@ function EditModeNotice({
       </ContentWrapper>
 
       <ButtonWrapper>
-        <StyledButton type="submit" disabled={isSaving || isDeleting}>
+        <StyledButton type="submit" disabled={isPending}>
           {mode === "create" ? "Create" : "Save"}
         </StyledButton>
         <StyledButton
@@ -520,7 +517,7 @@ function EditModeNotice({
             setIsEditMode(false);
             if (mode === "create") onComplete?.();
           }}
-          disabled={isSaving || isDeleting}
+          disabled={isPending}
         >
           Cancel
         </StyledButton>
@@ -528,7 +525,7 @@ function EditModeNotice({
           <StyledButton
             type="button"
             onClick={deleteNotice}
-            disabled={isSaving || isDeleting}
+            disabled={isPending}
           >
             Delete
           </StyledButton>
