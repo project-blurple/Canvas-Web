@@ -61,37 +61,51 @@ export function useBlocklistMutations() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["blocklist"] }),
   });
 
-  async function handleAdd(ids: Iterable<bigint>) {
+  async function handleAdd(ids: Iterable<bigint>): Promise<boolean> {
     const arr = Array.from(ids);
-    toast.promise(addToBlocklistMutation.mutateAsync(arr), {
-      loading: `Adding ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist…`,
-      success: `Added ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist`,
-      error: (error) =>
-        isUnauthorizedError(error) ?
-          "Your session has expired. Please log in again."
-        : "Failed to add users to blocklist",
-    });
+    try {
+      await toast
+        .promise(addToBlocklistMutation.mutateAsync(arr), {
+          loading: `Adding ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist…`,
+          success: `Added ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist`,
+          error: (error) =>
+            isUnauthorizedError(error) ?
+              "Your session has expired. Please log in again."
+            : "Failed to add users to blocklist",
+        })
+        .unwrap();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async function handleRemove(
     ids: Iterable<bigint>,
     shouldRestoreHistoryForCanvasId: number[] = [],
-  ) {
+  ): Promise<boolean> {
     const arr = Array.from(ids);
-    toast.promise(
-      removeFromBlocklistMutation.mutateAsync({
-        ids: arr,
-        shouldRestoreHistoryForCanvasId,
-      }),
-      {
-        loading: `Removing ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist…`,
-        success: `Removed ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist`,
-        error: (error) =>
-          isUnauthorizedError(error) ?
-            "Your session has expired. Please log in again."
-          : "Failed to remove users from blocklist",
-      },
-    );
+    try {
+      await toast
+        .promise(
+          removeFromBlocklistMutation.mutateAsync({
+            ids: arr,
+            shouldRestoreHistoryForCanvasId,
+          }),
+          {
+            loading: `Removing ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist…`,
+            success: `Removed ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist`,
+            error: (error) =>
+              isUnauthorizedError(error) ?
+                "Your session has expired. Please log in again."
+              : "Failed to remove users from blocklist",
+          },
+        )
+        .unwrap();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   return {
