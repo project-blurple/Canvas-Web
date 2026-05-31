@@ -13,6 +13,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { toast } from "sonner";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -227,7 +228,12 @@ export default function PlacePixelTab({
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
     onError: (error) => {
       if (error instanceof AxiosError && error.status === 401) signOut();
-      alert("Failed to place pixel, please refresh the page");
+      toast.error("Failed to place pixel, please refresh the page", {
+        action: {
+          label: "Refresh",
+          onClick: () => window.location.reload(),
+        },
+      });
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
