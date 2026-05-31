@@ -4,6 +4,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Checkbox, FormControlLabel, styled } from "@mui/material";
 import type { AxiosError } from "axios";
+import { Download } from "lucide-react";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
@@ -34,7 +35,6 @@ import SearchUserEntries, {
   type SearchUserSortBy,
   type SearchUserSortDirection,
 } from "./SearchUserEntry";
-import { Download } from "lucide-react";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
