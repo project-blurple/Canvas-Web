@@ -1,6 +1,7 @@
 import type { BlocklistRequest } from "@blurple-canvas-web/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 
 export function useBlocklist() {
@@ -60,43 +61,39 @@ export function useBlocklistMutations() {
   });
 
   async function handleAdd(ids: Iterable<bigint>) {
-    try {
-      const arr = Array.from(ids);
-      await addToBlocklistMutation.mutateAsync(arr);
-      return true;
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return false;
-      }
-
-      alert("Failed to add users to blocklist");
-      return false;
-    }
+    const arr = Array.from(ids);
+    toast.promise(addToBlocklistMutation.mutateAsync(arr), {
+      loading: `Adding ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist...`,
+      success: `Added ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist`,
+      error: (error) =>
+        (error as { response?: { status?: number } }).response?.status === 401 ?
+          "Your session has expired. Please log in again."
+        : "Failed to add users to blocklist",
+    });
   }
 
   async function handleRemove(
     ids: Iterable<bigint>,
     shouldRestoreHistoryForCanvasId: number[] = [],
   ) {
-    try {
-      const arr = Array.from(ids);
-      await removeFromBlocklistMutation.mutateAsync({
+    const arr = Array.from(ids);
+    toast.promise(
+      removeFromBlocklistMutation.mutateAsync({
         ids: arr,
         shouldRestoreHistoryForCanvasId,
-      });
-      return true;
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return false;
-      }
-
-      alert("Failed to remove users from blocklist");
-      return false;
-    }
+      }),
+      {
+        loading: `Removing ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist...`,
+        success: `Removed ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist`,
+        error: (error) =>
+          (
+            (error as { response?: { status?: number } }).response?.status ===
+            401
+          ) ?
+            "Your session has expired. Please log in again."
+          : "Failed to remove users from blocklist",
+      },
+    );
   }
 
   return {
