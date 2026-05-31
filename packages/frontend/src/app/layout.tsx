@@ -125,15 +125,17 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                       <AppProviders>
                         {children}
                         <Toaster
-                          closeButton={true}
                           expand={true}
-                          position="bottom-left"
+                          position="bottom-left" // bottom right overlaps with the action panel
                           theme="dark"
                           toastOptions={{
                             style: {
                               background:
                                 "var(--discord-legacy-not-quite-black)",
                               boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
+                              // Check out how we can style individual toasts with different colors?
+                              // richColors exists but the colors aren't customizable, and the alternative
+                              // are headless toasts that require completely custom styling.
                             },
                           }}
                           icons={{
