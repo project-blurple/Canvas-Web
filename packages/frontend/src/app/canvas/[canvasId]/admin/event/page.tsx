@@ -158,7 +158,9 @@ function AdminEventTab() {
                 <CanvasPreviewCard
                   key={canvasItem.id}
                   canvas={canvasItem}
-                  onClick={() => router.push(`/canvas/${canvasItem.id}`)}
+                  onClick={() =>
+                    router.push(`/canvas/${encodeURIComponent(canvasItem.id)}`)
+                  }
                 />
               ))}
             </EventCanvasList>

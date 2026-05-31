@@ -520,7 +520,9 @@ function AdminCanvasTab() {
                   key={canvasItem.id}
                   disabled={isCanvasSelectionDisabled}
                   onClick={() => {
-                    router.push(`/canvas/${canvasItem.id}/admin/canvas`);
+                    router.push(
+                      `/canvas/${encodeURIComponent(canvasItem.id)}/admin/canvas`,
+                    );
                     setMode("edit");
                   }}
                   aria-current={
