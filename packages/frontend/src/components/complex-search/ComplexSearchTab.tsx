@@ -12,7 +12,7 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { DynamicButton } from "@/components/button";
+import { BasicButton, DynamicButton } from "@/components/button";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
@@ -34,6 +34,7 @@ import SearchUserEntries, {
   type SearchUserSortBy,
   type SearchUserSortDirection,
 } from "./SearchUserEntry";
+import { Download } from "lucide-react";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -81,10 +82,24 @@ const SortSelect = styled("select")`
   }
 `;
 
+const RightAlignedControls = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
 const SortControlRow = styled("div")`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+`;
+
+const DownloadButton = styled(BasicButton)`
+  min-width: unset;
+  padding-inline: 0.25rem;
+  padding-block: 0rem;
+  font-size: 0.75rem;
+  font-weight: 400;
 `;
 
 const EraseWrapper = styled("div")`
@@ -347,26 +362,32 @@ export default function ComplexSearchTab({
                 })}
                 )
               </Summary>
-              <SortControlRow>
-                <SortSelect value={sortBy} onChange={handleSortChange}>
-                  {sortOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </SortSelect>
-                <SortSelect
-                  aria-label="Sort direction"
-                  value={sortDirection}
-                  onChange={handleSortDirectionChange}
-                >
-                  {sortDirectionOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </SortSelect>
-              </SortControlRow>
+              <RightAlignedControls>
+                <SortControlRow>
+                  <SortSelect value={sortBy} onChange={handleSortChange}>
+                    {sortOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </SortSelect>
+                  <SortSelect
+                    aria-label="Sort direction"
+                    value={sortDirection}
+                    onChange={handleSortDirectionChange}
+                  >
+                    {sortDirectionOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </SortSelect>
+                </SortControlRow>
+                <DownloadButton>
+                  CSV
+                  <Download size={12} />
+                </DownloadButton>
+              </RightAlignedControls>
             </ResultsHeader>
             <SearchUserEntries
               users={historyData.users}
