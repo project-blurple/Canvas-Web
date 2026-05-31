@@ -14,7 +14,6 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { DynamicButton } from "../button";
@@ -92,16 +91,15 @@ function FrameInfoPanelBody({
           </DynamicButton>
         )}
         {selectedFrame.owner.type !== FrameOwnerType.System && (
-          <TooltipDynamicButton
+          <DynamicButton
             color={hexStringToPixelColor(selectedFrame.id)}
-            tooltipTitle="Copied"
             onAction={async () => {
               void (await navigator.clipboard.writeText(frameUrl));
               toast.success("Frame link copied to clipboard");
             }}
           >
             Copy frame link
-          </TooltipDynamicButton>
+          </DynamicButton>
         )}
       </ActionPanelTabBody>
     );
