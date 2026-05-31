@@ -48,6 +48,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
+import { useCanvasMomentum } from "./useCanvasMomentum";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -377,8 +378,6 @@ const MAX_ZOOM = 100;
 const MIN_ZOOM_FACTOR = 0.9;
 const FRAME_FIT_FILL_RATIO = 0.75;
 
-const PAN_DECAY = 0.75;
-
 // This is to avoid weird business with the reticle not sizing properly
 const RETICLE_ORIGINAL_SCALE = 10;
 const RETICLE_ORIGINAL_SIZE = 14;
@@ -500,10 +499,10 @@ export default function CanvasView({
   zoomRef.current = zoom;
   const offsetRef = useRef(offset);
   offsetRef.current = offset;
+  // Last pointer movement (screen px), used to keep gliding after the drag ends.
+  const lastPanVelocityRef = useRef<Point>(ORIGIN);
 
   const [initialZoom, setInitialZoom] = useState(1);
-  const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
-  const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -638,7 +637,7 @@ export default function CanvasView({
         setOffset(ORIGIN);
       }
 
-      setVelocity(ORIGIN);
+      stopPan();
       setIsLoading(false);
       setIsLaunching(false);
       clearOverlay();
@@ -1024,13 +1023,20 @@ export default function CanvasView({
     [clampOffset, setOffset],
   );
 
+  // Inertial panning shared by pointer-drag release and keyboard glide.
+  const {
+    fling: flingPan,
+    glideBy: glidePan,
+    stop: stopPan,
+  } = useCanvasMomentum({ setOffset, clampOffset, zoomRef });
+
   const handlePan = useCallback(
     (offsetDelta: { x: number; y: number }): void => {
       // Disable transitions while panning
       setIsZooming(false);
-      const scaledOffsetDelta = multiplyPoint(offsetDelta, zoomRef.current);
-      setVelocity({ x: scaledOffsetDelta.x, y: scaledOffsetDelta.y });
-      updateOffset(scaledOffsetDelta);
+      // Remember the movement so the canvas can keep gliding once released.
+      lastPanVelocityRef.current = offsetDelta;
+      updateOffset(multiplyPoint(offsetDelta, zoomRef.current));
 
       setFrame(null);
     },
@@ -1087,13 +1093,14 @@ export default function CanvasView({
 
       // Don't disable handlers if there are still pointers down
       if (pointerEvents.size > 0) return;
-      setControlledPan(false);
+      // Carry the last pointer velocity into a smooth glide to rest.
+      flingPan(lastPanVelocityRef.current);
 
       elem.removeEventListener("pointermove", handlePointerMove);
       elem.removeEventListener("pointerup", handlePointerUp);
       elem.removeEventListener("pointercancel", handlePointerUp);
     },
-    [handlePointerMove],
+    [handlePointerMove, flingPan],
   );
 
   /**
@@ -1109,37 +1116,16 @@ export default function CanvasView({
         // No idea if this is the right way to define the pointerEvents
         pointerEvents.set(event.pointerId, event as unknown as PointerEvent);
       }
-      setControlledPan(true);
+      // Interrupt any in-flight glide so the new grab takes over immediately.
+      stopPan();
+      lastPanVelocityRef.current = ORIGIN;
 
       elem.addEventListener("pointermove", handlePointerMove);
       elem.addEventListener("pointerup", handlePointerUp);
       elem.addEventListener("pointercancel", handlePointerUp);
     },
-    [handlePointerMove, handlePointerUp],
+    [handlePointerMove, handlePointerUp, stopPan],
   );
-
-  // Could potentially get replaced by a transition animation with ease, however this will work on Safari
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only create the interval when controlledPan changes to prevent recursive calls
-  useEffect(() => {
-    if (controlledPan) return;
-    // could use a circular buffer to store the max velocity over the last few DOM event triggers for a smoother decay
-    // extracting the `currentVelocity` like this just seems to make it work over using straight up `velocity`. Thanks ChatSkibidi
-    let currentVelocity = { ...velocity };
-    const interval = setInterval(() => {
-      if (currentVelocity.x < 0.1 && currentVelocity.y < 0.1) {
-        setVelocity({ x: 0, y: 0 });
-        clearInterval(interval);
-        return;
-      }
-      updateOffset(currentVelocity);
-      currentVelocity = {
-        x: currentVelocity.x * PAN_DECAY,
-        y: currentVelocity.y * PAN_DECAY,
-      };
-      setVelocity(currentVelocity);
-    }, 16);
-    return () => clearInterval(interval);
-  }, [controlledPan]); // Only restart if `controlledPan` changes
 
   /***********************************
    * SELECTING PIXEL FUNCTIONALITY.  *
@@ -1230,19 +1216,14 @@ export default function CanvasView({
         padding,
       });
 
-      if (nextOffset.x !== offset.x || nextOffset.y !== offset.y) {
-        setOffset(clampOffset(nextOffset, zoom));
+      // Glide toward the auto-pan target instead of snapping, reusing the same
+      // inertia as pointer panning. The reticle still moves instantly.
+      const offsetDelta = diffPoints(nextOffset, offset);
+      if (offsetDelta.x !== 0 || offsetDelta.y !== 0) {
+        glidePan(offsetDelta);
       }
     },
-    [
-      canvas.width,
-      canvas.height,
-      clampOffset,
-      containerRef,
-      coords,
-      setCoords,
-      setOffset,
-    ],
+    [canvas.width, canvas.height, containerRef, coords, glidePan, setCoords],
   );
 
   const reticleOffset = calculateReticleOffset(coords);
