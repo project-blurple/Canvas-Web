@@ -274,48 +274,44 @@ function CanvasSettingsForm({
 
     onSavingChange(true);
 
-    try {
-      if (mode === "create") {
-        const createPromise = createCanvas.mutateAsync({
+    if (mode === "create") {
+      const createPromise = createCanvas.mutateAsync({
+        allColorsGlobal: formValues.allColorsGlobal,
+        cooldownDuration: formValues.cooldownDuration,
+        height: formValues.height,
+        isLocked: formValues.isLocked,
+        name: formValues.name,
+        width: formValues.width,
+        startCoordinates: formValues.startCoordinates,
+      });
+
+      toast.promise(createPromise, {
+        loading: "Creating canvas…",
+        success: "Canvas created!",
+        error: "Failed to create canvas. Please try again.",
+      });
+
+      const response = await createPromise;
+      await onSaved(response.data.id);
+    } else {
+      toast.promise(
+        updateCanvasInfo.mutateAsync({
           allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
-          height: formValues.height,
           isLocked: formValues.isLocked,
           name: formValues.name,
-          width: formValues.width,
-          startCoordinates: formValues.startCoordinates,
-        });
+        }),
+        {
+          loading: "Saving changes…",
+          success: "Changes saved!",
+          error: "Failed to save changes. Please try again.",
+        },
+      );
 
-        toast.promise(createPromise, {
-          loading: "Creating canvas…",
-          success: "Canvas created!",
-          error: "Failed to create canvas. Please try again.",
-        });
-
-        const response = await createPromise;
-        await onSaved(response.data.id);
-      } else {
-        toast.promise(
-          updateCanvasInfo.mutateAsync({
-            allColorsGlobal: formValues.allColorsGlobal,
-            cooldownDuration: formValues.cooldownDuration,
-            isLocked: formValues.isLocked,
-            name: formValues.name,
-          }),
-          {
-            loading: "Saving changes…",
-            success: "Changes saved!",
-            error: "Failed to save changes. Please try again.",
-          },
-        );
-
-        await onSaved(activeCanvas.id);
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      onSavingChange(false);
+      await onSaved(activeCanvas.id);
     }
+
+    onSavingChange(false);
   }
 
   return (
