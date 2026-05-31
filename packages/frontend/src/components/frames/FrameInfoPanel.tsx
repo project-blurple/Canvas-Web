@@ -3,6 +3,7 @@ import {
   type Frame,
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
+import { toast } from "sonner";
 import {
   useAuthContext,
   useCanvasContext,
@@ -94,8 +95,9 @@ function FrameInfoPanelBody({
           <TooltipDynamicButton
             color={hexStringToPixelColor(selectedFrame.id)}
             tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(frameUrl);
+            onAction={async () => {
+              void (await navigator.clipboard.writeText(frameUrl));
+              toast.success("Frame link copied to clipboard");
             }}
           >
             Copy frame link

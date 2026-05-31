@@ -1,6 +1,7 @@
 import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
+import { toast } from "sonner";
 import { ButtonSupplement } from "@/components/button";
 import Pagination from "@/components/Pagination";
 import { useCanvasContext, useCanvasViewContext } from "@/contexts";
@@ -191,8 +192,9 @@ export default function PixelInfoTab({
         {adjustedCoords && (
           <TooltipDynamicButton
             tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(pixelUrl);
+            onAction={async () => {
+              void (await navigator.clipboard.writeText(pixelUrl));
+              toast.success("Pixel link copied to clipboard");
             }}
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >
