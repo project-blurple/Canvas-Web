@@ -272,23 +272,24 @@ function CanvasSettingsForm({
     }
 
     if (mode === "create") {
-      const createPromise = createCanvas.mutateAsync({
-        allColorsGlobal: formValues.allColorsGlobal,
-        cooldownDuration: formValues.cooldownDuration,
-        height: formValues.height,
-        isLocked: formValues.isLocked,
-        name: formValues.name,
-        width: formValues.width,
-        startCoordinates: formValues.startCoordinates,
-      });
-
-      toast.promise(createPromise, {
-        loading: "Creating canvas…",
-        success: "Canvas created!",
-        error: "Failed to create canvas. Please try again.",
-      });
-
-      const response = await createPromise;
+      const response = await toast
+        .promise(
+          createCanvas.mutateAsync({
+            allColorsGlobal: formValues.allColorsGlobal,
+            cooldownDuration: formValues.cooldownDuration,
+            height: formValues.height,
+            isLocked: formValues.isLocked,
+            name: formValues.name,
+            width: formValues.width,
+            startCoordinates: formValues.startCoordinates,
+          }),
+          {
+            loading: "Creating canvas…",
+            success: "Canvas created!",
+            error: "Failed to create canvas. Please try again.",
+          },
+        )
+        .unwrap();
       await onSaved(response.data.id);
     } else {
       const updatePromise = updateCanvasInfo.mutateAsync({
