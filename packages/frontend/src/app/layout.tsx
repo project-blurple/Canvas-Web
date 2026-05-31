@@ -22,6 +22,7 @@ import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
 import { Toaster } from "sonner";
+import CanvasIcon from "@/components/CanvasIcon";
 import serverConfig from "@/config/serverConfig";
 import { AppProviders } from "./providers";
 
@@ -143,6 +144,7 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                             info: <Info />,
                             warning: <TriangleAlert />,
                             error: <CircleAlert />,
+                            loading: <CanvasIcon loading />,
                           }}
                         />
                       </AppProviders>
