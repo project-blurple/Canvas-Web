@@ -1,8 +1,9 @@
 "use client";
 
-import { CircularProgress, styled } from "@mui/material";
+import { styled } from "@mui/material";
 import { AxiosError } from "axios";
-import { type ReactNode, useEffect, useState } from "react";
+import type { ReactNode } from "react";
+import { toast } from "sonner";
 import { Button, PrimitiveButton } from "@/components/button";
 import { useAuthContext } from "@/contexts";
 import { useRefreshGuildMemberships } from "@/hooks";
@@ -15,12 +16,6 @@ const Wrapper = styled("div")`
   gap: 0.375rem;
 `;
 
-const StatusText = styled("p")`
-  color: oklch(from var(--discord-white) l c h / 60%);
-  font-size: 0.875rem;
-  margin: 0;
-`;
-
 const InlineTrigger = styled(PrimitiveButton)`
   cursor: pointer;
   text-decoration-line: underline;
@@ -29,14 +24,6 @@ const InlineTrigger = styled(PrimitiveButton)`
     cursor: progress;
   }
 `;
-
-const StatusBlock = styled("p")`
-  color: oklch(from var(--discord-white) l c h / 60%);
-  font-size: 0.875rem;
-  margin: 0.25rem 0 0;
-`;
-
-const SUCCESS_TEXT_RESET_MS = 5_000;
 
 function getErrorText(error: unknown): string | null {
   if (!error) return null;
@@ -47,39 +34,20 @@ function getErrorText(error: unknown): string | null {
 }
 
 type RecheckMembershipsController = RefreshMutation & {
-  showSuccess: boolean;
   errorText: string | null;
-  statusText: string | null;
 };
 
 export function useRecheckMemberships(): RecheckMembershipsController {
   const { user } = useAuthContext();
   const mutation = useRefreshGuildMemberships(user?.id);
-  const { isPending, isSuccess, error, reset } = mutation;
-  const [didJustSucceed, setDidJustSucceed] = useState(false);
+  const errorText = getErrorText(mutation.error);
 
-  useEffect(() => {
-    if (!isSuccess) return;
-    setDidJustSucceed(true);
-    const timer = setTimeout(() => {
-      setDidJustSucceed(false);
-      reset();
-    }, SUCCESS_TEXT_RESET_MS);
-    return () => clearTimeout(timer);
-  }, [isSuccess, reset]);
-
-  const errorText = getErrorText(error);
-  const statusText =
-    isPending ?
-      "Checking with Discord…"
-    : (errorText ?? (didJustSucceed ? "Server list updated" : null));
-
-  return { ...mutation, showSuccess: didJustSucceed, errorText, statusText };
+  return { ...mutation, errorText };
 }
 
 export default function RecheckMembershipsButton() {
   const { user } = useAuthContext();
-  const { mutate, isPending, showSuccess, errorText } = useRecheckMemberships();
+  const { mutateAsync, isPending, errorText } = useRecheckMemberships();
 
   if (!user) return null;
 
@@ -87,20 +55,17 @@ export default function RecheckMembershipsButton() {
     <Wrapper>
       <Button
         variant="contained"
-        onClick={() => mutate()}
-        aria-busy={isPending}
-        startIcon={
-          isPending ?
-            <CircularProgress color="inherit" size="1em" />
-          : undefined
-        }
+        onClick={async () => {
+          toast.promise(mutateAsync(), {
+            loading: "Rechecking servers…",
+            success: "Server list updated",
+            error: errorText ?? "Failed to reach Discord. Please try again.",
+          });
+        }}
+        disabled={isPending}
       >
-        {isPending ? "Rechecking…" : "Recheck your Discord servers"}
+        Recheck your Discord servers
       </Button>
-      {showSuccess && !errorText && (
-        <StatusText>Server list updated</StatusText>
-      )}
-      {errorText && <StatusText role="alert">{errorText}</StatusText>}
     </Wrapper>
   );
 }
@@ -115,34 +80,23 @@ export function RecheckMembershipsLink({
   controller,
 }: RecheckMembershipsLinkProps) {
   const { user } = useAuthContext();
-  const { mutate, isPending } = controller;
+  const { mutateAsync, isPending, errorText } = controller;
 
   if (!user) return <>{children}</>;
 
   return (
-    <InlineTrigger type="button" onClick={() => mutate()} disabled={isPending}>
+    <InlineTrigger
+      type="button"
+      onClick={async () => {
+        toast.promise(mutateAsync(), {
+          loading: "Rechecking servers…",
+          success: "Server list updated",
+          error: errorText ?? "Failed to reach Discord. Please try again.",
+        });
+      }}
+      disabled={isPending}
+    >
       {children}
     </InlineTrigger>
-  );
-}
-
-interface RecheckMembershipsStatusProps {
-  className?: string;
-  controller: RecheckMembershipsController;
-}
-
-export function RecheckMembershipsStatus({
-  className,
-  controller,
-}: Readonly<RecheckMembershipsStatusProps>) {
-  const { user } = useAuthContext();
-  const { statusText, errorText } = controller;
-
-  if (!user || !statusText) return null;
-
-  return (
-    <StatusBlock className={className} role={errorText ? "alert" : "status"}>
-      {statusText}
-    </StatusBlock>
   );
 }
