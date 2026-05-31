@@ -156,6 +156,7 @@ function areCanvasSettingsEqual(
 
 interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
+  createCanvas: ReturnType<typeof useCreateCanvas>;
   formValues: CanvasSettingsFormValues;
   isDirty: boolean;
   mode: FormMode;
@@ -164,25 +165,23 @@ interface CanvasSettingsFormProps {
     values: CanvasSettingsFormValues;
   } | null;
   isSaving: boolean;
-  onSavingChange: (isSaving: boolean) => void;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
   onSaved: (canvasId: CanvasInfo["id"]) => Promise<void>;
+  updateCanvasInfo: ReturnType<typeof useUpdateCanvasInfo>;
 }
 
 function CanvasSettingsForm({
   activeCanvas,
+  createCanvas,
   formValues,
   isDirty,
   mode,
   saveConfirmation,
   isSaving,
-  onSavingChange,
   onFormValuesChange,
   onSaved,
+  updateCanvasInfo,
 }: CanvasSettingsFormProps) {
-  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
-  const createCanvas = useCreateCanvas();
-
   const showSaveConfirmation =
     saveConfirmation !== null &&
     saveConfirmation.canvasId === activeCanvas.id &&
@@ -272,8 +271,6 @@ function CanvasSettingsForm({
       return;
     }
 
-    onSavingChange(true);
-
     if (mode === "create") {
       const createPromise = createCanvas.mutateAsync({
         allColorsGlobal: formValues.allColorsGlobal,
@@ -294,24 +291,22 @@ function CanvasSettingsForm({
       const response = await createPromise;
       await onSaved(response.data.id);
     } else {
-      toast.promise(
-        updateCanvasInfo.mutateAsync({
-          allColorsGlobal: formValues.allColorsGlobal,
-          cooldownDuration: formValues.cooldownDuration,
-          isLocked: formValues.isLocked,
-          name: formValues.name,
-        }),
-        {
-          loading: "Saving changes…",
-          success: "Changes saved!",
-          error: "Failed to save changes. Please try again.",
-        },
-      );
+      const updatePromise = updateCanvasInfo.mutateAsync({
+        allColorsGlobal: formValues.allColorsGlobal,
+        cooldownDuration: formValues.cooldownDuration,
+        isLocked: formValues.isLocked,
+        name: formValues.name,
+      });
 
+      toast.promise(updatePromise, {
+        loading: "Saving changes…",
+        success: "Changes saved!",
+        error: "Failed to save changes. Please try again.",
+      });
+
+      await updatePromise;
       await onSaved(activeCanvas.id);
     }
-
-    onSavingChange(false);
   }
 
   return (
@@ -423,7 +418,9 @@ function AdminCanvasTab() {
     canvasId: CanvasInfo["id"];
     values: CanvasSettingsFormValues;
   } | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
+  const createCanvas = useCreateCanvas();
+  const isSaving = createCanvas.isPending || updateCanvasInfo.isPending;
 
   const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
 
@@ -542,12 +539,12 @@ function AdminCanvasTab() {
             </CanvasList>
             <CanvasSettingsForm
               activeCanvas={activeCanvas}
+              createCanvas={createCanvas}
               formValues={formValues}
               isDirty={isDirty}
               mode={mode}
               saveConfirmation={saveConfirmation}
               isSaving={isSaving}
-              onSavingChange={setIsSaving}
               onFormValuesChange={setFormValues}
               onSaved={async (canvasId) => {
                 setSaveConfirmation({
@@ -556,6 +553,7 @@ function AdminCanvasTab() {
                 });
                 await setCanvas(canvasId, false);
               }}
+              updateCanvasInfo={updateCanvasInfo}
             />
             {mode !== "create" && (
               <StyledButton
