@@ -558,8 +558,11 @@ function AdminCanvasTab() {
             {mode !== "create" && (
               <StyledButton
                 onClick={async () => {
-                  await clearCanvasCache.mutateAsync();
-                  window.location.reload();
+                  toast.promise(clearCanvasCache.mutateAsync(), {
+                    loading: "Clearing canvas cache…",
+                    success: "Canvas cache cleared!",
+                    error: "Failed to clear canvas cache. Please try again.",
+                  });
                 }}
               >
                 Clear cached image
