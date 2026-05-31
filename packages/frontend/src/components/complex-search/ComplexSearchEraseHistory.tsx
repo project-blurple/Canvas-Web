@@ -13,6 +13,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
@@ -118,11 +119,22 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
     const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
+    const erasePromise = performErase(shouldBlockAuthors);
+
+    toast.promise(erasePromise, {
+      loading: `Erasing ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }...`,
+      success: `Successfully erased ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }${shouldBlockAuthors && " and blocked their authors"}.`,
+      error: `Failed to erase history.`,
+    });
+
     try {
-      await performErase(shouldBlockAuthors);
+      await erasePromise;
     } catch (error) {
       console.error(error);
-      alert("Failed to erase history");
     }
   }
 
