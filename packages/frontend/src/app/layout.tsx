@@ -81,7 +81,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
 
 const defaultCanvasInfo = {
   id: 1,
-  name: "Something went wrong...",
+  name: "Something went wrong…",
   isLocked: true,
   width: 600,
   height: 600,

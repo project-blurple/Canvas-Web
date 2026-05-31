@@ -63,7 +63,7 @@ export function useBlocklistMutations() {
   async function handleAdd(ids: Iterable<bigint>) {
     const arr = Array.from(ids);
     toast.promise(addToBlocklistMutation.mutateAsync(arr), {
-      loading: `Adding ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist...`,
+      loading: `Adding ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist…`,
       success: `Added ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist`,
       error: (error) =>
         (error as { response?: { status?: number } }).response?.status === 401 ?
@@ -83,7 +83,7 @@ export function useBlocklistMutations() {
         shouldRestoreHistoryForCanvasId,
       }),
       {
-        loading: `Removing ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist...`,
+        loading: `Removing ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist…`,
         success: `Removed ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist`,
         error: (error) =>
           (

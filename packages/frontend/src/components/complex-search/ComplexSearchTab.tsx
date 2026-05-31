@@ -422,7 +422,7 @@ export default function ComplexSearchTab({
               <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
                 {!historyQuery.isLoading ?
                   `Search (${pixelsInBounds.toLocaleString()} pixel${pixelsInBounds !== 1 ? "s" : ""})`
-                : "Searching..."}
+                : "Searching…"}
               </DynamicButton>
             </Form>
           </search>

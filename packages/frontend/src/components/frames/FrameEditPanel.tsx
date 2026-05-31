@@ -402,7 +402,7 @@ export default function FrameEditPanel({
           bounds: frameBounds,
         }),
         {
-          loading: "Saving frame changes...",
+          loading: "Saving frame changes…",
           success: "Frame saved",
           error: (error) =>
             (
@@ -427,7 +427,7 @@ export default function FrameEditPanel({
 
     try {
       toast.promise(deleteFrameMutation.mutateAsync(frameId), {
-        loading: "Deleting frame...",
+        loading: "Deleting frame…",
         success: "Frame deleted",
         error: (error) =>
           (
@@ -448,7 +448,7 @@ export default function FrameEditPanel({
   const handleCreateAction = async () => {
     try {
       toast.promise(createFrameMutation.mutateAsync(), {
-        loading: "Creating frame...",
+        loading: "Creating frame…",
         success: "Frame created",
         error: (error) =>
           (

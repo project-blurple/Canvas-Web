@@ -287,7 +287,7 @@ function CanvasSettingsForm({
         });
 
         toast.promise(createPromise, {
-          loading: "Creating canvas...",
+          loading: "Creating canvas…",
           success: "Canvas created!",
           error: "Failed to create canvas. Please try again.",
         });
@@ -303,7 +303,7 @@ function CanvasSettingsForm({
             name: formValues.name,
           }),
           {
-            loading: "Saving changes...",
+            loading: "Saving changes…",
             success: "Changes saved!",
             error: "Failed to save changes. Please try again.",
           },
