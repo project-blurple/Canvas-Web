@@ -257,8 +257,8 @@ function BlocklistRemoveSection({
         type="submit"
         disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
       >
-        Remove {selectedUsers.size} user
-        {selectedUsers.size !== 1 ? "s" : ""} from blocklist
+        Remove {selectedUsers.size}{" "}
+        {selectedUsers.size !== 1 ? "users" : "user"} from blocklist
       </StyledButton>
     </BlocklistAddWrapper>
   );

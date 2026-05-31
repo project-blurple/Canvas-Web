@@ -169,7 +169,7 @@ export default function ComplexSearchEraseHistory({
                 }}
               />
             }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
+            label={`Add ${usersLength.toLocaleString()} ${usersLength !== 1 ? "users" : "user"} to blocklist`}
             disabled={entriesCount === 0}
           />
         </DialogContent>

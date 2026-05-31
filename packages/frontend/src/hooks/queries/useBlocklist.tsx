@@ -64,8 +64,8 @@ export function useBlocklistMutations() {
   async function handleAdd(ids: Iterable<bigint>) {
     const arr = Array.from(ids);
     toast.promise(addToBlocklistMutation.mutateAsync(arr), {
-      loading: `Adding ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist…`,
-      success: `Added ${arr.length} user${arr.length > 1 ? "s" : ""} to blocklist`,
+      loading: `Adding ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist…`,
+      success: `Added ${arr.length} ${arr.length > 1 ? "users" : "user"} to blocklist`,
       error: (error) =>
         isUnauthorizedError(error) ?
           "Your session has expired. Please log in again."
@@ -84,8 +84,8 @@ export function useBlocklistMutations() {
         shouldRestoreHistoryForCanvasId,
       }),
       {
-        loading: `Removing ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist…`,
-        success: `Removed ${arr.length} user${arr.length > 1 ? "s" : ""} from blocklist`,
+        loading: `Removing ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist…`,
+        success: `Removed ${arr.length} ${arr.length > 1 ? "users" : "user"} from blocklist`,
         error: (error) =>
           isUnauthorizedError(error) ?
             "Your session has expired. Please log in again."
