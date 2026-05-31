@@ -4,6 +4,7 @@ import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import {
@@ -267,7 +268,7 @@ function CanvasSettingsForm({
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isFormInvalid()) {
-      alert("Name cannot be empty.");
+      toast.error("Name cannot be empty.");
       return;
     }
 
@@ -275,7 +276,7 @@ function CanvasSettingsForm({
 
     try {
       if (mode === "create") {
-        const response = await createCanvas.mutateAsync({
+        const createPromise = createCanvas.mutateAsync({
           allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
           height: formValues.height,
@@ -284,18 +285,33 @@ function CanvasSettingsForm({
           width: formValues.width,
           startCoordinates: formValues.startCoordinates,
         });
+
+        toast.promise(createPromise, {
+          loading: "Creating canvas...",
+          success: "Canvas created!",
+          error: "Failed to create canvas. Please try again.",
+        });
+
+        const response = await createPromise;
         await onSaved(response.data.id);
       } else {
-        await updateCanvasInfo.mutateAsync({
+        const updatePromise = updateCanvasInfo.mutateAsync({
           allColorsGlobal: formValues.allColorsGlobal,
           cooldownDuration: formValues.cooldownDuration,
           isLocked: formValues.isLocked,
           name: formValues.name,
         });
+
+        toast.promise(updatePromise, {
+          loading: "Saving changes...",
+          success: "Changes saved!",
+          error: "Failed to save changes. Please try again.",
+        });
+
         await onSaved(activeCanvas.id);
       }
-    } catch {
-      alert("Failed to update canvas info. Please try again.");
+    } catch (error) {
+      console.error(error);
     } finally {
       onSavingChange(false);
     }
