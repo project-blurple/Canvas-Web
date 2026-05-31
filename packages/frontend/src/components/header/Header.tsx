@@ -62,7 +62,7 @@ const Logo = styled(Image)(
 );
 
 export default function Header({
-  isCanvasPage: isCanvasPage = false,
+  isCanvasPage = false,
 }: HeaderProps) {
   return (
     <Wrapper>
