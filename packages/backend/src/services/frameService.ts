@@ -47,21 +47,21 @@ async function findFrameForType(frameId: string) {
 
 type FrameDbRecord = NonNullable<Awaited<ReturnType<typeof findFrameForType>>>;
 
-type UserOwnerRecord = {
+interface UserOwnerRecord {
   user_id: bigint;
   username: string;
   profile_picture_url: string;
-};
+}
 
-type GuildOwnerRecord = {
+interface GuildOwnerRecord {
   guild_id: bigint;
   name: string;
-};
+}
 
-type OwnerLookup = {
+interface OwnerLookup {
   usersById: Map<bigint, UserOwnerRecord>;
   guildsById: Map<bigint, GuildOwnerRecord>;
-};
+}
 
 function partitionOwnerIds(frames: FrameDbRecord[]) {
   const userIds = new Set<bigint>();

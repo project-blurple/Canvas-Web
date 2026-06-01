@@ -119,7 +119,7 @@ function fitViewBoundsToFillRatio(
 }
 
 interface SelectedBoundsProviderProps {
-  children: React.ReactNode;
+  children: Readonly<React.ReactNode>;
 }
 
 export const SelectedBoundsProvider = ({

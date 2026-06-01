@@ -5,11 +5,11 @@ import { BadRequestError } from "@/errors";
 type DefaultParams = Request["params"];
 type DefaultQuery = Request["query"];
 
-export type Schemas = {
+export interface Schemas {
   body?: z.ZodType;
   query?: z.ZodType;
   params?: z.ZodType;
-};
+}
 
 type ZodOr<Input, Fallback> =
   Input extends z.ZodType ? z.infer<Input> : Fallback;
