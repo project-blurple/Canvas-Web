@@ -1,12 +1,7 @@
 "use client";
 
-import {
-  type CanvasInfo,
-  type CanvasInfoRequest,
-  SocketEvents,
-} from "@blurple-canvas-web/types";
+import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
 import { useRouter } from "next/navigation";
 import {
   createContext,
@@ -15,10 +10,17 @@ import {
   useEffect,
   useState,
 } from "react";
-import config from "@/config/clientConfig";
+import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
+
+function buildSocketAuth<T extends CanvasInfo["id"]>(canvasId: T) {
+  return {
+    canvasId,
+    pixelTimestamp: new Date().toISOString(),
+  };
+}
 
 interface CanvasContextType {
   canvas: CanvasInfo;
@@ -58,10 +60,7 @@ export const CanvasProvider = ({
   const { setFrame } = useSelectedFrameContext();
 
   useEffect(() => {
-    socket.auth = {
-      canvasId: mainCanvasInfo.id,
-      pixelTimestamp: new Date().toISOString(),
-    };
+    socket.auth = buildSocketAuth(mainCanvasInfo.id);
     socket.connect();
 
     return () => {
@@ -88,10 +87,11 @@ export const CanvasProvider = ({
 
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
-      const response = await axios.get<CanvasInfoRequest.ResBody>(
-        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
-      );
-      setActiveCanvas(response.data);
+      const canvasInfo = await queryClient.fetchQuery({
+        queryKey: ["canvasInfo", canvasId],
+        queryFn: () => fetchCanvasInfo(canvasId),
+      });
+      setActiveCanvas(canvasInfo);
       setColor(null);
       setFrame(null);
 
@@ -108,10 +108,7 @@ export const CanvasProvider = ({
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
       // already been placed.
-      socket.auth = {
-        canvasId,
-        pixelTimestamp: new Date().toISOString(),
-      };
+      socket.auth = buildSocketAuth(canvasId);
 
       if (canvasId !== activeCanvas.id) {
         if (socket.connected) {
@@ -120,7 +117,14 @@ export const CanvasProvider = ({
         socket.connect();
       }
     },
-    [activeCanvas.id, router, setColor, setFrame, mainCanvasInfo.id],
+    [
+      activeCanvas.id,
+      mainCanvasInfo.id,
+      queryClient,
+      router,
+      setColor,
+      setFrame,
+    ],
   );
 
   return (

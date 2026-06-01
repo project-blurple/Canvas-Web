@@ -133,12 +133,16 @@ export default function PlacePixelTab({
     (onStoreChange: () => void) => {
       if (!cooldownEndTime) return () => {};
       const id = setInterval(onStoreChange, 1000);
-      // Stop ticking once the cooldown has expired
-      const remaining = cooldownEndTime - Date.now();
-      const stopId = setTimeout(() => clearInterval(id), remaining + 500);
+      const remainingMs = Math.max(0, cooldownEndTime - Date.now());
+      /** Make sure final 1 → 0 tick isn’t missed, else ‘Place pixel’ can get stuck disabled */
+      const cooldownExpiryId = setTimeout(function declareFinalTick() {
+        onStoreChange();
+        clearInterval(cooldownExpiryId);
+      }, remainingMs);
+
       return () => {
         clearInterval(id);
-        clearTimeout(stopId);
+        clearTimeout(cooldownExpiryId);
       };
     },
     [cooldownEndTime],
@@ -232,7 +236,6 @@ export default function PlacePixelTab({
   });
 
   const onSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    console.log(e);
     e.preventDefault();
     if (!coords || !selectedColor) return;
     playPixelPlacementSound();

@@ -8,8 +8,10 @@ import { Copy } from "lucide-react";
 import { useMemo } from "react";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
+import { rgbaToCssColor } from "@/util/color";
 import { PrimitiveButton } from "../button";
 import ColorCodeChip from "../ColorCodeChip";
+import ColorPreview from "../ColorPreview";
 import VisuallyHidden from "../VisuallyHidden";
 
 const UserWrapper = styled("ul")`
@@ -70,12 +72,18 @@ export const UserIdButton = styled(PrimitiveButton)`
 `;
 
 const ColorChipList = styled("ul")`
-  display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
   gap: 0.25rem;
   margin-block: 0.5em;
   overflow-x: auto;
+
+  li {
+    display: inline;
+  }
+  li + li {
+    margin-inline-start: 0.3em;
+  }
 `;
 
 const TimestampRow = styled("div")`
@@ -147,10 +155,21 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
 
       <ColorChipList role="list" style={{ gridArea: "--color-list" }}>
         {colors.slice(0, 5).map(({ color }) => {
-          const rgb = color.rgba.slice(0, 3).join(" ");
           return (
             <li key={color.id}>
-              <ColorCodeChip color={color} backgroundColorStr={`rgb(${rgb})`} />
+              <ColorCodeChip
+                color={color}
+                ornament={
+                  <ColorPreview
+                    style={{
+                      color: rgbaToCssColor(color.rgba),
+                      fontSize: "1cap",
+                      verticalAlign: "text-bottom",
+                      translate: "0 calc(var(--border-width) * -1)",
+                    }}
+                  />
+                }
+              />
             </li>
           );
         })}
