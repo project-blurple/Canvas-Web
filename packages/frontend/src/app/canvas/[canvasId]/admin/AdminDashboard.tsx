@@ -2,7 +2,7 @@
 
 import { styled } from "@mui/material";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithHeader";
 import { useAuthContext } from "@/contexts";
@@ -64,8 +64,10 @@ const TAB_ROUTES = [
 
 function AdminDashboardHeader() {
   const pathname = usePathname();
-  const activeTab = (TAB_ROUTES.find((tab) => pathname === `/admin/${tab.path}`)
-    ?.key ?? "event") as (typeof TAB_ROUTES)[number]["key"];
+  const { canvasId } = useParams<{ canvasId: string }>();
+  const activeTab = (TAB_ROUTES.find(
+    (tab) => pathname === `/canvas/${canvasId}/admin/${tab.path}`,
+  )?.key ?? "event") as (typeof TAB_ROUTES)[number]["key"];
 
   return (
     <NavWrapper>
@@ -74,7 +76,7 @@ function AdminDashboardHeader() {
         {TAB_ROUTES.map((tab) => (
           <NavLink
             key={tab.key}
-            href={`/admin/${tab.path}`}
+            href={`/canvas/${canvasId}/admin/${tab.path}`}
             aria-current={activeTab === tab.key ? "page" : undefined}
           >
             {tab.label}

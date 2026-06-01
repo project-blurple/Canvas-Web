@@ -2,6 +2,7 @@
 
 import { styled } from "@mui/material";
 import { CalendarRange, Radio } from "lucide-react";
+import { useRouter } from "next/navigation";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
@@ -74,7 +75,8 @@ const EventCanvasList = styled("div")`
 `;
 
 function AdminEventTab() {
-  const { canvas, setCanvas } = useCanvasContext();
+  const router = useRouter();
+  const { canvas } = useCanvasContext();
   const { data: selectedEvent, isLoading: currentEventIsLoading } =
     useEventInfo(canvas.eventId ?? undefined);
   const { data: canvases = [], isLoading: canvasListIsLoading } =
@@ -156,7 +158,9 @@ function AdminEventTab() {
                 <CanvasPreviewCard
                   key={canvasItem.id}
                   canvas={canvasItem}
-                  onClick={() => setCanvas(canvasItem.id, true)}
+                  onClick={() =>
+                    router.push(`/canvas/${encodeURIComponent(canvasItem.id)}`)
+                  }
                 />
               ))}
             </EventCanvasList>

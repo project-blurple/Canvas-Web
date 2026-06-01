@@ -1,5 +1,8 @@
 # Cached canvas images
 **/backend/static/canvas
+**/backend/static/snapshots
+**/backend/static/timelapse
+**/backend/data/snapshots
 
 # Generated code
 **/node_modules/
@@ -36,6 +39,7 @@ next-env.d.ts
 
 # Prisma generated files
 **/backend/src/client/generated/*
+**/backend/src/client/snapshots/generated/*
 
 
 ################################################################################

@@ -4,6 +4,7 @@ import type {
   CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
+  OptionalFrameBoundsModel,
   PixelColor,
   PlacePixelArray,
   Point,
@@ -13,6 +14,7 @@ import {
   DEFAULT_CANVAS_EXPORT_SCALE,
 } from "@blurple-canvas-web/types";
 import sharp from "sharp";
+import type z from "zod";
 import { type canvas, Prisma, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError, UnprocessableError } from "@/errors";
@@ -112,10 +114,13 @@ export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
+  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
 ): string {
   const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
+  const boundsSuffix =
+    bounds ? `_${bounds.x0}x${bounds.y0}_${bounds.x1}x${bounds.y1}` : "";
 
-  return `blurple-canvas__${canvasId}__${isLocked ? `locked${scaleSuffix}` : `${Date.now()}${scaleSuffix}`}.png`;
+  return `blurple-canvas__${canvasId}__${isLocked ? "locked" : Date.now()}${boundsSuffix}${scaleSuffix}.png`;
 }
 
 /**
@@ -369,18 +374,27 @@ export function updateCachedCanvasPixel(
   cachedCanvas.pixels[pixelIndex] = color;
 }
 
-export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
+export async function getCanvasPixels(
+  canvasId: number,
+  width: number,
+  height: number,
+): Promise<PixelColor[]> {
   const pixels = (await prisma.pixel.findMany({
     select: {
+      x: true,
+      y: true,
       color: {
         select: { rgba: true },
       },
     },
     where: { canvas_id: canvasId },
-    orderBy: [{ y: "asc" }, { x: "asc" }],
-  })) as { color: { rgba: PixelColor } }[];
+  })) as { x: number; y: number; color: { rgba: PixelColor } }[];
 
-  return pixels.map((pixel) => pixel.color.rgba);
+  const flat: PixelColor[] = new Array(width * height);
+  for (const pixel of pixels) {
+    flat[pixel.y * width + pixel.x] = pixel.color.rgba;
+  }
+  return flat;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
@@ -458,7 +472,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
       console.debug(`Cache miss for canvas ${canvasId}`);
     }
 
-    const pixels = await getCanvasPixels(canvasId);
+    const pixels = await getCanvasPixels(canvasId, canvas.width, canvas.height);
     const unlockedCanvas: UnlockedCanvas = {
       isLocked: false,
       width: canvas.width,
