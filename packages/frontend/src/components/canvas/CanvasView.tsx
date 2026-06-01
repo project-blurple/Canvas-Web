@@ -43,6 +43,7 @@ import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
 import { CanvasGrid } from "./CanvasGrid";
+import CanvasOptionButtons from "./CanvasOptionButtons";
 import {
   addPoints,
   diffPoints,
@@ -160,85 +161,6 @@ const InviteButton = styled(Button)`
     border-radius: 0.5rem 0.5rem 0.5rem 1rem;
   }
 `;
-
-const CanvasOptionsButtonColumn = styled("div", {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  inset-inline-end: 0.5rem;
-  inset-inline-end: ${(p) =>
-    p.$isPanelVisible &&
-    p.$isFullscreen &&
-    css`
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100vi - 1rem))
-      );
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100dvi - 1rem))
-      );
-    `};
-  inset-block-start: 0.5rem;
-
-  // display: flex;
-  // flex-direction: column;
-  // gap: 0.5rem;
-
-  display: grid;
-  grid-template-columns: repeat(1, auto);
-  gap: 0.5rem;
-  position: absolute;
-  z-index: 3;
-
-  > *:first-child {
-    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-
-    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-      border-radius: 0.5rem;
-    }
-  }
-
-  > *:last-child {
-    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-      border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-    }
-  }
-`;
-
-const StyledCanvasOptionButton = styled(Button)`
-  border-color: transparent;
-  border-radius: 0.5rem;
-  color: white;
-  min-width: auto;
-  padding: 0.5rem;
-  text-decoration: none;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: inherit;
-      box-shadow: 0 0 10px oklch(0 0 0 / 25%);
-    }
-  }
-`;
-
-function CanvasOptionButton({
-  children,
-  ...props
-}: Omit<
-  React.ComponentProps<typeof StyledCanvasOptionButton>,
-  "onPointerDown" | "type"
->) {
-  return (
-    <StyledCanvasOptionButton
-      onPointerDown={(event) => event.stopPropagation()}
-      type="button"
-      {...props}
-    >
-      {children}
-    </StyledCanvasOptionButton>
-  );
-}
 
 const FullscreenPanelOverlay = styled("div")`
   box-sizing: border-box;
@@ -1261,39 +1183,17 @@ export default function CanvasView({
     >
       {showNotices && <Notices />}
 
-      <CanvasOptionsButtonColumn
-        $isFullscreen={isFullscreen}
-        $isPanelVisible={isFullscreenPanelVisible}
-      >
-        {canUseFullscreen && (
-          <CanvasOptionButton
-            aria-pressed={isFullscreen}
-            onClick={toggleFullscreen}
-          >
-            <VisuallyHidden>
-              {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-            </VisuallyHidden>
-            {isFullscreen ?
-              <Minimize2 />
-            : <Maximize2 />}
-          </CanvasOptionButton>
-        )}
-        {canUseFullscreen && isFullscreen && (
-          <CanvasOptionButton
-            onClick={toggleFullscreenPanel}
-            aria-pressed={isFullscreenPanelVisible}
-          >
-            <VisuallyHidden>
-              {isFullscreenPanelVisible ?
-                "Hide action panel"
-              : "Show action panel"}
-            </VisuallyHidden>
-            {isFullscreenPanelVisible ?
-              <PanelRightClose />
-            : <PanelRightOpen />}
-          </CanvasOptionButton>
-        )}
-      </CanvasOptionsButtonColumn>
+      <CanvasOptionButtons
+        fullscreen={{
+          isActive: isFullscreen,
+          isAvailable: canUseFullscreen,
+          toggle: toggleFullscreen,
+        }}
+        panel={{
+          isActive: isFullscreenPanelVisible,
+          toggle: toggleFullscreenPanel,
+        }}
+      />
 
       {showInvite ?
         config.discordServerInvite &&
