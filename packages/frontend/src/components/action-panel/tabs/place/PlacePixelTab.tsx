@@ -6,13 +6,7 @@ import type {
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -21,6 +15,7 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
+import { useElementIsLarge } from "@/hooks/useElementIsLarge";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -133,12 +128,16 @@ export default function PlacePixelTab({
     (onStoreChange: () => void) => {
       if (!cooldownEndTime) return () => {};
       const id = setInterval(onStoreChange, 1000);
-      // Stop ticking once the cooldown has expired
-      const remaining = cooldownEndTime - Date.now();
-      const stopId = setTimeout(() => clearInterval(id), remaining + 500);
+      const remainingMs = Math.max(0, cooldownEndTime - Date.now());
+      /** Make sure final 1 → 0 tick isn’t missed, else ‘Place pixel’ can get stuck disabled */
+      const cooldownExpiryId = setTimeout(function declareFinalTick() {
+        onStoreChange();
+        clearInterval(cooldownExpiryId);
+      }, remainingMs);
+
       return () => {
         clearInterval(id);
-        clearTimeout(stopId);
+        clearTimeout(cooldownExpiryId);
       };
     },
     [cooldownEndTime],
@@ -163,29 +162,7 @@ export default function PlacePixelTab({
     [palette],
   );
   // Boolean to hide certain elements when the tab is too small
-  // Current implementation is a bit jarring when things pop in and out
-  const [isLarge, setIsLarge] = useState(true);
-
-  // Get value of the rem in pixels (and only run it client-side)
-  const [remPixels, setRemPixels] = useState<number>(16);
-  useEffect(() => {
-    // This runs only in the browser after hydration
-    setRemPixels(
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
-    );
-  }, []);
-
-  const PlacePixelTabBlockRef = useCallback(
-    (elem: HTMLDivElement | null) => {
-      if (!elem) return;
-      const resizeObserver = new ResizeObserver((entries) => {
-        const height = entries[0].target.clientHeight;
-        setIsLarge(height > remPixels * 20);
-      });
-      resizeObserver.observe(elem);
-    },
-    [remPixels],
-  );
+  const [PlacePixelTabBlockRef, drawerIsLarge] = useElementIsLarge(30);
 
   const { color: selectedColor } = useSelectedColorContext();
 
@@ -232,7 +209,6 @@ export default function PlacePixelTab({
   });
 
   const onSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    console.log(e);
     e.preventDefault();
     if (!coords || !selectedColor) return;
     playPixelPlacementSound();
@@ -254,7 +230,7 @@ export default function PlacePixelTab({
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>
-          {isLarge && (
+          {drawerIsLarge && (
             <ColorInfoCard
               color={selectedColor}
               invite={serverInvite}
@@ -267,7 +243,7 @@ export default function PlacePixelTab({
               aria-busy={isPlacing}
               cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
-              isVerbose={!isLarge}
+              isVerbose={!drawerIsLarge}
               partnerServerJoinRequired={partnerServerJoinRequired}
               partnerServerName={selectedColor?.guildName ?? null}
               type="submit"
@@ -282,7 +258,7 @@ export default function PlacePixelTab({
               {selectedColor?.guildName ?? "server"}
             </DynamicAnchorButton>
           )}
-          {!readOnly && isLarge && <BotPlaceCommandCard />}
+          {!readOnly && drawerIsLarge && <BotPlaceCommandCard />}
         </ActionPanelTabBody>
       </Form>
     </PlacePixelTabBlock>

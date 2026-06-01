@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Main from "@/app/Main";
+import LayoutWithHeader from "@/components/LayoutWithHeader";
 import config from "@/config/clientConfig";
 import { fetchCanvasInfo, fetchFrameById } from "@/hooks/queries/serverFetch";
 import { calculateScale, clamp } from "@/util";
@@ -6,8 +8,6 @@ import {
   extractAllSearchParamsFromRecord,
   type NextSearchParams,
 } from "@/util/searchParams";
-import Main from "../../../app/Main";
-import LayoutWithHeader from "../../../components/LayoutWithHeader";
 
 function toMetadata({
   title,
@@ -142,7 +142,7 @@ export async function generateMetadata({
 
 export default function CanvasPage() {
   return (
-    <LayoutWithHeader isCanvasPage>
+    <LayoutWithHeader>
       <Main />
     </LayoutWithHeader>
   );

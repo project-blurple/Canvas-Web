@@ -19,7 +19,6 @@ import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { Button, DynamicButton } from "../button";
-import { useSlideableDrawerContext } from "../slideable-drawer";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -29,15 +28,14 @@ const FrameInfoPanelBodyShell = styled("div")`
   opacity: 1;
   overflow: hidden;
   transform: translateY(0);
-  transition-duration: 280ms;
+  transition-duration: var(--transition-duration-slow);
   transition-property: grid-template-rows, transform;
-  transition-timing-function: ease;
+  transition-timing-function: var(--ease-out-cubic);
 
-  &[aria-hidden="true"] {
+  &[aria-expanded="false"] {
     grid-template-rows: 0fr;
-    opacity: 0;
     pointer-events: none;
-    transform: translateY(0.75rem);
+    transform: translateY(3rem);
   }
 
   > * {
@@ -83,37 +81,39 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 export default function FrameInfoPanel({
   enabled = true,
   setActivePanel,
+  drawerIsLarge,
 }: {
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
+  drawerIsLarge: boolean;
 }) {
   return (
     <>
       <FullWidthScrollView>
         <FrameList enabled={enabled} />
       </FullWidthScrollView>
-      <FrameInfoPanelBody setActivePanel={setActivePanel} />
+      <FrameInfoPanelBody
+        setActivePanel={setActivePanel}
+        drawerIsLarge={drawerIsLarge}
+      />
     </>
   );
 }
 
 function FrameInfoPanelBody({
   setActivePanel,
+  drawerIsLarge,
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
+  drawerIsLarge?: boolean;
 }) {
-  const slideableDrawerState = useSlideableDrawerContext();
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { frame: selectedFrame } = useSelectedFrameContext();
-  const shouldCollapse = slideableDrawerState?.isMiddleSnap;
 
   const frameUrl =
     selectedFrame ?
-      createPixelUrl({
-        canvasId: canvas.id,
-        frameId: selectedFrame.id,
-      })
+      createPixelUrl({ canvasId: canvas.id, frameId: selectedFrame.id })
     : "";
 
   const userHasPermsToEditSelectedFrame =
@@ -153,7 +153,7 @@ function FrameInfoPanelBody({
     const color = hexStringToPixelColor(selectedFrame.id);
 
     return (
-      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
@@ -194,7 +194,7 @@ function FrameInfoPanelBody({
 
   if (user) {
     return (
-      <FrameInfoPanelBodyShell aria-hidden={shouldCollapse}>
+      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
           <StyledButton
