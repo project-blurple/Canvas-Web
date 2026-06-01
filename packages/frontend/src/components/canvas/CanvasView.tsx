@@ -1355,7 +1355,7 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
-        <CanvasGrid />
+        <CanvasGrid zoom={zoom} />
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}

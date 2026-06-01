@@ -11,16 +11,24 @@ const Grid = styled("svg")`
   color: white;
 `;
 
-export function CanvasGrid() {
+interface CanvasGridProps extends React.SVGProps<SVGSVGElement> {
+  zoom: number;
+}
+
+export function CanvasGrid({ zoom, ...props }: CanvasGridProps) {
+  // Fully eyeballed this :)
+  // The stroke width is thicker when zoomed out to keep the grid visible, but thins as you zoom.
+  const gridStrokeWidth = ((5 - Math.log(zoom)) / 5) * 0.05;
+
   return (
-    <Grid xmlns="http://www.w3.org/2000/svg">
+    <Grid xmlns="http://www.w3.org/2000/svg" {...props}>
       <defs>
         <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
           <path
             d="M 0 0 L 1 0 L 1 1 L 0 1 Z"
             fill="none"
             stroke="currentColor"
-            strokeWidth="0.01"
+            strokeWidth={gridStrokeWidth}
           />
         </pattern>
       </defs>
