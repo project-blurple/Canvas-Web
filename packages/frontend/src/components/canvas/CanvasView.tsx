@@ -512,7 +512,7 @@ export default function CanvasView({
     showSelectedBounds,
     setSelectedBounds,
   } = useSelectedBoundsContext();
-  const { canvas, setCanvas } = useCanvasContext();
+  const { canvas } = useCanvasContext();
   const {
     containerRef,
     coords,
@@ -570,7 +570,6 @@ export default function CanvasView({
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
   });
-  const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
@@ -672,24 +671,6 @@ export default function CanvasView({
       clearOverlay();
     },
     [canvas.id, initialFrameFromSearchParams],
-  );
-
-  useEffect(
-    function switchToCanvasFromSearchParams() {
-      if (hasAppliedInitialCanvasRef.current) return;
-
-      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
-      if (targetCanvasId === null || targetCanvasId === canvas.id) {
-        hasAppliedInitialCanvasRef.current = true;
-        return;
-      }
-
-      hasAppliedInitialCanvasRef.current = true;
-      void setCanvas(targetCanvasId).catch(() => {
-        // If URL canvas does not exist, keep default canvas.
-      });
-    },
-    [canvas.id, setCanvas],
   );
 
   useEffect(() => {

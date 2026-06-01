@@ -2,12 +2,12 @@ import type { PixelHistoryOverlayPixel } from "@blurple-canvas-web/types";
 import styled from "@emotion/styled";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useId, useState } from "react";
+import { CanvasWrapper } from "@/app/Main";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import { CanvasView } from "@/components/canvas";
 import { ComplexSearchTab } from "@/components/complex-search";
 import { SlideableDrawer } from "@/components/slideable-drawer";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
-import { CanvasWrapper } from "../Main";
 import BlocklistTab from "./BlocklistTab";
 
 const DashboardWrapper = styled(CanvasWrapper)`

@@ -8,7 +8,7 @@ import { MenuIcon } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext, useCanvasContext } from "@/contexts";
 import { Noticeboard } from "../notices";
 
 const Links = styled("ul")`
@@ -66,27 +66,34 @@ const StyledMenuItem = styled(MenuItem)`
 `;
 
 interface LinkInfo {
+  permitted?: boolean;
   href: string;
   label: React.ReactNode;
 }
 
 export default function Nav() {
   const { user } = useAuthContext();
+  const { canvas } = useCanvasContext();
   const [anchorElement, setAnchorElement] = useState<null | HTMLElement>(null);
   const isOpen = anchorElement !== null;
 
-  const isAdmin = user?.isCanvasAdmin;
-  const isModerator = user?.isCanvasModerator;
+  const isAdmin = user?.isCanvasAdmin ?? false;
+  const isModerator = user?.isCanvasModerator ?? false;
+  const canvasId = canvas.id;
 
   const links: LinkInfo[] = [
-    { href: "/leaderboard", label: "Leaderboard" },
-    ...(isAdmin ? [{ href: "/admin", label: "Admin" }] : []),
-    ...(isModerator ? [{ href: "/moderation", label: "Moderation" }] : []),
+    { href: `/canvas/${canvasId}/leaderboard`, label: "Leaderboard" },
+    { href: `/canvas/${canvasId}/admin`, label: "Admin", permitted: isAdmin },
+    {
+      href: `/canvas/${canvasId}/moderation`,
+      label: "Moderation",
+      permitted: isModerator,
+    },
     { href: "/settings", label: "Settings" },
     user ?
-      { href: "/me", label: user.username }
+      { href: `/canvas/${canvasId}/@me`, label: user.username }
     : { href: "/signin", label: "Sign in" },
-  ];
+  ].filter(({ permitted = true }) => permitted);
 
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorElement(event.currentTarget);
