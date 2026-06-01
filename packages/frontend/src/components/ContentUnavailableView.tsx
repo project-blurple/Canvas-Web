@@ -5,7 +5,7 @@ export const Root = styled("article")`
   margin-trim: block;
   min-block-size: min(100vb, 16em); /* fallback */
   min-block-size: min(100dvb, 16em);
-  padding-block: 1.5rem;
+  padding-block: 2rem;
   text-align: center;
   text-wrap: balance;
   svg,
