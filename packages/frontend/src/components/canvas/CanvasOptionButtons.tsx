@@ -32,11 +32,7 @@ const CanvasOptionsButtonColumn = styled("div", {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  opacity: 0.55;
   position: absolute;
-  transition-duration: var(--transition-duration-slow);
-  transition-property: opacity;
-  transition-timing-function: ease;
   z-index: 3;
 
   > *:first-child {
@@ -46,12 +42,9 @@ const CanvasOptionsButtonColumn = styled("div", {
     }
   }
 
-  &:hover {
-    opacity: 0.8;
-  }
-
   ${({ theme }) => theme.breakpoints.down("md")} {
     inset-block-start: 3.5rem;
+    opacity: 0.75;
   }
 `;
 
@@ -63,8 +56,15 @@ const StyledCanvasOptionButton = styled(Button)`
   padding: 0.5rem;
   text-decoration: none;
 
+  transition-duration: var(--transition-duration-slow);
+  transition-property:
+    -webkit-backdrop-filter, backdrop-filter, border-color, box-shadow;
+  transition-timing-function: ease;
+
   @media (hover: hover) and (pointer: fine) {
     &:hover {
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
       border-color: inherit;
       box-shadow: 0 0 10px oklch(0 0 0 / 25%);
     }
