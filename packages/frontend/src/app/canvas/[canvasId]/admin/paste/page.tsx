@@ -450,7 +450,6 @@ function AdminPasteTab() {
           actionPanel={actionPanel}
           canvasLabel="Admin paste"
           showInvite={false}
-          showNotices={false}
           showReticle={false}
         />
         <SlideableDrawer>{actionPanel}</SlideableDrawer>
