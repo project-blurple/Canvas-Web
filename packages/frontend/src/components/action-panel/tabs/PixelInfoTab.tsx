@@ -192,7 +192,7 @@ export default function PixelInfoTab({
           <DynamicButton
             onAction={async () => {
               void (await navigator.clipboard.writeText(pixelUrl));
-              toast.success("Pixel link copied to clipboard");
+              toast.success("Copied pixel link");
             }}
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >
