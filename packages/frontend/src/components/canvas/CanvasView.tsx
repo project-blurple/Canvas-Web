@@ -161,7 +161,7 @@ const InviteButton = styled(Button)`
   }
 `;
 
-const BaseFullscreenButton = styled(Button, {
+const CanvasOptionsButtonColumn = styled("div", {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
@@ -177,13 +177,42 @@ const BaseFullscreenButton = styled(Button, {
         min(var(--action-panel-width), calc(100dvi - 1rem))
       );
     `};
+  inset-block-start: 0.5rem;
 
-  color: white;
+  // display: flex;
+  // flex-direction: column;
+  // gap: 0.5rem;
+
+  display: grid;
+  grid-template-columns: repeat(1, auto);
+  gap: 0.5rem;
   position: absolute;
-  text-decoration: none;
+  z-index: 3;
+
+  > *:first-child {
+    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+
+    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
+    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
+      border-radius: 0.5rem;
+    }
+  }
+
+  > *:last-child {
+    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
+    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
+      border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+    }
+  }
+`;
+
+const CanvasOptionButton = styled(Button)`
   border-color: transparent;
+  border-radius: 0.5rem;
+  color: white;
   min-width: auto;
   padding: 0.5rem;
+  text-decoration: none;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
@@ -191,27 +220,6 @@ const BaseFullscreenButton = styled(Button, {
       box-shadow: 0 0 10px oklch(0 0 0 / 25%);
     }
   }
-`;
-
-const FullscreenButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-  inset-block-start: 0.5rem;
-  z-index: 1;
-
-  #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-  #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  }
-
-  ${({ theme }) => theme.breakpoints.down("md")} {
-    display: none;
-  }
-`;
-
-const FullscreenPanelButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  inset-block-start: 4rem;
-  z-index: 3;
 `;
 
 const FullscreenPanelOverlay = styled("div")`
@@ -1234,39 +1242,42 @@ export default function CanvasView({
       onPointerDown={handlePointerDown}
     >
       {showNotices && <Notices />}
-      {canUseFullscreen && (
-        <FullscreenButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          aria-pressed={isFullscreen}
-          onClick={toggleFullscreen}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          {isFullscreen ?
-            <Minimize2 />
-          : <Maximize2 />}
-        </FullscreenButton>
-      )}
-      {canUseFullscreen && isFullscreen && (
-        <FullscreenPanelButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          onClick={toggleFullscreenPanel}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          <VisuallyHidden>
+
+      <CanvasOptionsButtonColumn
+        $isFullscreen={isFullscreen}
+        $isPanelVisible={isFullscreenPanelVisible}
+      >
+        {canUseFullscreen && (
+          <CanvasOptionButton
+            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            aria-pressed={isFullscreen}
+            onClick={toggleFullscreen}
+            onPointerDown={(event) => event.stopPropagation()}
+            type="button"
+          >
+            {isFullscreen ?
+              <Minimize2 />
+            : <Maximize2 />}
+          </CanvasOptionButton>
+        )}
+        {canUseFullscreen && isFullscreen && (
+          <CanvasOptionButton
+            onClick={toggleFullscreenPanel}
+            onPointerDown={(event) => event.stopPropagation()}
+            type="button"
+          >
+            <VisuallyHidden>
+              {isFullscreenPanelVisible ?
+                "Hide action panel"
+              : "Show action panel"}
+            </VisuallyHidden>
             {isFullscreenPanelVisible ?
-              "Hide action panel"
-            : "Show action panel"}
-          </VisuallyHidden>
-          {isFullscreenPanelVisible ?
-            <PanelRightClose />
-          : <PanelRightOpen />}
-        </FullscreenPanelButton>
-      )}
+              <PanelRightClose />
+            : <PanelRightOpen />}
+          </CanvasOptionButton>
+        )}
+      </CanvasOptionsButtonColumn>
+
       {showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
