@@ -42,6 +42,7 @@ import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import VisuallyHidden from "../VisuallyHidden";
+import { CanvasGrid } from "./CanvasGrid";
 import {
   addPoints,
   diffPoints,
@@ -1354,6 +1355,7 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
+        <CanvasGrid />
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}
