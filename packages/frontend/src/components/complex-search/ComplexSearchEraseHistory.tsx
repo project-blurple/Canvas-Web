@@ -126,7 +126,7 @@ export default function ComplexSearchEraseHistory({
       success: `Successfully erased ${entriesCount.toLocaleString()} history ${
         entriesCount !== 1 ? "entries" : "entry"
       }${shouldBlockAuthors && " and blocked their authors"}.`,
-      error: `Failed to erase history.`,
+      error: `Couldn’t erase history`,
     });
   }
 

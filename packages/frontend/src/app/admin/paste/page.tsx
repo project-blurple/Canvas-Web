@@ -248,7 +248,7 @@ function AdminDashboardPasteActionPanel({
       {
         loading: "Pasting image to canvas…",
         success: "Image pasted to canvas!",
-        error: "Failed to paste image to canvas. Please try again.",
+        error: "Couldn’t paste image to canvas. Please try again.",
       },
     );
   }

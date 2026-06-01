@@ -87,8 +87,9 @@ export default function ColorInfoCard({
           <Subtitle>
             Exclusive to {guildNameNode}. Already joined?{" "}
             <RecheckMembershipsLink controller={recheckMutation}>
-              Refresh here.
+              Refresh here
             </RecheckMembershipsLink>
+            .
           </Subtitle>
         : <Subtitle>
             Exclusive to {guildNameNode}. <a href="/signin">Log in</a> to use.

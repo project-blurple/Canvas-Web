@@ -178,7 +178,7 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
       <UserIdButton
         onClick={async () => {
           void (await navigator.clipboard.writeText(userId.toString()));
-          toast.success("User ID copied to clipboard");
+          toast.success("Copied user ID");
         }}
       >
         <code aria-hidden>{userId}</code>

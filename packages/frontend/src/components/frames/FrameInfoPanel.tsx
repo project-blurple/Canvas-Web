@@ -95,7 +95,7 @@ function FrameInfoPanelBody({
             color={hexStringToPixelColor(selectedFrame.id)}
             onAction={async () => {
               void (await navigator.clipboard.writeText(frameUrl));
-              toast.success("Frame link copied to clipboard");
+              toast.success("Copied frame link");
             }}
           >
             Copy frame link

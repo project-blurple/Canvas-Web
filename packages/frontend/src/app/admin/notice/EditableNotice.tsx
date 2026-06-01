@@ -248,9 +248,9 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         startAt: now.toISOString(),
       }),
       {
-        loading: "Activating notice...",
+        loading: "Activating notice…",
         success: "Notice activated",
-        error: "Failed to activate notice",
+        error: "Couldn’t activate notice",
       },
     );
   }
@@ -267,9 +267,9 @@ function StaticNotice({ notice, setIsEditMode }: NoticeProps) {
         startAt,
       }),
       {
-        loading: "Deactivating notice...",
+        loading: "Deactivating notice…",
         success: "Notice deactivated",
-        error: "Failed to deactivate notice",
+        error: "Couldn’t deactivate notice",
       },
     );
   }
@@ -369,17 +369,17 @@ function EditModeNotice({
     if (mode === "create") {
       const createPromise = createNoticeMutation.mutateAsync(data);
       toast.promise(createPromise, {
-        loading: "Creating notice...",
+        loading: "Creating notice…",
         success: "Notice created",
-        error: "Failed to create notice",
+        error: "Couldn’t create notice",
       });
       await createPromise;
     } else {
       const modifyPromise = modifyNoticeMutation.mutateAsync(data);
       toast.promise(modifyPromise, {
-        loading: "Saving notice...",
+        loading: "Saving notice…",
         success: "Notice saved",
-        error: "Failed to save notice",
+        error: "Couldn’t save notice",
       });
       await modifyPromise;
     }
@@ -392,9 +392,9 @@ function EditModeNotice({
 
     const deletePromise = deleteNoticeMutation.mutateAsync();
     toast.promise(deletePromise, {
-      loading: "Deleting notice...",
+      loading: "Deleting notice…",
       success: "Notice deleted",
-      error: "Failed to delete notice",
+      error: "Couldn’t delete notice",
     });
     await deletePromise;
     setIsEditMode(false);

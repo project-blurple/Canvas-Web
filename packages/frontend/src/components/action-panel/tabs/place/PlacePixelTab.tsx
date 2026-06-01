@@ -228,7 +228,7 @@ export default function PlacePixelTab({
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
     onError: (error) => {
       if (error instanceof AxiosError && error.status === 401) signOut();
-      toast.error("Failed to place pixel, please refresh the page", {
+      toast.error("Couldn’t place pixel, please refresh the page", {
         action: {
           label: "Refresh",
           onClick: () => window.location.reload(),

@@ -71,7 +71,7 @@ export function useBlocklistMutations() {
           error: (error) =>
             isUnauthorizedError(error) ?
               "Your session has expired. Please log in again."
-            : "Failed to add users to blocklist",
+            : "Couldn’t add users to blocklist",
         })
         .unwrap();
       return true;
@@ -98,7 +98,7 @@ export function useBlocklistMutations() {
             error: (error) =>
               isUnauthorizedError(error) ?
                 "Your session has expired. Please log in again."
-              : "Failed to remove users from blocklist",
+              : "Couldn’t remove users from blocklist",
           },
         )
         .unwrap();

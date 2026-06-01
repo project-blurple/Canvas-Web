@@ -406,7 +406,7 @@ export default function FrameEditPanel({
       error: (error) =>
         isUnauthorizedError(error) ?
           "Your session has expired. Please log in again."
-        : "Failed to save frame changes",
+        : "Couldn’t save frame changes",
     });
 
     await savePromise;
@@ -425,7 +425,7 @@ export default function FrameEditPanel({
       error: (error) =>
         isUnauthorizedError(error) ?
           "Your session has expired. Please log in again."
-        : "Failed to delete frame",
+        : "Couldn’t delete frame",
     });
     await deletePromise;
 
@@ -441,7 +441,7 @@ export default function FrameEditPanel({
       error: (error) =>
         isUnauthorizedError(error) ?
           "Your session has expired. Please log in again."
-        : "Failed to create frame",
+        : "Couldn’t create frame",
     });
     await createPromise;
     closeEditor();

@@ -286,7 +286,7 @@ function CanvasSettingsForm({
           {
             loading: "Creating canvas…",
             success: "Canvas created!",
-            error: "Failed to create canvas. Please try again.",
+            error: "Couldn’t create canvas. Please try again.",
           },
         )
         .unwrap();
@@ -302,7 +302,7 @@ function CanvasSettingsForm({
       toast.promise(updatePromise, {
         loading: "Saving changes…",
         success: "Changes saved!",
-        error: "Failed to save changes. Please try again.",
+        error: "Couldn’t save changes. Please try again.",
       });
 
       await updatePromise;
@@ -419,9 +419,10 @@ function AdminCanvasTab() {
     canvasId: CanvasInfo["id"];
     values: CanvasSettingsFormValues;
   } | null>(null);
-  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
-  const createCanvas = useCreateCanvas();
-  const isSaving = createCanvas.isPending || updateCanvasInfo.isPending;
+  const updateCanvasInfoMutation = useUpdateCanvasInfo(activeCanvas.id);
+  const createCanvasMutation = useCreateCanvas();
+  const isSaving =
+    createCanvasMutation.isPending || updateCanvasInfoMutation.isPending;
 
   const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
 
@@ -540,7 +541,7 @@ function AdminCanvasTab() {
             </CanvasList>
             <CanvasSettingsForm
               activeCanvas={activeCanvas}
-              createCanvas={createCanvas}
+              createCanvas={createCanvasMutation}
               formValues={formValues}
               isDirty={isDirty}
               mode={mode}
@@ -554,15 +555,15 @@ function AdminCanvasTab() {
                 });
                 await setCanvas(canvasId, false);
               }}
-              updateCanvasInfo={updateCanvasInfo}
+              updateCanvasInfo={updateCanvasInfoMutation}
             />
             {mode !== "create" && (
               <StyledButton
                 onClick={async () => {
                   toast.promise(clearCanvasCache.mutateAsync(), {
                     loading: "Clearing canvas cache…",
-                    success: "Canvas cache cleared!",
-                    error: "Failed to clear canvas cache. Please try again.",
+                    success: "Canvas cache cleared",
+                    error: "Couldn’t clear canvas cache. Please try again.",
                   });
                 }}
               >

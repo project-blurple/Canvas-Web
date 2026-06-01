@@ -59,7 +59,7 @@ export default function RecheckMembershipsButton() {
           toast.promise(mutateAsync(), {
             loading: "Rechecking servers…",
             success: "Server list updated",
-            error: errorText ?? "Failed to reach Discord. Please try again.",
+            error: errorText,
           });
         }}
         disabled={isPending}
@@ -91,7 +91,7 @@ export function RecheckMembershipsLink({
         toast.promise(mutateAsync(), {
           loading: "Rechecking servers…",
           success: "Server list updated",
-          error: errorText ?? "Failed to reach Discord. Please try again.",
+          error: errorText,
         });
       }}
       disabled={isPending}

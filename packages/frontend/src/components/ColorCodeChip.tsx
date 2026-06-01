@@ -53,7 +53,7 @@ export default function ColorCodeChip({
     void (await navigator.clipboard.writeText(colorCode));
     toast.success(
       <>
-        <code>{colorCode}</code> copied to clipboard
+        Copied <code>{colorCode}</code>
       </>,
     );
   };
