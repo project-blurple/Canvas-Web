@@ -4,7 +4,7 @@ import type { CSSProperties } from "react";
 import { rgbaToCssColor } from "@/util/color";
 import VisuallyHidden from "../VisuallyHidden";
 
-const SwatchBase = styled("div")`
+export const SwatchBase = styled("div")`
   aspect-ratio: 1;
   background-color: var(--swatch-color);
   border-radius: 0.5rem;

@@ -13,6 +13,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
+import { EyedropperSwatch } from "@/components/swatch/InteractiveSwatch";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -248,7 +249,11 @@ export default function PlacePixelTab({
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette colors={mainColors} name="Main colors" />
+            <NamedPalette
+              colors={mainColors}
+              name="Main colors"
+              includeEyedropper
+            />
             <NamedPalette
               colors={partnerColors}
               isColorDisabled={isColorDisabled}
@@ -296,10 +301,17 @@ interface NamedPaletteProps {
   colors: Palette | undefined;
   isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
+  includeEyedropper?: boolean;
 }
 
-function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
+function NamedPalette({
+  colors,
+  isColorDisabled,
+  name,
+  includeEyedropper = false,
+}: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
+  const { coords } = useCanvasViewContext();
   const playSound = usePlaySound("pick_color");
 
   if (colors?.length === 0) return null;
@@ -315,19 +327,24 @@ function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
             <SwatchSkeleton key={i} variant="rectangular" />
           ))
-        : colors.map((color) => (
-            <InteractiveSwatch
-              aria-selected={color === selectedColor}
-              key={color.code}
-              locked={isColorDisabled?.(color)}
-              onClick={() => {
-                playSound();
-                setColor(color);
-              }}
-              paletteColor={color}
-              role="option"
-            />
-          ))
+        : <>
+            {colors.map((color) => (
+              <InteractiveSwatch
+                aria-selected={color === selectedColor}
+                key={color.code}
+                locked={isColorDisabled?.(color)}
+                onClick={() => {
+                  playSound();
+                  setColor(color);
+                }}
+                paletteColor={color}
+                role="option"
+              />
+            ))}
+            {includeEyedropper && (
+              <EyedropperSwatch aria-disabled={coords === null} />
+            )}
+          </>
         }
       </Fieldset>
     </>
