@@ -129,6 +129,8 @@ export default function PlacePixelTab({
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playPixelPlacementSound = usePlaySound("place_pixel");
+  const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
+  const { setColor } = useSelectedColorContext();
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -244,6 +246,15 @@ export default function PlacePixelTab({
     setCoords(null);
   };
 
+  const selectedPixelColor =
+    palette?.find(
+      (color) =>
+        color.rgba[0] === selectedPixelColorRgb?.[0] &&
+        color.rgba[1] === selectedPixelColorRgb?.[1] &&
+        color.rgba[2] === selectedPixelColorRgb?.[2] &&
+        color.rgba[3] === selectedPixelColorRgb?.[3],
+    ) ?? null;
+
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       <Form onSubmit={onSubmit}>
@@ -252,7 +263,7 @@ export default function PlacePixelTab({
             <NamedPalette
               colors={mainColors}
               name="Main colors"
-              includeEyedropper
+              onEyedropperSelect={() => setColor(selectedPixelColor)}
             />
             <NamedPalette
               colors={partnerColors}
@@ -301,14 +312,14 @@ interface NamedPaletteProps {
   colors: Palette | undefined;
   isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
-  includeEyedropper?: boolean;
+  onEyedropperSelect?: () => void;
 }
 
 function NamedPalette({
   colors,
   isColorDisabled,
   name,
-  includeEyedropper = false,
+  onEyedropperSelect,
 }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
   const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
@@ -316,15 +327,6 @@ function NamedPalette({
 
   if (colors?.length === 0) return null;
   const isLoading = colors === undefined;
-
-  const selectedPixelColor =
-    colors?.find(
-      (color) =>
-        color.rgba[0] === selectedPixelColorRgb?.[0] &&
-        color.rgba[1] === selectedPixelColorRgb?.[1] &&
-        color.rgba[2] === selectedPixelColorRgb?.[2] &&
-        color.rgba[3] === selectedPixelColorRgb?.[3],
-    ) ?? null;
 
   return (
     <>
@@ -351,13 +353,13 @@ function NamedPalette({
                 role="option"
               />
             ))}
-            {includeEyedropper && (
+            {onEyedropperSelect && (
               <EyedropperSwatch
                 aria-disabled={selectedPixelColorRgb === null}
                 swatchColor={selectedPixelColorRgb}
                 onClick={() => {
                   playSound();
-                  setColor(selectedPixelColor);
+                  onEyedropperSelect();
                 }}
               />
             )}
