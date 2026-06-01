@@ -1,4 +1,3 @@
-import type { PixelColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { LockKeyhole as LockIcon, Pipette } from "lucide-react";
 import { PrimitiveButton } from "../button";
