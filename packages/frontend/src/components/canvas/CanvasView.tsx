@@ -206,7 +206,7 @@ const CanvasOptionsButtonColumn = styled("div", {
   }
 `;
 
-const CanvasOptionButton = styled(Button)`
+const StyledCanvasOptionButton = styled(Button)`
   border-color: transparent;
   border-radius: 0.5rem;
   color: white;
@@ -221,6 +221,24 @@ const CanvasOptionButton = styled(Button)`
     }
   }
 `;
+
+function CanvasOptionButton({
+  children,
+  ...props
+}: Omit<
+  React.ComponentProps<typeof StyledCanvasOptionButton>,
+  "onPointerDown" | "type"
+>) {
+  return (
+    <StyledCanvasOptionButton
+      onPointerDown={(event) => event.stopPropagation()}
+      type="button"
+      {...props}
+    >
+      {children}
+    </StyledCanvasOptionButton>
+  );
+}
 
 const FullscreenPanelOverlay = styled("div")`
   box-sizing: border-box;
@@ -1249,12 +1267,12 @@ export default function CanvasView({
       >
         {canUseFullscreen && (
           <CanvasOptionButton
-            aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
             aria-pressed={isFullscreen}
             onClick={toggleFullscreen}
-            onPointerDown={(event) => event.stopPropagation()}
-            type="button"
           >
+            <VisuallyHidden>
+              {isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            </VisuallyHidden>
             {isFullscreen ?
               <Minimize2 />
             : <Maximize2 />}
@@ -1263,8 +1281,7 @@ export default function CanvasView({
         {canUseFullscreen && isFullscreen && (
           <CanvasOptionButton
             onClick={toggleFullscreenPanel}
-            onPointerDown={(event) => event.stopPropagation()}
-            type="button"
+            aria-pressed={isFullscreenPanelVisible}
           >
             <VisuallyHidden>
               {isFullscreenPanelVisible ?
