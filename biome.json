@@ -6,6 +6,7 @@
   "linter": {
     "rules": {
       "style": {
+        "useConsistentTypeDefinitions": "error",
         "useImportType": "error"
       },
       "suspicious": {

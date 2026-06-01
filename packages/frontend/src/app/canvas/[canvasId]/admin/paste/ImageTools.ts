@@ -1,12 +1,12 @@
 import type { Palette, PixelColor } from "@blurple-canvas-web/types";
 
-export type UploadedImage = {
+export interface UploadedImage {
   file: File;
   src: string;
   width: number;
   height: number;
   data: ImageRawDataEntry[];
-};
+}
 
 export function getImageDimensions(src: string) {
   return new Promise<{ width: number; height: number }>((resolve, reject) => {
