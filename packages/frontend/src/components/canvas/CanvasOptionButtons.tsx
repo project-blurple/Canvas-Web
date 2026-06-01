@@ -32,7 +32,11 @@ const CanvasOptionsButtonColumn = styled("div", {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  opacity: 0.55;
   position: absolute;
+  transition-duration: var(--transition-duration-slow);
+  transition-property: opacity;
+  transition-timing-function: ease;
   z-index: 3;
 
   > *:first-child {
@@ -40,6 +44,14 @@ const CanvasOptionsButtonColumn = styled("div", {
     #${CANVAS_WRAPPER_CLASS_NAME}:not(:-webkit-full-screen) & {
       border-radius: 0.5rem 1rem 0.5rem 0.5rem;
     }
+  }
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  ${({ theme }) => theme.breakpoints.down("md")} {
+    inset-block-start: 3.5rem;
   }
 `;
 
