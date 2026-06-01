@@ -72,7 +72,7 @@ const StyledMenuItem = styled(MenuItem)`
 `;
 
 interface LinkInfo {
-  enabled?: boolean;
+  permitted?: boolean;
   href: string;
   label: React.ReactNode;
 }
@@ -89,17 +89,17 @@ export default function Nav() {
 
   const links: LinkInfo[] = [
     { href: `/canvas/${canvasId}/leaderboard`, label: "Leaderboard" },
-    { href: `/canvas/${canvasId}/admin`, label: "Admin", enabled: isAdmin },
+    { href: `/canvas/${canvasId}/admin`, label: "Admin", permitted: isAdmin },
     {
       href: `/canvas/${canvasId}/moderation`,
       label: "Moderation",
-      enabled: isModerator,
+      permitted: isModerator,
     },
     { href: "/settings", label: "Settings" },
     user ?
       { href: `/canvas/${canvasId}/@me`, label: user.username }
     : { href: "/signin", label: "Sign in" },
-  ].filter(({ enabled = true }) => enabled);
+  ].filter(({ permitted = true }) => permitted);
 
   const handleOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorElement(event.currentTarget);
