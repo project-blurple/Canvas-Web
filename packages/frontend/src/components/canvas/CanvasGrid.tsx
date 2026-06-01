@@ -1,14 +1,14 @@
 import { styled } from "@mui/material";
 
 const Grid = styled("svg")`
+  color: var(--discord-blurple);
   height: 100%;
+  inset: 0;
+  mix-blend-mode: difference;
   pointer-events: none;
   position: absolute;
   width: 100%;
-  inset: 0;
   z-index: 0;
-  mix-blend-mode: difference;
-  color: white;
 `;
 
 interface CanvasGridProps extends React.SVGProps<SVGSVGElement> {
