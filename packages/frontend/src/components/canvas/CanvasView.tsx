@@ -494,6 +494,7 @@ export default function CanvasView({
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGridVisible, setIsGridVisible] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -1156,10 +1157,6 @@ export default function CanvasView({
 
   const reticleOffset = calculateReticleOffset(coords);
 
-  const toggleFullscreenPanel = useCallback(() => {
-    setFullscreenPanelVisible((visible) => !visible);
-  }, [setFullscreenPanelVisible]);
-
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
@@ -1191,7 +1188,15 @@ export default function CanvasView({
         }}
         panel={{
           isActive: isFullscreenPanelVisible,
-          toggle: toggleFullscreenPanel,
+          toggle: useCallback(() => {
+            setFullscreenPanelVisible((visible) => !visible);
+          }, [setFullscreenPanelVisible]),
+        }}
+        grid={{
+          isActive: isGridVisible,
+          toggle: () => {
+            setIsGridVisible((visible) => !visible);
+          },
         }}
       />
 
@@ -1251,6 +1256,7 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
+
         {showSelectedBounds && (
           <SelectedBoundsOverlay
             canvasWidth={canvas.width}
@@ -1265,6 +1271,7 @@ export default function CanvasView({
             zoom={zoom}
           />
         )}
+
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1283,7 +1290,12 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
-        <CanvasGrid zoom={zoom} />
+
+        <CanvasGrid
+          zoom={zoom}
+          style={{ display: isGridVisible ? undefined : "none" }}
+        />
+
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}

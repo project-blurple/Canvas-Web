@@ -1,5 +1,7 @@
 import { css, styled } from "@mui/material";
 import {
+  Grid2x2,
+  Grid2x2X,
   Maximize2,
   Minimize2,
   PanelRightClose,
@@ -34,18 +36,9 @@ const CanvasOptionsButtonColumn = styled("div", {
   z-index: 3;
 
   > *:first-child {
-    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-
-    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-      border-radius: 0.5rem;
-    }
-  }
-
-  > *:last-child {
-    #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-    #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-      border-radius: 0.5rem 0.5rem 0.5rem 1rem;
+    #${CANVAS_WRAPPER_CLASS_NAME}:not(:fullscreen) &,
+    #${CANVAS_WRAPPER_CLASS_NAME}:not(:-webkit-full-screen) & {
+      border-radius: 0.5rem 1rem 0.5rem 0.5rem;
     }
   }
 `;
@@ -94,11 +87,16 @@ interface CanvasOptionButtonsProps {
     isActive: boolean;
     toggle: () => void;
   };
+  grid: {
+    isActive: boolean;
+    toggle: () => void;
+  };
 }
 
 export default function CanvasOptionButtons({
   fullscreen,
   panel,
+  grid,
 }: CanvasOptionButtonsProps) {
   return (
     <CanvasOptionsButtonColumn
@@ -118,6 +116,7 @@ export default function CanvasOptionButtons({
           : <Maximize2 />}
         </CanvasOptionButton>
       )}
+
       {fullscreen.isAvailable && fullscreen.isActive && (
         <CanvasOptionButton
           onClick={panel.toggle}
@@ -131,6 +130,15 @@ export default function CanvasOptionButtons({
           : <PanelRightOpen />}
         </CanvasOptionButton>
       )}
+
+      <CanvasOptionButton aria-pressed={grid.isActive} onClick={grid.toggle}>
+        <VisuallyHidden>
+          {grid.isActive ? "Hide grid" : "Show grid"}
+        </VisuallyHidden>
+        {grid.isActive ?
+          <Grid2x2X />
+        : <Grid2x2 />}
+      </CanvasOptionButton>
     </CanvasOptionsButtonColumn>
   );
 }
