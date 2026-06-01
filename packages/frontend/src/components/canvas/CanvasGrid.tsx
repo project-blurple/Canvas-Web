@@ -6,7 +6,9 @@ const Grid = styled("svg")`
   position: absolute;
   width: 100%;
   inset: 0;
-  z-index: 1;
+  z-index: 0;
+  mix-blend-mode: difference;
+  color: white;
 `;
 
 export function CanvasGrid() {
@@ -17,8 +19,8 @@ export function CanvasGrid() {
           <path
             d="M 0 0 L 1 0 L 1 1 L 0 1 Z"
             fill="none"
-            stroke="rgba(255,255,0,1)"
-            strokeWidth="0.02"
+            stroke="currentColor"
+            strokeWidth="0.01"
           />
         </pattern>
       </defs>
