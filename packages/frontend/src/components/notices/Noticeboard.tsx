@@ -2,7 +2,7 @@
 
 import { IconButton, styled } from "@mui/material";
 import { Megaphone } from "lucide-react";
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import VisuallyHidden from "../VisuallyHidden";
 import NoticeList from "./NoticeList";
@@ -59,6 +59,9 @@ const Heading = styled("h2")`
 `;
 
 export default function Noticeboard() {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
+
   const buttonId = useId();
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dialogId = useId();
@@ -70,15 +73,16 @@ export default function Noticeboard() {
         <Megaphone />
         <VisuallyHidden>Notices</VisuallyHidden>
       </StyledIconButton>
-      {createPortal(
-        <Dialog closedby="any" id={dialogId} popover="" ref={dialogRef}>
-          <Header>
-            <Heading>Notices</Heading>
-          </Header>
-          <NoticeList />
-        </Dialog>,
-        document.body,
-      )}
+      {isMounted &&
+        createPortal(
+          <Dialog closedby="any" id={dialogId} popover="" ref={dialogRef}>
+            <Header>
+              <Heading>Notices</Heading>
+            </Header>
+            <NoticeList />
+          </Dialog>,
+          document.body,
+        )}
     </>
   );
 }
