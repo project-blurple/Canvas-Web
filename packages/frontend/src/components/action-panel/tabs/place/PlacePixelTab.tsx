@@ -311,11 +311,21 @@ function NamedPalette({
   includeEyedropper = false,
 }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
-  const { coords } = useCanvasViewContext();
+  const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
   const playSound = usePlaySound("pick_color");
 
   if (colors?.length === 0) return null;
   const isLoading = colors === undefined;
+
+  const selectedPixelColor =
+    colors?.find(
+      (color) =>
+        color.rgba[0] === selectedPixelColorRgb?.[0] &&
+        color.rgba[1] === selectedPixelColorRgb?.[1] &&
+        color.rgba[2] === selectedPixelColorRgb?.[2] &&
+        color.rgba[3] === selectedPixelColorRgb?.[3],
+    ) ?? null;
+
   return (
     <>
       <ActionPanelPrimitives.SectionHeading>
@@ -342,7 +352,14 @@ function NamedPalette({
               />
             ))}
             {includeEyedropper && (
-              <EyedropperSwatch aria-disabled={coords === null} />
+              <EyedropperSwatch
+                aria-disabled={selectedPixelColorRgb === null}
+                swatchColor={selectedPixelColorRgb}
+                onClick={() => {
+                  playSound();
+                  setColor(selectedPixelColor);
+                }}
+              />
             )}
           </>
         }

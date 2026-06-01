@@ -1,5 +1,8 @@
+import type { PixelColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { LockKeyhole as LockIcon, Pipette } from "lucide-react";
+import type { CSSProperties } from "react";
+import { rgbaToCssColor } from "@/util/color";
 import { PrimitiveButton } from "../button";
 import VisuallyHidden from "../VisuallyHidden";
 import { StaticSwatch, SwatchBase } from "./StaticSwatch";
@@ -109,11 +112,12 @@ export function InteractiveSwatch({
 interface EyedropperSwatchProps extends React.ComponentPropsWithRef<
   typeof SwatchBase
 > {
-  locked?: boolean;
+  swatchColor: PixelColor | null;
 }
 
 export function EyedropperSwatch({
   children,
+  swatchColor,
   ...props
 }: EyedropperSwatchProps) {
   return (
@@ -123,6 +127,12 @@ export function EyedropperSwatch({
       // @ts-expect-error `styled` generic typing can’t handle `as` prop
       type="button"
       {...props}
+      style={
+        {
+          ...(props.style ?? {}),
+          "--swatch-color": rgbaToCssColor(swatchColor ?? [0, 0, 0, 0]),
+        } as CSSProperties
+      }
     >
       {children}
       <Pipette />
