@@ -1,30 +1,14 @@
 "use client";
 
 import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
-import { useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { createContext, useContext, useEffect } from "react";
 import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
-import { useSelectedColorContext } from "./SelectedColorContext";
-import { useSelectedFrameContext } from "./SelectedFrameContext";
-
-function buildSocketAuth<T extends CanvasInfo["id"]>(canvasId: T) {
-  return {
-    canvasId,
-    pixelTimestamp: new Date().toISOString(),
-  };
-}
 
 interface CanvasContextType {
   canvas: CanvasInfo;
-  setCanvas: (canvasId: CanvasInfo["id"], redirect?: boolean) => Promise<void>;
 }
 
 const CanvasContext = createContext<CanvasContextType>({
@@ -40,7 +24,6 @@ const CanvasContext = createContext<CanvasContextType>({
     allColorsGlobal: false,
     cooldownDuration: 0,
   },
-  setCanvas: async () => {},
 });
 
 interface CanvasProviderProps {
@@ -52,30 +35,24 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
+  const params = useParams();
 
-  const { setColor } = useSelectedColorContext();
-  const { setFrame } = useSelectedFrameContext();
+  const canvasId =
+    params?.canvasId ?
+      Number(decodeURIComponent(params.canvasId as string))
+    : mainCanvasInfo.id;
+
+  const { data: activeCanvas = mainCanvasInfo } = useQuery({
+    queryKey: ["canvasInfo", canvasId],
+    queryFn: () => fetchCanvasInfo(canvasId),
+    initialData: canvasId === mainCanvasInfo.id ? mainCanvasInfo : undefined,
+  });
 
   useEffect(() => {
-    socket.auth = buildSocketAuth(mainCanvasInfo.id);
-    socket.connect();
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [mainCanvasInfo.id]);
-
-  useEffect(() => {
-    const onCanvasUpdate = (canvas: CanvasInfo) => {
+    const onCanvasUpdate = (_canvas: CanvasInfo) => {
       void queryClient.invalidateQueries({ queryKey: ["canvas"] });
       void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
-
-      if (canvas.id === activeCanvas.id) {
-        setActiveCanvas(canvas);
-      }
     };
 
     socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
@@ -83,57 +60,29 @@ export const CanvasProvider = ({
     return () => {
       socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
     };
-  }, [activeCanvas.id, queryClient]);
+  }, [queryClient]);
 
-  const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
-    async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
-      const canvasInfo = await queryClient.fetchQuery({
-        queryKey: ["canvasInfo", canvasId],
-        queryFn: () => fetchCanvasInfo(canvasId),
-      });
-      setActiveCanvas(canvasInfo);
-      setColor(null);
-      setFrame(null);
+  // When we connect, we want to make sure any pixels placed since now get included in the
+  // response. This is because in the time it takes for the image to load some pixels may have
+  // already been placed.
+  useEffect(() => {
+    socket.auth = {
+      canvasId,
+      pixelTimestamp: new Date().toISOString(),
+    };
 
-      if (redirect) {
-        const url = new URL(window.location.href);
-        url.pathname =
-          canvasId === mainCanvasInfo.id ?
-            "/"
-          : `/canvas/${encodeURIComponent(canvasId)}`;
-        url.search = "";
-        router.replace(`${url.pathname}${url.search}${url.hash}`);
-      }
+    if (socket.connected) {
+      socket.disconnect();
+    }
+    socket.connect();
 
-      // When we load an image, we want to make sure any pixels placed since now get included in the
-      // response. This is because in the time it takes for the image to load some pixels may have
-      // already been placed.
-      socket.auth = buildSocketAuth(canvasId);
-
-      if (canvasId !== activeCanvas.id) {
-        if (socket.connected) {
-          socket.disconnect();
-        }
-        socket.connect();
-      }
-    },
-    [
-      activeCanvas.id,
-      mainCanvasInfo.id,
-      queryClient,
-      router,
-      setColor,
-      setFrame,
-    ],
-  );
+    return () => {
+      socket.disconnect();
+    };
+  }, [canvasId]);
 
   return (
-    <CanvasContext.Provider
-      value={{
-        canvas: activeCanvas,
-        setCanvas: setCanvasById,
-      }}
-    >
+    <CanvasContext.Provider value={{ canvas: activeCanvas }}>
       {children}
     </CanvasContext.Provider>
   );
