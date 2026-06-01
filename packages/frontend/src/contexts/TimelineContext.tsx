@@ -107,17 +107,22 @@ export const TimelineProvider = ({
       clamp((currentTimelineFrame / totalTimelineFrames) * 100, 0, 100)
     : 0;
 
-  const currentTimelineTimestamp: Date | null =
-    (
+  const currentTimelineTimestamp: Date | null = (() => {
+    if (
       snapshots &&
       totalTimelineFrames > 0 &&
       currentTimelineFrame >= 0 &&
       currentTimelineFrame < totalTimelineFrames
-    ) ?
-      (new Date(snapshots[currentTimelineFrame]?.lastIncludedHistoryAt) ??
-      new Date(snapshots[currentTimelineFrame]?.snapshotAt) ??
-      null)
-    : null;
+    ) {
+      const rawTimestamp =
+        snapshots[currentTimelineFrame]?.lastIncludedHistoryAt ??
+        snapshots[currentTimelineFrame]?.snapshotAt;
+
+      return rawTimestamp ? new Date(rawTimestamp) : null;
+    }
+
+    return null;
+  })();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset timeline state when the active canvas changes.
   useEffect(() => {
