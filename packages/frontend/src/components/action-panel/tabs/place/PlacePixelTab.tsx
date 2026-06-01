@@ -109,6 +109,33 @@ function isColorUnavailable(
   return !user || !isUserInServer(user, color.guildId);
 }
 
+function findPaletteColor(
+  palette: PaletteColor[],
+  rgba: number[] | null,
+): PaletteColor | null {
+  if (!rgba) return null;
+
+  const exact = palette.find(
+    (color) =>
+      color.rgba[0] === rgba[0] &&
+      color.rgba[1] === rgba[1] &&
+      color.rgba[2] === rgba[2] &&
+      color.rgba[3] === rgba[3],
+  );
+  if (exact) return exact;
+
+  // The renderer can be a bit annoying - colors that aren't fully opaque can end up with minor rounding differences in the OffscreenCanvas when setting the color. This means that (88, 101, 242, 127) (the blank pixel) tends to end up as (88, 100, 243, 127), so an exact match isn't always feasible.
+  return (
+    palette.find(
+      (color) =>
+        Math.abs(color.rgba[0] - rgba[0]) <= 1 &&
+        Math.abs(color.rgba[1] - rgba[1]) <= 1 &&
+        Math.abs(color.rgba[2] - rgba[2]) <= 1 &&
+        color.rgba[3] === rgba[3],
+    ) ?? null
+  );
+}
+
 interface PlacePixelTabProps extends React.ComponentPropsWithRef<
   typeof PlacePixelTabBlock
 > {
@@ -247,13 +274,7 @@ export default function PlacePixelTab({
   };
 
   const selectedPixelColor =
-    palette?.find(
-      (color) =>
-        color.rgba[0] === selectedPixelColorRgb?.[0] &&
-        color.rgba[1] === selectedPixelColorRgb?.[1] &&
-        color.rgba[2] === selectedPixelColorRgb?.[2] &&
-        color.rgba[3] === selectedPixelColorRgb?.[3],
-    ) ?? null;
+    findPaletteColor(palette ?? [], selectedPixelColorRgb) ?? null;
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
