@@ -1,4 +1,5 @@
 import { fail } from "node:assert";
+import type { PaletteColor } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
@@ -14,7 +15,7 @@ import { createDefaultAvatarUrl } from "./discordProfileService";
 import {
   getCooldown,
   placePixel,
-  restorePixelsAfterHistoryDeletion,
+  restorePixelsAfterHistoryModification,
   validateColor,
   validatePixel,
   validateUser,
@@ -23,6 +24,7 @@ import {
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
   },
 }));
 
@@ -298,6 +300,95 @@ describe("Place Pixel Tests", () => {
     expect(before.history.length + 1).toEqual(after.history.length);
   });
 
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when there is no previous cooldown", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect(failures[0].reason).toBeInstanceOf(ForbiddenError);
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should only allow one placement at a time and reject the other with a ForbiddenError when the cooldown has just expired", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    // Seed an already-expired cooldown record (in the past)
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: new Date(0) },
+    });
+
+    const historyBefore = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+
+    const results = await Promise.allSettled([
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ]);
+
+    const successes = results.filter((r) => r.status === "fulfilled");
+    const failures = results.filter((r) => r.status === "rejected");
+
+    expect(successes).toHaveLength(1);
+    expect(failures).toHaveLength(1);
+    expect((failures[0] as PromiseRejectedResult).reason).toBeInstanceOf(
+      ForbiddenError,
+    );
+
+    // Exactly one new history entry should have been written
+    const historyAfter = await prisma.history.count({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(historyAfter - historyBefore).toBe(1);
+  });
+
+  it("should allow a user with cooldown_time=null to place a pixel", async () => {
+    const canvasId = 1;
+    const color = { id: 1, rgba: [88, 101, 242, 127] } as Pick<
+      PaletteColor,
+      "id" | "rgba"
+    >;
+
+    await prisma.cooldown.create({
+      data: { canvas_id: canvasId, user_id: 1n, cooldown_time: null },
+    });
+
+    await expect(
+      placePixel(canvasId, 1n, { x: 0, y: 0 }, color),
+    ).resolves.not.toThrow();
+
+    // Cooldown should now be set to a future time (bypass is consumed by placement)
+    const cooldown = await prisma.cooldown.findFirst({
+      where: { canvas_id: canvasId, user_id: 1n },
+    });
+    expect(cooldown?.cooldown_time).not.toBeNull();
+    expect(cooldown?.cooldown_time?.getTime()).toBeGreaterThan(Date.now());
+  });
+
   it("Resolves updating cached canvas pixel", async () => {
     const canvasId = 1;
     const userId = 1n;
@@ -473,7 +564,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -496,7 +587,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore without any history entries
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -540,7 +631,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(
+    await restorePixelsAfterHistoryModification(
       1,
       coords.map(({ x, y }) => ({ x, y })),
     );
@@ -567,7 +658,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
 
     // Restore with empty list - should be a no-op
     await expect(
-      restorePixelsAfterHistoryDeletion(1, []),
+      restorePixelsAfterHistoryModification(1, []),
     ).resolves.not.toThrow();
 
     // Pixel should be unchanged
@@ -615,7 +706,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -663,7 +754,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore
-    await restorePixelsAfterHistoryDeletion(1, [{ x: 0, y: 0 }]);
+    await restorePixelsAfterHistoryModification(1, [{ x: 0, y: 0 }]);
 
     const restored = await prisma.pixel.findUnique({
       where: { canvas_id_x_y: { canvas_id: 1, x: 0, y: 0 } },
@@ -716,7 +807,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -769,7 +860,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should handle single chunk correctly
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -822,7 +913,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     }
 
     // Restore all at once - should chunk internally
-    await restorePixelsAfterHistoryDeletion(1, coords);
+    await restorePixelsAfterHistoryModification(1, coords);
 
     // Verify all were restored
     const restored = await prisma.pixel.findMany({
@@ -856,7 +947,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
     });
 
     // Restore with duplicate coordinates
-    await restorePixelsAfterHistoryDeletion(1, [
+    await restorePixelsAfterHistoryModification(1, [
       { x: 0, y: 0 },
       { x: 0, y: 0 },
       { x: 0, y: 0 },

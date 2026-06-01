@@ -1,7 +1,13 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
-import { createCanvas, editCanvas } from "@/services/canvasService";
+import { audit } from "@/services/auditLogService";
+import {
+  clearCachedCanvas,
+  createCanvas,
+  editCanvas,
+  pasteCanvasData,
+} from "@/services/canvasService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { canvasRouter } from "./canvas";
 
@@ -12,6 +18,7 @@ vi.mock("@/index", () => ({
 }));
 
 vi.mock("@/services/canvasService", () => ({
+  clearCachedCanvas: vi.fn(),
   createCanvas: vi.fn(),
   editCanvas: vi.fn(),
   getCanvases: vi.fn(),
@@ -20,7 +27,12 @@ vi.mock("@/services/canvasService", () => ({
   getCanvasPng: vi.fn(),
   getCurrentCanvas: vi.fn(),
   getCurrentCanvasInfo: vi.fn(),
+  pasteCanvasData: vi.fn(),
   unlockedCanvasToPng: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -71,7 +83,7 @@ describe("Canvas admin route tests", () => {
         height: 16,
         startCoordinates: [1, 1],
         allColorsGlobal: true,
-        cooldownLength: 30,
+        cooldownDuration: 30,
       });
 
     expect(response.status).toBe(201);
@@ -92,8 +104,14 @@ describe("Canvas admin route tests", () => {
       height: 16,
       startCoordinates: [1, 1],
       allColorsGlobal: true,
-      cooldownLength: 30,
+      cooldownDuration: 30,
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "canvas.create",
+      expect.objectContaining({ resourceId: 9 }),
+    );
   });
 
   it("edits a canvas", async () => {
@@ -114,7 +132,7 @@ describe("Canvas admin route tests", () => {
     const response = await request(app).put("/api/v1/canvas/7").send({
       name: "Updated Canvas",
       allColorsGlobal: false,
-      cooldownLength: 45,
+      cooldownDuration: 45,
       isLocked: true,
     });
 
@@ -133,9 +151,68 @@ describe("Canvas admin route tests", () => {
     expect(vi.mocked(editCanvas)).toHaveBeenCalledWith({
       canvasId: 7,
       name: "Updated Canvas",
-      cooldownLength: 45,
+      cooldownDuration: 45,
       isLocked: true,
       allColorsGlobal: false,
     });
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "canvas.update",
+      expect.objectContaining({ resourceId: 7 }),
+    );
+  });
+
+  it("clears cached canvas by ID", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
+    const app = createApp();
+
+    const response = await request(app).delete("/api/v1/canvas/7/cache");
+
+    expect(response.status).toBe(204);
+    expect(response.body).toStrictEqual({});
+    expect(vi.mocked(clearCachedCanvas)).toHaveBeenCalledWith(7);
+  });
+
+  it("pastes canvas data and audits the action", async () => {
+    vi.mocked(isCanvasAdmin).mockResolvedValueOnce(true);
+    const app = createApp();
+    vi.mocked(pasteCanvasData).mockResolvedValueOnce(undefined);
+
+    const response = await request(app)
+      .post("/api/v1/canvas/9/paste")
+      .send({
+        authorId: "123456789012345678",
+        data: [
+          [0, 0, 1],
+          [1, 1, 2],
+        ],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toStrictEqual({
+      message: "Canvas data pasted",
+      count: 2,
+    });
+    expect(vi.mocked(pasteCanvasData)).toHaveBeenCalledWith(
+      9,
+      123456789012345678n,
+      [
+        [0, 0, 1],
+        [1, 1, 2],
+      ],
+    );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "canvas.paste",
+      expect.objectContaining({
+        resourceId: 9,
+        metadata: expect.objectContaining({
+          authorId: "123456789012345678",
+          pixelCount: 2,
+        }),
+      }),
+    );
   });
 });

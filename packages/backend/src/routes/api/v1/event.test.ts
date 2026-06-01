@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import { isCanvasAdmin } from "@/services/discordGuildService";
 import { createEvent, editEvent } from "@/services/eventService";
 import { eventRouter } from "./event";
@@ -10,6 +11,10 @@ vi.mock("@/services/eventService", () => ({
   editEvent: vi.fn(),
   getCurrentEvent: vi.fn(),
   getEventById: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -43,6 +48,7 @@ describe("Event admin route tests", () => {
     vi.mocked(createEvent).mockResolvedValueOnce({
       id: 42,
       name: "Spring Event",
+      isCurrentEvent: false,
     });
 
     const response = await request(app).post("/api/v1/event/").send({
@@ -54,8 +60,15 @@ describe("Event admin route tests", () => {
     expect(response.body).toStrictEqual({
       id: 42,
       name: "Spring Event",
+      isCurrentEvent: false,
     });
     expect(vi.mocked(createEvent)).toHaveBeenCalledWith("Spring Event", 42);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "event.create",
+      expect.objectContaining({ resourceId: 42 }),
+    );
   });
 
   it("edits an event", async () => {
@@ -64,6 +77,7 @@ describe("Event admin route tests", () => {
     vi.mocked(editEvent).mockResolvedValueOnce({
       id: 42,
       name: "Updated Event",
+      isCurrentEvent: false,
     });
 
     const response = await request(app).put("/api/v1/event/42").send({
@@ -74,7 +88,14 @@ describe("Event admin route tests", () => {
     expect(response.body).toStrictEqual({
       id: 42,
       name: "Updated Event",
+      isCurrentEvent: false,
     });
     expect(vi.mocked(editEvent)).toHaveBeenCalledWith(42, "Updated Event");
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "event.update",
+      expect.objectContaining({ resourceId: 42 }),
+    );
   });
 });

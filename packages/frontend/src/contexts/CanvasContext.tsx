@@ -1,13 +1,26 @@
 "use client";
 
-import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
-import axios from "axios";
+import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { createContext, useCallback, useContext, useState } from "react";
-import config from "@/config/clientConfig";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
 import { useSelectedColorContext } from "./SelectedColorContext";
 import { useSelectedFrameContext } from "./SelectedFrameContext";
+
+function buildSocketAuth<T extends CanvasInfo["id"]>(canvasId: T) {
+  return {
+    canvasId,
+    pixelTimestamp: new Date().toISOString(),
+  };
+}
 
 interface CanvasContextType {
   canvas: CanvasInfo;
@@ -25,6 +38,7 @@ const CanvasContext = createContext<CanvasContextType>({
     eventId: null,
     webPlacingEnabled: false,
     allColorsGlobal: false,
+    cooldownDuration: 0,
   },
   setCanvas: async () => {},
 });
@@ -39,17 +53,45 @@ export const CanvasProvider = ({
   mainCanvasInfo,
 }: CanvasProviderProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [activeCanvas, setActiveCanvas] = useState(mainCanvasInfo);
 
   const { setColor } = useSelectedColorContext();
   const { setFrame } = useSelectedFrameContext();
 
+  useEffect(() => {
+    socket.auth = buildSocketAuth(mainCanvasInfo.id);
+    socket.connect();
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [mainCanvasInfo.id]);
+
+  useEffect(() => {
+    const onCanvasUpdate = (canvas: CanvasInfo) => {
+      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
+      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
+
+      if (canvas.id === activeCanvas.id) {
+        setActiveCanvas(canvas);
+      }
+    };
+
+    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
+
+    return () => {
+      socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
+    };
+  }, [activeCanvas.id, queryClient]);
+
   const setCanvasById = useCallback<CanvasContextType["setCanvas"]>(
     async (canvasId: CanvasInfo["id"], redirect: boolean = true) => {
-      const response = await axios.get<CanvasInfoRequest.ResBody>(
-        `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/info`,
-      );
-      setActiveCanvas(response.data);
+      const canvasInfo = await queryClient.fetchQuery({
+        queryKey: ["canvasInfo", canvasId],
+        queryFn: () => fetchCanvasInfo(canvasId),
+      });
+      setActiveCanvas(canvasInfo);
       setColor(null);
       setFrame(null);
 
@@ -66,12 +108,23 @@ export const CanvasProvider = ({
       // When we load an image, we want to make sure any pixels placed since now get included in the
       // response. This is because in the time it takes for the image to load some pixels may have
       // already been placed.
-      socket.auth = {
-        canvasId,
-        pixelTimestamp: new Date().toISOString(),
-      };
+      socket.auth = buildSocketAuth(canvasId);
+
+      if (canvasId !== activeCanvas.id) {
+        if (socket.connected) {
+          socket.disconnect();
+        }
+        socket.connect();
+      }
     },
-    [router, setColor, setFrame, mainCanvasInfo.id],
+    [
+      activeCanvas.id,
+      mainCanvasInfo.id,
+      queryClient,
+      router,
+      setColor,
+      setFrame,
+    ],
   );
 
   return (

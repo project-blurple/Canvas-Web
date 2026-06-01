@@ -1,18 +1,20 @@
+import {
+  CanvasIdParamModel,
+  CreateFrameBodyModel,
+  ExportFrameParamModel,
+  FrameDataParamModel,
+  FrameGuildIdsQueryModel,
+  FrameIdParamModel,
+  UserCanvasParamModel,
+} from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
 import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
-import { CanvasIdParamModel } from "@/models/canvas.models";
-import {
-  CreateFrameBodyModel,
-  FrameDataParamModel,
-  FrameGuildIdsQueryModel,
-  FrameIdParamModel,
-} from "@/models/frame.models";
-import { UserCanvasParamModel } from "@/models/pixel.models";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
+import { exportFrameAsStream } from "@/services/exportService";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -25,6 +27,40 @@ import {
 import { normalizeBounds } from "@/utils";
 
 export const frameRouter = typedRouter(Router());
+
+frameRouter.get(
+  "/:frameId@:scale.png",
+  validate({ params: ExportFrameParamModel }),
+  async (req, res) => {
+    const scale = req.params.scale;
+
+    const stream = await exportFrameAsStream({
+      frameId: req.params.frameId,
+      scale,
+    });
+
+    stream.on("error", (err) => {
+      console.error("Error streaming frame PNG:", err);
+      if (res.headersSent) {
+        res.destroy(err);
+      } else {
+        res.sendStatus(500);
+      }
+    });
+    stream.pipe(
+      res
+        .status(200)
+        .type("png")
+        .setHeader("Cache-Control", ["no-cache", "no-store"])
+        // Needed to force Safari to not cache the image
+        .setHeader("Vary", "*")
+        .setHeader(
+          "Content-Disposition",
+          `inline; filename="frame-${req.params.frameId}.png"`,
+        ),
+    );
+  },
+);
 
 frameRouter.get(
   "/:frameId",
@@ -124,12 +160,11 @@ frameRouter.post(
   async (req, res) => {
     assertLoggedIn(req);
 
-    const { canvasId, ownerId, isGuildOwned, name } = req.body;
+    const { canvasId, owner, name } = req.body;
 
     await assertMaxOwnerFramesNotExceeded({
       canvasId,
-      ownerId,
-      isGuildOwned,
+      owner,
     });
 
     const { x0, y0, x1, y1 } = normalizeBounds(req.body);
@@ -142,8 +177,7 @@ frameRouter.post(
           accessToken,
           canvasId,
           name,
-          ownerId,
-          isGuildOwned,
+          owner,
           x0,
           y0,
           x1,

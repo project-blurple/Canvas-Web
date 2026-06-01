@@ -4,7 +4,7 @@ import type {
   Point,
 } from "@blurple-canvas-web/types";
 
-import { type color, prisma } from "@/client";
+import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -243,40 +243,21 @@ export async function placePixel(
   color: Pick<PaletteColor, "id" | "rgba">,
 ) {
   const placementTime = new Date();
-  let { currentCooldown, futureCooldown } = await getCooldown(
-    canvasId,
-    userId,
-    placementTime,
-  );
+  const { futureCooldown } = await getCooldown(canvasId, userId, placementTime);
 
   await prisma.$transaction(async (tx) => {
     // only update the cooldown table if the canvas has a cooldown
     if (futureCooldown) {
-      // create the cooldown if it doesn't exist already
-      if (!currentCooldown) {
-        const cooldown = await tx.cooldown.create({
-          data: {
-            user_id: userId,
-            canvas_id: canvasId,
-            cooldown_time: futureCooldown,
-          },
-        });
-        currentCooldown = cooldown.cooldown_time;
-      }
-      // Perform an update with an attempt at an optimistic query
-      const updateCooldown = await tx.cooldown.update({
-        where: {
-          user_id_canvas_id: {
-            user_id: userId,
-            canvas_id: canvasId,
-          },
-          cooldown_time: currentCooldown,
-        },
-        data: {
-          cooldown_time: futureCooldown,
-        },
-      });
-      if (!updateCooldown) {
+      const rows = await tx.$queryRaw<[{ user_id: bigint }?]>`
+        INSERT INTO cooldown (user_id, canvas_id, cooldown_time)
+        VALUES (${userId}::bigint, ${canvasId}::integer, ${futureCooldown}::timestamptz)
+        ON CONFLICT (user_id, canvas_id) DO UPDATE
+          SET cooldown_time = EXCLUDED.cooldown_time
+          WHERE cooldown.cooldown_time IS NULL
+             OR cooldown.cooldown_time <= ${placementTime}::timestamptz
+        RETURNING user_id
+      `;
+      if (rows.length === 0) {
         throw new ForbiddenError("Pixel placement is on cooldown");
       }
     }
@@ -323,7 +304,7 @@ export async function placePixel(
 const COORDINATE_CHUNK_SIZE = 500;
 
 /**
- * Rebuilds the current pixel state for the given coordinates after history entries are removed.
+ * Rebuilds the current pixel state for the given coordinates after bulk history operations.
  *
  * @param canvasId - The ID of the canvas
  * @param coordinates - The coordinates that need to be refreshed
@@ -333,7 +314,7 @@ const COORDINATE_CHUNK_SIZE = 500;
  * Coordinates are processed in chunks to avoid hitting query size limits
  * and ensure predictable performance for large erasures.
  */
-export async function restorePixelsAfterHistoryDeletion(
+export async function restorePixelsAfterHistoryModification(
   canvasId: number,
   coordinates: Point[],
 ): Promise<void> {
@@ -432,19 +413,70 @@ export async function restorePixelsAfterHistoryDeletion(
     }
   }
 
-  // Broadcast and cache per-pixel
+  // Build bulk payload and update cache per-pixel
+  const pixels: { x: number; y: number; rgba: PixelColor }[] = [];
   for (const coordinate of uniqueCoordinates.values()) {
     const key = `${coordinate.x}:${coordinate.y}`;
     const latestEntry = latestByCoord.get(key);
     const pixelColor =
       (latestEntry?.color.rgba as PixelColor) ?? blankColor.rgba;
 
-    socketHandler.broadcastPixelPlacement(canvasId, {
-      x: coordinate.x,
-      y: coordinate.y,
-      rgba: pixelColor,
-    });
+    pixels.push({ x: coordinate.x, y: coordinate.y, rgba: pixelColor });
 
     updateCachedCanvasPixel(canvasId, coordinate, pixelColor);
   }
+
+  if (pixels.length > 0) {
+    socketHandler.broadcastPixelBulkPlacement(canvasId, { pixels });
+  }
+}
+
+export interface BulkPlaceEntry {
+  colorId: number;
+  x: number;
+  y: number;
+}
+
+export async function createBulkPlaceEntries({
+  canvasId,
+  userId,
+  guildId,
+  timestamp,
+  entries,
+}: {
+  canvasId: number;
+  userId: bigint;
+  guildId?: bigint;
+  timestamp?: Date;
+  entries: BulkPlaceEntry[];
+}) {
+  console.log(
+    `Creating ${entries.length} history entries for canvas ${canvasId}`,
+  );
+
+  const batchSize = 10_000;
+  for (let i = 0; i < entries.length; i += batchSize) {
+    const batch = entries.slice(i, i + batchSize);
+    console.log(
+      `Inserting batch ${i / batchSize + 1} (${batch.length} entries)`,
+    );
+
+    const data = batch.map(
+      (entry) =>
+        ({
+          canvas_id: canvasId,
+          user_id: userId,
+          guild_id: guildId,
+          color_id: entry.colorId,
+          x: entry.x,
+          y: entry.y,
+          timestamp: timestamp ?? new Date(),
+        }) as Prisma.historyCreateManyInput,
+    );
+    await prisma.history.createMany({
+      data,
+    });
+  }
+
+  await restorePixelsAfterHistoryModification(canvasId, entries);
 }

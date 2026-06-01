@@ -1,10 +1,12 @@
 "use client";
 
-import type {
-  CanvasInfo,
-  Frame,
-  PlacePixelSocket,
-  Point,
+import {
+  type CanvasInfo,
+  type Frame,
+  type PixelHistoryOverlayPixel,
+  type PlacePixelSocket,
+  type Point,
+  SocketEvents,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import {
@@ -14,6 +16,7 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
@@ -35,7 +38,7 @@ import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
-import CanvasAnimatedIcon from "../CanvasAnimatedIcon";
+import CanvasIcon from "../CanvasIcon";
 import VisuallyHidden from "../VisuallyHidden";
 import {
   addPoints,
@@ -481,6 +484,8 @@ interface CanvasViewProps {
     typeof ActionPanel
   >;
   canvasLabel?: string;
+  searchOverlayPixels?: PixelHistoryOverlayPixel[] | null;
+  searchOverlayVisible?: boolean;
   showInvite?: boolean;
   showReticle?: boolean;
 }
@@ -488,11 +493,13 @@ interface CanvasViewProps {
 export default function CanvasView({
   actionPanel,
   canvasLabel,
+  searchOverlayPixels = null,
+  searchOverlayVisible = false,
   showInvite = true,
   showReticle = true,
 }: CanvasViewProps) {
   const imageRef = useRef<HTMLImageElement>(null);
-  const canvasImageWrapperRef = useRef<HTMLImageElement>(null);
+  const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
   const { color } = useSelectedColorContext();
@@ -733,13 +740,40 @@ export default function CanvasView({
       console.debug("[Live Updating]: Disconnected from server");
     };
 
+    const paintPixel = (
+      ctx: CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D,
+      payload: PlacePixelSocket.Payload,
+      clearBeforePaint: boolean,
+    ) => {
+      if (payload.rgba[3] < 255) {
+        if (clearBeforePaint) {
+          ctx.clearRect(payload.x, payload.y, 1, 1);
+        } else {
+          const backgroundColor = "rgba(35, 35, 40, 1)";
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(payload.x, payload.y, 1, 1);
+        }
+      }
+
+      const [r, g, b, a] = payload.rgba;
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+      ctx.fillRect(payload.x, payload.y, 1, 1);
+    };
+
+    const refreshCanvasImage = () => {
+      clearOverlay();
+      offscreenCanvasRef.current?.convertToBlob().then((blob) => {
+        if (!imageRef.current) return;
+        const oldSrc = imageRef.current.src;
+        imageRef.current.src = URL.createObjectURL(blob);
+        URL.revokeObjectURL(oldSrc);
+      });
+      overlayCountRef.current = 0;
+    };
+
     // If the canvas is locked, we don't need to listen for updates.
     if (canvas.isLocked) {
       return;
-    }
-
-    if (!socket.connected) {
-      socket.connect();
     }
 
     const onConnect = () => {
@@ -764,26 +798,46 @@ export default function CanvasView({
       // Updates the canvas `canvas` which is used as the source of truth for the canvas
       const ctx = offscreenCanvasRef.current?.getContext("2d");
       if (!ctx) return;
-      const [r, g, b, a] = payload.rgba;
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      ctx.fillRect(payload.x, payload.y, 1, 1);
+      paintPixel(ctx, payload, true);
 
       // This method prevents the need to convert an N×M canvas to a png on every update
       // while also preventing an inordinate amount of overlaid pixels from causing lag
       if (overlayCountRef.current >= pixelOverlayThreshold) {
         // flush the overlaid pixels and update canvas image
-        clearOverlay();
-        offscreenCanvasRef.current?.convertToBlob().then((blob) => {
-          if (!imageRef.current) return;
-          const oldSrc = imageRef.current.src;
-          imageRef.current.src = URL.createObjectURL(blob);
-          URL.revokeObjectURL(oldSrc);
-        });
-        overlayCountRef.current = 0;
+        refreshCanvasImage();
       } else {
         // overlay the pixel without any changes
         overlayCountRef.current++;
         overlayPixel(payload);
+      }
+    };
+
+    const onPixelBulkPlaced = (payload: PlacePixelSocket.BulkPayload) => {
+      console.debug("[Live Updating]: Received pixel bulk update", payload);
+
+      if (payload.pixels.length === 0) return;
+
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!ctx) return;
+
+      for (const pixel of payload.pixels) {
+        paintPixel(ctx, pixel, true);
+      }
+
+      const shouldRefreshCanvasImage =
+        overlayCountRef.current + payload.pixels.length >=
+        pixelOverlayThreshold;
+
+      if (shouldRefreshCanvasImage) {
+        // When flushing to the main canvas image we should clear the mask set
+        // since the offscreen canvas now contains the authoritative pixels.
+        refreshCanvasImage();
+        return;
+      }
+
+      for (const pixel of payload.pixels) {
+        overlayCountRef.current++;
+        overlayPixel(pixel);
       }
     };
 
@@ -795,29 +849,53 @@ export default function CanvasView({
       const offscreenCanvas = new OffscreenCanvas(canvas.width, canvas.height);
       const ctx = offscreenCanvas.getContext("2d");
       if (!ctx) return;
-      const [r, g, b, a] = payload.rgba;
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${a / 255})`;
-      ctx.fillRect(payload.x, payload.y, 1, 1);
+      paintPixel(ctx, payload, false);
+
+      const key = `${payload.x}:${payload.y}`;
+
+      // If this pixel is translucent, clear any previous overlay for the same
+      // coordinate to avoid stacking translucent overlays.
+      if (payload.rgba[3] < 255) {
+        const wrapper = canvasImageWrapperRef.current;
+        if (wrapper) {
+          const children = Array.from(wrapper.children);
+          for (const child of children) {
+            if (
+              child instanceof HTMLImageElement &&
+              child.dataset.coord === key
+            ) {
+              try {
+                URL.revokeObjectURL(child.src);
+              } catch {}
+              wrapper.removeChild(child);
+            }
+          }
+        }
+      }
+
       offscreenCanvas.convertToBlob().then((blob) => {
         const pixelImage = new Image();
         pixelImage.src = URL.createObjectURL(blob);
+        pixelImage.dataset.coord = key;
         pixelImage.onload = () => {
           canvasImageWrapperRef.current?.appendChild(pixelImage);
         };
       });
     };
 
-    const pixelPlaceEvent = `place pixel ${canvas.id}`;
+    const pixelPlaceEvent = SocketEvents.placePixel(canvas.id);
+    const pixelBulkPlaceEvent = SocketEvents.placePixelBulk(canvas.id);
 
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
     socket.on(pixelPlaceEvent, onPixelPlaced);
+    socket.on(pixelBulkPlaceEvent, onPixelBulkPlaced);
 
     return () => {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
       socket.off(pixelPlaceEvent, onPixelPlaced);
-      socket.disconnect();
+      socket.off(pixelBulkPlaceEvent, onPixelBulkPlaced);
     };
   }, [canvas]);
 
@@ -828,6 +906,7 @@ export default function CanvasView({
     // canvasImageWrapper.children only gets populated per DOM update.
     // This means that if the pixels are overlaid in a for loop, `clearOverlay` doesn't run during the loop.
     // Keep this in mind when testing for performance.
+    console.debug("[Live Updating]: Clearing overlaid pixels");
     const canvasImageWrapper = canvasImageWrapperRef.current;
     if (!canvasImageWrapper) return;
     // Clears all overlaid pixels and retains the original image
@@ -1211,7 +1290,9 @@ export default function CanvasView({
         config.discordServerInvite &&
         !isFullscreen && (
           <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
-            <InviteButton>Project Blurple</InviteButton>
+            <InviteButton onPointerDown={(event) => event.stopPropagation()}>
+              Project Blurple
+            </InviteButton>
           </a>
         )
       : canvasLabel && <CanvasViewLabel>{canvasLabel}</CanvasViewLabel>}
@@ -1293,6 +1374,12 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
+        <ComplexSearchOverlay
+          canvasHeight={canvas.height}
+          canvasWidth={canvas.width}
+          pixels={searchOverlayPixels}
+          visible={searchOverlayVisible}
+        />
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay
@@ -1305,10 +1392,11 @@ export default function CanvasView({
         </FullscreenPanelOverlay>
       )}
       {isLoading && (
-        <CanvasAnimatedIcon
+        <CanvasIcon
+          loading
+          size={128}
           style={{
             color: "var(--discord-blurple)",
-            height: "100px",
             opacity: 0.8,
             position: "absolute",
           }}

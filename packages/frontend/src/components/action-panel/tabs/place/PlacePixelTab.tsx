@@ -6,14 +6,21 @@ import type {
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  useActionPanelContext,
   useAuthContext,
   useCanvasContext,
   useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
-import { usePalette, usePlayCooldownExpirySound, usePlaySound } from "@/hooks";
+import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -113,12 +120,45 @@ export default function PlacePixelTab({
   eventId,
   ...props
 }: PlacePixelTabProps) {
+  const { user } = useAuthContext();
+  const {
+    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
+  } = useCanvasContext();
+  const { cooldownEndTime, setCooldownEndTime } = useActionPanelContext();
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
-  const playCooldownExpirySound = usePlayCooldownExpirySound();
   const playPixelPlacementSound = usePlaySound("place_pixel");
-  const [cooldownSeconds, setCooldownSeconds] = useState(0);
-  const [prevTimeLeft, setPrevTimeLeft] = useState(0);
+
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (!cooldownEndTime) return () => {};
+      const id = setInterval(onStoreChange, 1000);
+      const remainingMs = Math.max(0, cooldownEndTime - Date.now());
+      /** Make sure final 1 → 0 tick isn’t missed, else ‘Place pixel’ can get stuck disabled */
+      const cooldownExpiryId = setTimeout(function declareFinalTick() {
+        onStoreChange();
+        clearInterval(cooldownExpiryId);
+      }, remainingMs);
+
+      return () => {
+        clearInterval(id);
+        clearTimeout(cooldownExpiryId);
+      };
+    },
+    [cooldownEndTime],
+  );
+  const getSnapshot = useCallback(
+    () =>
+      cooldownEndTime ?
+        Math.max(0, Math.ceil((cooldownEndTime - Date.now()) / 1000))
+      : 0,
+    [cooldownEndTime],
+  );
+  const cooldownSeconds = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getSnapshot,
+  );
 
   const { data: palette } = usePalette(eventId ?? undefined);
 
@@ -152,11 +192,6 @@ export default function PlacePixelTab({
   );
 
   const { color: selectedColor } = useSelectedColorContext();
-
-  const { user } = useAuthContext();
-  const {
-    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
-  } = useCanvasContext();
 
   const inviteSlug = selectedColor?.invite;
   const hasInvite = !!inviteSlug;
@@ -196,40 +231,17 @@ export default function PlacePixelTab({
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
-      if (cooldown) setCooldownSeconds(Math.ceil(cooldown / 1000));
+      if (cooldown) setCooldownEndTime(Date.now() + cooldown);
     },
   });
 
   const onSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    console.log(e);
     e.preventDefault();
     if (!coords || !selectedColor) return;
     playPixelPlacementSound();
     await mutateAsync();
     setCoords(null);
   };
-
-  useEffect(
-    function tickCountdown() {
-      if (cooldownSeconds > 0) {
-        const timerId = setTimeout(
-          () => setCooldownSeconds(cooldownSeconds - 1),
-          1000,
-        );
-        return () => clearTimeout(timerId);
-      }
-      setCooldownSeconds(0);
-    },
-    [cooldownSeconds],
-  );
-
-  useEffect(
-    function playJingleWhenCooldownExpires() {
-      if (prevTimeLeft > 0 && cooldownSeconds === 0) playCooldownExpirySound();
-      setPrevTimeLeft(cooldownSeconds);
-    },
-    [playCooldownExpirySound, prevTimeLeft, cooldownSeconds],
-  );
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
@@ -305,9 +317,9 @@ function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
           ))
         : colors.map((color) => (
             <InteractiveSwatch
-              aria-disabled={isColorDisabled?.(color) || undefined}
               aria-selected={color === selectedColor}
               key={color.code}
+              locked={isColorDisabled?.(color)}
               onClick={() => {
                 playSound();
                 setColor(color);

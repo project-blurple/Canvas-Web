@@ -3,7 +3,7 @@
 import { CircularProgress, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import { type ReactNode, useEffect, useState } from "react";
-import { Button } from "@/components/button";
+import { Button, PrimitiveButton } from "@/components/button";
 import { useAuthContext } from "@/contexts";
 import { useRefreshGuildMemberships } from "@/hooks";
 
@@ -21,14 +21,9 @@ const StatusText = styled("p")`
   margin: 0;
 `;
 
-const InlineTrigger = styled("button")`
-  background: none;
-  border: 0;
-  color: inherit;
+const InlineTrigger = styled(PrimitiveButton)`
   cursor: pointer;
-  font: inherit;
-  padding: 0;
-  text-decoration: underline;
+  text-decoration-line: underline;
 
   &[aria-busy="true"] {
     cursor: progress;
@@ -46,12 +41,12 @@ const SUCCESS_TEXT_RESET_MS = 5_000;
 function getErrorText(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof AxiosError && error.response?.status === 429) {
-    return "Slow down — try again in a minute.";
+    return "Slow down — try again in a minute";
   }
   return "Couldn’t reach Discord. Try again shortly.";
 }
 
-export type RecheckMembershipsController = RefreshMutation & {
+type RecheckMembershipsController = RefreshMutation & {
   showSuccess: boolean;
   errorText: string | null;
   statusText: string | null;

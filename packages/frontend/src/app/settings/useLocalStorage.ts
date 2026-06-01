@@ -27,7 +27,7 @@ interface LocalStorageValueTypes extends Satisfies<
   { [key: string]: JsonDataType }
 > {}
 
-export type LocalStorageKey = keyof LocalStorageValueTypes;
+type LocalStorageKey = keyof LocalStorageValueTypes;
 
 const defaults = {
   "audio/cooldown-jingle": true,

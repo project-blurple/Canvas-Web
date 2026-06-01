@@ -3,12 +3,12 @@ import type {
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
-  LeaderboardEntry,
+  LeaderboardEntrySchema,
   Paginated,
   UserStats,
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
-import { getCanvases } from "./canvasService";
+import { NotFoundError } from "../errors";
 import { createDefaultAvatarUrl } from "./discordProfileService";
 import { toPaletteColorSummary } from "./paletteService";
 
@@ -62,7 +62,7 @@ export async function getLeaderboard(
   canvasId: CanvasInfo["id"],
   page = 1,
   size = 10,
-): Promise<Paginated<LeaderboardEntry>> {
+): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
@@ -111,51 +111,38 @@ export async function getLeaderboard(
 export async function getCanvasStatisticsSummary(
   canvasId: CanvasInfo["id"],
 ): Promise<CanvasStatisticsSummary> {
-  const leaderboardRows = await prisma.leaderboard.findMany({
-    where: {
-      canvas_id: canvasId,
-    },
-    select: {
-      total_pixels: true,
-    },
+  const stats = await prisma.canvas_stats.findUnique({
+    where: { canvas_id: canvasId },
   });
+
+  if (!stats) {
+    throw new NotFoundError(
+      `Canvas statistics not found for canvas ${canvasId}`,
+    );
+  }
 
   return {
     canvasId,
-    totalUsersInvolved: leaderboardRows.length,
-    totalPixelsPlaced: leaderboardRows.reduce(
-      (total, row) => total + row.total_pixels,
-      0,
-    ),
+    totalUsersInvolved: stats.total_users ?? 0,
+    totalPixelsPlaced: stats.total_pixels ?? 0,
+    lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
   };
 }
 
 export async function getEventStatisticsSummary(
   eventId: BlurpleEvent["id"],
 ): Promise<EventStatisticsSummary> {
-  const canvases = await getCanvases(eventId);
-
-  const leaderboardRows = await prisma.leaderboard.findMany({
-    where: {
-      canvas_id: {
-        in: canvases.map((canvas) => canvas.id),
-      },
-    },
-    select: {
-      user_id: true,
-      total_pixels: true,
-    },
+  const stats = await prisma.event_stats.findUnique({
+    where: { event_id: eventId },
   });
+
+  if (!stats) {
+    throw new NotFoundError(`Event statistics not found for event ${eventId}`);
+  }
 
   return {
     eventId,
-    totalUsersInvolved: leaderboardRows.reduce((uniqueUsers, row) => {
-      uniqueUsers.add(row.user_id.toString());
-      return uniqueUsers;
-    }, new Set<string>()).size,
-    totalPixelsPlaced: leaderboardRows.reduce(
-      (total, row) => total + row.total_pixels,
-      0,
-    ),
+    totalUsersInvolved: stats.total_users ?? 0,
+    totalPixelsPlaced: stats.total_pixels ?? 0,
   };
 }

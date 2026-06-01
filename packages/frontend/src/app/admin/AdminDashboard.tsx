@@ -12,7 +12,7 @@ const Wrapper = styled("div")`
   flex-direction: column;
   gap: calc(2 * var(--layout-padding-y));
   padding-block: 4rem;
-  padding-inline: var(--layout-padding-x);
+  padding-inline: 0;
   place-items: center;
 `;
 
@@ -28,8 +28,8 @@ const NavWrapper = styled("div")`
 const NavBar = styled("nav")`
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(5, 1fr);
-  max-width: 600px; // need mobile responsiveness
+  grid-template-columns: repeat(6, 1fr);
+  max-width: 720px; // need mobile responsiveness
   width: 100%;
 `;
 
@@ -59,6 +59,7 @@ const TAB_ROUTES = [
   { key: "canvas", label: "Canvas", path: "canvas" },
   { key: "color", label: "Color", path: "color" },
   { key: "paste", label: "Paste", path: "paste" },
+  { key: "audit", label: "Audit", path: "audit" },
 ] as const;
 
 function AdminDashboardHeader() {

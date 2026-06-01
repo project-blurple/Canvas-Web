@@ -5,7 +5,9 @@ import { UnauthorizedError } from "@/errors";
 const DISCORD_STRATEGY_NAME = "discord";
 const DISCORD_TOKEN_REFRESH_BUFFER_MS = 30_000;
 
-export interface DiscordTokenSession {
+const inFlightRefreshes = new WeakMap<object, Promise<string>>();
+
+interface DiscordTokenSession {
   discordAccessToken?: string;
   discordRefreshToken?: string;
   discordTokenExpiresAt?: number;
@@ -66,7 +68,7 @@ function requestDiscordTokenRefresh(
   });
 }
 
-export async function refreshDiscordAccessToken(
+async function doRefreshDiscordAccessToken(
   session: DiscordTokenSession,
 ): Promise<string> {
   if (!session.discordRefreshToken) {
@@ -90,6 +92,22 @@ export async function refreshDiscordAccessToken(
   }
 
   return refreshedToken.accessToken;
+}
+
+export function refreshDiscordAccessToken(
+  session: DiscordTokenSession,
+): Promise<string> {
+  const existing = inFlightRefreshes.get(session);
+  if (existing) {
+    return existing;
+  }
+
+  const promise = doRefreshDiscordAccessToken(session).finally(() => {
+    inFlightRefreshes.delete(session);
+  });
+
+  inFlightRefreshes.set(session, promise);
+  return promise;
 }
 
 export async function getDiscordAccessToken(

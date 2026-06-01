@@ -1,12 +1,13 @@
-import { Router } from "express";
-import { requireCanvasAdmin } from "@/middleware/canvasAuth";
-import { typedRouter } from "@/middleware/typedRouter";
-import { validate } from "@/middleware/validate";
 import {
   CreateEventBodyModel,
   EditEventBodyModel,
   EventIdParamModel,
-} from "@/models/event.models";
+} from "@blurple-canvas-web/types";
+import { Router } from "express";
+import { requireCanvasAdmin } from "@/middleware/canvasAuth";
+import { typedRouter } from "@/middleware/typedRouter";
+import { validate } from "@/middleware/validate";
+import { audit } from "@/services/auditLogService";
 import {
   createEvent,
   editEvent,
@@ -37,6 +38,10 @@ eventRouter.post(
   async (req, res) => {
     const event = await createEvent(req.body.name, req.body.id);
     res.status(201).json(event);
+    void audit(req, "admin", "event.create", {
+      resourceId: event.id,
+      metadata: req.body,
+    });
   },
 );
 
@@ -47,5 +52,9 @@ eventRouter.put(
   async (req, res) => {
     const event = await editEvent(req.params.eventId, req.body.name);
     res.status(200).json(event);
+    void audit(req, "admin", "event.update", {
+      resourceId: event.id,
+      metadata: req.body,
+    });
   },
 );
