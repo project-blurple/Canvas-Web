@@ -15,7 +15,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
@@ -31,6 +31,7 @@ import {
   useCanvasImage,
   useCanvasSearchParams,
   useIsFullscreenAvailable,
+  useIsWebKit,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
@@ -517,7 +518,7 @@ export default function CanvasView({
     showSelectedBounds,
     setSelectedBounds,
   } = useSelectedBoundsContext();
-  const { canvas, setCanvas } = useCanvasContext();
+  const { canvas } = useCanvasContext();
   const {
     containerRef,
     coords,
@@ -557,15 +558,7 @@ export default function CanvasView({
    * If the user spoof their user agent, this is not my problem.
    * @see https://bugs.webkit.org/show_bug.cgi?id=27684
    */
-  const isWebKit = useMemo(() => {
-    const { userAgent: ua, vendor } = navigator;
-    const isProbablyWebKit =
-      vendor === "Apple Computer, Inc." ||
-      ua.includes("AppleWebKit/") ||
-      ua.includes("Safari/");
-    const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
-    return isProbablyWebKit && isNotChromium;
-  }, []);
+  const isWebKit = useIsWebKit();
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -575,7 +568,6 @@ export default function CanvasView({
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
   });
-  const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
@@ -677,24 +669,6 @@ export default function CanvasView({
       clearOverlay();
     },
     [canvas.id, initialFrameFromSearchParams],
-  );
-
-  useEffect(
-    function switchToCanvasFromSearchParams() {
-      if (hasAppliedInitialCanvasRef.current) return;
-
-      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
-      if (targetCanvasId === null || targetCanvasId === canvas.id) {
-        hasAppliedInitialCanvasRef.current = true;
-        return;
-      }
-
-      hasAppliedInitialCanvasRef.current = true;
-      void setCanvas(targetCanvasId).catch(() => {
-        // If URL canvas does not exist, keep default canvas.
-      });
-    },
-    [canvas.id, setCanvas],
   );
 
   useEffect(() => {
