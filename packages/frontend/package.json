@@ -53,7 +53,8 @@
     "next": "^16.2.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "socket.io-client": "^4.8.3"
+    "socket.io-client": "^4.8.3",
+    "es-toolkit": "^1.0.0"
   },
   "devDependencies": {
     "@blurple-canvas-web/types": "workspace:*",

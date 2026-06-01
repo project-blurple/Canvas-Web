@@ -5,6 +5,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
+import { isEqual } from "es-toolkit";
 import type React from "react";
 import {
   useCallback,
@@ -115,13 +116,7 @@ function findPaletteColor(
 ): PaletteColor | null {
   if (!rgba) return null;
 
-  const exact = palette.find(
-    (color) =>
-      color.rgba[0] === rgba[0] &&
-      color.rgba[1] === rgba[1] &&
-      color.rgba[2] === rgba[2] &&
-      color.rgba[3] === rgba[3],
-  );
+  const exact = palette.find((color) => isEqual(color.rgba, rgba));
   if (exact) return exact;
 
   // The renderer can be a bit annoying - colors that aren't fully opaque can end up with minor rounding differences in the OffscreenCanvas when setting the color. This means that (88, 101, 242, 127) (the blank pixel) tends to end up as (88, 100, 243, 127), so an exact match isn't always feasible.
@@ -376,15 +371,15 @@ function NamedPalette({
             ))}
             {onEyedropperSelect && (
               <EyedropperSwatch
-                aria-disabled={selectedPixelColorRgb === null}
-                paletteColor={{
-                  name: "Eyedropper",
-                  rgba: selectedPixelColorRgb ?? [0, 0, 0, 0],
-                }}
                 onClick={() => {
                   playSound();
                   onEyedropperSelect();
                 }}
+                paletteColor={{
+                  name: "Eyedropper",
+                  rgba: selectedPixelColorRgb ?? [0, 0, 0, 0],
+                }}
+                role="option"
               />
             )}
           </>

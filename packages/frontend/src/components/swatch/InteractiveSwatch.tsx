@@ -31,11 +31,6 @@ const StyledSwatch = styled(StaticSwatch, {
     background-clip: content-box;
     padding: 3px;
   }
-
-  &[aria-disabled="true"] {
-    cursor: not-allowed;
-    opacity: 60%;
-  }
 `;
 
 const DisabledLockOverlay = styled("span")`
