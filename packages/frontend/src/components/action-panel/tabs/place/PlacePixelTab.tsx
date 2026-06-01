@@ -236,7 +236,6 @@ export default function PlacePixelTab({
   });
 
   const onSubmit: React.SubmitEventHandler<HTMLFormElement> = async (e) => {
-    console.log(e);
     e.preventDefault();
     if (!coords || !selectedColor) return;
     playPixelPlacementSound();
