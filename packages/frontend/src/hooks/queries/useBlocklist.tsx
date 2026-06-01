@@ -40,10 +40,19 @@ export function useBlocklistMutations() {
 
   const removeFromBlocklistMutation = useMutation({
     mutationKey: ["blocklist", "remove"],
-    mutationFn: async (ids: bigint[]) => {
+    mutationFn: async ({
+      ids,
+      shouldRestoreHistoryForCanvasId,
+    }: {
+      ids: bigint[];
+      shouldRestoreHistoryForCanvasId?: number[];
+    }) => {
       const url = `${config.apiUrl}/api/v1/blocklist`;
       await axios.delete(url, {
-        data: { userId: ids.map((id) => id.toString()) },
+        data: {
+          userId: ids.map((id) => id.toString()),
+          shouldRestoreHistoryForCanvasId,
+        },
         withCredentials: true,
       });
     },
@@ -67,10 +76,16 @@ export function useBlocklistMutations() {
     }
   }
 
-  async function handleRemove(ids: Iterable<bigint>) {
+  async function handleRemove(
+    ids: Iterable<bigint>,
+    shouldRestoreHistoryForCanvasId: number[] = [],
+  ) {
     try {
       const arr = Array.from(ids);
-      await removeFromBlocklistMutation.mutateAsync(arr);
+      await removeFromBlocklistMutation.mutateAsync({
+        ids: arr,
+        shouldRestoreHistoryForCanvasId,
+      });
       return true;
     } catch (e) {
       console.error(e);
