@@ -80,9 +80,15 @@ export const CanvasProvider = ({
       canvasId,
       pixelTimestamp: new Date().toISOString(),
     };
-    if (socket.connected) socket.disconnect();
+
+    if (socket.connected) {
+      socket.disconnect();
+    }
     socket.connect();
-    return () => void socket.disconnect();
+
+    return () => {
+      socket.disconnect();
+    };
   }, [canvasId]);
 
   return (
