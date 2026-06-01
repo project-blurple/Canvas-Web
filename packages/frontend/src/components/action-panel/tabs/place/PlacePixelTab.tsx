@@ -356,7 +356,10 @@ function NamedPalette({
             {onEyedropperSelect && (
               <EyedropperSwatch
                 aria-disabled={selectedPixelColorRgb === null}
-                swatchColor={selectedPixelColorRgb}
+                paletteColor={{
+                  name: "Eyedropper",
+                  rgba: selectedPixelColorRgb ?? [0, 0, 0, 0],
+                }}
                 onClick={() => {
                   playSound();
                   onEyedropperSelect();
