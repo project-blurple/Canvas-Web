@@ -93,6 +93,14 @@ const defaultCanvasInfo = {
   cooldownDuration: 0,
 } satisfies CanvasInfo;
 
+const toasterIcons = {
+  success: <CircleCheck />,
+  info: <Info />,
+  warning: <TriangleAlert />,
+  error: <CircleAlert />,
+  loading: <CanvasIcon loading />,
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -126,6 +134,7 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                       <AppProviders>
                         {children}
                         <Toaster
+                          icons={toasterIcons}
                           position="bottom-left" // bottom right overlaps with the action panel
                           theme="dark"
                           toastOptions={{
@@ -134,13 +143,6 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
                                 "var(--discord-legacy-not-quite-black)",
                               boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
                             },
-                          }}
-                          icons={{
-                            success: <CircleCheck />,
-                            info: <Info />,
-                            warning: <TriangleAlert />,
-                            error: <CircleAlert />,
-                            loading: <CanvasIcon loading />,
                           }}
                         />
                       </AppProviders>
