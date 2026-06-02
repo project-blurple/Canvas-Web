@@ -1284,10 +1284,7 @@ export default function CanvasView({
           />
         </CanvasImageWrapper>
 
-        <CanvasGrid
-          zoom={zoom}
-          style={{ display: isGridVisible ? undefined : "none" }}
-        />
+        <CanvasGrid zoom={zoom} hidden={!isGridVisible} />
 
         <ComplexSearchOverlay
           canvasHeight={canvas.height}

@@ -12,6 +12,7 @@ const Grid = styled("svg")`
 `;
 
 interface CanvasGridProps extends React.SVGProps<SVGSVGElement> {
+  hidden?: boolean;
   zoom: number;
 }
 
