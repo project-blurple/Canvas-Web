@@ -15,7 +15,6 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import { EyedropperSwatch } from "@/components/swatch/InteractiveSwatch";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -25,7 +24,7 @@ import {
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
-import { Button, DynamicAnchorButton, DynamicButton } from "../../../button";
+import { DynamicAnchorButton, DynamicButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
