@@ -94,9 +94,9 @@ With the database server running:
 ```sh
 pnpm install
 # Build backend once, so generated scripts can import the built client
-pnpm -F backend build
+pnpm -F backend run build
 # Set up database
-pnpm prisma:migrate && pnpm prisma:seed
+pnpm run prisma:migrate && pnpm run prisma:seed
 ```
 
 ### 🚀 Build & deploy
@@ -104,15 +104,15 @@ pnpm prisma:migrate && pnpm prisma:seed
 From repo root:
 
 ```sh
-pnpm dev                  # with hot reloading…
-pnpm build && pnpm start  # …or without
+pnpm run dev                      # with hot reloading…
+pnpm run build && pnpm run start  # …or without
 ```
 
 If you want to run the front- and back-ends in different terminals:
 
 ```sh
-pnpm -F backend dev
-pnpm -F frontend dev
+pnpm -F backend run dev
+pnpm -F frontend run dev
 ```
 
 ## 🤓 Maintainers
