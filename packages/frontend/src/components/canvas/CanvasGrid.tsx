@@ -25,8 +25,11 @@ export function CanvasGrid({ zoom, ...props }: CanvasGridProps) {
     <Grid xmlns="http://www.w3.org/2000/svg" {...props}>
       <defs>
         <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
-          <path
-            d="M 0 0 L 1 0 L 1 1 L 0 1 Z"
+          <rect
+            x="0"
+            y="0"
+            width="1"
+            height="1"
             fill="none"
             stroke="currentColor"
             strokeWidth={gridStrokeWidth}
