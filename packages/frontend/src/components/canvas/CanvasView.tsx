@@ -9,12 +9,6 @@ import {
   SocketEvents,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import {
-  Maximize2,
-  Minimize2,
-  PanelRightClose,
-  PanelRightOpen,
-} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
@@ -41,7 +35,6 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
-import VisuallyHidden from "../VisuallyHidden";
 import { CanvasGrid } from "./CanvasGrid";
 import CanvasOptionButtons from "./CanvasOptionButtons";
 import {
