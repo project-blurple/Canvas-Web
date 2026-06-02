@@ -46,8 +46,9 @@ Worth noting:
 > PowerShell—things still work—but you’ll have to “translate” these steps for
 > yourself.
 
-**nvm & Node.js.** [Node Version Manger](https://github.com/nvm-sh/nvm) optional
-but recommended. Just make sure your Node version matches [`/.nvmrc`](/.nvmrc).
+**[nvm](https://github.com/nvm-sh/nvm) & [Node.js](https://nodejs.org).** Node
+Version Manger optional but recommended. Just make sure your Node version
+matches [`/.nvmrc`](/.nvmrc).
 
 ```sh
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash  # …or… `brew install nvm`
@@ -67,7 +68,8 @@ corepack --version             # Shouldn’t error
 pnpm --version                 # Should match package.json → engines
 ```
 
-**PostgreSQL 17+.** 👉 https://www.postgresql.org/download
+**[PostgreSQL](https://www.postgresql.org) 17+.** 👉
+https://www.postgresql.org/download
 
 ### 🧱 Install dependencies
 
