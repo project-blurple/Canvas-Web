@@ -111,9 +111,7 @@ pnpm build && pnpm start  # …or without
 If you want to run the front- and back-ends in different terminals:
 
 ```sh
-# Start the back-end
 pnpm -F backend dev
-# Start the front-end
 pnpm -F frontend dev
 ```
 
