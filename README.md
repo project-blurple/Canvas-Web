@@ -157,11 +157,6 @@ Thanks to:
     Pretty sure Samuel isn’t happy about me putting him on this list. Tough
     cookies.&emsp;—Jasper
 
-## 📜 Licence
-
-The code for Blurple Canvas Web is licensed under the
-[Apache License, Version 2.0](https://github.com/project-blurple/Canvas-Web?tab=License-1-ov-file#readme).
-
 ---
 
 <p align="center">
