@@ -161,3 +161,9 @@ Thanks to:
 
 The code for Blurple Canvas Web is licensed under the
 [Apache License, Version 2.0](https://github.com/project-blurple/Canvas-Web?tab=License-1-ov-file#readme).
+
+---
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/347c5873-6859-40c1-a6de-25a326aad2a6" width="450" height="450" alt="Final canvas from 2026" />
+</p>
