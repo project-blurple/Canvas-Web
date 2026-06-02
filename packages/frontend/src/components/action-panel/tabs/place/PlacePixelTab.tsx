@@ -6,6 +6,7 @@ import type {
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import { isEqual } from "es-toolkit";
+import { Pipette } from "lucide-react";
 import type React from "react";
 import {
   useCallback,
@@ -24,7 +25,7 @@ import {
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
 import { getUserGuildIds } from "@/util";
-import { DynamicAnchorButton } from "../../../button";
+import { Button, DynamicAnchorButton, DynamicButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
@@ -276,16 +277,23 @@ export default function PlacePixelTab({
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>
-            <NamedPalette
-              colors={mainColors}
-              name="Main colors"
-              onEyedropperSelect={() => setColor(selectedPixelColor)}
-            />
+            <NamedPalette colors={mainColors} name="Main colors" />
             <NamedPalette
               colors={partnerColors}
               isColorDisabled={isColorDisabled}
               name="Partner colors"
             />
+            <ActionPanelPrimitives.SectionHeading>
+              Tools
+            </ActionPanelPrimitives.SectionHeading>
+            <DynamicButton
+              alwaysShowColor
+              color={selectedPixelColor?.rgba}
+              disabled={selectedPixelColor === null}
+              onClick={() => setColor(selectedPixelColor)}
+            >
+              <Pipette /> Select {selectedPixelColor?.name ?? "color"}
+            </DynamicButton>
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>
@@ -328,17 +336,10 @@ interface NamedPaletteProps {
   colors: Palette | undefined;
   isColorDisabled?: (color: PaletteColor) => boolean;
   name: React.ReactNode;
-  onEyedropperSelect?: () => void;
 }
 
-function NamedPalette({
-  colors,
-  isColorDisabled,
-  name,
-  onEyedropperSelect,
-}: NamedPaletteProps) {
+function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
-  const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
   const playSound = usePlaySound("pick_color");
 
   if (colors?.length === 0) return null;
@@ -355,34 +356,19 @@ function NamedPalette({
             // biome-ignore lint/suspicious/noArrayIndexKey: These will never change
             <SwatchSkeleton key={i} variant="rectangular" />
           ))
-        : <>
-            {colors.map((color) => (
-              <InteractiveSwatch
-                aria-selected={color === selectedColor}
-                key={color.code}
-                locked={isColorDisabled?.(color)}
-                onClick={() => {
-                  playSound();
-                  setColor(color);
-                }}
-                paletteColor={color}
-                role="option"
-              />
-            ))}
-            {onEyedropperSelect && (
-              <EyedropperSwatch
-                onClick={() => {
-                  playSound();
-                  onEyedropperSelect();
-                }}
-                paletteColor={{
-                  name: "Eyedropper",
-                  rgba: selectedPixelColorRgb ?? [0, 0, 0, 0],
-                }}
-                role="option"
-              />
-            )}
-          </>
+        : colors.map((color) => (
+            <InteractiveSwatch
+              aria-selected={color === selectedColor}
+              key={color.code}
+              locked={isColorDisabled?.(color)}
+              onClick={() => {
+                playSound();
+                setColor(color);
+              }}
+              paletteColor={color}
+              role="option"
+            />
+          ))
         }
       </Fieldset>
     </>
