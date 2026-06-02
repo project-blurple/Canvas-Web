@@ -35,7 +35,7 @@ importers:
     dependencies:
       '@blurple-canvas-web/types':
         specifier: workspace:*
-        version: link:../types
+        version: file:packages/types
       '@dotenvx/dotenvx':
         specifier: ^1.61.0
         version: 1.61.0
@@ -170,7 +170,7 @@ importers:
         specifier: ^0.6.1
         version: 0.6.1
       es-toolkit:
-        specifier: ^1.0.0
+        specifier: ^1.47.0
         version: 1.47.0
       js-cookie:
         specifier: ^3.0.7
@@ -199,7 +199,7 @@ importers:
     devDependencies:
       '@blurple-canvas-web/types':
         specifier: workspace:*
-        version: link:../types
+        version: file:packages/types
       '@types/js-cookie':
         specifier: ^3.0.6
         version: 3.0.6
@@ -347,6 +347,10 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
+
+  '@blurple-canvas-web/types@file:packages/types':
+    resolution: {directory: packages/types, type: directory}
+    engines: {node: '>=25', pnpm: '>=10.33.0'}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -3488,6 +3492,9 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
+  zod@4.4.3:
+    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
 snapshots:
 
   '@babel/code-frame@7.29.0':
@@ -3582,6 +3589,10 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.4.12':
     optional: true
+
+  '@blurple-canvas-web/types@file:packages/types':
+    dependencies:
+      zod: 4.4.3
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -6654,3 +6665,5 @@ snapshots:
       readable-stream: 4.7.0
 
   zod@4.3.6: {}
+
+  zod@4.4.3: {}
