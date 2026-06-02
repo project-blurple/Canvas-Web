@@ -104,8 +104,8 @@ pnpm prisma:migrate && pnpm prisma:seed
 From repo root:
 
 ```sh
-pnpm dev # with hot reloading…
-pnpm build && pnpm start # …or without
+pnpm dev                  # with hot reloading…
+pnpm build && pnpm start  # …or without
 ```
 
 If you want to run the front- and back-ends in different terminals:
