@@ -153,7 +153,7 @@ Thanks to:
 
 [^samuel]:
     Pretty sure Samuel isn’t happy about me putting him on this list. Tough
-    cookies.&emsp;<small>—Jasper</small>
+    cookies.&emsp;—Jasper
 
 ## 📜 Licence
 
