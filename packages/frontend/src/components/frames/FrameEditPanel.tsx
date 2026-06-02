@@ -23,11 +23,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import {
-  hexStringToPixelColor,
-  normalizeFrameBounds,
-  type ViewBounds,
-} from "@/util";
+import { normalizeFrameBounds, type ViewBounds } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -35,7 +31,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import BoundsSelect from "../BoundsSelect/BoundsSelect";
-import { BasicButton, DestructiveButton, DynamicButton } from "../button";
+import { BasicButton, Button, DestructiveButton } from "../button";
 import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
@@ -109,14 +105,10 @@ const EditPreviewCanvas = styled(PreviewCanvas)`
 
 const ButtonRow = styled("div")`
   display: flex;
-  gap: 0.5rem;
+  flex-direction: row-reverse;
+  gap: 0.5em;
   inline-size: 100%;
-  padding: 0;
-
-  > * {
-    flex: 1 1 0;
-    min-width: 0;
-  }
+}
 `;
 
 const StyledDialog = styled(Dialog)`
@@ -706,8 +698,7 @@ export default function FrameEditPanel({
           <ButtonRow>
             {!isCreateMode ?
               <>
-                <DynamicButton
-                  color={hexStringToPixelColor(frameId)}
+                <Button
                   type="submit"
                   disabled={
                     !frameName ||
@@ -718,7 +709,7 @@ export default function FrameEditPanel({
                   }
                 >
                   Save
-                </DynamicButton>
+                </Button>
                 <DestructiveButton
                   onClick={handleDeleteButtonAction}
                   type="button"
