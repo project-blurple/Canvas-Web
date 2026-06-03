@@ -129,9 +129,11 @@ export default function PlacePixelTab({
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playPixelPlacementSound = usePlaySound("place_pixel");
-  const { turnstileElement, getToken } = useTurnstileToken(
-    Boolean(user && !readOnly && webPlacingEnabled),
-  );
+  const {
+    turnstileElement,
+    getToken,
+    reset: resetToken,
+  } = useTurnstileToken(Boolean(user && !readOnly && webPlacingEnabled));
 
   const canPrefetchTurnstile = !!user && !readOnly && webPlacingEnabled;
 
@@ -252,6 +254,7 @@ export default function PlacePixelTab({
     playPixelPlacementSound();
     const turnstileToken = await getToken();
     await mutateAsync(turnstileToken);
+    resetToken();
     void getToken();
     setCoords(null);
   };

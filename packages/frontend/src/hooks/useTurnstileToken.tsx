@@ -20,6 +20,10 @@ export default function useTurnstileToken(enabled: boolean) {
     return token ?? undefined;
   }, [enabled]);
 
+  const reset = useCallback(() => {
+    turnstileRef.current?.reset();
+  }, []);
+
   const turnstileElement =
     enabled && config.turnstileSiteKey ?
       <Turnstile
@@ -41,6 +45,7 @@ export default function useTurnstileToken(enabled: boolean) {
   return {
     turnstileElement,
     getToken,
+    reset,
     ref: turnstileRef,
   } as const;
 }
