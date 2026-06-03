@@ -1,10 +1,12 @@
 import { ForbiddenError } from "@/errors";
 
-const fetchMock = vi.fn();
-const configMock = {
-  captchaEnabled: false,
-  turnstileSecretKey: undefined as string | undefined,
-};
+const { fetchMock, configMock } = vi.hoisted(() => ({
+  fetchMock: vi.fn(),
+  configMock: {
+    captchaEnabled: false,
+    turnstileSecretKey: undefined as string | undefined,
+  },
+}));
 
 vi.mock("@/config", () => ({
   default: configMock,
