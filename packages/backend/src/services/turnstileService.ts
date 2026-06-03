@@ -14,6 +14,10 @@ interface TurnstileVerificationResponse {
 }
 
 export async function verifyTurnstileToken(token: string): Promise<void> {
+  if (!config.captchaEnabled) {
+    return;
+  }
+
   if (!config.turnstileSecretKey) {
     throw new ForbiddenError("Turnstile is not configured");
   }

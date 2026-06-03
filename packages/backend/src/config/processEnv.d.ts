@@ -15,6 +15,8 @@ declare namespace NodeJS {
 
     BOT_PLACING_ENABLED?: string;
 
+    CAPTCHA_ENABLED?: string;
+
     TURNSTILE_SECRET_KEY?: string;
   }
 }
