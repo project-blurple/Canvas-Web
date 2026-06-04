@@ -21,6 +21,7 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
+import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
 import { DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
@@ -128,6 +129,18 @@ export default function PlacePixelTab({
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playPixelPlacementSound = usePlaySound("place_pixel");
+  const {
+    turnstileElement,
+    getToken,
+    reset: resetToken,
+  } = useTurnstileToken(Boolean(user && !readOnly && webPlacingEnabled));
+
+  const canPrefetchTurnstile = !!user && !readOnly && webPlacingEnabled;
+
+  useEffect(() => {
+    // Prefetch a turnstile token when the tab mounts and placing is allowed
+    if (canPrefetchTurnstile) void getToken();
+  }, [getToken, canPrefetchTurnstile]);
 
   const subscribe = useCallback(
     (onStoreChange: () => void) => {
@@ -239,12 +252,16 @@ export default function PlacePixelTab({
     e.preventDefault();
     if (!coords || !selectedColor) return;
     playPixelPlacementSound();
-    await mutateAsync();
+    const turnstileToken = await getToken();
+    await mutateAsync(turnstileToken);
+    resetToken();
+    void getToken();
     setCoords(null);
   };
 
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
+      {turnstileElement}
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
           <div>

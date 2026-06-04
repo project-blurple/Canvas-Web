@@ -186,6 +186,8 @@ const CanvasImageWrapper = styled("div", {
       filter: grayscale(80%);
     `}
 
+  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
+  // box-shadow means the shadow only shows on the edges, and doesn't affect the backing color of the translucent pixels in the canvas
   position: relative;
 
   img {
