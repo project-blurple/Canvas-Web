@@ -46,7 +46,6 @@ export default function ModerationDashboard() {
         searchOverlayPixels={searchOverlayPixels}
         searchOverlayVisible={isSearchOverlayVisible}
         showInvite={false}
-        showNotices={false}
         showReticle={false}
       />
       <SlideableDrawer>{actionPanel}</SlideableDrawer>

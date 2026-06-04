@@ -9,35 +9,29 @@ import Link from "next/link";
 import type React from "react";
 import { useState } from "react";
 import { useAuthContext, useCanvasContext } from "@/contexts";
+import { Noticeboard } from "../notices";
 
 const Links = styled("ul")`
   display: none;
-
   ${({ theme }) => theme.breakpoints.up("md")} {
+    align-items: baseline;
     display: flex;
   }
-
   li {
     display: inline-flex;
-  }
-
-  /*
-   * Workaround for accessibility issue with VoiceOver.
-   * See https://gerardkcohen.me/writing/2017/voiceover-list-style-type.html
-   */
-  li::before {
-    content: "\\200B"; /* zero-width space */
   }
 `;
 
 export const NavLink = styled(Link)`
   border-radius: 0.5rem;
   color: var(--discord-white);
+  font-weight: 450;
+  letter-spacing: 0.01em;
   padding-block: 0.5rem;
   padding-inline: 0.75rem;
   text-decoration: none;
-  transition-duration: var(--transition-duration-fast);
-  transition-property: background-color, opacity, outline-width;
+  transition-property: background-color, outline-width;
+  transition-timing-function: var(--transition-duration-fast);
 
   :hover {
     opacity: 55%;
@@ -137,6 +131,7 @@ export default function Nav() {
         ))}
       </Menu>
       <Links>
+        <Noticeboard />
         {links.map(({ href, label }) => (
           <li key={href}>
             <NavLink href={href}>{label}</NavLink>
