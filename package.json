@@ -30,6 +30,7 @@
     "format:fix": "pnpm --recursive run format:fix",
     "check": "pnpm --recursive run check",
     "check:fix": "pnpm --recursive run check:fix",
+    "knip": "knip",
     "prepare": "husky",
     "clean": "pnpm --recursive run clean && pnpm purge",
     "prisma:push": "pnpm --filter=backend run prisma:push",
@@ -54,6 +55,7 @@
     "@biomejs/biome": "^2.4.12",
     "@types/node": "^24.12.2",
     "husky": "^9.1.7",
+    "knip": "^6.4.1",
     "lint-staged": "^16.4.0",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3"
