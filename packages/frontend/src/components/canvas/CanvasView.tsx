@@ -36,7 +36,7 @@ import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import { CanvasGrid } from "./CanvasGrid";
-import CanvasOptionButtons from "./CanvasOptionButtons";
+import CanvasViewControls from "./CanvasViewControls";
 import {
   addPoints,
   diffPoints,
@@ -1175,7 +1175,7 @@ export default function CanvasView({
     >
       {showNotices && <Notices />}
 
-      <CanvasOptionButtons
+      <CanvasViewControls
         fullscreen={{
           isActive: isFullscreen,
           isAvailable: canUseFullscreen,

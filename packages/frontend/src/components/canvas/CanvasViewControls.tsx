@@ -11,7 +11,7 @@ import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
 import { Button } from "../button";
 import VisuallyHidden from "../VisuallyHidden";
 
-const CanvasOptionsButtonColumn = styled("div", {
+const CanvasViewControlColumn = styled("div", {
   shouldForwardProp: (prop: string) =>
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
@@ -44,7 +44,7 @@ const CanvasOptionsButtonColumn = styled("div", {
   }
 `;
 
-const StyledCanvasOptionButton = styled(Button)`
+const StyledCanvasViewControlButton = styled(Button)`
   border-color: transparent;
   border-radius: 0.5rem;
   color: white;
@@ -65,25 +65,25 @@ const StyledCanvasOptionButton = styled(Button)`
   }
 `;
 
-function CanvasOptionButton({
+function CanvasViewControlButton({
   children,
   ...props
 }: Omit<
-  React.ComponentProps<typeof StyledCanvasOptionButton>,
+  React.ComponentProps<typeof StyledCanvasViewControlButton>,
   "onPointerDown" | "type"
 >) {
   return (
-    <StyledCanvasOptionButton
+    <StyledCanvasViewControlButton
       onPointerDown={(event) => event.stopPropagation()}
       type="button"
       {...props}
     >
       {children}
-    </StyledCanvasOptionButton>
+    </StyledCanvasViewControlButton>
   );
 }
 
-interface CanvasOptionButtonsProps {
+interface CanvasViewControlsProps {
   fullscreen: {
     isActive: boolean;
     isAvailable: boolean;
@@ -99,18 +99,18 @@ interface CanvasOptionButtonsProps {
   };
 }
 
-export default function CanvasOptionButtons({
+export default function CanvasViewControls({
   fullscreen,
   panel,
   grid,
-}: CanvasOptionButtonsProps) {
+}: CanvasViewControlsProps) {
   return (
-    <CanvasOptionsButtonColumn
+    <CanvasViewControlColumn
       $isFullscreen={fullscreen.isActive}
       $isPanelVisible={panel.isActive}
     >
       {fullscreen.isAvailable && (
-        <CanvasOptionButton
+        <CanvasViewControlButton
           aria-pressed={fullscreen.isActive}
           onClick={fullscreen.toggle}
         >
@@ -120,11 +120,11 @@ export default function CanvasOptionButtons({
           {fullscreen.isActive ?
             <Minimize2 />
           : <Maximize2 />}
-        </CanvasOptionButton>
+        </CanvasViewControlButton>
       )}
 
       {fullscreen.isAvailable && fullscreen.isActive && (
-        <CanvasOptionButton
+        <CanvasViewControlButton
           onClick={panel.toggle}
           aria-pressed={panel.isActive}
         >
@@ -134,17 +134,20 @@ export default function CanvasOptionButtons({
           {panel.isActive ?
             <PanelRightClose />
           : <PanelRightOpen />}
-        </CanvasOptionButton>
+        </CanvasViewControlButton>
       )}
 
-      <CanvasOptionButton aria-pressed={grid.isActive} onClick={grid.toggle}>
+      <CanvasViewControlButton
+        aria-pressed={grid.isActive}
+        onClick={grid.toggle}
+      >
         <VisuallyHidden>
           {grid.isActive ? "Hide grid" : "Show grid"}
         </VisuallyHidden>
         {grid.isActive ?
           <Grid2x2X />
         : <Grid2x2 />}
-      </CanvasOptionButton>
-    </CanvasOptionsButtonColumn>
+      </CanvasViewControlButton>
+    </CanvasViewControlColumn>
   );
 }
