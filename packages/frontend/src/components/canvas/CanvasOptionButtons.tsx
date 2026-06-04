@@ -16,18 +16,14 @@ const CanvasOptionsButtonColumn = styled("div", {
     !["$isPanelVisible", "$isFullscreen"].includes(prop),
 })<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
   inset-inline-end: 0.5rem;
-  inset-inline-end: ${(p) =>
+  inset-block-start: 3.5rem;
+
+  ${(p) =>
     p.$isPanelVisible &&
     p.$isFullscreen &&
     css`
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100vi - 1rem))
-      );
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100dvi - 1rem))
-      );
+      right: min(var(--action-panel-width), calc(100vw - 1rem));
     `};
-  inset-block-start: 3.5rem;
 
   display: flex;
   flex-direction: column;
