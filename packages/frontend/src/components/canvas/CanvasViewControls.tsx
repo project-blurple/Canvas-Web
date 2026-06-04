@@ -110,10 +110,7 @@ export default function CanvasViewControls({
       $isPanelVisible={panel.isActive}
     >
       {fullscreen.isAvailable && (
-        <CanvasViewControlButton
-          aria-pressed={fullscreen.isActive}
-          onClick={fullscreen.toggle}
-        >
+        <CanvasViewControlButton onClick={fullscreen.toggle}>
           <VisuallyHidden>
             {fullscreen.isActive ? "Exit fullscreen" : "Enter fullscreen"}
           </VisuallyHidden>
@@ -124,10 +121,7 @@ export default function CanvasViewControls({
       )}
 
       {fullscreen.isAvailable && fullscreen.isActive && (
-        <CanvasViewControlButton
-          onClick={panel.toggle}
-          aria-pressed={panel.isActive}
-        >
+        <CanvasViewControlButton onClick={panel.toggle}>
           <VisuallyHidden>
             {panel.isActive ? "Hide action panel" : "Show action panel"}
           </VisuallyHidden>
@@ -137,10 +131,7 @@ export default function CanvasViewControls({
         </CanvasViewControlButton>
       )}
 
-      <CanvasViewControlButton
-        aria-pressed={grid.isActive}
-        onClick={grid.toggle}
-      >
+      <CanvasViewControlButton onClick={grid.toggle}>
         <VisuallyHidden>
           {grid.isActive ? "Hide grid" : "Show grid"}
         </VisuallyHidden>
