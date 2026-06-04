@@ -57,6 +57,8 @@ const config = {
   },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
+  captchaEnabled: process.env.CAPTCHA_ENABLED === "true",
+  turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY,
   databaseUrl: requiredEnv("DATABASE_URL"),
 } as const;
 
