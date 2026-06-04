@@ -35,7 +35,7 @@ importers:
     dependencies:
       '@blurple-canvas-web/types':
         specifier: workspace:*
-        version: file:packages/types
+        version: link:../types
       '@dotenvx/dotenvx':
         specifier: ^1.61.0
         version: 1.61.0
@@ -211,7 +211,7 @@ importers:
     devDependencies:
       '@blurple-canvas-web/types':
         specifier: workspace:*
-        version: file:packages/types
+        version: link:../types
       '@types/js-cookie':
         specifier: ^3.0.6
         version: 3.0.6
@@ -359,10 +359,6 @@ packages:
     engines: {node: '>=14.21.3'}
     cpu: [x64]
     os: [win32]
-
-  '@blurple-canvas-web/types@file:packages/types':
-    resolution: {directory: packages/types, type: directory}
-    engines: {node: '>=25', pnpm: '>=10.33.0'}
 
   '@chevrotain/cst-dts-gen@10.5.0':
     resolution: {integrity: sha512-lhmC/FyqQ2o7pGK4Om+hzuDrm9rhFYIJ/AXoQBeongmn870Xeb0L6oGEiuR8nohFNL5sMaQEJWCxr1oIVIVXrw==}
@@ -3668,9 +3664,6 @@ packages:
   zod@4.3.6:
     resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
 
-  zod@4.4.3:
-    resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
-
 snapshots:
 
   '@babel/code-frame@7.29.0':
@@ -3765,10 +3758,6 @@ snapshots:
 
   '@biomejs/cli-win32-x64@2.4.12':
     optional: true
-
-  '@blurple-canvas-web/types@file:packages/types':
-    dependencies:
-      zod: 4.4.3
 
   '@chevrotain/cst-dts-gen@10.5.0':
     dependencies:
@@ -7044,5 +7033,3 @@ snapshots:
       readable-stream: 4.7.0
 
   zod@4.3.6: {}
-
-  zod@4.4.3: {}
