@@ -9,7 +9,7 @@ import {
   SocketEvents,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
@@ -1167,6 +1167,41 @@ export default function CanvasView({
     }
   }, [containerRef]);
 
+  const toggleFullscreenPanel = useCallback(() => {
+    setFullscreenPanelVisible((visible) => !visible);
+  }, [setFullscreenPanelVisible]);
+
+  const toggleGridVisible = useCallback(() => {
+    setIsGridVisible((visible) => !visible);
+  }, []);
+
+  const canvasViewControls = useMemo(
+    () => ({
+      fullscreen: {
+        isActive: isFullscreen,
+        isAvailable: canUseFullscreen,
+        toggle: toggleFullscreen,
+      },
+      panel: {
+        isActive: isFullscreenPanelVisible,
+        toggle: toggleFullscreenPanel,
+      },
+      grid: {
+        isActive: isGridVisible,
+        toggle: toggleGridVisible,
+      },
+    }),
+    [
+      canUseFullscreen,
+      isFullscreen,
+      isFullscreenPanelVisible,
+      isGridVisible,
+      toggleFullscreen,
+      toggleFullscreenPanel,
+      toggleGridVisible,
+    ],
+  );
+
   return (
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
@@ -1175,25 +1210,7 @@ export default function CanvasView({
     >
       {showNotices && <Notices />}
 
-      <CanvasViewControls
-        fullscreen={{
-          isActive: isFullscreen,
-          isAvailable: canUseFullscreen,
-          toggle: toggleFullscreen,
-        }}
-        panel={{
-          isActive: isFullscreenPanelVisible,
-          toggle: useCallback(() => {
-            setFullscreenPanelVisible((visible) => !visible);
-          }, [setFullscreenPanelVisible]),
-        }}
-        grid={{
-          isActive: isGridVisible,
-          toggle: () => {
-            setIsGridVisible((visible) => !visible);
-          },
-        }}
-      />
+      <CanvasViewControls {...canvasViewControls} />
 
       {showInvite ?
         config.discordServerInvite &&
