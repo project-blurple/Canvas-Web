@@ -25,7 +25,7 @@ import {
 import { usePalette, usePlaySound } from "@/hooks";
 import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
-import { Button, DynamicAnchorButton, DynamicButton } from "../../../button";
+import { Button, DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";

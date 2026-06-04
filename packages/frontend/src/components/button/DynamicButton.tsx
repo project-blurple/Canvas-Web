@@ -11,9 +11,7 @@ const StyledAnchor = styled("a")`
 
 const StyledButton = styled(ButtonBase, {
   shouldForwardProp: (prop) => prop !== "backgroundColorStr",
-})<{
-  backgroundColorStr?: string;
-}>`
+})<{ backgroundColorStr?: string }>`
   :not(.${buttonClasses.disabled}) {
     --dynamic-bg-color: var(--discord-blurple);
     background-color: var(--dynamic-bg-color);
