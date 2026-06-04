@@ -27,24 +27,23 @@ const CanvasOptionsButtonColumn = styled("div", {
         min(var(--action-panel-width), calc(100dvi - 1rem))
       );
     `};
-  inset-block-start: 0.5rem;
+  inset-block-start: 3.5rem;
 
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  opacity: 0.75;
   position: absolute;
   z-index: 3;
 
-  > *:first-child {
-    #${CANVAS_WRAPPER_CLASS_NAME}:not(:fullscreen) &,
-    #${CANVAS_WRAPPER_CLASS_NAME}:not(:-webkit-full-screen) & {
-      border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-    }
+  #${CANVAS_WRAPPER_CLASS_NAME}:not(:fullscreen, :-webkit-full-screen)
+    > *:first-child {
+    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
   }
 
-  ${({ theme }) => theme.breakpoints.down("md")} {
-    inset-block-start: 3.5rem;
-    opacity: 0.75;
+  ${({ theme }) => theme.breakpoints.up("md")} {
+    inset-block-start: 0.5rem;
+    opacity: 1;
   }
 `;
 
@@ -52,21 +51,19 @@ const StyledCanvasOptionButton = styled(Button)`
   border-color: transparent;
   border-radius: 0.5rem;
   color: white;
-  min-width: auto;
+  min-inline-size: auto;
   padding: 0.5rem;
   text-decoration: none;
 
-  transition-duration: var(--transition-duration-slow);
+  transition-duration: var(--transition-duration-fast);
   transition-property:
     -webkit-backdrop-filter, backdrop-filter, border-color, box-shadow;
   transition-timing-function: ease;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       border-color: inherit;
-      box-shadow: 0 0 10px oklch(0 0 0 / 25%);
     }
   }
 `;

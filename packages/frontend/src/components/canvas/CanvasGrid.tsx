@@ -1,4 +1,5 @@
 import { styled } from "@mui/material";
+import { useId } from "react";
 
 const Grid = styled("svg")`
   color: var(--discord-blurple);
@@ -20,11 +21,12 @@ export function CanvasGrid({ zoom, ...props }: CanvasGridProps) {
   // Fully eyeballed this :)
   // The stroke width is thicker when zoomed out to keep the grid visible, but thins as you zoom.
   const gridStrokeWidth = ((5 - Math.log(zoom)) / 5) * 0.05;
+  const gridId = useId();
 
   return (
     <Grid xmlns="http://www.w3.org/2000/svg" {...props}>
       <defs>
-        <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
+        <pattern id={gridId} width="1" height="1" patternUnits="userSpaceOnUse">
           <rect
             x="0"
             y="0"
@@ -36,7 +38,7 @@ export function CanvasGrid({ zoom, ...props }: CanvasGridProps) {
           />
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#grid)" />
+      <rect width="100%" height="100%" fill={`url(#${gridId})`} />
     </Grid>
   );
 }
