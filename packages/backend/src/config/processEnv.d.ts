@@ -14,5 +14,9 @@ declare namespace NodeJS {
     DISCORD_MODERATOR_ROLE_ID?: string;
 
     BOT_PLACING_ENABLED?: string;
+
+    CAPTCHA_ENABLED?: string;
+
+    TURNSTILE_SECRET_KEY?: string;
   }
 }
