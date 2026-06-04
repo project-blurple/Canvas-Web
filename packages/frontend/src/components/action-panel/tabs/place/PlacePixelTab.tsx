@@ -25,7 +25,7 @@ import {
 import { usePalette, usePlaySound } from "@/hooks";
 import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
-import { DynamicAnchorButton, DynamicButton } from "../../../button";
+import { Button, DynamicAnchorButton, DynamicButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
@@ -71,6 +71,27 @@ const SwatchSkeleton = styled(Skeleton)`
   border-radius: 0.5rem;
   width: 100%;
   height: auto;
+`;
+
+const StyledButton = styled(Button)`
+  @supports (color: color-mix(in oklab, black, black)) {
+    color: color-mix(
+      in oklab,
+      contrast-color(var(--dynamic-bg-color)) 94%,
+      var(--dynamic-bg-color)
+    );
+  }
+
+  @supports not (color: color-mix(in oklab, black, black)) {
+    /*
+     * Ensure contrast of button label against background. The color property
+     * should match that of the background it sits against.
+     * From https://robinrendle.com/the-cascade/015-context-aware-colors
+     */
+    color: var(--dynamic-bg-color);
+    filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
+    mix-blend-mode: luminosity;
+  }
 `;
 
 export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
@@ -300,16 +321,21 @@ export default function PlacePixelTab({
               name="Partner colors"
             />
             <ActionPanelPrimitives.SectionHeading>
-              Tools
+              Current pixel
             </ActionPanelPrimitives.SectionHeading>
-            <DynamicButton
-              alwaysShowColor
-              color={selectedPixelColor?.rgba}
+            <StyledButton
               disabled={selectedPixelColor === null}
               onClick={() => setColor(selectedPixelColor)}
+              startIcon={<Pipette />}
+              style={{
+                backgroundColor:
+                  selectedPixelColor ?
+                    `rgba(${selectedPixelColor.rgba.join(",")})`
+                  : undefined,
+              }}
             >
-              <Pipette /> Select {selectedPixelColor?.name ?? "color"}
-            </DynamicButton>
+              Select {selectedPixelColor?.name ?? "color"}
+            </StyledButton>
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>

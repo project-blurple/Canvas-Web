@@ -10,20 +10,12 @@ const StyledAnchor = styled("a")`
 `;
 
 const StyledButton = styled(ButtonBase, {
-  shouldForwardProp: (prop) =>
-    prop !== "backgroundColorStr" && prop !== "alwaysShowColor",
+  shouldForwardProp: (prop) => prop !== "backgroundColorStr",
 })<{
-  alwaysShowColor?: boolean;
   backgroundColorStr?: string;
 }>`
   :not(.${buttonClasses.disabled}) {
     --dynamic-bg-color: var(--discord-blurple);
-    ${({ backgroundColorStr, alwaysShowColor }) =>
-      backgroundColorStr &&
-      css`
-        ${alwaysShowColor && `--dynamic-bg-color: ${backgroundColorStr};`}
-      `}
-
     background-color: var(--dynamic-bg-color);
 
     &:hover,
@@ -74,13 +66,11 @@ interface DynamicButtonProps extends Omit<
   React.ComponentPropsWithRef<typeof StyledButton>,
   "color"
 > {
-  alwaysShowColor?: boolean;
   color?: PixelColor | null;
   onAction?: () => void;
 }
 
 export default function DynamicButton({
-  alwaysShowColor,
   children,
   color,
   onAction,
@@ -98,7 +88,6 @@ export default function DynamicButton({
 
   return (
     <StyledButton
-      alwaysShowColor={alwaysShowColor}
       backgroundColorStr={backgroundColorStr}
       onClick={clickHandler}
       onKeyUp={keyUpHandler}
