@@ -32,9 +32,10 @@ const CanvasOptionsButtonColumn = styled("div", {
   position: absolute;
   z-index: 3;
 
-  #${CANVAS_WRAPPER_CLASS_NAME}:not(:fullscreen, :-webkit-full-screen)
-    > *:first-child {
-    border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+  > *:first-child {
+    #${CANVAS_WRAPPER_CLASS_NAME}:not(:fullscreen, :-webkit-full-screen) & {
+      border-radius: 0.5rem 1rem 0.5rem 0.5rem;
+    }
   }
 
   ${({ theme }) => theme.breakpoints.up("md")} {
