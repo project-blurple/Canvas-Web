@@ -74,24 +74,7 @@ const SwatchSkeleton = styled(Skeleton)`
 `;
 
 const StyledButton = styled(Button)`
-  @supports (color: color-mix(in oklab, black, black)) {
-    color: color-mix(
-      in oklab,
-      contrast-color(var(--dynamic-bg-color)) 94%,
-      var(--dynamic-bg-color)
-    );
-  }
-
-  @supports not (color: color-mix(in oklab, black, black)) {
-    /*
-     * Ensure contrast of button label against background. The color property
-     * should match that of the background it sits against.
-     * From https://robinrendle.com/the-cascade/015-context-aware-colors
-     */
-    color: var(--dynamic-bg-color);
-    filter: invert(1) grayscale(1) brightness(1.3) contrast(9000);
-    mix-blend-mode: luminosity;
-  }
+  color: white;
 `;
 
 export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
@@ -327,12 +310,6 @@ export default function PlacePixelTab({
               disabled={selectedPixelColor === null}
               onClick={() => setColor(selectedPixelColor)}
               startIcon={<Pipette />}
-              style={{
-                backgroundColor:
-                  selectedPixelColor ?
-                    `rgba(${selectedPixelColor.rgba.join(",")})`
-                  : undefined,
-              }}
             >
               Select {selectedPixelColor?.name ?? "color"}
             </StyledButton>
