@@ -5,6 +5,8 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
+import { isEqual } from "es-toolkit";
+import { Pipette } from "lucide-react";
 import type React from "react";
 import {
   useCallback,
@@ -23,7 +25,7 @@ import {
 import { usePalette, usePlaySound } from "@/hooks";
 import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
-import { DynamicAnchorButton } from "../../../button";
+import { Button, DynamicAnchorButton } from "../../../button";
 import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
@@ -71,6 +73,10 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
+const StyledButton = styled(Button)`
+  color: white;
+`;
+
 export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
   const mainColors: Palette = [];
   const partnerColors: Palette = [];
@@ -109,6 +115,27 @@ function isColorUnavailable(
   return !user || !isUserInServer(user, color.guildId);
 }
 
+function findPaletteColor(
+  palette: PaletteColor[],
+  rgba: number[] | null,
+): PaletteColor | null {
+  if (!rgba) return null;
+
+  const exact = palette.find((color) => isEqual(color.rgba, rgba));
+  if (exact) return exact;
+
+  // The renderer can be a bit annoying - colors that aren't fully opaque can end up with minor rounding differences in the OffscreenCanvas when setting the color. This means that (88, 101, 242, 127) (the blank pixel) tends to end up as (88, 100, 243, 127), so an exact match isn't always feasible.
+  return (
+    palette.find(
+      (color) =>
+        Math.abs(color.rgba[0] - rgba[0]) <= 1 &&
+        Math.abs(color.rgba[1] - rgba[1]) <= 1 &&
+        Math.abs(color.rgba[2] - rgba[2]) <= 1 &&
+        color.rgba[3] === rgba[3],
+    ) ?? null
+  );
+}
+
 interface PlacePixelTabProps extends React.ComponentPropsWithRef<
   typeof PlacePixelTabBlock
 > {
@@ -129,6 +156,8 @@ export default function PlacePixelTab({
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
   const playPixelPlacementSound = usePlaySound("place_pixel");
+  const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
+  const { setColor } = useSelectedColorContext();
   const {
     turnstileElement,
     getToken,
@@ -259,6 +288,9 @@ export default function PlacePixelTab({
     setCoords(null);
   };
 
+  const selectedPixelColor =
+    findPaletteColor(palette ?? [], selectedPixelColorRgb) ?? null;
+
   return (
     <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
       {turnstileElement}
@@ -271,6 +303,16 @@ export default function PlacePixelTab({
               isColorDisabled={isColorDisabled}
               name="Partner colors"
             />
+            <ActionPanelPrimitives.SectionHeading>
+              Current pixel
+            </ActionPanelPrimitives.SectionHeading>
+            <StyledButton
+              disabled={selectedPixelColor === null}
+              onClick={() => setColor(selectedPixelColor)}
+              startIcon={<Pipette />}
+            >
+              Select {selectedPixelColor?.name ?? "color"}
+            </StyledButton>
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>
@@ -321,6 +363,7 @@ function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
 
   if (colors?.length === 0) return null;
   const isLoading = colors === undefined;
+
   return (
     <>
       <ActionPanelPrimitives.SectionHeading>

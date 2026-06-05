@@ -1,13 +1,14 @@
 "use client";
 
-import {
-  type CanvasInfo,
-  type Frame,
-  type PixelHistoryOverlayPixel,
-  type PlacePixelSocket,
-  type Point,
-  SocketEvents,
+import type {
+  CanvasInfo,
+  Frame,
+  PixelColor,
+  PixelHistoryOverlayPixel,
+  PlacePixelSocket,
+  Point,
 } from "@blurple-canvas-web/types";
+import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
@@ -468,6 +469,7 @@ export default function CanvasView({
     coords,
     isReticleVisible,
     offset,
+    setSelectedPixelColor,
     setCoords,
     setOffset,
     setZoom,
@@ -517,6 +519,18 @@ export default function CanvasView({
   const hasAppliedInitialFrameRef = useRef(false);
 
   const canUseFullscreen = useIsFullscreenAvailable();
+
+  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
+    const ctx = offscreenCanvasRef.current?.getContext("2d");
+    if (!ctx) return null;
+
+    try {
+      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
+      return [data[0], data[1], data[2], data[3]];
+    } catch {
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -1136,6 +1150,15 @@ export default function CanvasView({
     },
     [zoom, setCoords],
   );
+
+  useEffect(() => {
+    if (!coords) {
+      setSelectedPixelColor(null);
+      return;
+    }
+
+    setSelectedPixelColor(samplePixelColor(coords));
+  }, [coords, samplePixelColor, setSelectedPixelColor]);
 
   useEffect(() => {
     canvasImageWrapperRef.current?.addEventListener(
