@@ -28,7 +28,6 @@ paletteRouter.get(
   validate({ query: PaletteQueryModel }),
   async (req, res) => {
     addSpanAttributes(req, {
-      "event.id": "current",
       "query.all_colors": req.query.allColors,
     });
 

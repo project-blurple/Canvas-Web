@@ -53,6 +53,14 @@ frameRouter.get(
         res.sendStatus(500);
       }
     });
+
+    let contentLength = 0;
+
+    stream.on("data", (chunk: Buffer | string) => {
+      contentLength +=
+        typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
+    });
+
     stream.pipe(
       res
         .status(200)
@@ -67,10 +75,8 @@ frameRouter.get(
     );
 
     stream.on("end", () => {
-      const contentLength = res.getHeader("Content-Length");
       addSpanAttributes(req, {
-        "response.export.size.bytes":
-          typeof contentLength === "number" ? contentLength : undefined,
+        "response.export.size.bytes": contentLength,
       });
     });
   },
