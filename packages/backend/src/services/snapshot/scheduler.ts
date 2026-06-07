@@ -15,13 +15,6 @@ const SNAPSHOT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 let isRunning = false;
 let timer: NodeJS.Timeout | null = null;
 
-interface ReadySnapshotWindowRow {
-  canvas_id: number;
-  bucket_start: Date;
-  bucket_end: Date;
-  history_count: number;
-}
-
 function getWindowCutoff(now: Date): Date {
   return new Date(
     Math.floor(now.getTime() / SNAPSHOT_WINDOW_MS) * SNAPSHOT_WINDOW_MS,
@@ -85,16 +78,13 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   const now = new Date();
   const cutoff = getWindowCutoff(now);
 
-  const readyWindows = await prisma.$queryRaw<ReadySnapshotWindowRow[]>`
-    SELECT
-      canvas_id,
-      bucket_start,
-      bucket_end,
-      history_count
-    FROM history_snapshot_windows
-    WHERE bucket_end <= ${cutoff}
-    ORDER BY canvas_id ASC, bucket_start ASC
-  `;
+  const readyWindows = await prisma.$kysely
+    .selectFrom("history_snapshot_windows")
+    .select(["canvas_id", "bucket_start", "bucket_end", "history_count"])
+    .where("bucket_end", "<=", cutoff)
+    .orderBy("canvas_id", "asc")
+    .orderBy("bucket_start", "asc")
+    .execute();
 
   // Fetch cursor state for all canvases from the sidecar before processing.
   const cursors = await snapshotPrisma.snapshot_cursor.findMany();

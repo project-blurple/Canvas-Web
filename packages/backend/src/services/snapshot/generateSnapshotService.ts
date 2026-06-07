@@ -40,24 +40,6 @@ export interface BuildSnapshotParams {
   before: Date;
 }
 
-interface LatestHistoryEntryRow {
-  id: bigint;
-  canvas_id: number;
-  user_id: bigint;
-  x: number;
-  y: number;
-  color_id: number;
-  timestamp: Date;
-  guild_id: bigint | null;
-  color__id: number;
-  color__code: string;
-  color__emoji_name: string | null;
-  color__emoji_id: bigint | null;
-  color__global: boolean;
-  color__name: string;
-  color__rgba: number[];
-}
-
 /**
  * Gets the latest history entry for each coordinate on a canvas within a timestamp range.
  *
@@ -73,31 +55,36 @@ async function getLatestHistoryEntriesInRange({
     throw new Error("to must be after from");
   }
 
-  const rows = await prisma.$queryRaw<LatestHistoryEntryRow[]>`
-    SELECT DISTINCT ON (h.x, h.y)
-      h.id,
-      h.canvas_id,
-      h.user_id,
-      h.x,
-      h.y,
-      h.color_id,
-      h.timestamp,
-      h.guild_id,
-      c.id AS color__id,
-      c.code AS color__code,
-      c.emoji_name AS color__emoji_name,
-      c.emoji_id AS color__emoji_id,
-      c.global AS color__global,
-      c.name AS color__name,
-      c.rgba AS color__rgba
-    FROM history h
-    INNER JOIN color c ON c.id = h.color_id
-    WHERE h.canvas_id = ${canvasId}
-      AND h.erased_at IS NULL
-      AND h.timestamp >= ${from}
-      AND h.timestamp < ${to}
-    ORDER BY h.x, h.y, h.timestamp DESC, h.id DESC
-  `;
+  const rows = await prisma.$kysely
+    .selectFrom("history as h")
+    .innerJoin("color as c", "c.id", "h.color_id")
+    .select([
+      "h.id",
+      "h.canvas_id",
+      "h.user_id",
+      "h.x",
+      "h.y",
+      "h.color_id",
+      "h.timestamp",
+      "h.guild_id",
+      "c.id as color__id",
+      "c.code as color__code",
+      "c.emoji_name as color__emoji_name",
+      "c.emoji_id as color__emoji_id",
+      "c.global as color__global",
+      "c.name as color__name",
+      "c.rgba as color__rgba",
+    ])
+    .distinctOn(["x", "y"])
+    .where("h.canvas_id", "=", canvasId)
+    .where("h.erased_at", "is", null)
+    .where("h.timestamp", ">=", from)
+    .where("h.timestamp", "<", to)
+    .orderBy("x", "asc")
+    .orderBy("y", "asc")
+    .orderBy("timestamp", "desc")
+    .orderBy("id", "desc")
+    .execute();
 
   return rows.map((row) => ({
     id: row.id,
