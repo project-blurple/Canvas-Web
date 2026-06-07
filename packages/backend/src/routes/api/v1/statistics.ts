@@ -22,7 +22,7 @@ statisticsRouter.get(
   validate({ params: UserCanvasParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
-      "params.user.id": req.params.userId,
+      "query.user.id": req.params.userId,
       "canvas.id": req.params.canvasId,
     });
 
