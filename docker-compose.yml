@@ -12,6 +12,8 @@ services:
     environment:
       # Overwrite the port set in the .env file to ensure it matches the exposed port.
       - PORT=8000
+      - OTEL_SERVICE_NAME=canvas-backend
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
     ports:
       - 8000:8000
 
@@ -46,15 +48,17 @@ services:
       - "9200:9200"
 
   jaeger:
-    image: jaegertracing/jaeger:latest
-    environment:
-      - SPAN_STORAGE_TYPE=elasticsearch
-      - ES_SERVER_URLS=http://opensearch:9200
+    image: jaegertracing/jaeger:2.19.0
+    command:
+      - --config=/jaeger/config.yaml
     depends_on:
       - opensearch
+    volumes:
+      - ./jaeger.yaml:/jaeger/config.yaml
     ports:
+      - "16686:16686"
+      - "4317:4317"
       - "4318:4318"
-      - "14268:14268"
 
   oauth2-proxy:
     image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
@@ -62,6 +66,9 @@ services:
       - jaeger
     env_file:
       - ./.env.oauth
+    environment:
+      - OAUTH2_PROXY_REDIRECT_URL=http://jaeger.localhost/oauth2/callback
+      - OAUTH2_PROXY_UPSTREAMS=http://jaeger:16686
     ports:
       - "4180:4180"
 

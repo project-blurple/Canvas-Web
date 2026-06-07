@@ -79,15 +79,10 @@ The backend can export traces to Jaeger over OTLP.
 
 #### Local Jaeger setup
 
-Start Jaeger with OTLP enabled:
+Start Jaeger with the OpenSearch-backed config:
 
 ```sh
-docker run --rm --name jaeger ^
-	-p 16686:16686 ^
-	-p 4317:4317 ^
-	-p 4318:4318 ^
-	-e COLLECTOR_OTLP_ENABLED=true ^
-	jaegertracing/all-in-one:latest
+docker run --rm --name jaeger -p 16686:16686 -p 4317:4317 -p 4318:4318 -v "$(Get-Location)\jaeger.yaml:/jaeger/config.yaml" jaegertracing/jaeger:2.19.0 --config /jaeger/config.yaml
 ```
 
 Open the Jaeger UI at http://localhost:16686.
@@ -105,8 +100,7 @@ If you run the backend inside Docker Compose, set the OTLP endpoint to http://ja
 
 #### Notes
 
-- Jaeger stores traces in memory in this local setup, so they are cleared when the container stops.
-- The standalone Jaeger quickstart does not need OpenSearch.
+- The standalone Jaeger quickstart can use OpenSearch-backed storage with the mounted `jaeger.yaml` config.
 - This repository's Docker Compose stack uses OpenSearch for persistent trace storage.
 
 ### Jaeger auth with GitHub
@@ -124,11 +118,13 @@ OAUTH2_PROXY_PROVIDER=github
 OAUTH2_PROXY_CLIENT_ID=your-github-oauth-app-client-id
 OAUTH2_PROXY_CLIENT_SECRET=your-github-oauth-app-client-secret
 OAUTH2_PROXY_COOKIE_SECRET=generate-a-32-byte-base64-secret
-OAUTH2_PROXY_REDIRECT_URL=http://jaeger.localhost/oauth2/callback
-OAUTH2_PROXY_UPSTREAMS=http://jaeger:16686
+OAUTH2_PROXY_REDIRECT_URL=http://localhost:4180/oauth2/callback
+OAUTH2_PROXY_UPSTREAMS=http://host.docker.internal:16686
 OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
 OAUTH2_PROXY_EMAIL_DOMAINS=*
 ```
+
+The compose stack overrides the Jaeger URL and upstream so the same `.env.oauth` file can also be reused for manual `docker run` testing.
 
 #### GitHub access restrictions
 
