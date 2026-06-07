@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import {
   CanvasExportParamModel,
   type CanvasExportScale,
@@ -11,7 +12,6 @@ import {
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import { stat } from "node:fs/promises";
 import { assertLoggedIn, requireCanvasAdmin } from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
@@ -33,8 +33,8 @@ import {
 } from "@/services/canvasService";
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
-import { pixelRouter } from "./pixel";
 import { addSpanAttributes } from "@/utils/otel";
+import { pixelRouter } from "./pixel";
 
 export const canvasRouter = typedRouter(Router());
 

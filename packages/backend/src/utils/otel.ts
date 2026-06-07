@@ -1,10 +1,9 @@
-import { trace, type Span } from "@opentelemetry/api";
 import type { IncomingMessage } from "node:http";
+import { type Span, trace } from "@opentelemetry/api";
 
-export type RequestWithRootSpan = {
-  headers: IncomingMessage["headers"];
+export interface RequestWithRootSpan extends IncomingMessage {
   __otelRootSpan?: Span;
-};
+}
 
 export function addSpanAttributes(
   req: RequestWithRootSpan,

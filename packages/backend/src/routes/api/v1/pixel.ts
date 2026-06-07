@@ -22,8 +22,8 @@ import {
   validateUser,
 } from "@/services/pixelService";
 import { verifyTurnstileToken } from "@/services/turnstileService";
-import { historyRouter } from "./history";
 import { addSpanAttributes } from "@/utils/otel";
+import { historyRouter } from "./history";
 
 export const pixelRouter = typedRouter(Router({ mergeParams: true }));
 

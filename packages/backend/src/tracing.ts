@@ -1,12 +1,12 @@
+import type { IncomingMessage } from "node:http";
+import type { trace } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import type { IncomingMessage } from "node:http";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import config from "./config";
-import { trace } from "@opentelemetry/api";
 
 type IncomingMessageWithRootSpan = IncomingMessage & {
   __otelRootSpan?: ReturnType<typeof trace.getSpan>;

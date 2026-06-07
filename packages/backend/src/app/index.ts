@@ -7,9 +7,9 @@ import { errorHandler } from "@/middleware/errorHandler";
 import { apiRouter } from "@/routes";
 import { initializeCache } from "@/services/canvasService";
 import "@/utils";
-import { addSpanAttributes } from "@/utils/otel";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import { addSpanAttributes } from "@/utils/otel";
 import { SocketHandler } from "./SocketHandler";
 
 interface App {
