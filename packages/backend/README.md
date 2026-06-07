@@ -72,3 +72,38 @@ We use [Prisma](https://www.prisma.io) for connecting to our database. Running `
 Whenever you make changes to the database schema, you need to create a new migration. This is done using Prisma Migrate, which generates SQL migration files based on changes to the `schema.prisma` file.
 
 For instructions on how to create and manage database migrations using Prisma Migrate, see [MIGRATIONS_README.md](./prisma/MIGRATIONS_README.md).
+
+### OpenTelemetry tracing
+
+The backend can export traces to Jaeger over OTLP.
+
+#### Local Jaeger setup
+
+Start Jaeger with OTLP enabled:
+
+```sh
+docker run --rm --name jaeger ^
+	-p 16686:16686 ^
+	-p 4317:4317 ^
+	-p 4318:4318 ^
+	-e COLLECTOR_OTLP_ENABLED=true ^
+	jaegertracing/all-in-one:latest
+```
+
+Open the Jaeger UI at http://localhost:16686.
+
+#### Backend env vars
+
+Set these values in your local [`.env`](./.env) file:
+
+```sh
+OTEL_SERVICE_NAME=canvas-backend
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+```
+
+If you run the backend inside Docker Compose, set the OTLP endpoint to http://jaeger:4318/v1/traces instead.
+
+#### Notes
+
+- Jaeger stores traces in memory in this local setup, so they are cleared when the container stops.
+- OpenSearch can be used as a more persistent storage backend, but isn't necessary for local development.
