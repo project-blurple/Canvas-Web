@@ -23,6 +23,7 @@ import {
 } from "@/services/pixelService";
 import { verifyTurnstileToken } from "@/services/turnstileService";
 import { historyRouter } from "./history";
+import { addSpanAttributes } from "@/utils/otel";
 
 export const pixelRouter = typedRouter(Router({ mergeParams: true }));
 
@@ -73,6 +74,11 @@ pixelRouter.post(
     const { x, y, colorId } = req.body;
     assertLoggedIn(req);
     const profile = req.user;
+
+    addSpanAttributes(req, {
+      "params.coordinate.x": x,
+      "params.coordinate.y": y,
+    });
 
     await verifyTurnstileToken(req.body.turnstileToken ?? "");
 

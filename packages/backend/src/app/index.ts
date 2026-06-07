@@ -1,6 +1,5 @@
 import cors from "cors";
 import express from "express";
-import { trace, type Span } from "@opentelemetry/api";
 
 import config from "@/config";
 import { initializeAuth } from "@/middleware/discordAuth";
@@ -8,6 +7,7 @@ import { errorHandler } from "@/middleware/errorHandler";
 import { apiRouter } from "@/routes";
 import { initializeCache } from "@/services/canvasService";
 import "@/utils";
+import { addSpanAttributes } from "@/utils/otel";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { SocketHandler } from "./SocketHandler";
@@ -15,10 +15,6 @@ import { SocketHandler } from "./SocketHandler";
 interface App {
   socketHandler: SocketHandler;
 }
-
-type RequestWithRootSpan = express.Request & {
-  __otelRootSpan?: Span;
-};
 
 export function createApp(): App {
   const app = express();
@@ -36,11 +32,8 @@ export function createApp(): App {
   initializeAuth(app);
 
   app.use((req, _res, next) => {
-    const span =
-      (req as RequestWithRootSpan).__otelRootSpan ?? trace.getActiveSpan();
-
-    if (span && req.user) {
-      span.setAttributes({
+    if (req.user) {
+      addSpanAttributes(req, {
         "canvas.auth.userId": req.user.id,
         "canvas.auth.username": req.user.username,
         "canvas.auth.isCanvasAdmin": Boolean(req.user.isCanvasAdmin),
