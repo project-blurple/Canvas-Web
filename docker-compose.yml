@@ -53,9 +53,18 @@ services:
     depends_on:
       - opensearch
     ports:
-      - "16686:16686"
       - "4318:4318"
       - "14268:14268"
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
+    depends_on:
+      - jaeger
+    env_file:
+      - ./.env.oauth
+    ports:
+      - "4180:4180"
+
   caddy:
     image: caddy:2.7-alpine
 
@@ -66,6 +75,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - oauth2-proxy
     volumes:
       # copy local ./Caddyfile to /etc/caddy/Caddyfile on docker
       - ./Caddyfile:/etc/caddy/Caddyfile
@@ -75,3 +85,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  opensearch_data:

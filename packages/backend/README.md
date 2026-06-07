@@ -106,4 +106,52 @@ If you run the backend inside Docker Compose, set the OTLP endpoint to http://ja
 #### Notes
 
 - Jaeger stores traces in memory in this local setup, so they are cleared when the container stops.
-- OpenSearch can be used as a more persistent storage backend, but isn't necessary for local development.
+- The standalone Jaeger quickstart does not need OpenSearch.
+- This repository's Docker Compose stack uses OpenSearch for persistent trace storage.
+
+### Jaeger auth with GitHub
+
+When you run Jaeger through Docker Compose, the UI is protected by `oauth2-proxy` and GitHub login.
+
+Open the UI at http://jaeger.localhost after starting the compose stack.
+
+#### Required env vars
+
+Copy the repository root [`.env.oauth.example`](../../.env.oauth.example) to `.env.oauth` and set these values before running `docker compose up`:
+
+```sh
+OAUTH2_PROXY_PROVIDER=github
+OAUTH2_PROXY_CLIENT_ID=your-github-oauth-app-client-id
+OAUTH2_PROXY_CLIENT_SECRET=your-github-oauth-app-client-secret
+OAUTH2_PROXY_COOKIE_SECRET=generate-a-32-byte-base64-secret
+OAUTH2_PROXY_REDIRECT_URL=http://jaeger.localhost/oauth2/callback
+OAUTH2_PROXY_UPSTREAMS=http://jaeger:16686
+OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
+OAUTH2_PROXY_EMAIL_DOMAINS=*
+```
+
+#### GitHub access restrictions
+
+Set one of these to restrict who can sign in:
+
+```sh
+OAUTH2_PROXY_GITHUB_ORG=your-org
+OAUTH2_PROXY_GITHUB_TEAM=your-org:your-team
+OAUTH2_PROXY_GITHUB_REPO=your-org/your-repo
+```
+
+#### Recommended local settings
+
+These keep the local setup simple on plain HTTP:
+
+```sh
+OAUTH2_PROXY_REVERSE_PROXY=true
+OAUTH2_PROXY_COOKIE_SECURE=false
+OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
+```
+
+#### Notes
+
+- `OAUTH2_PROXY_CLIENT_SECRET`, `OAUTH2_PROXY_COOKIE_SECRET`, and the GitHub restriction variables can all be set via env.
+- `OAUTH2_PROXY_EMAIL_DOMAINS=*` is the simplest local-dev setting when using GitHub org/team restrictions.
+- If you later put Jaeger behind HTTPS, set `OAUTH2_PROXY_COOKIE_SECURE=true` and update `OAUTH2_PROXY_REDIRECT_URL` to the HTTPS URL.

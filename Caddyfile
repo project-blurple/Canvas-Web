@@ -4,3 +4,7 @@ localhost, canvas.projectblurple.com {
   reverse_proxy /socket.io* backend:8000
   reverse_proxy /* frontend:3000
 }
+
+http://jaeger.localhost {
+  reverse_proxy oauth2-proxy:4180
+}
