@@ -17,5 +17,9 @@ declare namespace NodeJS {
     SNAPSHOTS_AVAILABLE_FOR_CANVASES?: string;
 
     BOT_PLACING_ENABLED?: string;
+
+    CAPTCHA_ENABLED?: string;
+
+    TURNSTILE_SECRET_KEY?: string;
   }
 }

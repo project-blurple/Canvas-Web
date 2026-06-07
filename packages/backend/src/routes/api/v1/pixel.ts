@@ -21,6 +21,7 @@ import {
   validatePixel,
   validateUser,
 } from "@/services/pixelService";
+import { verifyTurnstileToken } from "@/services/turnstileService";
 import { historyRouter } from "./history";
 
 export const pixelRouter = typedRouter(Router({ mergeParams: true }));
@@ -72,6 +73,8 @@ pixelRouter.post(
     const { x, y, colorId } = req.body;
     assertLoggedIn(req);
     const profile = req.user;
+
+    await verifyTurnstileToken(req.body.turnstileToken ?? "");
 
     const coordinates: Point = { x, y };
     const guildFlags = await withDiscordAccessToken(
