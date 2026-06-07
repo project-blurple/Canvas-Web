@@ -41,8 +41,8 @@ pnpm prisma migrate dev --config prisma/core/prisma.config.ts --name add_publish
 
 ## Common Commands
 
-| Command                                            | Purpose                                                         |
-| -------------------------------------------------- | --------------------------------------------------------------- |
+| Command                                                                                  | Purpose                                                         |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------- |
 | `pnpm prisma migrate dev --config prisma/core/prisma.config.ts --name <name>`            | Create and apply a new migration in development                 |
 | `pnpm prisma migrate status --config prisma/core/prisma.config.ts`                       | Check the status of all migrations                              |
 | `pnpm prisma migrate resolve --config prisma/core/prisma.config.ts --rolled-back <name>` | Manually mark a migration as rolled back                        |
