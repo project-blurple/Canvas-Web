@@ -39,7 +39,7 @@
     "check:fix": "pnpm run format:fix && pnpm run lint:fix",
     "clean": "rm -rf -- build/ && pnpm purge",
     "prisma:push": "prisma db push --config prisma/core/prisma.config.ts",
-    "prisma:seed": "prisma db seed --",
+    "prisma:seed": "prisma db seed --config prisma/core/prisma.config.ts --",
     "prisma:migrate": "prisma migrate deploy --config prisma/core/prisma.config.ts",
     "prisma:snapshots:generate": "prisma generate --config prisma/snapshots/prisma.config.ts",
     "prisma:snapshots:migrate:dev": "prisma migrate dev --config prisma/snapshots/prisma.config.ts",
