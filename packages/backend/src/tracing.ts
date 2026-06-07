@@ -2,9 +2,15 @@ import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentation
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { resourceFromAttributes } from "@opentelemetry/resources";
+import type { IncomingMessage } from "node:http";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
 import config from "./config";
+import { trace } from "@opentelemetry/api";
+
+type IncomingMessageWithRootSpan = IncomingMessage & {
+  __otelRootSpan?: ReturnType<typeof trace.getSpan>;
+};
 
 const exporter = new OTLPTraceExporter({
   url: config.tracing.otlpTracesEndpoint,
@@ -18,7 +24,15 @@ const sdk = new NodeSDK({
 });
 
 registerInstrumentations({
-  instrumentations: [getNodeAutoInstrumentations()],
+  instrumentations: [
+    getNodeAutoInstrumentations({
+      "@opentelemetry/instrumentation-http": {
+        requestHook: (span, request) => {
+          (request as IncomingMessageWithRootSpan).__otelRootSpan = span;
+        },
+      },
+    }),
+  ],
 });
 
 try {
