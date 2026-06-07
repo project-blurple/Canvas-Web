@@ -76,9 +76,11 @@ pixelRouter.post(
     const profile = req.user;
 
     addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "params.color.id": colorId,
       "params.coordinate.x": x,
       "params.coordinate.y": y,
-      "params.color.id": colorId,
+      "turnstile.provided": Boolean(req.body.turnstileToken),
       "pixel.place.success": false,
     });
 
