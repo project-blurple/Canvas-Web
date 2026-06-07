@@ -78,6 +78,8 @@ pixelRouter.post(
     addSpanAttributes(req, {
       "params.coordinate.x": x,
       "params.coordinate.y": y,
+      "params.color.id": colorId,
+      "pixel.place.success": false,
     });
 
     await verifyTurnstileToken(req.body.turnstileToken ?? "");
@@ -94,6 +96,11 @@ pixelRouter.post(
       validatePixel(req.params.canvasId, coordinates, true),
       validateUser(BigInt(profile.id)),
     ]);
+
+    addSpanAttributes(req, {
+      "params.color.name": color.name,
+    });
+
     const { futureCooldown } = await placePixel(
       req.params.canvasId,
       BigInt(profile.id),
@@ -102,10 +109,18 @@ pixelRouter.post(
     );
     if (!futureCooldown) {
       res.status(201).json({ cooldownEndTime: null });
+      addSpanAttributes(req, {
+        "pixel.place.cooldown": false,
+        "pixel.place.success": true,
+      });
       return;
     }
-    res
-      .status(201)
-      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
+
+    const cooldownMs = futureCooldown.valueOf() - Date.now();
+    res.status(201).json({ cooldownEndTime: cooldownMs });
+    addSpanAttributes(req, {
+      "pixel.place.cooldown": cooldownMs,
+      "pixel.place.success": true,
+    });
   },
 );
