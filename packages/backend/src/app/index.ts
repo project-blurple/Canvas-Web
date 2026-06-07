@@ -34,10 +34,10 @@ export function createApp(): App {
   app.use((req, _res, next) => {
     if (req.user) {
       addSpanAttributes(req, {
-        "canvas.auth.userId": req.user.id,
-        "canvas.auth.username": req.user.username,
-        "canvas.auth.isCanvasAdmin": Boolean(req.user.isCanvasAdmin),
-        "canvas.auth.isCanvasModerator": Boolean(req.user.isCanvasModerator),
+        "auth.userId": req.user.id,
+        "auth.username": req.user.username,
+        "auth.isCanvasAdmin": Boolean(req.user.isCanvasAdmin),
+        "auth.isCanvasModerator": Boolean(req.user.isCanvasModerator),
       });
     }
 
