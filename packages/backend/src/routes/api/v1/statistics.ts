@@ -47,6 +47,8 @@ statisticsRouter.get(
       req.query.size,
     );
     res.status(200).json(leaderboard);
+
+    addSpanAttributes(req, { "response.size": leaderboard.size });
   },
 );
 

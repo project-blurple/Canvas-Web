@@ -8,14 +8,21 @@ export type RequestWithRootSpan = {
 
 export function addSpanAttributes(
   req: RequestWithRootSpan,
-  attributes: Record<string, string | number | boolean>,
+  attributes: Record<string, string | number | boolean | null | undefined>,
 ): void {
   const activeSpan = trace.getActiveSpan();
   const rootSpan = req.__otelRootSpan;
 
-  activeSpan?.setAttributes(attributes);
+  const filteredAttributes: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(attributes)) {
+    if (value !== null && value !== undefined) {
+      filteredAttributes[key] = value;
+    }
+  }
+
+  activeSpan?.setAttributes(filteredAttributes);
 
   if (rootSpan && rootSpan !== activeSpan) {
-    rootSpan.setAttributes(attributes);
+    rootSpan.setAttributes(filteredAttributes);
   }
 }
