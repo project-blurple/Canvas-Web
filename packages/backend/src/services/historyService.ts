@@ -6,7 +6,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import type { Expression, ExpressionBuilder, SqlBool } from "kysely";
 import { prisma } from "@/client";
-import type { DB } from "@/client/kysely/types";
+import type { DB } from "@/client/core/kysely/types";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {

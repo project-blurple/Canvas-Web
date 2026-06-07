@@ -69,6 +69,6 @@ We use [Prisma](https://www.prisma.io) for connecting to our database. Running `
 
 ### Prisma Migrations
 
-Whenever you make changes to the database schema, you need to create a new migration. This is done using Prisma Migrate, which generates SQL migration files based on changes to the `schema.prisma` file.
+Whenever you make changes to the database schema, you need to create a new migration. This is done using Prisma Migrate, which generates SQL migration files based on changes to `prisma/core/schema.prisma`.
 
-For instructions on how to create and manage database migrations using Prisma Migrate, see [MIGRATIONS_README.md](./prisma/MIGRATIONS_README.md).
+For instructions on how to create and manage database migrations using Prisma Migrate, see [MIGRATIONS_README.md](./prisma/core/MIGRATIONS_README.md).

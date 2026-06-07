@@ -6,7 +6,7 @@ This guide explains how to create and manage database migrations using Prisma Mi
 
 ### 1. Modify Your Schema
 
-Update the `schema.prisma` file with your desired database changes.
+Update the `schema.prisma` file in `prisma/core/` with your desired database changes.
 
 ```prisma
 model Post {
@@ -23,18 +23,18 @@ model Post {
 Run the migration command to generate a migration file:
 
 ```bash
-pnpm prisma migrate dev --name <migration_name>
+pnpm prisma migrate dev --config prisma/core/prisma.config.ts --name <migration_name>
 ```
 
 Replace `<migration_name>` with a descriptive name for your changes, using snake_case. For example:
 
 ```bash
-pnpm prisma migrate dev --name add_published_field_to_posts
+pnpm prisma migrate dev --config prisma/core/prisma.config.ts --name add_published_field_to_posts
 ```
 
 ### 3. What Happens Automatically
 
-- Prisma generates a new migration file in the `migrations/` folder
+- Prisma generates a new migration file in `prisma/core/migrations/`
 - The migration file contains the SQL statements needed to update the schema
 - The migration is automatically applied to your development database
 - The Prisma Client is regenerated
@@ -43,11 +43,11 @@ pnpm prisma migrate dev --name add_published_field_to_posts
 
 | Command                                            | Purpose                                                         |
 | -------------------------------------------------- | --------------------------------------------------------------- |
-| `pnpm prisma migrate dev --name <name>`            | Create and apply a new migration in development                 |
-| `pnpm prisma migrate status`                       | Check the status of all migrations                              |
-| `pnpm prisma migrate resolve --rolled-back <name>` | Manually mark a migration as rolled back                        |
-| `pnpm prisma migrate reset`                        | Reset the database and reapply all migrations (⚠️ deletes data) |
-| `pnpm prisma migrate deploy`                       | Apply pending migrations in production                          |
+| `pnpm prisma migrate dev --config prisma/core/prisma.config.ts --name <name>`            | Create and apply a new migration in development                 |
+| `pnpm prisma migrate status --config prisma/core/prisma.config.ts`                       | Check the status of all migrations                              |
+| `pnpm prisma migrate resolve --config prisma/core/prisma.config.ts --rolled-back <name>` | Manually mark a migration as rolled back                        |
+| `pnpm prisma migrate reset --config prisma/core/prisma.config.ts`                        | Reset the database and reapply all migrations (⚠️ deletes data) |
+| `pnpm prisma migrate deploy --config prisma/core/prisma.config.ts`                       | Apply pending migrations in production                          |
 
 ## Best Practices
 
@@ -59,7 +59,7 @@ pnpm prisma migrate dev --name add_published_field_to_posts
 
 ## Tips
 
-- Use `pnpm prisma migrate status` to see which migrations have been applied
+- Use `pnpm prisma migrate status --config prisma/core/prisma.config.ts` to see which migrations have been applied
 - Migration files are immutable once created—if you need to fix a mistake, create a new migration
 - Never manually edit SQL in migration files; instead, create a new migration with corrections
 
