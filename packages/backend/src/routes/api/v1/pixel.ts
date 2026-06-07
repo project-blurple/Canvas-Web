@@ -77,9 +77,9 @@ pixelRouter.post(
 
     addSpanAttributes(req, {
       "canvas.id": req.params.canvasId,
-      "params.color.id": colorId,
-      "params.coordinate.x": x,
-      "params.coordinate.y": y,
+      "color.id": colorId,
+      "coordinate.x": x,
+      "coordinate.y": y,
       "turnstile.provided": Boolean(req.body.turnstileToken),
       "pixel.place.success": false,
     });
@@ -100,7 +100,7 @@ pixelRouter.post(
     ]);
 
     addSpanAttributes(req, {
-      "params.color.name": color.name,
+      "color.name": color.name,
     });
 
     const { futureCooldown } = await placePixel(

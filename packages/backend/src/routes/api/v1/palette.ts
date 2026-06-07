@@ -64,10 +64,10 @@ paletteRouter.post(
   validate({ body: ColorBodyModel }),
   async (req, res) => {
     addSpanAttributes(req, {
-      "params.color.name": req.body.name,
-      "params.color.code": req.body.code,
-      "params.color.global": req.body.global,
-      "params.color.rgba":
+      "color.name": req.body.name,
+      "color.code": req.body.code,
+      "color.global": req.body.global,
+      "color.rgba":
         req.body.rgba ?
           `rgba(${req.body.rgba[0]},${req.body.rgba[1]},${req.body.rgba[2]},${req.body.rgba[3]})`
         : false,
@@ -80,7 +80,7 @@ paletteRouter.post(
       metadata: req.body,
     });
     addSpanAttributes(req, {
-      "params.color.id": color.id,
+      "color.id": color.id,
     });
   },
 );
@@ -91,11 +91,11 @@ paletteRouter.put(
   validate({ params: ColorIdParamModel, body: ColorBodyModel }),
   async (req, res) => {
     addSpanAttributes(req, {
-      "params.color.id": req.params.colorId,
-      "params.color.name": req.body.name,
-      "params.color.code": req.body.code,
-      "params.color.global": req.body.global,
-      "params.color.rgba":
+      "color.id": req.params.colorId,
+      "color.name": req.body.name,
+      "color.code": req.body.code,
+      "color.global": req.body.global,
+      "color.rgba":
         req.body.rgba ?
           `rgba(${req.body.rgba[0]},${req.body.rgba[1]},${req.body.rgba[2]},${req.body.rgba[3]})`
         : false,
@@ -119,7 +119,7 @@ paletteRouter.delete(
   validate({ params: ColorIdParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
-      "params.color.id": req.params.colorId,
+      "color.id": req.params.colorId,
     });
 
     await deleteColor(req.params.colorId);
@@ -136,9 +136,9 @@ paletteRouter.post(
   validate({ params: AssignColorParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
+      "color.id": req.params.colorId,
       "event.id": req.params.eventId,
-      "params.color.id": req.params.colorId,
-      "params.guild.id": req.params.guildId,
+      "guild.id": req.params.guildId,
     });
 
     await assignColorToEvent({
@@ -164,9 +164,9 @@ paletteRouter.delete(
   validate({ params: AssignColorParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
+      "color.id": req.params.colorId,
       "event.id": req.params.eventId,
-      "params.color.id": req.params.colorId,
-      "params.guild.id": req.params.guildId,
+      "guild.id": req.params.guildId,
     });
 
     await unassignColorFromEvent({
