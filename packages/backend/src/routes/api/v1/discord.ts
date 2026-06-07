@@ -17,6 +17,7 @@ import {
 import { saveDiscordProfile } from "@/services/discordProfileService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import { assertIsSnowflake } from "@/utils/discordRouteUtils";
+import { addSpanAttributes } from "@/utils/otel";
 
 export const discordRouter = Router();
 
@@ -24,6 +25,10 @@ discordRouter.get("/", passport.authenticate("discord"));
 
 discordRouter.get("/guilds/:guildId/permissions", async (req, res) => {
   const { guildId } = req.params;
+  addSpanAttributes(req, {
+    "guild.id": guildId,
+  });
+
   assertLoggedIn(req);
 
   assertIsSnowflake(guildId, "guildId");
@@ -46,6 +51,10 @@ discordRouter.get("/guilds/permissions-map", async (req, res) => {
   res.status(200).json({
     guilds: guildFlags,
   });
+
+  addSpanAttributes(req, {
+    "response.size": Object.keys(guildFlags).length,
+  });
 });
 
 discordRouter.post("/guilds/refresh", guildRefreshLimiter, async (req, res) => {
@@ -62,6 +71,10 @@ discordRouter.post("/guilds/refresh", guildRefreshLimiter, async (req, res) => {
     });
 
     await syncDiscordGuildRecords(guildFlags);
+
+    addSpanAttributes(req, {
+      "response.size": Object.keys(guildFlags).length,
+    });
   } catch (error) {
     ApiError.sendError(res, error);
   }
