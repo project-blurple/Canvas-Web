@@ -109,6 +109,6 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
 - Jaeger UI: http://localhost:16686
 
 - Files:
-	- jaeger.yaml — base config
-	- jaeger.dev.yaml — dev overrides
-	- docker-compose.local.yml — minimal Jaeger/OpenSearch for host-backed development
+ 	- jaeger.yaml — base config
+ 	- jaeger.dev.yaml — dev overrides
+ 	- docker-compose.local.yml — minimal Jaeger/OpenSearch for host-backed development
