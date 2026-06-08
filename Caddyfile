@@ -8,3 +8,12 @@ localhost, canvas.projectblurple.com {
 http://jaeger.localhost {
   reverse_proxy oauth2-proxy:4180
 }
+
+jaeger.blurplecanvas.com {
+    reverse_proxy oauth2-proxy:4180 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+}
