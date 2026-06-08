@@ -4,5 +4,9 @@ extensions:
       some_storage:
         opensearch:
           tls:
-            enabled: true
-            skip_host_verify: true
+            insecure_skip_verify: true
+          server_urls:
+            - http://opensearch:9200
+  jaeger_query:
+    storage:
+      metrics: ""

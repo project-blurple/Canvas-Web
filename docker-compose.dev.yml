@@ -2,6 +2,15 @@ services:
   opensearch:
     ports:
       - "9200:9200"
+    environment:
+      - DISABLE_SECURITY_PLUGIN=true
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      timeout: 10s
+      interval: 10s
+      retries: 12
+      start_period: 10s
 
   jaeger:
     command:
