@@ -90,7 +90,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 - Run lightweight local-only stack (Jaeger + OpenSearch) while running the backend on your host:
 
 ```bash
-docker compose -f docker-compose.local.yml up -d
+docker compose -f docker-compose.dev.yml up -d
 ```
 
 - Environment (host `pnpm dev`):
@@ -111,4 +111,4 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
 - Files:
   - jaeger.yaml — base config
   - jaeger.dev.yaml — dev overrides
-  - docker-compose.local.yml — minimal Jaeger/OpenSearch for host-backed development
+  - docker-compose.dev.yml — minimal Jaeger/OpenSearch for host-backed development
