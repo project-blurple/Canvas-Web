@@ -44,8 +44,6 @@ services:
         hard: -1
     volumes:
       - opensearch_data:/usr/share/opensearch/data
-    ports:
-      - "9200:9200"
     healthcheck:
       test:
         [
@@ -60,12 +58,12 @@ services:
   jaeger:
     image: jaegertracing/jaeger:2.19.0
     command:
-      - --config=/jaeger/config.yaml
+      - --config=/jaeger/jaeger.yaml
     depends_on:
       opensearch:
         condition: service_healthy
     volumes:
-      - ./jaeger.yaml:/jaeger/config.yaml
+      - ./jaeger.yaml:/jaeger/jaeger.yaml
     ports:
       - "16686:16686"
       - "4317:4317"

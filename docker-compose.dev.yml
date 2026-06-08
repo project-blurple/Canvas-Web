@@ -1,0 +1,12 @@
+services:
+  opensearch:
+    ports:
+      - "9200:9200"
+
+  jaeger:
+    command:
+      - --config=/jaeger/jaeger.yaml
+      - --config=/jaeger/jaeger.dev.yaml
+    volumes:
+      - ./jaeger.yaml:/jaeger/jaeger.yaml
+      - ./jaeger.dev.yaml:/jaeger/jaeger.dev.yaml
