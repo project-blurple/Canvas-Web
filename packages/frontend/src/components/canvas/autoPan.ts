@@ -32,10 +32,24 @@ function pixelScreenPos({
 }
 
 /**
+ * How far past the container edge (as a fraction of the container's size on
+ * that axis) the reticle may drift before we abandon gentle edge-following and
+ * hard-recenter the viewport on it.
+ *
+ * Keyboard auto-pan moves the reticle instantly but only glides the viewport to
+ * follow, so while an arrow key is held the reticle can briefly outrun the
+ * viewport and slip past the edge.
+ */
+const RECENTER_EDGE_LENIENCE = 0.5;
+
+/**
  * Calculates the new viewport offset for one axis when the reticle moves from
  * `oldCoord` to `newCoord`, following these rules:
  *
- * 1. If the reticle was off-screen on this axis, fully recenter on it.
+ * 1. If the reticle was off-screen on this axis by more than the recenter
+ *    margin, fully recenter on it. A smaller overshoot (e.g. the viewport
+ *    briefly lagging behind a held arrow key) falls through to the gentle
+ *    threshold correction below instead of snapping.
  * 2. If the reticle was inside the padded threshold and stays inside, do not pan.
  * 3. If the reticle was inside the threshold and leaves it, pan by the movement delta
  *    so the reticle stays visually still.
@@ -55,7 +69,11 @@ function resolveAxisOffset({
   const oldScreen = pixelScreenPos({ coord: oldCoord, ...screenArgs });
   const newScreen = pixelScreenPos({ coord: newCoord, ...screenArgs });
 
-  if (oldScreen < 0 || oldScreen > containerSize) {
+  const recenterMargin = containerSize * RECENTER_EDGE_LENIENCE;
+  if (
+    oldScreen < -recenterMargin ||
+    oldScreen > containerSize + recenterMargin
+  ) {
     return (canvasSize / 2 - newCoord - 0.5) * zoom;
   }
 
