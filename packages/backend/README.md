@@ -73,37 +73,42 @@ Whenever you make changes to the database schema, you need to create a new migra
 
 For instructions on how to create and manage database migrations using Prisma Migrate, see [MIGRATIONS_README.md](./prisma/MIGRATIONS_README.md).
 
-### OpenTelemetry (tracing)
+### Tracing (OpenTelemetry & Jaeger)
 
-Run the prod-default stack:
+- Run full prod stack:
 
 ```bash
 docker compose up -d
 ```
 
-Run the local/dev stack (opens OpenSearch and mounts the dev Jaeger overlay):
+- Run dev stack (backend + local Jaeger/OpenSearch):
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
-If running the backend on your host, set in `./.env`:
+- Run lightweight local-only stack (Jaeger + OpenSearch) while running the backend on your host:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
+
+- Environment (host `pnpm dev`):
 
 ```bash
 OTEL_SERVICE_NAME=canvas-backend
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
 ```
 
-If running the backend inside Docker Compose, use:
+- Environment (backend inside Compose):
 
 ```bash
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
 ```
 
-Files: `jaeger.yaml` (base) and `jaeger.dev.yaml` (dev overlay).
+- Jaeger UI: http://localhost:16686
 
-### Jaeger (UI & auth)
-
-Jaeger UI is available at `http://localhost:16686` when running the dev stack. In the Compose stack the UI is protected by `oauth2-proxy`; see `./.env.oauth.example` for the minimal env keys if you need to enable GitHub auth.
-
-Files: `jaeger.yaml` (base) and `jaeger.dev.yaml` (dev overlay).
+- Files:
+	- jaeger.yaml — base config
+	- jaeger.dev.yaml — dev overrides
+	- docker-compose.local.yml — minimal Jaeger/OpenSearch for host-backed development

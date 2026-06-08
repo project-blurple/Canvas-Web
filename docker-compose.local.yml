@@ -1,0 +1,42 @@
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.9.0
+    environment:
+      OPENSEARCH_JAVA_OPTS: -Xms512m -Xmx512m
+      cluster.name: opensearch-cluster
+      discovery.type: single-node
+      DISABLE_SECURITY_PLUGIN: "true"
+    healthcheck:
+      test:
+        ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health || exit 1"]
+      timeout: 10s
+      interval: 10s
+      retries: 12
+      start_period: 10s
+    ports:
+      - "9200:9200"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  jaeger:
+    image: jaegertracing/jaeger:2.19.0
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    command:
+      - --config=/jaeger/jaeger.yaml
+      - --config=/jaeger/jaeger.dev.yaml
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./jaeger.yaml:/jaeger/jaeger.yaml
+      - ./jaeger.dev.yaml:/jaeger/jaeger.dev.yaml
+
+volumes:
+  opensearch_data:
