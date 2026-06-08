@@ -1185,6 +1185,8 @@ export default function CanvasView({
 
       event.preventDefault();
 
+      setIsZooming(false);
+
       const step = event.shiftKey ? ARROW_KEY_JUMP_STEP_SIZE : 1;
       const newCoords = {
         x: clamp(coords.x + delta.x * step, 0, canvas.width - 1),
