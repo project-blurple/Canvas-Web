@@ -9,7 +9,7 @@ import {
   type PixelHistoryParams,
   usePixelHistory,
 } from "@/hooks/queries/usePixelHistory";
-import { createPixelUrl } from "@/util";
+import createPixelUrl from "@/util/searchParams";
 import ActionPanelPrimitives from "../primitives";
 import {
   ActionPanelTabBody,

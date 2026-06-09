@@ -7,7 +7,8 @@ import DynamicButton from "@/components/button/DynamicButton";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
-import { createPixelUrl, hexStringToPixelColor } from "@/util";
+import { hexStringToPixelColor } from "@/util";
+import createPixelUrl from "@/util/searchParams";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
