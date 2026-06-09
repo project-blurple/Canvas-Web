@@ -6,6 +6,7 @@ import { registerInstrumentations } from "@opentelemetry/instrumentation";
 import { resourceFromAttributes } from "@opentelemetry/resources";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ATTR_SERVICE_NAME } from "@opentelemetry/semantic-conventions";
+import { PrismaInstrumentation } from "@prisma/instrumentation";
 import config from "./config";
 
 type IncomingMessageWithRootSpan = IncomingMessage & {
@@ -32,6 +33,7 @@ registerInstrumentations({
         },
       },
     }),
+    new PrismaInstrumentation(),
   ],
 });
 
