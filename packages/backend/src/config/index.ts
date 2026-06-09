@@ -73,6 +73,12 @@ const config = {
     canvases: path.resolve("static", "canvas"),
   },
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  tracing: {
+    serviceName: process.env.OTEL_SERVICE_NAME || "canvas-backend",
+    otlpTracesEndpoint:
+      process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
+      "http://localhost:4318/v1/traces",
+  },
   // having a random secret would mess with persistent sessions
   expressSessionSecret:
     process.env.EXPRESS_SESSION_SECRET || "change the secret in production",

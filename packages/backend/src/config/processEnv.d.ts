@@ -13,6 +13,9 @@ declare namespace NodeJS {
     DISCORD_MANAGEMENT_GUILD_ID?: string;
     DISCORD_MODERATOR_ROLE_ID?: string;
 
+    OTEL_SERVICE_NAME?: string;
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT?: string;
+
     GENERATE_SNAPSHOTS?: string;
     SNAPSHOTS_AVAILABLE_FOR_CANVASES?: string;
 
