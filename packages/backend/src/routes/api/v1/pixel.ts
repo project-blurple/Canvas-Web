@@ -22,6 +22,7 @@ import {
   validateUser,
 } from "@/services/pixelService";
 import { verifyTurnstileToken } from "@/services/turnstileService";
+import { addSpanAttributes } from "@/utils/otel";
 import { historyRouter } from "./history";
 
 export const pixelRouter = typedRouter(Router({ mergeParams: true }));
@@ -74,6 +75,15 @@ pixelRouter.post(
     assertLoggedIn(req);
     const profile = req.user;
 
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "color.id": colorId,
+      "coordinate.x": x,
+      "coordinate.y": y,
+      "turnstile.provided": Boolean(req.body.turnstileToken),
+      "pixel.place.success": false,
+    });
+
     await verifyTurnstileToken(req.body.turnstileToken ?? "");
 
     const coordinates: Point = { x, y };
@@ -88,6 +98,11 @@ pixelRouter.post(
       validatePixel(req.params.canvasId, coordinates, true),
       validateUser(BigInt(profile.id)),
     ]);
+
+    addSpanAttributes(req, {
+      "color.name": color.name,
+    });
+
     const { futureCooldown } = await placePixel(
       req.params.canvasId,
       BigInt(profile.id),
@@ -96,10 +111,18 @@ pixelRouter.post(
     );
     if (!futureCooldown) {
       res.status(201).json({ cooldownEndTime: null });
+      addSpanAttributes(req, {
+        "pixel.place.cooldown": false,
+        "pixel.place.success": true,
+      });
       return;
     }
-    res
-      .status(201)
-      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
+
+    const cooldownMs = futureCooldown.valueOf() - Date.now();
+    res.status(201).json({ cooldownEndTime: cooldownMs });
+    addSpanAttributes(req, {
+      "pixel.place.cooldown": cooldownMs,
+      "pixel.place.success": true,
+    });
   },
 );

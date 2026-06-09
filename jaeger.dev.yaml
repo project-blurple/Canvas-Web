@@ -1,0 +1,12 @@
+extensions:
+  jaeger_storage:
+    backends:
+      some_storage:
+        opensearch:
+          tls:
+            insecure_skip_verify: true
+          server_urls:
+            - http://opensearch:9200
+  jaeger_query:
+    storage:
+      metrics: ""
