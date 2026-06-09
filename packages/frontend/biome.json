@@ -1,0 +1,15 @@
+{
+	"root": false,
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"extends": ["../../biome.json"],
+	"vcs": {
+		"root": "../.."
+	},
+	"linter": {
+		"rules": {
+			"performance": {
+				"noBarrelFile": "error"
+			}
+		}
+	}
+}
