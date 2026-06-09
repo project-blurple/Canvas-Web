@@ -13,9 +13,11 @@ import {
 } from "@/components/canvas/CanvasPreviewCard";
 import NumberField from "@/components/NumberField";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import { 
+import {
   useClearCanvasCache,
-  useCreateCanvas,useUpdateCanvasInfo, } from "@/hooks/queries/useCanvasInfo";
+  useCreateCanvas,
+  useUpdateCanvasInfo,
+} from "@/hooks/queries/useCanvasInfo";
 import { useCanvasList } from "@/hooks/queries/useCanvasList";
 import { useEventInfo } from "@/hooks/queries/useEventInfo";
 import AdminDashboard from "../AdminDashboard";
