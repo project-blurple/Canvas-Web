@@ -1,6 +1,6 @@
-import path from 'node:path';
-import swc from 'unplugin-swc';
-import { defineConfig } from 'vitest/config';
+import path from "node:path";
+import swc from "unplugin-swc";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   // Let SWC be the sole transformer (it emits the NestJS decorator metadata
@@ -8,13 +8,13 @@ export default defineConfig({
   oxc: false,
   test: {
     globals: true,
-    include: ['src/**/*.spec.ts'],
-    root: './',
+    include: ["src/**/*.spec.ts"],
+    root: "./",
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      "@": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [swc.vite({ module: { type: 'es6' } })],
+  plugins: [swc.vite({ module: { type: "es6" } })],
 });
