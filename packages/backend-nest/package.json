@@ -1,0 +1,69 @@
+{
+  "name": "@blurple-canvas-web/backend-nest",
+  "version": "1.0.0",
+  "description": "API server for Blurple Canvas using NestJS",
+  "author": "",
+  "private": true,
+  "contributors": [
+    "Aaron Guo <aaronjoshguo@gmail.com>",
+    "Emily Zou <yzou415@aucklanduni.ac.nz>",
+    "Henry Wang <hwan513@aucklanduni.ac.nz> (http://henryh.wang)",
+    "Jasper Lai <klai866@aucklanduni.ac.nz> (https://lai.nz)",
+    "Josh Jeffers <joshjeffers600@gmail.com> (https://pumbas.net)",
+    "Samuel Ou <me@sjou.dev> (https://sjou.dev)",
+    "Stijn van der Kolk <me@stijnvdkolk.dev> (https://stijnvdkolk.dev)"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/project-blurple/Canvas-Web.git",
+    "directory": "packages/backend-nest"
+  },
+  "license": "SEE LICENSE IN LICENSE.md",
+  "bugs": {
+    "url": "https://github.com/project-blurple/Canvas-Web/issues"
+  },
+  "engines": {
+    "node": ">=25",
+    "pnpm": ">=10.33.0"
+  },
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main",
+    "format": "prettier --check --cache . --ignore-path ../../.gitignore",
+    "format:fix": "prettier --write --cache . --ignore-path ../../.gitignore",
+    "lint": "biome check --formatter-enabled=false .",
+    "lint:fix": "biome check --formatter-enabled=false --write .",
+    "check": "pnpm run format && pnpm run lint",
+    "check:fix": "pnpm run format:fix && pnpm run lint:fix",
+    "test": "vitest",
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.1",
+    "@nestjs/core": "^11.0.1",
+    "@nestjs/platform-express": "^11.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.0",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.1",
+    "@swc/core": "^1.15.40",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^7.0.0",
+    "prettier": "^3.4.2",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.7.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^4.1.5"
+  }
+}
