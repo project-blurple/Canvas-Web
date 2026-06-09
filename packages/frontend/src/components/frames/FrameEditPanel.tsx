@@ -26,13 +26,12 @@ import {
   useRef,
   useState,
 } from "react";
+import DynamicButton from "@/components/button/DynamicButton";
 import config from "@/config/clientConfig";
-import {
-  useAuthContext,
-  useCanvasContext,
-  useSelectedBoundsContext,
-  useSelectedFrameContext,
-} from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
+import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
 import {
@@ -47,7 +46,6 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { DynamicButton } from "../button";
 import { addPoints, tupleToPoint } from "../canvas/point";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 

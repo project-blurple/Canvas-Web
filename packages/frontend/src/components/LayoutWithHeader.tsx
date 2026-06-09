@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { Header } from "@/components/header";
+import Header from "@/components/header/Header";
 
 interface LayoutWithHeaderProps {
   children?: ReactNode;

@@ -1,7 +1,7 @@
 import type { Frame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material/styles";
 import { useEffect, useRef } from "react";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import {
   drawSourceRectToCanvas,
   getFrameCropRect,

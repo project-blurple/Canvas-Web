@@ -1,12 +1,10 @@
 import { styled } from "@mui/material";
 import CircularProgress from "@mui/material/CircularProgress";
 import VisuallyHidden from "@/components/VisuallyHidden";
-import {
-  useAuthContext,
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedColorContext,
-} from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
 import ButtonSupplement from "../../../button/ButtonSupplement";
 import DynamicButton from "../../../button/DynamicButton";
 

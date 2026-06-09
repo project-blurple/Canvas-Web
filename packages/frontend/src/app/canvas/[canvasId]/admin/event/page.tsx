@@ -6,12 +6,10 @@ import { useRouter } from "next/navigation";
 import CanvasIcon from "@/components/CanvasIcon";
 import { CanvasPreviewCard } from "@/components/canvas/CanvasPreviewCard";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import {
-  useCanvasList,
-  useEventInfo,
-  useEventStats,
-  usePalette,
-} from "@/hooks";
+import { useCanvasList } from "@/hooks/queries/useCanvasList";
+import { useEventInfo } from "@/hooks/queries/useEventInfo";
+import { useEventStats } from "@/hooks/queries/useEventStats";
+import { usePalette } from "@/hooks/queries/usePalette";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminEventTabBlock = styled("section")`

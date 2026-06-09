@@ -1,7 +1,7 @@
 import { styled } from "@mui/material";
 import type React from "react";
 import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
-import { PrimitiveButton } from "../button";
+import PrimitiveButton from "../button/PrimitiveButton";
 
 const Root = styled("div")`
   --padding-width: 1rem;

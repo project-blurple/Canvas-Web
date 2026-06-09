@@ -3,8 +3,8 @@
 import type { PixelHistoryOverlayPixel } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useEffect, useMemo, useRef } from "react";
-import { useCanvasContext } from "@/contexts";
-import { usePalette } from "@/hooks";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { usePalette } from "@/hooks/queries/usePalette";
 
 const OverlayWrapper = styled("div")`
   inset: 0;

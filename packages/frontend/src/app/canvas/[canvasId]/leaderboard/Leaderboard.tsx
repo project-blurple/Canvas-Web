@@ -3,7 +3,7 @@
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
 import Pagination from "@/components/Pagination";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
 

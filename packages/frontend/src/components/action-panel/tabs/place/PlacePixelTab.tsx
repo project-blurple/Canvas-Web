@@ -15,18 +15,18 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import {
-  useActionPanelContext,
-  useAuthContext,
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedColorContext,
-} from "@/contexts";
-import { usePalette, usePlaySound } from "@/hooks";
+import { useActionPanelContext } from "@/contexts/ActionPanelContext";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
+import { usePalette } from "@/hooks/queries/usePalette";
+import { usePlaySound } from "@/hooks/sfx";
 import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
-import { Button, DynamicAnchorButton } from "../../../button";
-import { InteractiveSwatch } from "../../../swatch";
+import { Button } from "../../../button/Button";
+import { DynamicAnchorButton } from "../../../button/DynamicButton";
+import { InteractiveSwatch } from "../../../swatch/InteractiveSwatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
 import { BotPlaceCommandCard } from "../BotCommandCard";

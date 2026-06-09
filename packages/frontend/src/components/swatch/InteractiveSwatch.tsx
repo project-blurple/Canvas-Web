@@ -1,6 +1,6 @@
 import { styled } from "@mui/material";
 import { LockKeyhole as LockIcon, Pipette } from "lucide-react";
-import { PrimitiveButton } from "../button";
+import PrimitiveButton from "../button/PrimitiveButton";
 import VisuallyHidden from "../VisuallyHidden";
 import { StaticSwatch } from "./StaticSwatch";
 

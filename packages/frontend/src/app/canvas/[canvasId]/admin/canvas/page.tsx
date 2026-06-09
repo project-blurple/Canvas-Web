@@ -5,19 +5,19 @@ import { Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import CanvasIcon from "@/components/CanvasIcon";
 import {
   CanvasPreviewCard,
   EventCanvasCard,
 } from "@/components/canvas/CanvasPreviewCard";
 import NumberField from "@/components/NumberField";
-import { useCanvasContext } from "@/contexts";
-import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
-import {
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { 
   useClearCanvasCache,
-  useCreateCanvas,
-} from "@/hooks/queries/useCanvasInfo";
+  useCreateCanvas,useUpdateCanvasInfo, } from "@/hooks/queries/useCanvasInfo";
+import { useCanvasList } from "@/hooks/queries/useCanvasList";
+import { useEventInfo } from "@/hooks/queries/useEventInfo";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminCanvasTabBlock = styled("section")`

@@ -12,9 +12,9 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { DynamicButton } from "@/components/button";
+import DynamicButton from "@/components/button/DynamicButton";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import {
@@ -23,13 +23,11 @@ import {
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
 import { durationFormatNarrow } from "@/util/intl";
-import {
-  ComplexSearchBoundsSelect,
-  ComplexSearchColorSelect,
-  ComplexSearchDateSelect,
-  ComplexSearchUserSelect,
-} from "../complex-search";
+import ComplexSearchBoundsSelect from "./ComplexSearchBoundsSelect";
+import ComplexSearchColorSelect from "./ComplexSearchColorSelect";
+import ComplexSearchDateSelect from "./ComplexSearchDateSelect";
 import ComplexSearchEraseHistory from "./ComplexSearchEraseHistory";
+import ComplexSearchUserSelect from "./ComplexSearchUserSelect";
 import SearchUserEntries, {
   type SearchUserSortBy,
   type SearchUserSortDirection,

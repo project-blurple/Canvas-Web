@@ -3,7 +3,7 @@ import { Chip, css, TextField } from "@mui/material";
 import { useIsMutating } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import { AutocompleteInput } from "@/components/input/Input";
 
 const BlocklistFooter = styled("footer")`

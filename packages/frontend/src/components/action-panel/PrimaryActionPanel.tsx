@@ -1,15 +1,14 @@
 "use client";
 
 import { useId } from "react";
-import {
-  useActionPanelContext,
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedColorContext,
-} from "@/contexts";
+import { useActionPanelContext } from "@/contexts/ActionPanelContext";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
 import ActionPanelPrimitives from "./primitives";
-import { PixelInfoTab, PlacePixelTab } from "./tabs";
 import FramesTab from "./tabs/FramesTab";
+import PixelInfoTab from "./tabs/PixelInfoTab";
+import PlacePixelTab from "./tabs/place/PlacePixelTab";
 
 type TabKey = "look" | "place" | "frame";
 

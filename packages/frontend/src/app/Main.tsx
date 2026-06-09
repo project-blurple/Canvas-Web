@@ -2,9 +2,9 @@
 
 import { styled } from "@mui/material";
 
-import { ActionPanel } from "@/components/action-panel";
-import { CanvasView } from "@/components/canvas";
-import { SlideableDrawer } from "@/components/slideable-drawer";
+import ActionPanel from "@/components/action-panel/PrimaryActionPanel";
+import CanvasView from "@/components/canvas/CanvasView";
+import SlideableDrawer from "@/components/slideable-drawer/SlideableDrawer";
 
 export const CanvasWrapper = styled("main")`
   body:has(&) {

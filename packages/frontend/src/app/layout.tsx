@@ -8,16 +8,14 @@ import axios from "axios";
 import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config/clientConfig";
-import {
-  ActionPanelProvider,
-  AuthProvider,
-  CanvasProvider,
-  CanvasViewProvider,
-  QueryClientProvider,
-  SelectedBoundsProvider,
-  SelectedColorProvider,
-  SelectedFrameProvider,
-} from "@/contexts";
+import { ActionPanelProvider } from "@/contexts/ActionPanelContext";
+import { AuthProvider } from "@/contexts/AuthProvider";
+import { CanvasProvider } from "@/contexts/CanvasContext";
+import { CanvasViewProvider } from "@/contexts/CanvasViewContext";
+import { QueryClientProvider } from "@/contexts/QueryClientProvider";
+import { SelectedBoundsProvider } from "@/contexts/SelectedBoundsContext";
+import { SelectedColorProvider } from "@/contexts/SelectedColorContext";
+import { SelectedFrameProvider } from "@/contexts/SelectedFrameContext";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import serverConfig from "@/config/serverConfig";

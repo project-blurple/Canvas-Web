@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Avatar from "@/components/Avatar";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import RecheckMembershipsButton from "@/components/RecheckMemberships";
-import { useAuthContext, useCanvasContext } from "@/contexts";
-import { useUserStats } from "@/hooks";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useUserStats } from "@/hooks/queries/useUserStats";
 import StatsTable from "./StatsTable";
 
 const Container = styled("main")`

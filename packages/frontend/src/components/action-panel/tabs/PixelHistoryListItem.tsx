@@ -2,7 +2,7 @@ import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 
 import ColorCodeChip from "@/components/ColorCodeChip";
-import { StaticSwatch } from "@/components/swatch";
+import { StaticSwatch } from "@/components/swatch/StaticSwatch";
 
 const Wrapper = styled("div")`
   align-items: center;

@@ -7,9 +7,9 @@ import {
   partitionPaletteByParticipation,
 } from "@/components/action-panel/tabs/place/PlacePixelTab";
 import CanvasIcon from "@/components/CanvasIcon";
-import { StaticSwatch } from "@/components/swatch";
-import { useCanvasContext } from "@/contexts";
-import { usePalette } from "@/hooks";
+import { StaticSwatch } from "@/components/swatch/StaticSwatch";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { usePalette } from "@/hooks/queries/usePalette";
 import AdminDashboard from "../AdminDashboard";
 
 const AdminColorTabBlock = styled("section")`

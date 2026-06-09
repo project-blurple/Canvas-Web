@@ -3,9 +3,9 @@ import { css, styled } from "@mui/material";
 import { X } from "lucide-react";
 import Markdown from "markdown-to-jsx";
 import { useRef, useState } from "react";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import NumberField from "@/components/NumberField";
-import { useCanvasList } from "@/hooks";
+import { useCanvasList } from "@/hooks/queries/useCanvasList";
 import {
   useCreateNotice,
   useDeleteNotice,

@@ -6,11 +6,9 @@ import {
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
-import {
-  useAuthContext,
-  useCanvasContext,
-  useSelectedFrameContext,
-} from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
 import ActionPanelPrimitives from "../action-panel/primitives";

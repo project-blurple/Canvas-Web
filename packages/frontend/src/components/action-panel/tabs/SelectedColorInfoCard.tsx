@@ -1,6 +1,7 @@
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { useAuthContext, useCanvasContext } from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import {
   RecheckMembershipsLink,
   RecheckMembershipsStatus,

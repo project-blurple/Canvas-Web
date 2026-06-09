@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithHeader";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
 
 const Wrapper = styled("div")`
   display: flex;

@@ -3,11 +3,10 @@ import {
   type Frame,
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
-import {
-  useAuthContext,
-  useCanvasContext,
-  useSelectedFrameContext,
-} from "@/contexts";
+import DynamicButton from "@/components/button/DynamicButton";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { createPixelUrl, hexStringToPixelColor } from "@/util";
 import {
   ActionPanelTabBody,
@@ -16,7 +15,6 @@ import {
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { DynamicButton } from "../button";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 

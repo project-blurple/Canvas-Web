@@ -2,7 +2,7 @@
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { PrimitiveButton } from "./button";
+import PrimitiveButton from "./button/PrimitiveButton";
 import VisuallyHidden from "./VisuallyHidden";
 
 const StyledButton = styled(PrimitiveButton)`

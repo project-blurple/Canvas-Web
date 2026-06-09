@@ -2,11 +2,9 @@ import type { Cooldown } from "@blurple-canvas-web/types";
 import { type UseMutationOptions, useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
-import {
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedColorContext,
-} from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
 
 export default function usePlacePixelMutation(
   useMutationOptions?: Omit<

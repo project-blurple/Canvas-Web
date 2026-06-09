@@ -4,9 +4,9 @@ import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useId, useState } from "react";
 import { CanvasWrapper } from "@/app/Main";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
-import { CanvasView } from "@/components/canvas";
-import { ComplexSearchTab } from "@/components/complex-search";
-import { SlideableDrawer } from "@/components/slideable-drawer";
+import CanvasView from "@/components/canvas/CanvasView";
+import ComplexSearchTab from "@/components/complex-search/ComplexSearchTab";
+import SlideableDrawer from "@/components/slideable-drawer/SlideableDrawer";
 import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import BlocklistTab from "./BlocklistTab";
 

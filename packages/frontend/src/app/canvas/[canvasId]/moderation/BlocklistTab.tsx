@@ -11,8 +11,11 @@ import {
 import { UserIdButton } from "@/components/complex-search/SearchUserEntry";
 import { Input } from "@/components/input/Input";
 import VisuallyHidden from "@/components/VisuallyHidden";
-import { useCanvasContext } from "@/contexts";
-import { useBlocklist, useBlocklistMutations } from "@/hooks/queries";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import {
+  useBlocklist,
+  useBlocklistMutations,
+} from "@/hooks/queries/useBlocklist";
 import { BlocklistFooterSection } from "./BlocklistTabFooter";
 
 const BlocklistBodyWrapper = styled("div")`

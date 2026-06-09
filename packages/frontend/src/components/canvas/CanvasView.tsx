@@ -14,26 +14,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
-import {
-  useActionPanelContext,
-  useCanvasContext,
-  useCanvasViewContext,
-  useSelectedBoundsContext,
-  useSelectedColorContext,
-  useSelectedFrameContext,
-} from "@/contexts";
-import {
-  useCanvasImage,
-  useCanvasSearchParams,
-  useIsFullscreenAvailable,
-  useIsWebKit,
-} from "@/hooks";
+import { useActionPanelContext } from "@/contexts/ActionPanelContext";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
+import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { useFrameById } from "@/hooks/queries/useFrame";
+import { useCanvasImage } from "@/hooks/useCanvasImage";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import { useCanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import { useIsFullscreenAvailable } from "@/hooks/useIsFullscreenAvailable";
+import useIsWebKit from "@/hooks/useIsWebKit";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
-import type { ActionPanel } from "../action-panel";
-import { Button } from "../button";
+import type PrimaryActionPanel from "../action-panel/PrimaryActionPanel";
+import { Button } from "../button/Button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import { CanvasGrid } from "./CanvasGrid";
@@ -429,8 +425,8 @@ function getViewForFrame({
 
 interface CanvasViewProps {
   actionPanel?: React.ReactElement<
-    React.ComponentProps<typeof ActionPanel>,
-    typeof ActionPanel
+    React.ComponentProps<typeof PrimaryActionPanel>,
+    typeof PrimaryActionPanel
   >;
   canvasLabel?: string;
   searchOverlayPixels?: PixelHistoryOverlayPixel[] | null;

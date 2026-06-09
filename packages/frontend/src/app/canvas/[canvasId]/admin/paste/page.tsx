@@ -11,12 +11,12 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { Button } from "@/components/button";
-import { CanvasView } from "@/components/canvas";
+import { Button } from "@/components/button/Button";
+import CanvasView from "@/components/canvas/CanvasView";
 import NumberField from "@/components/NumberField";
-import { SlideableDrawer } from "@/components/slideable-drawer";
-import { useCanvasContext } from "@/contexts";
-import { usePalette } from "@/hooks";
+import SlideableDrawer from "@/components/slideable-drawer/SlideableDrawer";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { usePalette } from "@/hooks/queries/usePalette";
 import { useCanvasPaste } from "@/hooks/queries/usePaste";
 import AdminDashboard from "../AdminDashboard";
 import {

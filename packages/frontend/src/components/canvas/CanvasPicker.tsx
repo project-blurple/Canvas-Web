@@ -4,8 +4,10 @@ import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { NativeSelect, nativeSelectClasses, styled } from "@mui/material";
 import { ChevronsUpDown } from "lucide-react";
 import { useParams, usePathname, useRouter } from "next/navigation";
-import { useCanvasContext } from "@/contexts";
-import { useCanvasInfo, useCanvasList, useEventInfo } from "@/hooks";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasInfo } from "@/hooks/queries/useCanvasInfo";
+import { useCanvasList } from "@/hooks/queries/useCanvasList";
+import { useEventInfo } from "@/hooks/queries/useEventInfo";
 
 const Select = styled(NativeSelect)`
   background-color: var(--discord-legacy-not-quite-black);

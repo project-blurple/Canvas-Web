@@ -3,7 +3,7 @@
 import { css, styled } from "@mui/material";
 import Image from "next/image";
 import { useCanvasContext } from "@/contexts/CanvasContext";
-import { CanvasPicker } from "../canvas";
+import CanvasPicker from "../canvas/CanvasPicker";
 import Nav, { NavLink } from "./Nav";
 
 const Wrapper = styled("header")`

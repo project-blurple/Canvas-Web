@@ -6,10 +6,10 @@ import type {
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo } from "react";
-import { useCanvasContext } from "@/contexts";
-import { usePalette } from "@/hooks";
+import PrimitiveButton from "@/components/button/PrimitiveButton";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { usePalette } from "@/hooks/queries/usePalette";
 import { rgbaToCssColor } from "@/util/color";
-import { PrimitiveButton } from "../button";
 import ColorCodeChip from "../ColorCodeChip";
 import ColorPreview from "../ColorPreview";
 import VisuallyHidden from "../VisuallyHidden";

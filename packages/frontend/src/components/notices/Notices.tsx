@@ -1,7 +1,7 @@
 import { styled } from "@mui/material";
 import { useCallback, useMemo, useState } from "react";
 import useLocalStorage from "@/app/settings/useLocalStorage";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useNotices } from "@/hooks/queries/useNotice";
 import NoticeBanner from "./NoticeBanner";
 

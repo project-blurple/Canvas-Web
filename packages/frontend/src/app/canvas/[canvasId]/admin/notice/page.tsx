@@ -3,7 +3,7 @@
 import { styled } from "@mui/material";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import CanvasIcon from "@/components/CanvasIcon";
 import { useNotices } from "@/hooks/queries/useNotice";
 import AdminDashboard from "../AdminDashboard";

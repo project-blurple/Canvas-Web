@@ -2,7 +2,8 @@ import { styled } from "@mui/material";
 import { Copy as CopyIcon } from "lucide-react";
 import VisuallyHidden from "@/components/VisuallyHidden";
 import config from "@/config/clientConfig";
-import { useCanvasViewContext, useSelectedColorContext } from "@/contexts";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
+import { useSelectedColorContext } from "@/contexts/SelectedColorContext";
 
 const Wrapper = styled("div")`
   align-items: center;

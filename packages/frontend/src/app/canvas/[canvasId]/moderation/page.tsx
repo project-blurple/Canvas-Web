@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import LayoutWithHeader from "@/components/LayoutWithHeader";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
 import ModerationDashboard from "./ModerationDashboard";
 
 export default function ModerationPage() {

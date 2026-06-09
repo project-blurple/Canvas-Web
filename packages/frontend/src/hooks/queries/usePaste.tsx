@@ -2,7 +2,7 @@ import type { PaletteColor } from "@blurple-canvas-web/types";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 
 export function useCanvasPaste() {
   const { canvas } = useCanvasContext();

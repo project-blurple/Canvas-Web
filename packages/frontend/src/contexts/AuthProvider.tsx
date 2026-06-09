@@ -11,7 +11,7 @@ import {
   useState,
 } from "react";
 import config from "@/config/clientConfig";
-import { useUserData } from "@/hooks";
+import { useUserData } from "@/hooks/queries/useUserData";
 
 interface AuthContextType {
   user: DiscordUserProfile | null;

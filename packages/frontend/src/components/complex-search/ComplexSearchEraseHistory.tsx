@@ -13,11 +13,11 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/button/Button";
 import config from "@/config/clientConfig";
-import { useCanvasContext } from "@/contexts";
-import { useEventInfo } from "@/hooks";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useEventInfo } from "@/hooks/queries/useEventInfo";
 import type { ComplexPixelHistoryParams } from "@/hooks/queries/usePixelHistory";
-import { Button } from "../button";
 
 const StyledDialog = styled(Dialog)`
   & .MuiDialog-paper {

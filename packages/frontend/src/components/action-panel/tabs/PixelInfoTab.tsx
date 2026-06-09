@@ -1,9 +1,10 @@
 import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
-import { ButtonSupplement } from "@/components/button";
+import ButtonSupplement from "@/components/button/ButtonSupplement";
 import Pagination from "@/components/Pagination";
-import { useCanvasContext, useCanvasViewContext } from "@/contexts";
+import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import {
   type PixelHistoryParams,
   usePixelHistory,

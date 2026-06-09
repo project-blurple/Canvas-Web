@@ -3,9 +3,10 @@
 import { CircularProgress, styled } from "@mui/material";
 import { AxiosError } from "axios";
 import { type ReactNode, useEffect, useState } from "react";
-import { Button, PrimitiveButton } from "@/components/button";
-import { useAuthContext } from "@/contexts";
-import { useRefreshGuildMemberships } from "@/hooks";
+import { Button } from "@/components/button/Button";
+import PrimitiveButton from "@/components/button/PrimitiveButton";
+import { useAuthContext } from "@/contexts/AuthProvider";
+import { useRefreshGuildMemberships } from "@/hooks/queries/useUserData";
 
 type RefreshMutation = ReturnType<typeof useRefreshGuildMemberships>;
 

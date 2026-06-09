@@ -9,7 +9,7 @@ import {
 import { styled } from "@mui/material";
 import { useMemo, useState } from "react";
 import Avatar from "@/components/Avatar";
-import { DynamicButton } from "@/components/button";
+import DynamicButton from "@/components/button/DynamicButton";
 import { type AuditLogFilters, useAuditLog } from "@/hooks/queries/useAuditLog";
 import AdminDashboard from "../AdminDashboard";
 

@@ -1,7 +1,8 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
-import { useCanvasImage, useCanvasStats } from "@/hooks";
+import { useCanvasStats } from "@/hooks/queries/useCanvasStats";
+import { useCanvasImage } from "@/hooks/useCanvasImage";
 import { dateToRelativeTime } from "@/util/text";
 import CanvasIcon from "../CanvasIcon";
 

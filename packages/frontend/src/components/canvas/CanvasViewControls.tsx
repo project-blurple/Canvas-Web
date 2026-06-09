@@ -8,7 +8,7 @@ import {
   PanelRightOpen,
 } from "lucide-react";
 import { CANVAS_WRAPPER_CLASS_NAME } from "@/util";
-import { Button } from "../button";
+import { Button } from "../button/Button";
 import VisuallyHidden from "../VisuallyHidden";
 
 const CanvasViewControlColumn = styled("div", {

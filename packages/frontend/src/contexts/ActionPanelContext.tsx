@@ -10,7 +10,8 @@ import {
   useEffect,
   useState,
 } from "react";
-import { useCanvasCooldown, usePlayCooldownExpirySound } from "@/hooks";
+import { useCanvasCooldown } from "@/hooks/queries/useCanvasCooldown";
+import { usePlayCooldownExpirySound } from "@/hooks/sfx";
 import { useAuthContext } from "./AuthProvider";
 import { useCanvasContext } from "./CanvasContext";
 

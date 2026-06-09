@@ -3,9 +3,9 @@
 import { styled, Typography } from "@mui/material";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/button";
+import { Button } from "@/components/button/Button";
 import config from "@/config/clientConfig";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext } from "@/contexts/AuthProvider";
 
 const Background = styled("div")`
   align-items: center;
