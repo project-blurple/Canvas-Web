@@ -32,9 +32,8 @@
     "check:fix": "pnpm --recursive run check:fix",
     "prepare": "husky",
     "clean": "pnpm --recursive run clean && pnpm purge",
-    "prisma:push": "pnpm --filter=backend run prisma:push",
-    "prisma:seed": "pnpm --filter=backend run prisma:seed --",
-    "prisma:migrate": "pnpm --filter=backend run prisma:migrate",
+    "prisma:seed": "pnpm --filter=backend run prisma:core:seed --",
+    "prisma:migrate": "pnpm --filter=backend run prisma:core:migrate",
     "db:resequence": "pnpm --filter=backend run db:resequence",
     "db:repair-canvas": "pnpm --filter=backend run db:repair-canvas --"
   },

@@ -23,14 +23,14 @@ pnpm build
 Then apply schema changes and seed test data:
 
 ```sh
-pnpm prisma:migrate
-pnpm prisma:seed
+pnpm prisma:core:migrate
+pnpm prisma:core:seed
 ```
 
 If you do not want to use the test data, you should at least add the web guild (used internally) via:
 
 ```sh
-pnpm prisma:seed --seedings web_guild
+pnpm prisma:core:seed --seedings web_guild
 ```
 
 ### Running
