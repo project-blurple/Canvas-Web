@@ -2,6 +2,7 @@ minimumReleaseAge: 10080
 
 packages:
   - "packages/backend"
+  - "packages/backend-nest"
   - "packages/frontend"
   - "packages/types"
 
@@ -11,7 +12,9 @@ overrides:
   protobufjs: ^7.5.5
 
 allowBuilds:
+  "@nestjs/core": false
   "@prisma/engines": false
+  "@swc/core": false
   cpu-features: false
   esbuild: false
   prisma: false
