@@ -11,9 +11,6 @@ community-run event which celebrates Discord’s anniversary. Part of this is
 Blurple Canvas where people in participating servers create pixel art on a
 shared canvas.
 
-Blurple Canvas Web is a web alternative to the
-[existing Discord bot](https://github.com/Rocked03/Blurple-Canvas) Discord bot.
-
 ## 🥪 Tech stack & repo structure
 
 This is a [monorepo](https://monorepo.tools), with three packages:
@@ -28,8 +25,10 @@ This is a [monorepo](https://monorepo.tools), with three packages:
 
 Worth noting:
 
-- **backend** talks to the same [PostgreSQL](http://www.postgresql.org) as the
+- this web app succeeds the now-deprecated
   [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;
+- **backend** talks to the same [PostgreSQL](http://www.postgresql.org) as the
+  old bot;
 - [Prisma](https://www.prisma.io) serves as the ORM layer.
 - With the odd exception, **frontend** makes queries to the **backend** API with
   [TanStack Query](https://tanstack.com/query).
