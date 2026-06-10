@@ -121,7 +121,11 @@ a core contributor: [@rocked03](https://sjou.dev), [@jaskfla](https://lai.nz),
 [@stijnvdkolk](https://github.com/stijnvdkolk).
 
 <details>
-<summary>🦒 The OG team[^team-name]</summary>
+<summary>🦒 The OG team</summary>
+
+Blurple Canvas Web started as a
+[SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750)
+project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).[^team-name]
 
 [^team-name]:
     Dig back
@@ -129,10 +133,6 @@ a core contributor: [@rocked03](https://sjou.dev), [@jaskfla](https://lai.nz),
     and you’ll find that we once had the team name
     [Golden Giraffes](https://github.com/project-blurple/Canvas-Web/blob/32549bada3a5636045955beb35812c3e09ef074e/group-image/Golden%20Giraffes.webp).
     Not sure we would’ve chosen this name for ourselves, though…
-
-Blurple Canvas Web started as a
-[SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750)
-project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
 
 - [Aaron Guo](https://github.com/PolarWolf314)
 - [Emily Zou](https://github.com/boxy8)
