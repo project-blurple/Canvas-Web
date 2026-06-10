@@ -5,6 +5,7 @@ import { prisma } from "@/client";
 import type { snapshot_manifest } from "@/client/snapshots";
 import { snapshotPrisma } from "@/client/snapshots";
 import { getCanvasInfo } from "@/services/canvasService";
+import { isSnapshotAvailableForCanvas } from "./snapshotPolicy";
 
 export interface GetLatestHistoryEntryInRangeParams {
   canvasId: number;
@@ -114,6 +115,10 @@ async function getLatestSnapshotForCanvas({
   canvasId,
   before,
 }: GetLatestSnapshotForCanvasParams): Promise<LatestSnapshotForCanvas | null> {
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    return null;
+  }
+
   return snapshotPrisma.snapshot_manifest.findFirst({
     where: {
       canvas_id: canvasId,

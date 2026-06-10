@@ -7,5 +7,5 @@ export function isSnapshotGenerationEnabled(): boolean {
 }
 
 export function isSnapshotAvailableForCanvas(canvasId: number): boolean {
-  return availableCanvasIds.has(canvasId);
+  return isSnapshotGenerationEnabled() && availableCanvasIds.has(canvasId);
 }
