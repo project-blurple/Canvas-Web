@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import {
   useAuthContext,
@@ -24,7 +25,12 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
-import { normalizeFrameBounds, type ViewBounds } from "@/util";
+import {
+  isUnauthorizedError,
+  normalizeFrameBounds,
+  type ViewBounds,
+} from "@/util";
+
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -457,26 +463,23 @@ export default function FrameEditPanel({
   const handleDeleteButtonAction = () => {
     setIsDeleteConfirmOpen(true);
   };
-
   const handleDeleteAction = async () => {
     setIsDeleteConfirmOpen(false);
+    if (!frameId) return;
 
-    try {
-      if (!frameId) return;
+    const deletePromise = deleteFrameMutation.mutateAsync(frameId);
+    toast.promise(deletePromise, {
+      loading: "Deleting frame…",
+      success: "Frame deleted",
+      error: (error) =>
+        isUnauthorizedError(error) ?
+          "Your session has expired. Please log in again."
+        : "Couldn’t delete frame",
+    });
+    await deletePromise;
 
-      await deleteFrameMutation.mutateAsync(frameId);
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return;
-      }
-
-      alert("Failed to delete frame");
-    } finally {
-      setSelectedFrame(null);
-      closeEditor();
-    }
+    setSelectedFrame(null);
+    closeEditor();
   };
 
   const handleFormSubmit: React.SubmitEventHandler<HTMLFormElement> = async (

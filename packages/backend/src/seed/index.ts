@@ -75,7 +75,7 @@ async function runSeedingStep(
   action?: () => Promise<void>,
 ): Promise<void> {
   const startedAt = performance.now();
-  logWithTiming(`Seeding ${step}...`);
+  logWithTiming(`Seeding ${step}…`);
   await action?.();
   logWithTiming(
     `Seeded ${step} (${Math.round(performance.now() - startedAt)}ms)`,

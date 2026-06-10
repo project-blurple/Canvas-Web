@@ -12,6 +12,9 @@ import serverConfig from "@/config/serverConfig";
 import { AuthProvider, CanvasProvider, QueryClientProvider } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { Toaster, type ToasterProps } from "sonner";
+import CanvasIcon from "@/components/CanvasIcon";
 import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
@@ -70,7 +73,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
 
 const defaultCanvasInfo = {
   id: 1,
-  name: "Something went wrong...",
+  name: "Something went wrong…",
   isLocked: true,
   width: 600,
   height: 600,
@@ -80,6 +83,14 @@ const defaultCanvasInfo = {
   allColorsGlobal: false,
   cooldownDuration: 0,
 } satisfies CanvasInfo;
+
+const toasterIcons = {
+  success: <CircleCheck />,
+  info: <Info />,
+  warning: <TriangleAlert />,
+  error: <CircleAlert />,
+  loading: <CanvasIcon loading />,
+} as const satisfies ToasterProps["icons"];
 
 export default async function RootLayout({
   children,
@@ -106,7 +117,20 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
       <QueryClientProvider>
         <AuthProvider profile={profile}>
           <CanvasProvider mainCanvasInfo={canvasInfo}>
-            <AppProviders>{children}</AppProviders>
+            <AppProviders>
+              {children}
+              <Toaster
+                icons={toasterIcons}
+                position="bottom-left" // bottom right overlaps with the action panel
+                theme="dark"
+                toastOptions={{
+                  style: {
+                    backgroundColor: "var(--discord-legacy-not-quite-black)",
+                    boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
+                  },
+                }}
+              />
+            </AppProviders>
           </CanvasProvider>
         </AuthProvider>
       </QueryClientProvider>

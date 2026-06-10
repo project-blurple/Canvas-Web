@@ -425,8 +425,8 @@ export default function ComplexSearchTab({
                 disabled={!boundsValid || isLoading}
               >
                 {!historyQuery.isLoading ?
-                  `Search (${pixelsInBounds.toLocaleString()} pixel${pixelsInBounds !== 1 ? "s" : ""})`
-                : "Searching..."}
+                  `Search (${pixelsInBounds.toLocaleString()} ${pixelsInBounds !== 1 ? "pixels" : "pixel"})`
+                : "Searching…"}
               </BasicHighlightButton>
             </Form>
           </search>

@@ -4,6 +4,7 @@ import { styled } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
@@ -122,12 +123,15 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
     const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
-    try {
-      await performErase(shouldBlockAuthors);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to erase history");
-    }
+    toast.promise(performErase(shouldBlockAuthors), {
+      loading: `Erasing ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }...`,
+      success: `Successfully erased ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }${shouldBlockAuthors && " and blocked their authors"}.`,
+      error: `Couldn’t erase history`,
+    });
   }
 
   function handleCancelErase() {

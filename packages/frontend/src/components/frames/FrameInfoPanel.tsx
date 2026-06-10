@@ -4,6 +4,7 @@ import {
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { toast } from "sonner";
 import {
   useAuthContext,
   useCanvasContext,
@@ -14,10 +15,9 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { Button } from "../button";
+import { Button, DynamicButton } from "../button";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
 
@@ -115,15 +115,15 @@ function FrameInfoPanelBody({
             </StyledButton>
           )}
           {selectedFrame.owner.type !== FrameOwnerType.System && (
-            <TooltipDynamicButton
+            <DynamicButton
               color={hexStringToPixelColor(selectedFrame.id)}
-              tooltipTitle="Copied"
-              onAction={() => {
-                navigator.clipboard.writeText(frameUrl);
+              onAction={async () => {
+                void (await navigator.clipboard.writeText(frameUrl));
+                toast.success("Copied frame link");
               }}
             >
               Copy frame link
-            </TooltipDynamicButton>
+            </DynamicButton>
           )}
         </ActionPanelTabBody>
       </FrameInfoPanelBodyShell>

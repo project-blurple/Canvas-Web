@@ -9,6 +9,7 @@ import { isEqual, partition } from "es-toolkit";
 import { Pipette } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -220,7 +221,12 @@ export default function PlacePixelTab({
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
     onError: (error) => {
       if (error instanceof AxiosError && error.status === 401) signOut();
-      alert("Failed to place pixel, please refresh the page");
+      toast.error("Couldn’t place pixel, please refresh the page", {
+        action: {
+          label: "Refresh",
+          onClick: () => window.location.reload(),
+        },
+      });
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
