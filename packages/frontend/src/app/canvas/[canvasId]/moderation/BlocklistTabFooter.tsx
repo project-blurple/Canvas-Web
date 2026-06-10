@@ -245,7 +245,7 @@ function BlocklistRemoveSection({
         type="submit"
         disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
       >
-        Remove {selectedUsers.size}{" "}
+        Remove {selectedUsers.size}&nbsp;
         {selectedUsers.size !== 1 ? "users" : "user"} from blocklist
       </BasicButton>
     </BlocklistAddWrapper>

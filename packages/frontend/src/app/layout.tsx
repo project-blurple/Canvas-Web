@@ -13,7 +13,7 @@ import { AuthProvider, CanvasProvider, QueryClientProvider } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
-import { Toaster } from "sonner";
+import { Toaster, type ToasterProps } from "sonner";
 import CanvasIcon from "@/components/CanvasIcon";
 import { AppProviders } from "./providers";
 
@@ -90,7 +90,7 @@ const toasterIcons = {
   warning: <TriangleAlert />,
   error: <CircleAlert />,
   loading: <CanvasIcon loading />,
-};
+} as const satisfies ToasterProps["icons"];
 
 export default async function RootLayout({
   children,
