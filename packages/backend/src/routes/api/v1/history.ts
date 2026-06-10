@@ -21,6 +21,7 @@ import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
 } from "@/services/historyService";
+import { addSpanAttributes } from "@/utils/otel";
 
 export const historyRouter = typedRouter(Router({ mergeParams: true }));
 
@@ -28,6 +29,14 @@ historyRouter.get(
   "/",
   validate({ params: CanvasIdParamModel, query: PixelHistoryParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "coordinate.x": req.query.x,
+      "coordinate.y": req.query.y,
+      "query.page": req.query.page,
+      "query.size": req.query.size,
+    });
+
     const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
       {
@@ -39,9 +48,16 @@ historyRouter.get(
       false,
     );
 
+    const duration = performance.now() - startedAt;
+
     res.status(200).json({
       ...pixelHistory,
-      executionDurationMs: performance.now() - startedAt,
+      executionDurationMs: duration,
+    });
+
+    addSpanAttributes(req, {
+      "response.size": pixelHistory.entries.length,
+      "response.duration.ms": duration,
     });
   },
 );
@@ -60,6 +76,22 @@ historyRouter.post(
     body: PixelHistoryComplexBodyModel,
   }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "bounds.x0": req.query.x0,
+      "bounds.y0": req.query.y0,
+      "bounds.x1": req.query.x1,
+      "bounds.y1": req.query.y1,
+      "query.page": req.query.page,
+      "query.size": req.query.size,
+      "filter.from_date_time": req.body.fromDateTime?.toISOString(),
+      "filter.to_date_time": req.body.toDateTime?.toISOString(),
+      "filter.include_user_ids": req.body.includeUserIds,
+      "filter.exclude_user_ids": req.body.excludeUserIds,
+      "filter.include_colors": req.body.includeColors?.map(String),
+      "filter.exclude_colors": req.body.excludeColors?.map(String),
+    });
+
     assertLoggedIn(req);
 
     const point0 = {
@@ -104,9 +136,16 @@ historyRouter.post(
       true,
     );
 
+    const duration = Date.now() - startedAt;
+
     res.status(200).json({
       ...pixelHistory,
-      executionDurationMs: Date.now() - startedAt,
+      executionDurationMs: duration,
+    });
+
+    addSpanAttributes(req, {
+      "response.size": pixelHistory.entries.length,
+      "response.duration.ms": duration,
     });
   },
 );
@@ -161,6 +200,22 @@ historyRouter.delete(
   requireCanvasModerator,
   validate({ params: CanvasIdParamModel, body: PixelHistoryDeleteBodyModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "bounds.x0": req.body.x0,
+      "bounds.y0": req.body.y0,
+      "bounds.x1": req.body.x1,
+      "bounds.y1": req.body.y1,
+      "filter.from_date_time": req.body.fromDateTime?.toISOString(),
+      "filter.to_date_time": req.body.toDateTime?.toISOString(),
+      "filter.include_user_ids": req.body.includeUserIds,
+      "filter.exclude_user_ids": req.body.excludeUserIds,
+      "filter.include_colors": req.body.includeColors?.map(String),
+      "filter.exclude_colors": req.body.excludeColors?.map(String),
+      "pixel_history.delete.query.should_block_authors":
+        req.body.shouldBlockAuthors,
+    });
+
     assertLoggedIn(req);
 
     const { payload, shouldBlockAuthors } = buildDeletePayload(req);
@@ -169,6 +224,10 @@ historyRouter.delete(
       res.status(403).json({
         error:
           "Cannot erase history for a canvas that is not in the current event",
+      });
+      addSpanAttributes(req, {
+        "pixel_history.delete.blocked": true,
+        "pixel_history.delete.block_reason": "canvas_not_in_current_event",
       });
       return;
     }
@@ -189,6 +248,23 @@ historyRouter.delete(
   requireCanvasAdmin,
   validate({ params: CanvasIdParamModel, body: PixelHistoryDeleteBodyModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "bounds.x0": req.body.x0,
+      "bounds.y0": req.body.y0,
+      "bounds.x1": req.body.x1,
+      "bounds.y1": req.body.y1,
+      "filter.from_date_time": req.body.fromDateTime?.toISOString(),
+      "filter.to_date_time": req.body.toDateTime?.toISOString(),
+      "filter.include_user_ids": req.body.includeUserIds,
+      "filter.exclude_user_ids": req.body.excludeUserIds,
+      "filter.include_colors": req.body.includeColors?.map(String),
+      "filter.exclude_colors": req.body.excludeColors?.map(String),
+      "pixel_history.delete.query.should_block_authors":
+        req.body.shouldBlockAuthors,
+      "pixel_history.delete.query.forced": true,
+    });
+
     assertLoggedIn(req);
 
     const { payload, shouldBlockAuthors } = buildDeletePayload(req);

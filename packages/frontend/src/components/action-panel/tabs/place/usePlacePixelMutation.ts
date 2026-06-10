@@ -10,7 +10,7 @@ import {
 
 export default function usePlacePixelMutation(
   useMutationOptions?: Omit<
-    UseMutationOptions<Cooldown>,
+    UseMutationOptions<Cooldown, Error, string | undefined>,
     "mutationKey" | "mutationFn"
   >,
 ) {
@@ -18,10 +18,10 @@ export default function usePlacePixelMutation(
   const { coords } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
 
-  return useMutation<Cooldown>({
+  return useMutation<Cooldown, Error, string | undefined>({
     // TODO: figure out why coords breaks - https://github.com/project-blurple/Canvas-Web/issues/675
     mutationKey: ["pixel", canvas.id],
-    mutationFn: async () => {
+    mutationFn: async (turnstileToken?: string) => {
       if (!coords) {
         throw new Error(
           `usePlacePixelMutation mutation function called with ${coords} coords`,
@@ -37,6 +37,7 @@ export default function usePlacePixelMutation(
         {
           ...coords,
           colorId: color.id,
+          turnstileToken,
         },
         { withCredentials: true },
       );
