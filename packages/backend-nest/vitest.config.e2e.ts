@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["test/**/*.e2e-spec.ts"],
+    setupFiles: ["./test/setup-env.ts"],
     root: "./",
   },
   resolve: {
