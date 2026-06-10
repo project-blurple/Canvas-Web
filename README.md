@@ -121,6 +121,7 @@ a core contributor: @rocked03, @jaskfla, @stijnvdkolk.
 
 <details>
 <summary>🦒 The OG team[^team-name]</summary>
+
 Blurple Canvas Web started as a
 [SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750)
 project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
@@ -131,6 +132,7 @@ project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
 - [Jasper Lai](https://lai.nz)
 - [Josh Jeffers](https://pumbas.net)
 - [Samuel Ou](https://sjou.dev)
+
 </details>
 
 [^team-name]:
@@ -146,7 +148,7 @@ Blurple Canvas Web wouldn’t exist without these lovely people and projects.
 Thanks to:
 
 - <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="16" height="16" />
-  [Project Blurple](https://projectblurple.com)[^project-blurple] and the Project Blurple
+  [Project Blurple](https://projectblurple.com) [^project-blurple] and the Project Blurple
   community, for obvious reasons;
 - [Rocked03](https://rocked03.dev) for creating the
   [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord
