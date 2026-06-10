@@ -9,6 +9,7 @@ import { initializeCache } from "@/services/canvasService";
 import "@/utils";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
+import { addSpanAttributes } from "@/utils/otel";
 import { SocketHandler } from "./SocketHandler";
 
 interface App {
@@ -29,6 +30,20 @@ export function createApp(): App {
   app.use(express.urlencoded({ extended: false }));
 
   initializeAuth(app);
+
+  app.use((req, _res, next) => {
+    if (req.user) {
+      addSpanAttributes(req, {
+        "auth.userId": req.user.id,
+        "auth.username": req.user.username,
+        "auth.isCanvasAdmin": Boolean(req.user.isCanvasAdmin),
+        "auth.isCanvasModerator": Boolean(req.user.isCanvasModerator),
+      });
+    }
+
+    next();
+  });
+
   app.use(apiRouter);
   app.use(errorHandler);
 

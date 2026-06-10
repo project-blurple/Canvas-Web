@@ -72,3 +72,43 @@ We use [Prisma](https://www.prisma.io) for connecting to our database. Running `
 Whenever you make changes to the database schema, you need to create a new migration. This is done using Prisma Migrate, which generates SQL migration files based on changes to the `schema.prisma` file.
 
 For instructions on how to create and manage database migrations using Prisma Migrate, see [MIGRATIONS_README.md](./prisma/MIGRATIONS_README.md).
+
+### Tracing (OpenTelemetry & Jaeger)
+
+- Run full prod stack:
+
+```bash
+docker compose up -d
+```
+
+- Run dev stack (backend + local Jaeger/OpenSearch):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+- Run lightweight local-only stack (Jaeger + OpenSearch) while running the backend on your host:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d
+```
+
+- Environment (host `pnpm dev`):
+
+```bash
+OTEL_SERVICE_NAME=canvas-backend
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://localhost:4318/v1/traces
+```
+
+- Environment (backend inside Compose):
+
+```bash
+OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
+```
+
+- Jaeger UI: http://localhost:16686
+
+- Files:
+  - jaeger.yaml — base config
+  - jaeger.dev.yaml — dev overrides
+  - docker-compose.dev.yml — minimal Jaeger/OpenSearch for host-backed development
