@@ -136,7 +136,15 @@ export async function runSnapshotSchedulerCycle(): Promise<{
     }
 
     // Decide generation based solely on window + cursor state (cursor map loaded above).
-    const cursor = cursorByCanvas.get(canvasId) ?? null;
+    const cursor = cursorByCanvas.get(canvasId);
+    if (!cursor) {
+      // This should never happen since we ensure cursors exist for all canvases above, but just in case...
+      console.warn(
+        `No snapshot cursor found for canvas ${canvasId}, skipping snapshot generation for this cycle.`,
+      );
+      skipped += 1;
+      continue;
+    }
 
     const shouldGenerate =
       !cursor || // No cursor means this is the first snapshot, so we should generate.
@@ -168,30 +176,25 @@ export async function runSnapshotSchedulerCycle(): Promise<{
       lastIncludedHistoryAt,
     });
 
-    // Update or create the cursor: set last_processed_timestamp and clear dirty when applicable.
+    // Update the cursor using the current DB value, not the stale in-memory cursor.
     const snapshotAt = window.bucket_end;
-    if (cursor) {
-      const shouldClearDirty =
-        cursor.dirty_from_timestamp != null &&
-        snapshotAt.getTime() >= cursor.dirty_from_timestamp.getTime();
-
-      await snapshotPrisma.snapshot_cursor.update({
+    await snapshotPrisma.$transaction([
+      snapshotPrisma.snapshot_cursor.update({
         where: { canvas_id: canvasId },
         data: {
           last_processed_timestamp: snapshotAt,
-          dirty_from_timestamp:
-            shouldClearDirty ? null : cursor.dirty_from_timestamp,
         },
-      });
-    } else {
-      await snapshotPrisma.snapshot_cursor.create({
-        data: {
+      }),
+      snapshotPrisma.snapshot_cursor.updateMany({
+        where: {
           canvas_id: canvasId,
-          last_processed_timestamp: snapshotAt,
+          dirty_from_timestamp: { lte: snapshotAt },
+        },
+        data: {
           dirty_from_timestamp: null,
         },
-      });
-    }
+      }),
+    ]);
 
     processed += 1;
   }
