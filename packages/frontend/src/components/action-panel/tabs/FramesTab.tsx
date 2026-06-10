@@ -3,10 +3,10 @@ import { styled } from "@mui/material";
 import { type ReactNode, useEffect, useState } from "react";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
 import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
-import { useElementIsLarge } from "@/hooks/useElementIsLarge";
 import { TabPanel } from "./ActionPanelTabBody";
 
 const FramesTabBlock = styled(TabPanel)`
+  container: --frame-tabpanel / size;
   grid-template-rows: 1fr auto;
 `;
 
@@ -34,19 +34,13 @@ export default function FramesTab({
     FramePanelMode.Info,
   );
 
-  const [FrameTabBlockRef, drawerIsLarge] = useElementIsLarge(30);
-
   useEffect(() => {
     setTabsLocked(activePanel !== FramePanelMode.Info);
   }, [activePanel, setTabsLocked]);
 
   const panelByMode = {
     [FramePanelMode.Info]: (
-      <FrameInfoPanel
-        setActivePanel={setActivePanel}
-        enabled={active}
-        drawerIsLarge={drawerIsLarge}
-      />
+      <FrameInfoPanel setActivePanel={setActivePanel} enabled={active} />
     ),
     [FramePanelMode.Edit]: (
       <FrameEditPanel setActivePanel={setActivePanel} mode="edit" />
@@ -57,7 +51,7 @@ export default function FramesTab({
   } as const satisfies Record<FramePanelMode, ReactNode>;
 
   return (
-    <FramesTabBlock active={active} ref={FrameTabBlockRef} {...props}>
+    <FramesTabBlock active={active} {...props}>
       {panelByMode[activePanel]}
     </FramesTabBlock>
   );

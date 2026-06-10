@@ -31,7 +31,7 @@ const FrameInfoPanelBodyShell = styled("div")`
   transition-property: grid-template-rows, transform;
   transition-timing-function: var(--ease-out-cubic);
 
-  &[aria-expanded="false"] {
+  @container --frame-tabpanel (height < 30rem) {
     grid-template-rows: 0fr;
     pointer-events: none;
     transform: translateY(3rem);
@@ -69,31 +69,24 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 export default function FrameInfoPanel({
   enabled = true,
   setActivePanel,
-  drawerIsLarge,
 }: {
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
-  drawerIsLarge: boolean;
 }) {
   return (
     <>
       <FullWidthScrollView>
         <FrameList enabled={enabled} />
       </FullWidthScrollView>
-      <FrameInfoPanelBody
-        setActivePanel={setActivePanel}
-        drawerIsLarge={drawerIsLarge}
-      />
+      <FrameInfoPanelBody setActivePanel={setActivePanel} />
     </>
   );
 }
 
 function FrameInfoPanelBody({
   setActivePanel,
-  drawerIsLarge,
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
-  drawerIsLarge?: boolean;
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
@@ -109,7 +102,7 @@ function FrameInfoPanelBody({
 
   if (selectedFrame) {
     return (
-      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
+      <FrameInfoPanelBodyShell>
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
@@ -139,7 +132,7 @@ function FrameInfoPanelBody({
 
   if (user) {
     return (
-      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
+      <FrameInfoPanelBodyShell>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
           <StyledButton
