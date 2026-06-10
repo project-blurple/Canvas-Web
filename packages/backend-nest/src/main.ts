@@ -20,6 +20,7 @@ async function bootstrap(): Promise<void> {
   SwaggerModule.setup("docs", app, documentFactory);
 
   const { port } = app.get<AppConfig>(appConfig.KEY);
+  app.enableShutdownHooks();
   await app.listen(port);
 }
 
