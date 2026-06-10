@@ -78,33 +78,51 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   const now = new Date();
   const cutoff = getWindowCutoff(now);
 
-  const readyWindows = await prisma.$kysely
-    .selectFrom("history_snapshot_windows")
-    .select(["canvas_id", "bucket_start", "bucket_end", "history_count"])
-    .where("bucket_end", "<=", cutoff)
-    .orderBy("canvas_id", "asc")
-    .orderBy("bucket_start", "asc")
-    .execute();
+  const canvasIds = config.snapshot.availableForCanvases;
+  if (canvasIds.length === 0) {
+    return { processed: 0, skipped: 0 };
+  }
 
-  // Fetch cursor state for all canvases from the sidecar before processing.
-  const cursors = await snapshotPrisma.snapshot_cursor.findMany();
+  const cursors = await snapshotPrisma.snapshot_cursor.findMany({
+    where: { canvas_id: { in: canvasIds } },
+  });
   const cursorByCanvas = new Map<number, snapshot_cursor>();
-  for (const c of cursors) cursorByCanvas.set(c.canvas_id, c);
+  for (const cursor of cursors) cursorByCanvas.set(cursor.canvas_id, cursor);
 
-  for (const canvasId in config.snapshot.availableForCanvases) {
-    const canvasIdNum = Number.parseInt(canvasId, 10);
-
-    if (!cursorByCanvas.has(canvasIdNum)) {
+  for (const canvasId of canvasIds) {
+    if (!cursorByCanvas.has(canvasId)) {
       const newCursor = await snapshotPrisma.snapshot_cursor.create({
         data: {
-          canvas_id: canvasIdNum,
+          canvas_id: canvasId,
           last_processed_timestamp: new Date(0),
           dirty_from_timestamp: null,
         },
       });
-      cursorByCanvas.set(canvasIdNum, newCursor);
+      cursorByCanvas.set(canvasId, newCursor);
     }
   }
+
+  const earliestTimestampMs = Math.min(
+    ...Array.from(cursorByCanvas.values(), (cursor) => {
+      const effectiveTimestamp =
+        cursor.dirty_from_timestamp ?? cursor.last_processed_timestamp;
+      return (
+        Math.floor(effectiveTimestamp.getTime() / SNAPSHOT_WINDOW_MS) *
+        SNAPSHOT_WINDOW_MS
+      );
+    }),
+  );
+  const lowerBound = new Date(earliestTimestampMs);
+
+  const readyWindows = await prisma.$kysely
+    .selectFrom("history_snapshot_windows")
+    .select(["canvas_id", "bucket_start", "bucket_end", "history_count"])
+    .where("canvas_id", "in", canvasIds)
+    .where("bucket_start", ">=", lowerBound)
+    .where("bucket_end", "<=", cutoff)
+    .orderBy("canvas_id", "asc")
+    .orderBy("bucket_start", "asc")
+    .execute();
 
   let processed = 0;
   let skipped = 0;
