@@ -65,7 +65,7 @@ pnpm --version                 # Should match package.json → engines
 ```
 
 **[PostgreSQL](https://www.postgresql.org) 17+.** 👉
-https://www.postgresql.org/download
+[postgresql.org/download](https://www.postgresql.org/download)
 
 ### 🧱 Install dependencies
 
