@@ -1,16 +1,12 @@
 import { type RefObject, useEffect } from "react";
 
-type ElementEventMap<T> = T extends Document
-  ? DocumentEventMap
-  : T extends HTMLElement
-    ? HTMLElementEventMap
-    : T extends SVGElement
-      ? SVGElementEventMap
-      : T extends MediaQueryList
-        ? MediaQueryListEventMap
-        : T extends Window
-          ? WindowEventMap
-          : Record<string, Event>;
+type ElementEventMap<T> =
+  T extends Document ? DocumentEventMap
+  : T extends HTMLElement ? HTMLElementEventMap
+  : T extends SVGElement ? SVGElementEventMap
+  : T extends MediaQueryList ? MediaQueryListEventMap
+  : T extends Window ? WindowEventMap
+  : Record<string, Event>;
 
 export function useEventListener<
   T extends Document | HTMLElement | SVGElement | MediaQueryList | Window,
