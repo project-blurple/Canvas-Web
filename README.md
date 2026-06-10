@@ -123,15 +123,23 @@ pnpm -F frontend run dev
 
 ## 🤓 Maintainers
 
+Availabilities and contributions ebb and flow, but at the moment these are
+probably the most reasonable people to contact if you need to get in touch with
+a core contributor: @rocked03, @jaskfla, @stijnvdkolk.
+
+<details>
+<summary>🦒 The OG team[^team-name]</summary>
 Blurple Canvas Web started as a
 [SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750)
-project at [Waipapa Taumata Rau](https://www.auckland.ac.nz). Availabilities and
-contributions ebb and flow, but these folks remain reasonable people to contact
-if you need to get in touch with a core contributor
-[Samuel Ou](https://sjou.dev), [Jasper Lai](https://lai.nz),
-[Josh Jeffers](https://pumbas.net), [Henry Wang](http://henryh.wang),
-[Aaron Guo](https://github.com/PolarWolf314),
-[Emily Zou](https://github.com/boxy8).[^team-name]
+project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
+
+- [Aaron Guo](https://github.com/PolarWolf314)
+- [Emily Zou](https://github.com/boxy8)
+- [Henry Wang](http://henryh.wang)
+- [Jasper Lai](https://lai.nz)
+- [Josh Jeffers](https://pumbas.net)
+- [Samuel Ou](https://sjou.dev)
+</details>
 
 [^team-name]:
     Dig back
