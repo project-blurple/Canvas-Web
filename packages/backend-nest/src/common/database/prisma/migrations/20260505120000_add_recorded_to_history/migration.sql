@@ -1,0 +1,2 @@
+ALTER TABLE "history"
+ADD COLUMN "erased_at" TIMESTAMPTZ(6) DEFAULT NULL;
