@@ -3,7 +3,6 @@
 import type {
   CanvasInfo,
   Frame,
-  PixelColor,
   PixelHistoryOverlayPixel,
   PlacePixelSocket,
   Point,
