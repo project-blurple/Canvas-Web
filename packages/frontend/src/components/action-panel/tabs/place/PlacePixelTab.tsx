@@ -5,7 +5,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
-import { isEqual } from "es-toolkit";
+import { isEqual, partition } from "es-toolkit";
 import { Pipette } from "lucide-react";
 import type React from "react";
 import {
@@ -76,28 +76,6 @@ const SwatchSkeleton = styled(Skeleton)`
 const StyledButton = styled(Button)`
   color: white;
 `;
-
-export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
-  const mainColors: Palette = [];
-  const partnerColors: Palette = [];
-  for (const color of palette) {
-    (color.global ? mainColors : partnerColors).push(color);
-  }
-
-  return [mainColors, partnerColors];
-}
-
-export function partitionPaletteByParticipation(
-  palette: Palette,
-): [Palette, Palette] {
-  const participatingColors: Palette = [];
-  const nonParticipatingColors: Palette = [];
-  for (const color of palette) {
-    (color.guildId ? participatingColors : nonParticipatingColors).push(color);
-  }
-
-  return [participatingColors, nonParticipatingColors];
-}
 
 function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
   if (!serverId) return false;
@@ -205,7 +183,8 @@ export default function PlacePixelTab({
   const { data: palette } = usePalette(eventId ?? undefined);
 
   const [mainColors, partnerColors] = useMemo(
-    () => (palette !== undefined ? partitionPaletteByOwner(palette) : []),
+    () =>
+      palette !== undefined ? partition(palette, (color) => color.global) : [],
     [palette],
   );
   // Boolean to hide certain elements when the tab is too small
