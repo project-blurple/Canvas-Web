@@ -519,6 +519,18 @@ export default function CanvasView({
 
   const canUseFullscreen = useIsFullscreenAvailable();
 
+  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
+    const ctx = offscreenCanvasRef.current?.getContext("2d");
+    if (!ctx) return null;
+
+    try {
+      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
+      return [data[0], data[1], data[2], data[3]];
+    } catch {
+      return null;
+    }
+  }, []);
+
   const handleFullscreenChange = useCallback(() => {
     const container = containerRef.current;
     const fullscreenDocument = document as Document & {
@@ -532,6 +544,10 @@ export default function CanvasView({
     if (!isCanvasFullscreen) setFullscreenPanelVisible(false);
   }, [containerRef, setFullscreenPanelVisible]);
 
+  useEffect(() => {
+    handleFullscreenChange();
+  }, [handleFullscreenChange]);
+
   const documentRef = useRef<Document>(document);
   useEventListener("fullscreenchange", handleFullscreenChange, documentRef);
   /** WebKit fallback event for older Safari */
@@ -540,10 +556,6 @@ export default function CanvasView({
     handleFullscreenChange,
     documentRef,
   );
-
-  useEffect(() => {
-    handleFullscreenChange();
-  }, [handleFullscreenChange]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -1132,20 +1144,6 @@ export default function CanvasView({
     [zoom, setCoords],
   );
 
-  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
-
-  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
-    const ctx = offscreenCanvasRef.current?.getContext("2d");
-    if (!ctx) return null;
-
-    try {
-      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
-      return [data[0], data[1], data[2], data[3]];
-    } catch {
-      return null;
-    }
-  }, []);
-
   useEffect(() => {
     if (!coords) {
       setSelectedPixelColor(null);
@@ -1154,6 +1152,8 @@ export default function CanvasView({
 
     setSelectedPixelColor(samplePixelColor(coords));
   }, [coords, samplePixelColor, setSelectedPixelColor]);
+
+  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
 
   const reticleOffset = calculateReticleOffset(coords);
 
