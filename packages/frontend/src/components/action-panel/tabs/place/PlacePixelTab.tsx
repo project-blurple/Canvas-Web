@@ -5,16 +5,11 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
-import { isEqual } from "es-toolkit";
+import { isEqual, partition } from "es-toolkit";
 import { Pipette } from "lucide-react";
 import type React from "react";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import {
   useActionPanelContext,
   useAuthContext,
@@ -30,7 +25,6 @@ import { InteractiveSwatch } from "../../../swatch";
 import ActionPanelPrimitives from "../../primitives";
 import { ActionPanelTabBody, TabPanel } from "../ActionPanelTabBody";
 import { BotPlaceCommandCard } from "../BotCommandCard";
-import ColorInfoCard from "../SelectedColorInfoCard";
 import PlacePixelButton from "./PlacePixelButton";
 import usePlacePixelMutation from "./usePlacePixelMutation";
 
@@ -63,6 +57,7 @@ const Fieldset = styled("fieldset")`
 `;
 
 const PlacePixelTabBlock = styled(TabPanel)`
+  container: --place-tabpanel / size;
   grid-template-rows: 1fr auto;
 `;
 
@@ -73,31 +68,11 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
-const StyledButton = styled(Button)`
-  color: white;
+const StyledBotPlaceCommandCard = styled(BotPlaceCommandCard)`
+  @container --place-tabpanel (height < 30rem) {
+    display: none;
+  }
 `;
-
-export function partitionPaletteByOwner(palette: Palette): [Palette, Palette] {
-  const mainColors: Palette = [];
-  const partnerColors: Palette = [];
-  for (const color of palette) {
-    (color.global ? mainColors : partnerColors).push(color);
-  }
-
-  return [mainColors, partnerColors];
-}
-
-export function partitionPaletteByParticipation(
-  palette: Palette,
-): [Palette, Palette] {
-  const participatingColors: Palette = [];
-  const nonParticipatingColors: Palette = [];
-  for (const color of palette) {
-    (color.guildId ? participatingColors : nonParticipatingColors).push(color);
-  }
-
-  return [participatingColors, nonParticipatingColors];
-}
 
 function isUserInServer(user: DiscordUserProfile, serverId: string | null) {
   if (!serverId) return false;
@@ -205,32 +180,9 @@ export default function PlacePixelTab({
   const { data: palette } = usePalette(eventId ?? undefined);
 
   const [mainColors, partnerColors] = useMemo(
-    () => (palette !== undefined ? partitionPaletteByOwner(palette) : []),
+    () =>
+      palette !== undefined ? partition(palette, (color) => color.global) : [],
     [palette],
-  );
-  // Boolean to hide certain elements when the tab is too small
-  // Current implementation is a bit jarring when things pop in and out
-  const [isLarge, setIsLarge] = useState(true);
-
-  // Get value of the rem in pixels (and only run it client-side)
-  const [remPixels, setRemPixels] = useState<number>(16);
-  useEffect(() => {
-    // This runs only in the browser after hydration
-    setRemPixels(
-      Number.parseFloat(getComputedStyle(document.documentElement).fontSize),
-    );
-  }, []);
-
-  const PlacePixelTabBlockRef = useCallback(
-    (elem: HTMLDivElement | null) => {
-      if (!elem) return;
-      const resizeObserver = new ResizeObserver((entries) => {
-        const height = entries[0].target.clientHeight;
-        setIsLarge(height > remPixels * 20);
-      });
-      resizeObserver.observe(elem);
-    },
-    [remPixels],
   );
 
   const { color: selectedColor } = useSelectedColorContext();
@@ -269,7 +221,12 @@ export default function PlacePixelTab({
   const { mutateAsync, isPending: isPlacing } = usePlacePixelMutation({
     onError: (error) => {
       if (error instanceof AxiosError && error.status === 401) signOut();
-      alert("Failed to place pixel, please refresh the page");
+      toast.error("Couldn’t place pixel, please refresh the page", {
+        action: {
+          label: "Refresh",
+          onClick: () => window.location.reload(),
+        },
+      });
     },
     onSuccess: (data) => {
       const cooldown = data.cooldownEndTime;
@@ -292,7 +249,7 @@ export default function PlacePixelTab({
     findPaletteColor(palette ?? [], selectedPixelColorRgb) ?? null;
 
   return (
-    <PlacePixelTabBlock {...props} active={active} ref={PlacePixelTabBlockRef}>
+    <PlacePixelTabBlock {...props} active={active}>
       {turnstileElement}
       <Form onSubmit={onSubmit}>
         <ActionPanelTabBody>
@@ -306,30 +263,24 @@ export default function PlacePixelTab({
             <ActionPanelPrimitives.SectionHeading>
               Current pixel
             </ActionPanelPrimitives.SectionHeading>
-            <StyledButton
+            <Button
+              color="inherit"
               disabled={selectedPixelColor === null}
               onClick={() => setColor(selectedPixelColor)}
               startIcon={<Pipette />}
             >
               Select {selectedPixelColor?.name ?? "color"}
-            </StyledButton>
+            </Button>
           </div>
         </ActionPanelTabBody>
         <ActionPanelTabBody>
-          {isLarge && (
-            <ColorInfoCard
-              color={selectedColor}
-              invite={serverInvite}
-              isUserInServer={userInServer}
-            />
-          )}
           {(canPlacePixel ||
             (partnerServerJoinRequired && !isJoinServerShown)) && (
             <PlacePixelButton
               aria-busy={isPlacing}
               cooldownSeconds={cooldownSeconds}
               disabled={!canPlacePixel}
-              isVerbose={!isLarge}
+              isVerbose
               partnerServerJoinRequired={partnerServerJoinRequired}
               partnerServerName={selectedColor?.guildName ?? null}
               type="submit"
@@ -344,7 +295,7 @@ export default function PlacePixelTab({
               {selectedColor?.guildName ?? "server"}
             </DynamicAnchorButton>
           )}
-          {!readOnly && isLarge && <BotPlaceCommandCard />}
+          {!readOnly && <StyledBotPlaceCommandCard />}
         </ActionPanelTabBody>
       </Form>
     </PlacePixelTabBlock>

@@ -5,7 +5,8 @@ import { Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/button";
+import { toast } from "sonner";
+import { BasicButton, DestructiveButton } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import {
   CanvasPreviewCard,
@@ -107,14 +108,6 @@ const ButtonWrapper = styled("div")`
   gap: 0.5rem;
 `;
 
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-legacy-full-white);
-  transition-duration: var(--transition-duration-fast);
-  transition-property: background-color, color, opacity;
-  transition-timing-function: ease;
-`;
-
 const createDefaults = {
   allColorsGlobal: false,
   cooldownDuration: 0,
@@ -163,8 +156,7 @@ interface CanvasSettingsFormProps {
     canvasId: CanvasInfo["id"];
     values: CanvasSettingsFormValues;
   } | null;
-  isSaving: boolean;
-  onSavingChange: (isSaving: boolean) => void;
+  onSavingChange?: (isSaving: boolean) => void;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
   onSaved: (canvasId: CanvasInfo["id"]) => void | Promise<void>;
 }
@@ -175,13 +167,17 @@ function CanvasSettingsForm({
   isDirty,
   mode,
   saveConfirmation,
-  isSaving,
   onSavingChange,
   onFormValuesChange,
   onSaved,
 }: CanvasSettingsFormProps) {
   const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
   const createCanvas = useCreateCanvas();
+  const isSaving = createCanvas.isPending || updateCanvasInfo.isPending;
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
 
   const showSaveConfirmation =
     saveConfirmation !== null &&
@@ -268,37 +264,46 @@ function CanvasSettingsForm({
   async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (isFormInvalid()) {
-      alert("Name cannot be empty.");
+      toast.error("Name cannot be empty.");
       return;
     }
 
-    onSavingChange(true);
+    if (mode === "create") {
+      const response = await toast
+        .promise(
+          createCanvas.mutateAsync({
+            allColorsGlobal: formValues.allColorsGlobal,
+            cooldownDuration: formValues.cooldownDuration,
+            height: formValues.height,
+            isLocked: formValues.isLocked,
+            name: formValues.name,
+            width: formValues.width,
+            startCoordinates: formValues.startCoordinates,
+          }),
+          {
+            loading: "Creating canvas…",
+            success: "Canvas created!",
+            error: "Couldn’t create canvas. Please try again.",
+          },
+        )
+        .unwrap();
+      await onSaved(response.data.id);
+    } else {
+      const updatePromise = updateCanvasInfo.mutateAsync({
+        allColorsGlobal: formValues.allColorsGlobal,
+        cooldownDuration: formValues.cooldownDuration,
+        isLocked: formValues.isLocked,
+        name: formValues.name,
+      });
 
-    try {
-      if (mode === "create") {
-        const response = await createCanvas.mutateAsync({
-          allColorsGlobal: formValues.allColorsGlobal,
-          cooldownDuration: formValues.cooldownDuration,
-          height: formValues.height,
-          isLocked: formValues.isLocked,
-          name: formValues.name,
-          width: formValues.width,
-          startCoordinates: formValues.startCoordinates,
-        });
-        await onSaved(response.data.id);
-      } else {
-        await updateCanvasInfo.mutateAsync({
-          allColorsGlobal: formValues.allColorsGlobal,
-          cooldownDuration: formValues.cooldownDuration,
-          isLocked: formValues.isLocked,
-          name: formValues.name,
-        });
-        await onSaved(activeCanvas.id);
-      }
-    } catch {
-      alert("Failed to update canvas info. Please try again.");
-    } finally {
-      onSavingChange(false);
+      toast.promise(updatePromise, {
+        loading: "Saving changes…",
+        success: "Changes saved!",
+        error: "Couldn’t save changes. Please try again.",
+      });
+
+      await updatePromise;
+      await onSaved(activeCanvas.id);
     }
   }
 
@@ -383,19 +388,19 @@ function CanvasSettingsForm({
         <SaveStatusText aria-live="polite">Saved</SaveStatusText>
       )}
       <ButtonWrapper>
-        <StyledButton
+        <BasicButton
           disabled={!isDirty || isFormInvalid() || isSaving}
           type="submit"
         >
           {mode === "create" ? "Create canvas" : "Save changes"}
-        </StyledButton>
-        <StyledButton
+        </BasicButton>
+        <DestructiveButton
           disabled={!isDirty || isSaving}
           type="reset"
           onClick={resetForm}
         >
           <ListRestart />
-        </StyledButton>
+        </DestructiveButton>
       </ButtonWrapper>
     </CanvasContents>
   );
@@ -537,7 +542,6 @@ function AdminCanvasTab() {
               isDirty={isDirty}
               mode={mode}
               saveConfirmation={saveConfirmation}
-              isSaving={isSaving}
               onSavingChange={setIsSaving}
               onFormValuesChange={setFormValues}
               onSaved={(savedCanvasId) => {
@@ -549,14 +553,17 @@ function AdminCanvasTab() {
               }}
             />
             {mode !== "create" && (
-              <StyledButton
+              <DestructiveButton
                 onClick={async () => {
-                  await clearCanvasCache.mutateAsync();
-                  window.location.reload();
+                  toast.promise(clearCanvasCache.mutateAsync(), {
+                    loading: "Clearing canvas cache…",
+                    success: "Canvas cache cleared",
+                    error: "Couldn’t clear canvas cache. Please try again.",
+                  });
                 }}
               >
                 Clear cached image
-              </StyledButton>
+              </DestructiveButton>
             )}
           </>
         }

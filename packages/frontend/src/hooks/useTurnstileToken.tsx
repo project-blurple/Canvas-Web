@@ -16,7 +16,7 @@ export default function useTurnstileToken(enabled: boolean) {
     inst.execute();
     const token = inst.getResponse();
     // leave token lifecycle to the consumer; they can call reset() if desired
-    return token ?? undefined;
+    return token;
   }, [enabled]);
 
   const reset = useCallback(() => {

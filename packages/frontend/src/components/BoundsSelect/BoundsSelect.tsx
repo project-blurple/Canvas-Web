@@ -2,13 +2,16 @@ import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Scan } from "lucide-react";
 import NumberField from "@/components/NumberField";
-import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
+import { useSelectedBoundsContext } from "@/contexts/SelectedBoundsContext";
 import type { ViewBounds } from "@/util";
 
 const CoordinateRangeWrapper = styled("fieldset")`
   display: flex;
   flex-direction: row;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  justify-content: center;
+  width: 100%;
 
   > svg {
     flex: 0 0 auto;
@@ -19,16 +22,16 @@ const CoordinateInputWrapper = styled("div")`
   display: flex;
   gap: 0.5rem;
   justify-content: center;
-  width: 100%;
-  margin-block: 1em;
+  width: fit-content;
 `;
 
-interface ComplexSearchBoundsSelectProps extends React.ComponentPropsWithRef<
+interface BoundsSelectProps extends React.ComponentPropsWithRef<
   typeof CoordinateRangeWrapper
 > {
   canvas: CanvasInfo;
   selectedBounds: ViewBounds | null;
   setSelectedBounds: (bounds: ViewBounds) => void;
+  showFrameButton?: boolean;
 }
 
 function withDerivedDimensions(
@@ -41,14 +44,16 @@ function withDerivedDimensions(
   };
 }
 
-export default function ComplexSearchBoundsSelect({
+export default function BoundsSelect({
   canvas,
   selectedBounds,
   setSelectedBounds,
+  showFrameButton = true,
   disabled,
   ...props
-}: ComplexSearchBoundsSelectProps) {
+}: BoundsSelectProps) {
   const [startX, startY] = canvas.startCoordinates;
+  const { minWidth, minHeight } = useSelectedBoundsContext();
 
   const displayBounds =
     selectedBounds ?
@@ -72,10 +77,8 @@ export default function ComplexSearchBoundsSelect({
           }
           max={
             selectedBounds?.right != null ?
-              selectedBounds.right +
-              startX -
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
-            : canvas.width + startX - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
+              selectedBounds.right + startX - minWidth
+            : canvas.width + startX - minWidth
           }
           min={startX}
           name="x1"
@@ -101,10 +104,8 @@ export default function ComplexSearchBoundsSelect({
           }
           max={
             selectedBounds?.bottom != null ?
-              selectedBounds.bottom +
-              startY -
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
-            : canvas.height + startY - COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+              selectedBounds.bottom + startY - minHeight
+            : canvas.height + startY - minHeight
           }
           min={startY}
           name="y1"
@@ -122,7 +123,9 @@ export default function ComplexSearchBoundsSelect({
           value={displayBounds?.top ?? startY}
         />
       </CoordinateInputWrapper>
-      <Scan size={24} />
+      {
+        showFrameButton && <Scan size={24} /> // This will eventually be a button that can used to select bounds via an existing frame
+      }
       <CoordinateInputWrapper>
         <NumberField
           disabled={disabled}
@@ -134,11 +137,8 @@ export default function ComplexSearchBoundsSelect({
           max={canvas.width + startX - 1}
           min={
             selectedBounds?.left != null ?
-              selectedBounds.left +
-              startX +
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width -
-              1
-            : startX + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.width
+              selectedBounds.left + startX + minWidth - 1
+            : startX + minWidth
           }
           name="x2"
           onValueChange={(value: number | null) => {
@@ -164,11 +164,8 @@ export default function ComplexSearchBoundsSelect({
           max={canvas.height + startY - 1}
           min={
             selectedBounds?.top != null ?
-              selectedBounds.top +
-              startY +
-              COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height -
-              1
-            : startY + COMPLEX_SEARCH_BOUNDS_MIN_SIZE.height
+              selectedBounds.top + startY + minHeight - 1
+            : startY + minHeight
           }
           name="y2"
           onValueChange={(value: number | null) => {
