@@ -2,7 +2,7 @@ import { styled } from "@mui/material";
 import { useId } from "react";
 
 const Svg = styled("svg")`
-  color: var(--discord-blurple);
+  color: oklch(1 0 0 / 90%);
   height: 100%;
   inset: 0;
   mix-blend-mode: difference;
