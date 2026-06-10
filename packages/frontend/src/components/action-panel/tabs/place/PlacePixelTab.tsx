@@ -279,6 +279,7 @@ export default function PlacePixelTab({
               Current pixel
             </ActionPanelPrimitives.SectionHeading>
             <Button
+              color="inherit"
               disabled={selectedPixelColor === null}
               onClick={() => setColor(selectedPixelColor)}
               startIcon={<Pipette />}
