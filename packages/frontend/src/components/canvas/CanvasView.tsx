@@ -888,14 +888,13 @@ export default function CanvasView({
     [initialZoom],
   );
 
-  useEffect(() => {
-    /**
-     * When we zoom, not only do we need to scale the image, but to give the appearing of zooming
-     * in on a specific pixel, we need to offset the image so that the pixel we're zooming in on
-     * stays in the same place on the screen after the zoom.
-     */
-    const container = containerRef.current;
-    const handleWheel = (event: WheelEvent): void => {
+  /**
+   * When we zoom, not only do we need to scale the image, but to give the appearing of zooming
+   * in on a specific pixel, we need to offset the image so that the pixel we're zooming in on
+   * stays in the same place on the screen after the zoom.
+   */
+  const handleWheel = useCallback(
+    (event: WheelEvent): void => {
       event.preventDefault();
       // Ensures that the handler can be added to a parent element but only operates on the canvas image wrapper.
       // Applying the handler to lower elements for some isn't consistently picked up in certain browsers (Firefox and Chrome).
@@ -915,14 +914,11 @@ export default function CanvasView({
         1 + SCALE_FACTOR * Math.max(Math.abs(event.deltaY), 1);
       const scale = event.deltaY > 0 ? 1 / scaleMagnitude : 1 * scaleMagnitude;
       handleZoom(scale, pointerPosition, elem);
-    };
+    },
+    [handleZoom],
+  );
 
-    container?.addEventListener("wheel", handleWheel, {
-      passive: false,
-    });
-
-    return () => container?.removeEventListener("wheel", handleWheel);
-  }, [handleZoom, containerRef]);
+  useEventListener("wheel", handleWheel, containerRef, { passive: false });
 
   /********************************
    * PANNING FUNCTIONALITY.       *
@@ -1136,18 +1132,7 @@ export default function CanvasView({
     [zoom, setCoords],
   );
 
-  useEffect(() => {
-    canvasImageWrapperRef.current?.addEventListener(
-      "pointerdown",
-      handleCanvasClick,
-    );
-
-    return () =>
-      canvasImageWrapperRef.current?.removeEventListener(
-        "pointerdown",
-        handleCanvasClick,
-      );
-  }, [handleCanvasClick]);
+  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
 
   const samplePixelColor = useCallback((point: Point): PixelColor | null => {
     const ctx = offscreenCanvasRef.current?.getContext("2d");
