@@ -160,10 +160,9 @@ Thanks to:
 - you, for your interest in this project!
 
 [^project-blurple]:
-    [Project Blurple](https://projectblurple.com) is an annual, week-long,
-    community-run event which celebrates Discord’s anniversary. Part of this is
-    Blurple Canvas where people in participating servers create pixel art on a
-    shared canvas.
+    [Project Blurple](https://projectblurple.com) was an annual, week-long,
+    community-run event which celebrates Discord’s anniversary. Blurple Canvas
+    Web spun out of this.
 
 [^samuel]:
     Pretty sure Samuel isn’t happy about me putting him on this list. Tough
