@@ -179,6 +179,8 @@ const CanvasImageWrapper = styled("div", {
   isLoading: boolean;
   isLaunching: boolean;
 }>`
+  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
+  position: relative;
   transition: filter var(--transition-duration-medium) ease;
   ${({ isLoading }) =>
     isLoading &&
@@ -186,10 +188,6 @@ const CanvasImageWrapper = styled("div", {
       cursor: wait;
       filter: grayscale(80%);
     `}
-
-  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
-  // box-shadow means the shadow only shows on the edges, and doesn't affect the backing color of the translucent pixels in the canvas
-  position: relative;
 
   img {
     ${({ isLaunching }) =>
