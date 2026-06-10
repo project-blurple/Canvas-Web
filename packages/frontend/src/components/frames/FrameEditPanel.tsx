@@ -6,6 +6,7 @@ import {
 import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { partition } from "es-toolkit";
 import {
   type Dispatch,
   type SetStateAction,
@@ -159,18 +160,8 @@ function splitGuildsByFramePresence(
   const guildIdsWithFrames = new Set(
     guildFrames.map((frame) => frame.owner.guild.guild_id),
   );
-
-  return managedGuildEntries.reduce<[GuildEntry[], GuildEntry[]]>(
-    (acc, entry) => {
-      const [guildId] = entry;
-      if (guildIdsWithFrames.has(guildId)) {
-        acc[0].push(entry);
-      } else {
-        acc[1].push(entry);
-      }
-      return acc;
-    },
-    [[], []],
+  return partition(managedGuildEntries, ([guildId]) =>
+    guildIdsWithFrames.has(guildId),
   );
 }
 
