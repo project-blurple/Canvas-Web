@@ -1,7 +1,7 @@
 import "@/common/bigint-json";
 
 import type { NestExpressApplication } from "@nestjs/platform-express";
-import { type AppConfig, appConfig } from "@/config";
+import { type AppConfig, appConfig } from "@/config/app.config";
 
 /**
  * Process-level Express settings shared by `main.ts` and the e2e test harness,
