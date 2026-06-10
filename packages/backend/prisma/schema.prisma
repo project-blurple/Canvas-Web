@@ -7,6 +7,13 @@ generator client {
   importFileExtension = ""
 }
 
+generator kysely {
+  provider           = "prisma-kysely"
+  output             = "../src/client/kysely"
+  fileName           = "types.ts"
+  bigIntTypeOverride = "bigint"
+}
+
 datasource db {
   provider = "postgresql"
 }

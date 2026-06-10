@@ -12,7 +12,6 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { DynamicButton } from "@/components/button";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
@@ -23,8 +22,9 @@ import {
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
 import { durationFormatNarrow } from "@/util/intl";
+import { BasicHighlightButton } from "../button/BasicButtons";
 import {
-  ComplexSearchBoundsSelect,
+  BoundsSelect,
   ComplexSearchColorSelect,
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
@@ -391,11 +391,12 @@ export default function ComplexSearchTab({
               History search
             </ActionPanelPrimitives.SectionHeading>
             <Form onSubmit={handleSearchSubmit}>
-              <ComplexSearchBoundsSelect
+              <BoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}
                 setSelectedBounds={setSelectedBounds}
                 disabled={isLoading}
+                style={{ marginBlock: "1em" }}
               />
               <ComplexSearchColorSelect
                 value={selectedColorIds}
@@ -419,11 +420,14 @@ export default function ComplexSearchTab({
                 setToTime={setToTime}
                 disabled={isLoading}
               />
-              <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
+              <BasicHighlightButton
+                type="submit"
+                disabled={!boundsValid || isLoading}
+              >
                 {!historyQuery.isLoading ?
                   `Search (${pixelsInBounds.toLocaleString()} ${pixelsInBounds !== 1 ? "pixels" : "pixel"})`
                 : "Searching…"}
-              </DynamicButton>
+              </BasicHighlightButton>
             </Form>
           </search>
         </ActionPanelTabBody>

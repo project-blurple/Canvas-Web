@@ -12,7 +12,7 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { Button } from "@/components/button";
+import { BasicButton } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
@@ -50,12 +50,7 @@ const PasteWrapper = styled(CanvasWrapper)`
   column-gap: 1rem;
 `;
 
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-white);
-`;
-
-const FullWidthStyledButton = styled(StyledButton)`
+const FullWidthStyledButton = styled(BasicButton)`
   width: 100%;
 `;
 
