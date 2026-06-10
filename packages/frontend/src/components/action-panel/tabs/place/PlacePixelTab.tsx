@@ -8,7 +8,7 @@ import { AxiosError } from "axios";
 import { isEqual } from "es-toolkit";
 import { Pipette } from "lucide-react";
 import type React from "react";
-import { useCallback, useMemo, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   useActionPanelContext,
   useAuthContext,
