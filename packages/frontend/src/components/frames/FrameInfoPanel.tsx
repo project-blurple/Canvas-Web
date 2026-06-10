@@ -3,6 +3,7 @@ import {
   type Frame,
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
+import { styled } from "@mui/material";
 import {
   useAuthContext,
   useCanvasContext,
@@ -16,9 +17,35 @@ import {
 import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { DynamicButton } from "../button";
+import { Button } from "../button";
 import FrameList from "./FrameList";
 import FrameInfoCard from "./SelectedFrameInfoCard";
+
+const FrameInfoPanelBodyShell = styled("div")`
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  overflow: hidden;
+  transform: translateY(0);
+  transition-duration: var(--transition-duration-slow);
+  transition-property: grid-template-rows, transform;
+  transition-timing-function: var(--ease-out-cubic);
+
+  @container --frame-tabpanel (height < 30rem) {
+    grid-template-rows: 0fr;
+    pointer-events: none;
+    transform: translateY(3rem);
+  }
+
+  > * {
+    min-height: 0;
+  }
+`;
+
+const StyledButton = styled(Button)`
+  background-color: var(--discord-blurple);
+  color: var(--discord-white);
+`;
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
@@ -67,10 +94,7 @@ function FrameInfoPanelBody({
 
   const frameUrl =
     selectedFrame ?
-      createPixelUrl({
-        canvasId: canvas.id,
-        frameId: selectedFrame.id,
-      })
+      createPixelUrl({ canvasId: canvas.id, frameId: selectedFrame.id })
     : "";
 
   const userHasPermsToEditSelectedFrame =
@@ -78,46 +102,48 @@ function FrameInfoPanelBody({
 
   if (selectedFrame) {
     return (
-      <ActionPanelTabBody>
-        <FrameInfoCard frame={selectedFrame} />
-        {userHasPermsToEditSelectedFrame && (
-          <DynamicButton
-            color={null}
-            onAction={() => {
-              setActivePanel(FramePanelMode.Edit);
-            }}
-          >
-            Edit frame
-          </DynamicButton>
-        )}
-        {selectedFrame.owner.type !== FrameOwnerType.System && (
-          <TooltipDynamicButton
-            color={hexStringToPixelColor(selectedFrame.id)}
-            tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(frameUrl);
-            }}
-          >
-            Copy frame link
-          </TooltipDynamicButton>
-        )}
-      </ActionPanelTabBody>
+      <FrameInfoPanelBodyShell>
+        <ActionPanelTabBody>
+          <FrameInfoCard frame={selectedFrame} />
+          {userHasPermsToEditSelectedFrame && (
+            <StyledButton
+              onClick={() => {
+                setActivePanel(FramePanelMode.Edit);
+              }}
+            >
+              Edit frame
+            </StyledButton>
+          )}
+          {selectedFrame.owner.type !== FrameOwnerType.System && (
+            <TooltipDynamicButton
+              color={hexStringToPixelColor(selectedFrame.id)}
+              tooltipTitle="Copied"
+              onAction={() => {
+                navigator.clipboard.writeText(frameUrl);
+              }}
+            >
+              Copy frame link
+            </TooltipDynamicButton>
+          )}
+        </ActionPanelTabBody>
+      </FrameInfoPanelBodyShell>
     );
   }
 
   if (user) {
     return (
-      <ActionPanelTabBody>
-        <BotCommandCard command="/frame create" />
-        <DynamicButton
-          color={null}
-          onAction={() => {
-            setActivePanel(FramePanelMode.Create);
-          }}
-        >
-          New frame
-        </DynamicButton>
-      </ActionPanelTabBody>
+      <FrameInfoPanelBodyShell>
+        <ActionPanelTabBody>
+          <BotCommandCard command="/frame create" />
+          <StyledButton
+            onClick={() => {
+              setActivePanel(FramePanelMode.Create);
+            }}
+          >
+            New frame
+          </StyledButton>
+        </ActionPanelTabBody>
+      </FrameInfoPanelBodyShell>
     );
   }
 

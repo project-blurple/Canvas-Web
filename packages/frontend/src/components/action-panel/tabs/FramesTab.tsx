@@ -6,6 +6,7 @@ import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
 import { TabPanel } from "./ActionPanelTabBody";
 
 const FramesTabBlock = styled(TabPanel)`
+  container: --frame-tabpanel / size;
   grid-template-rows: 1fr auto;
 `;
 
