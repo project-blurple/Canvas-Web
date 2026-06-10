@@ -13,10 +13,8 @@ export const appConfig = registerAs(ConfigNamespace.App, () => {
     canvases: path.resolve("static", "canvas"),
   };
 
-  if (!fs.existsSync(paths.canvases)) {
-    console.debug(`Creating canvases directory at ${paths.canvases}`);
-    fs.mkdirSync(paths.canvases, { recursive: true });
-  }
+  console.debug(`Creating canvases directory at ${paths.canvases}`);
+  fs.mkdirSync(paths.canvases, { recursive: true });
 
   return {
     environment: env.NODE_ENV,

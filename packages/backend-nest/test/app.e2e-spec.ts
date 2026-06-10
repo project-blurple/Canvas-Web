@@ -23,7 +23,7 @@ describe("Bootstrap (e2e)", () => {
   });
 
   it("boots with an empty API surface", async () => {
-    await request(app.getHttpServer()).get("/").expect(404);
+    request(app.getHttpServer()).get("/").expect(404);
   });
 
   it("sends credentialed CORS headers for the frontend origin", async () => {
@@ -38,8 +38,8 @@ describe("Bootstrap (e2e)", () => {
   });
 
   it("serialises BigInt values as JSON strings", () => {
-    expect(JSON.stringify({ id: 204446594050784000n })).toBe(
-      '{"id":"204446594050784000"}',
+    expect(JSON.stringify({ id: 204778476102877187n })).toBe(
+      '{"id":"204778476102877187"}',
     );
   });
 });

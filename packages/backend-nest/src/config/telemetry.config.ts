@@ -3,7 +3,7 @@ import { registerAs } from "@nestjs/config";
 import { ConfigNamespace } from "./config-namespace";
 import { validateEnv } from "./env";
 
-export const tracingConfig = registerAs(ConfigNamespace.Tracing, () => {
+export const telemetryConfig = registerAs(ConfigNamespace.Telemetry, () => {
   const env = validateEnv(process.env);
 
   return {
@@ -12,4 +12,4 @@ export const tracingConfig = registerAs(ConfigNamespace.Tracing, () => {
   };
 });
 
-export type TracingConfig = ConfigType<typeof tracingConfig>;
+export type TelemetryConfig = ConfigType<typeof telemetryConfig>;

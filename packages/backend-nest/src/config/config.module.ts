@@ -9,7 +9,7 @@ import { validateEnv } from "./env";
 import { framesConfig } from "./frames.config";
 import { placementConfig } from "./placement.config";
 import { sessionConfig } from "./session.config";
-import { tracingConfig } from "./tracing.config";
+import { telemetryConfig } from "./telemetry.config";
 
 @Module({
   imports: [
@@ -27,7 +27,7 @@ import { tracingConfig } from "./tracing.config";
         framesConfig,
         placementConfig,
         sessionConfig,
-        tracingConfig,
+        telemetryConfig,
       ],
     }),
   ],

@@ -14,10 +14,10 @@ const REQUIRED_ENV = {
 };
 
 describe("config", () => {
-  const originalEnv = process.env;
+  const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    process.env = { ...REQUIRED_ENV };
+    Object.assign(process.env, REQUIRED_ENV);
   });
 
   afterEach(() => {

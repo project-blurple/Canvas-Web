@@ -3,7 +3,7 @@
   "sourceMaps": true,
   "module": { "type": "commonjs" },
   "jsc": {
-    "target": "es2023",
+    "target": "esnext",
     "parser": { "syntax": "typescript", "decorators": true },
     "transform": { "legacyDecorator": true, "decoratorMetadata": true },
     "baseUrl": ".",

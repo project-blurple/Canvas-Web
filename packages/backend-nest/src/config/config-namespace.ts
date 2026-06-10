@@ -6,7 +6,7 @@ export const ConfigNamespace = {
   Frames: "frames",
   Placement: "placement",
   Session: "session",
-  Tracing: "tracing",
+  Telemetry: "telemetry",
 } as const;
 
 export type ConfigNamespace =
