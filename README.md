@@ -147,9 +147,8 @@ project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
 Blurple Canvas Web wouldn’t exist without these lovely people and projects.
 Thanks to:
 
-- <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="16" height="16" />
-  [Project Blurple](https://projectblurple.com) [^project-blurple] and the Project Blurple
-  community, for obvious reasons;
+- [Project Blurple](https://projectblurple.com)&zwj;[^project-blurple] and the
+  Project Blurple community, for obvious reasons;
 - [Rocked03](https://rocked03.dev) for creating the
   [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord
   bot;[^samuel]
