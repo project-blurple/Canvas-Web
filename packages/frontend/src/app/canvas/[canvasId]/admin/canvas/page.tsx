@@ -149,7 +149,6 @@ function areCanvasSettingsEqual(
 
 interface CanvasSettingsFormProps {
   activeCanvas: CanvasInfo;
-  createCanvas: ReturnType<typeof useCreateCanvas>;
   formValues: CanvasSettingsFormValues;
   isDirty: boolean;
   mode: FormMode;
@@ -157,24 +156,29 @@ interface CanvasSettingsFormProps {
     canvasId: CanvasInfo["id"];
     values: CanvasSettingsFormValues;
   } | null;
-  isSaving: boolean;
+  onSavingChange?: (isSaving: boolean) => void;
   onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
   onSaved: (canvasId: CanvasInfo["id"]) => void | Promise<void>;
-  updateCanvasInfo: ReturnType<typeof useUpdateCanvasInfo>;
 }
 
 function CanvasSettingsForm({
   activeCanvas,
-  createCanvas,
   formValues,
   isDirty,
   mode,
   saveConfirmation,
-  isSaving,
+  onSavingChange,
   onFormValuesChange,
   onSaved,
-  updateCanvasInfo,
 }: CanvasSettingsFormProps) {
+  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
+  const createCanvas = useCreateCanvas();
+  const isSaving = createCanvas.isPending || updateCanvasInfo.isPending;
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
+
   const showSaveConfirmation =
     saveConfirmation !== null &&
     saveConfirmation.canvasId === activeCanvas.id &&
@@ -413,10 +417,7 @@ function AdminCanvasTab() {
     canvasId: CanvasInfo["id"];
     values: CanvasSettingsFormValues;
   } | null>(null);
-  const updateCanvasInfoMutation = useUpdateCanvasInfo(activeCanvas.id);
-  const createCanvasMutation = useCreateCanvas();
-  const isSaving =
-    createCanvasMutation.isPending || updateCanvasInfoMutation.isPending;
+  const [isSaving, setIsSaving] = useState(false);
 
   const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
 
@@ -537,12 +538,11 @@ function AdminCanvasTab() {
             </CanvasList>
             <CanvasSettingsForm
               activeCanvas={activeCanvas}
-              createCanvas={createCanvasMutation}
               formValues={formValues}
               isDirty={isDirty}
               mode={mode}
               saveConfirmation={saveConfirmation}
-              isSaving={isSaving}
+              onSavingChange={setIsSaving}
               onFormValuesChange={setFormValues}
               onSaved={(savedCanvasId) => {
                 setSaveConfirmation({
@@ -551,7 +551,6 @@ function AdminCanvasTab() {
                 });
                 router.push(`/canvas/${savedCanvasId}/admin/canvas`);
               }}
-              updateCanvasInfo={updateCanvasInfoMutation}
             />
             {mode !== "create" && (
               <DestructiveButton
