@@ -4,13 +4,6 @@
   <img src="https://github.com/user-attachments/assets/347c5873-6859-40c1-a6de-25a326aad2a6" width="450" height="450" alt="Final canvas from 2026" />
 </p>
 
-## <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
-
-[Project Blurple](https://projectblurple.com) is an annual, week-long,
-community-run event which celebrates Discord’s anniversary. Part of this is
-Blurple Canvas where people in participating servers create pixel art on a
-shared canvas.
-
 ## 🥪 Tech stack & repo structure
 
 This is a [monorepo](https://monorepo.tools), with three packages:
@@ -122,7 +115,7 @@ pnpm -F frontend run dev
 
 ## 🤓 Maintainers
 
-Availabilities and contributions ebb and flow, but at the moment these are
+Availabilities and contributions ebb and flow but, at the moment, these are
 probably the most reasonable people to contact if you need to get in touch with
 a core contributor: @rocked03, @jaskfla, @stijnvdkolk.
 
@@ -152,7 +145,8 @@ project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).
 Blurple Canvas Web wouldn’t exist without these lovely people and projects.
 Thanks to:
 
-- [Project Blurple](https://projectblurple.com) and the Project Blurple
+- <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="16" height="16" />
+  [Project Blurple](https://projectblurple.com)[^project-blurple] and the Project Blurple
   community, for obvious reasons;
 - [Rocked03](https://rocked03.dev) for creating the
   [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord
@@ -163,6 +157,12 @@ Thanks to:
   [r/Place](https://www.reddit.com/r/place) participants (no introduction
   needed); and
 - you, for your interest in this project!
+
+[^project-blurple]:
+    [Project Blurple](https://projectblurple.com) is an annual, week-long,
+    community-run event which celebrates Discord’s anniversary. Part of this is
+    Blurple Canvas where people in participating servers create pixel art on a
+    shared canvas.
 
 [^samuel]:
     Pretty sure Samuel isn’t happy about me putting him on this list. Tough
