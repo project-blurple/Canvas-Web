@@ -5,7 +5,7 @@ import { Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/button";
+import { BasicButton, DestructiveButton } from "@/components/button";
 import CanvasIcon from "@/components/CanvasIcon";
 import {
   CanvasPreviewCard,
@@ -105,14 +105,6 @@ const SaveStatusText = styled("p")`
 const ButtonWrapper = styled("div")`
   display: flex;
   gap: 0.5rem;
-`;
-
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-legacy-full-white);
-  transition-duration: var(--transition-duration-fast);
-  transition-property: background-color, color, opacity;
-  transition-timing-function: ease;
 `;
 
 const createDefaults = {
@@ -383,19 +375,19 @@ function CanvasSettingsForm({
         <SaveStatusText aria-live="polite">Saved</SaveStatusText>
       )}
       <ButtonWrapper>
-        <StyledButton
+        <BasicButton
           disabled={!isDirty || isFormInvalid() || isSaving}
           type="submit"
         >
           {mode === "create" ? "Create canvas" : "Save changes"}
-        </StyledButton>
-        <StyledButton
+        </BasicButton>
+        <DestructiveButton
           disabled={!isDirty || isSaving}
           type="reset"
           onClick={resetForm}
         >
           <ListRestart />
-        </StyledButton>
+        </DestructiveButton>
       </ButtonWrapper>
     </CanvasContents>
   );
@@ -549,14 +541,14 @@ function AdminCanvasTab() {
               }}
             />
             {mode !== "create" && (
-              <StyledButton
+              <DestructiveButton
                 onClick={async () => {
                   await clearCanvasCache.mutateAsync();
                   window.location.reload();
                 }}
               >
                 Clear cached image
-              </StyledButton>
+              </DestructiveButton>
             )}
           </>
         }

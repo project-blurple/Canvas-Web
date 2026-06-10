@@ -1,6 +1,6 @@
 "use client";
 
-import type { Point } from "@blurple-canvas-web/types";
+import type { PixelColor, Point } from "@blurple-canvas-web/types";
 import {
   createContext,
   type Dispatch,
@@ -18,10 +18,12 @@ interface CanvasViewContextType {
   adjustedCoords: Point | null;
   containerRef: RefObject<HTMLDivElement | null>;
   coords: Point | null;
+  selectedPixelColor: PixelColor | null;
   isReticleVisible: boolean;
   offset: Point;
   zoom: number;
   setCoords: Dispatch<SetStateAction<Point | null>>;
+  setSelectedPixelColor: Dispatch<SetStateAction<PixelColor | null>>;
   setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
   setOffset: Dispatch<SetStateAction<Point>>;
   setZoom: Dispatch<SetStateAction<number>>;
@@ -31,10 +33,12 @@ const CanvasViewContext = createContext<CanvasViewContextType>({
   adjustedCoords: null,
   containerRef: { current: null },
   coords: null,
+  selectedPixelColor: null,
   isReticleVisible: false,
   offset: ORIGIN,
   zoom: 1,
   setCoords: () => {},
+  setSelectedPixelColor: () => {},
   setIsReticleVisible: () => {},
   setOffset: () => {},
   setZoom: () => {},
@@ -48,6 +52,8 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const { canvas } = useCanvasContext();
   const [selectedCoords, setSelectedCoords] =
     useState<CanvasViewContextType["coords"]>(null);
+  const [selectedPixelColor, setSelectedPixelColor] =
+    useState<CanvasViewContextType["selectedPixelColor"]>(null);
   const [isReticleVisible, setIsReticleVisible] =
     useState<CanvasViewContextType["isReticleVisible"]>(true);
   const [zoom, setZoom] = useState(1);
@@ -72,15 +78,17 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
     <CanvasViewContext.Provider
       value={{
         adjustedCoords,
-        containerRef: containerRef,
+        containerRef,
         coords: selectedCoords,
         isReticleVisible: isReticleVisible && selectedCoords !== null,
-        offset: offset,
-        zoom: zoom,
+        offset,
+        selectedPixelColor,
         setCoords: setSelectedCoords,
-        setIsReticleVisible: setIsReticleVisible,
-        setOffset: setOffset,
-        setZoom: setZoom,
+        setIsReticleVisible,
+        setOffset,
+        setSelectedPixelColor,
+        setZoom,
+        zoom,
       }}
     >
       {children}

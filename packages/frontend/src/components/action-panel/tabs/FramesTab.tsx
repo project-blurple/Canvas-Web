@@ -49,10 +49,10 @@ export default function FramesTab({
       />
     ),
     [FramePanelMode.Edit]: (
-      <FrameEditPanel setActivePanel={setActivePanel} isCreateMode={false} />
+      <FrameEditPanel setActivePanel={setActivePanel} mode="edit" />
     ),
     [FramePanelMode.Create]: (
-      <FrameEditPanel setActivePanel={setActivePanel} isCreateMode />
+      <FrameEditPanel setActivePanel={setActivePanel} mode="create" />
     ),
   } as const satisfies Record<FramePanelMode, ReactNode>;
 

@@ -5,12 +5,17 @@ import { errorHandler } from "@/middleware/errorHandler";
 import seedAll from "@/test";
 import { mockAuth } from "@/test/mockAuth";
 
+vi.mock("@/services/turnstileService", () => ({
+  verifyTurnstileToken: vi.fn(async () => {}),
+}));
+
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
   },
 }));
 
+import { verifyTurnstileToken } from "@/services/turnstileService";
 import { pixelRouter } from "./pixel";
 
 let app: express.Express;
@@ -42,6 +47,7 @@ describe("Place Pixel Tests", () => {
         x: 1,
         y: 1,
         colorId: 1,
+        turnstileToken: "test-turnstile-token",
       })
       .type("json")
       .set("Test-User-Id", "1");
@@ -50,6 +56,9 @@ describe("Place Pixel Tests", () => {
       cooldownEndTime: 30 * 1000,
     });
     expect(response.status).toBe(201);
+    expect(vi.mocked(verifyTurnstileToken)).toHaveBeenCalledWith(
+      "test-turnstile-token",
+    );
   });
 
   it("Only allows one pixel to be placed at a time", async () => {
@@ -62,6 +71,7 @@ describe("Place Pixel Tests", () => {
           x: 1,
           y: 1,
           colorId: 1,
+          turnstileToken: "test-turnstile-token",
         })
         .type("json")
         .set("Test-User-Id", "1");
