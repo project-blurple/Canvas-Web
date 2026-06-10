@@ -1,28 +1,31 @@
 import { type RefObject, useEffect } from "react";
 
-export function useEventListener<K extends keyof DocumentEventMap>(
+type ElementEventMap<T> = T extends Document
+  ? DocumentEventMap
+  : T extends HTMLElement
+    ? HTMLElementEventMap
+    : T extends SVGElement
+      ? SVGElementEventMap
+      : T extends MediaQueryList
+        ? MediaQueryListEventMap
+        : T extends Window
+          ? WindowEventMap
+          : Record<string, Event>;
+
+export function useEventListener<
+  T extends Document | HTMLElement | SVGElement | MediaQueryList | Window,
+  K extends keyof ElementEventMap<T>,
+>(
   eventName: K,
-  handler: (event: DocumentEventMap[K]) => void,
-  element: RefObject<Document | null>,
+  handler: (event: ElementEventMap<T>[K]) => void,
+  element: RefObject<T | null>,
   options?: boolean | AddEventListenerOptions,
 ): void;
 
-export function useEventListener<
-  KW extends keyof WindowEventMap,
-  KH extends keyof HTMLElementEventMap & keyof SVGElementEventMap,
-  KM extends keyof MediaQueryListEventMap,
-  T extends HTMLElement | SVGAElement | MediaQueryList = HTMLElement,
->(
-  eventName: KW | KH | KM,
-  listener: (
-    event:
-      | WindowEventMap[KW]
-      | HTMLElementEventMap[KH]
-      | SVGElementEventMap[KH]
-      | MediaQueryListEventMap[KM]
-      | Event,
-  ) => void,
-  element?: RefObject<T | null>,
+export function useEventListener<K extends keyof WindowEventMap>(
+  eventName: K,
+  handler: (event: WindowEventMap[K]) => void,
+  element?: undefined,
   options?: boolean | AddEventListenerOptions,
 ): void;
 
@@ -30,7 +33,7 @@ export function useEventListener(
   eventName: string,
   listener: (event: Event) => void,
   element?: RefObject<
-    Document | HTMLElement | SVGAElement | MediaQueryList | null
+    Document | HTMLElement | SVGElement | MediaQueryList | null
   >,
   options?: boolean | AddEventListenerOptions,
 ) {
