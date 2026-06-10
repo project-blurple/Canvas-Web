@@ -929,7 +929,6 @@ export default function CanvasView({
     },
     [handleZoom],
   );
-
   useEventListener("wheel", handleWheel, containerRef, { passive: false });
 
   /********************************
@@ -1143,6 +1142,7 @@ export default function CanvasView({
     },
     [zoom, setCoords],
   );
+  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
 
   useEffect(() => {
     if (!coords) {
@@ -1152,8 +1152,6 @@ export default function CanvasView({
 
     setSelectedPixelColor(samplePixelColor(coords));
   }, [coords, samplePixelColor, setSelectedPixelColor]);
-
-  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
 
   const reticleOffset = calculateReticleOffset(coords);
 
