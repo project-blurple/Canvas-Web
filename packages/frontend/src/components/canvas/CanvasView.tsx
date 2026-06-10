@@ -3,7 +3,6 @@
 import type {
   CanvasInfo,
   Frame,
-  PixelColor,
   PixelHistoryOverlayPixel,
   PlacePixelSocket,
   Point,
@@ -517,18 +516,6 @@ export default function CanvasView({
   const hasAppliedInitialFrameRef = useRef(false);
 
   const canUseFullscreen = useIsFullscreenAvailable();
-
-  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
-    const ctx = offscreenCanvasRef.current?.getContext("2d");
-    if (!ctx) return null;
-
-    try {
-      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
-      return [data[0], data[1], data[2], data[3]];
-    } catch {
-      return null;
-    }
-  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -1153,14 +1140,24 @@ export default function CanvasView({
     [zoom, setCoords],
   );
 
-  useEffect(() => {
-    if (!coords) {
-      setSelectedPixelColor(null);
-      return;
-    }
-
-    setSelectedPixelColor(samplePixelColor(coords));
-  }, [coords, samplePixelColor, setSelectedPixelColor]);
+  useEffect(
+    function sampleCurrentPixel() {
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!coords || !ctx) {
+        setSelectedPixelColor(null);
+        return;
+      }
+      try {
+        const { data } = ctx.getImageData(coords.x, coords.y, 1, 1);
+        setSelectedPixelColor([data[0], data[1], data[2], data[3]]);
+      } catch {
+        setSelectedPixelColor(null);
+      }
+      // No clean-up. This Effect is a hack; the selected pixel colour should be derived within
+      // render lifecycle. Hopefully we clean it up at some point.
+    },
+    [coords, setSelectedPixelColor],
+  );
 
   useEffect(() => {
     canvasImageWrapperRef.current?.addEventListener(
