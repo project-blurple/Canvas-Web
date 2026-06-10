@@ -117,7 +117,8 @@ pnpm -F frontend run dev
 
 Availabilities and contributions ebb and flow but, at the moment, these are
 probably the most reasonable people to contact if you need to get in touch with
-a core contributor: @rocked03, @jaskfla, @stijnvdkolk.
+a core contributor: [@rocked03](https://sjou.dev), [@jaskfla](https://lai.nz),
+[@stijnvdkolk](https://github.com/stijnvdkolk).
 
 <details>
 <summary>🦒 The OG team[^team-name]</summary>
