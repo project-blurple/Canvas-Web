@@ -148,8 +148,8 @@ project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).[^team-name]
 Blurple Canvas Web wouldn’t exist without these lovely people and projects.
 Thanks to:
 
-- [Project Blurple](https://projectblurple.com)&zwj;[^project-blurple] and the
-  Project Blurple community, for obvious reasons;
+- [Project Blurple](https://projectblurple.com)and the Project Blurple
+  community, which Blurple Canvas was spun out of;
 - [Rocked03](https://rocked03.dev) for creating the
   [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord
   bot;[^samuel]
@@ -159,11 +159,6 @@ Thanks to:
   [r/Place](https://www.reddit.com/r/place) participants (no introduction
   needed); and
 - you, for your interest in this project!
-
-[^project-blurple]:
-    [Project Blurple](https://projectblurple.com) was an annual, week-long,
-    community-run event which celebrates Discord’s anniversary. Blurple Canvas
-    Web spun out of this.
 
 [^samuel]:
     Pretty sure Samuel isn’t happy about me putting him on this list. Tough
