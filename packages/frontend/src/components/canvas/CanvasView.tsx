@@ -37,8 +37,8 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
-import { CanvasGrid } from "./CanvasGrid";
 import CanvasViewControls from "./CanvasViewControls";
+import { PixelGrid } from "./PixelGrid";
 import {
   addPoints,
   diffPoints,
@@ -1303,7 +1303,7 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
-        <CanvasGrid zoom={zoom} hidden={!isGridVisible} />
+        <PixelGrid zoom={zoom} hidden={!isGridVisible} />
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}

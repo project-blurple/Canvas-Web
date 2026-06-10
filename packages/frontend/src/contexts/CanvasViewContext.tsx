@@ -59,12 +59,6 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
-  const [prevCanvasId, setPrevCanvasId] = useState(canvas.id);
-
-  if (prevCanvasId !== canvas.id) {
-    setSelectedCoords(null);
-    setPrevCanvasId(canvas.id);
-  }
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -78,17 +72,17 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
     <CanvasViewContext.Provider
       value={{
         adjustedCoords,
-        containerRef: containerRef,
+        containerRef,
         coords: selectedCoords,
-        selectedPixelColor: selectedPixelColor,
         isReticleVisible: isReticleVisible && selectedCoords !== null,
-        offset: offset,
-        zoom: zoom,
+        offset,
+        selectedPixelColor,
         setCoords: setSelectedCoords,
-        setSelectedPixelColor: setSelectedPixelColor,
-        setIsReticleVisible: setIsReticleVisible,
-        setOffset: setOffset,
-        setZoom: setZoom,
+        setIsReticleVisible,
+        setOffset,
+        setSelectedPixelColor,
+        setZoom,
+        zoom,
       }}
     >
       {children}

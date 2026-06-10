@@ -61,7 +61,7 @@
     "cors": "^2.8.6",
     "discord-strategy": "^2.5.0",
     "express": "^5.2.1",
-    "express-rate-limit": "^8.3.2",
+    "express-rate-limit": "^8.5.2",
     "express-session": "^1.19.0",
     "kysely": "^0.29.2",
     "passport": "^0.7.0",
@@ -69,7 +69,7 @@
     "prisma-extension-kysely": "^4.0.0",
     "sharp": "^0.34.5",
     "socket.io": "^4.8.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^11.14.0",
@@ -84,7 +84,7 @@
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
     "prisma": "^7.7.0",
-    "prisma-kysely": "^3.1.0",
+    "prisma-kysely": "^3.1.1",
     "supertest": "^7.2.2",
     "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.17",
