@@ -47,7 +47,7 @@
     "axios": "^1.16.1",
     "colorjs.io": "^0.6.1",
     "es-toolkit": "^1.47.0",
-    "js-cookie": "^3.0.7",
+    "js-cookie": "^3.0.8",
     "lucide-react": "^1.8.0",
     "luxon": "^3.7.2",
     "markdown-to-jsx": "^9.7.16",
