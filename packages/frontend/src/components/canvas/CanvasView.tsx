@@ -1,14 +1,14 @@
 "use client";
 
-import type {
-  CanvasInfo,
-  Frame,
-  PixelColor,
-  PixelHistoryOverlayPixel,
-  PlacePixelSocket,
-  Point,
+import {
+  type CanvasInfo,
+  type Frame,
+  type PixelColor,
+  type PixelHistoryOverlayPixel,
+  type PlacePixelSocket,
+  type Point,
+  SocketEvents,
 } from "@blurple-canvas-web/types";
-import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
@@ -30,6 +30,7 @@ import {
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import { useEventListener } from "@/hooks/useEventListener";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
@@ -467,9 +468,9 @@ export default function CanvasView({
     coords,
     isReticleVisible,
     offset,
-    setSelectedPixelColor,
     setCoords,
     setOffset,
+    setSelectedPixelColor,
     setZoom,
     zoom,
   } = useCanvasViewContext();
@@ -518,50 +519,31 @@ export default function CanvasView({
 
   const canUseFullscreen = useIsFullscreenAvailable();
 
-  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
-    const ctx = offscreenCanvasRef.current?.getContext("2d");
-    if (!ctx) return null;
+  const handleFullscreenChange = useCallback(() => {
+    const container = containerRef.current;
+    const fullscreenDocument = document as Document & {
+      webkitFullscreenElement?: Element | null;
+    };
+    const isCanvasFullscreen =
+      !!container &&
+      (document.fullscreenElement === container ||
+        fullscreenDocument.webkitFullscreenElement === container);
+    setIsFullscreen(isCanvasFullscreen);
+    if (!isCanvasFullscreen) setFullscreenPanelVisible(false);
+  }, [containerRef, setFullscreenPanelVisible]);
 
-    try {
-      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
-      return [data[0], data[1], data[2], data[3]];
-    } catch {
-      return null;
-    }
-  }, []);
+  const documentRef = useRef<Document>(document);
+  useEventListener("fullscreenchange", handleFullscreenChange, documentRef);
+  /** WebKit fallback event for older Safari */
+  useEventListener(
+    "webkitfullscreenchange" as "fullscreenchange",
+    handleFullscreenChange,
+    documentRef,
+  );
 
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const container = containerRef.current;
-      const fullscreenDocument = document as Document & {
-        webkitFullscreenElement?: Element | null;
-      };
-      const isCanvasFullscreen =
-        !!container &&
-        (document.fullscreenElement === container ||
-          fullscreenDocument.webkitFullscreenElement === container);
-      setIsFullscreen(isCanvasFullscreen);
-      if (!isCanvasFullscreen) {
-        setFullscreenPanelVisible(false);
-      }
-    };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    // webkit fallback event for older Safari
-    document.addEventListener(
-      "webkitfullscreenchange",
-      handleFullscreenChange as EventListener,
-    );
     handleFullscreenChange();
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        handleFullscreenChange as EventListener,
-      );
-    };
-  }, [containerRef, setFullscreenPanelVisible]);
+  }, [handleFullscreenChange]);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -1136,8 +1118,9 @@ export default function CanvasView({
         !(event.currentTarget instanceof HTMLElement) ||
         !event.isPrimary ||
         event.button !== 0
-      )
+      ) {
         return;
+      }
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
       const relativeMousePos = getRelativePointerPosition(canvas, event);
@@ -1154,15 +1137,6 @@ export default function CanvasView({
   );
 
   useEffect(() => {
-    if (!coords) {
-      setSelectedPixelColor(null);
-      return;
-    }
-
-    setSelectedPixelColor(samplePixelColor(coords));
-  }, [coords, samplePixelColor, setSelectedPixelColor]);
-
-  useEffect(() => {
     canvasImageWrapperRef.current?.addEventListener(
       "pointerdown",
       handleCanvasClick,
@@ -1174,6 +1148,27 @@ export default function CanvasView({
         handleCanvasClick,
       );
   }, [handleCanvasClick]);
+
+  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
+    const ctx = offscreenCanvasRef.current?.getContext("2d");
+    if (!ctx) return null;
+
+    try {
+      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
+      return [data[0], data[1], data[2], data[3]];
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!coords) {
+      setSelectedPixelColor(null);
+      return;
+    }
+
+    setSelectedPixelColor(samplePixelColor(coords));
+  }, [coords, samplePixelColor, setSelectedPixelColor]);
 
   const reticleOffset = calculateReticleOffset(coords);
 
@@ -1293,7 +1288,6 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
-
         {showSelectedBounds && (
           <SelectedBoundsOverlay
             canvasWidth={canvas.width}
@@ -1308,7 +1302,6 @@ export default function CanvasView({
             zoom={zoom}
           />
         )}
-
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1327,9 +1320,7 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
-
         <CanvasGrid zoom={zoom} hidden={!isGridVisible} />
-
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}
