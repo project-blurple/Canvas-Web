@@ -105,7 +105,9 @@ describe("Error contract (e2e)", () => {
   ] as const)(
     "renders %s with its ApiError envelope",
     async (route, status, body) => {
-      const response = await request(app.getHttpServer()).get(`/${route}`);
+      const response = await request(app.getHttpServer()).get(
+        `/api/v1/${route}`,
+      );
 
       expect(response.status).toBe(status);
       expect(response.body).toStrictEqual(body);
@@ -121,7 +123,9 @@ describe("Error contract (e2e)", () => {
       .spyOn(Logger.prototype, "error")
       .mockImplementation(() => {});
 
-    const response = await request(app.getHttpServer()).get("/unexpected");
+    const response = await request(app.getHttpServer()).get(
+      "/api/v1/unexpected",
+    );
 
     expect(response.status).toBe(500);
     expect(response.body).toStrictEqual({

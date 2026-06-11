@@ -16,6 +16,7 @@ allowBuilds:
   "@swc/core": false
   cpu-features: false
   esbuild: false
+  msw: false
   prisma: false
   protobufjs: false
   sharp: false
