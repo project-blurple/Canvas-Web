@@ -9,6 +9,7 @@ injectWorkspacePackages: true
 
 allowBuilds:
   "@prisma/engines": false
+  better-sqlite3: true
   cpu-features: false
   esbuild: false
   prisma: false

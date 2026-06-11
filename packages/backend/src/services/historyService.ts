@@ -13,6 +13,7 @@ import {
   restorePixelsAfterHistoryModification,
   validatePixel,
 } from "./pixelService";
+import { setSnapshotDirtyTimestamp } from "./snapshot/snapshotService";
 
 interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
@@ -444,7 +445,7 @@ export async function deletePixelHistoryEntries(
     .updateTable("history")
     .set({ erased_at: erasedAt })
     .where((eb) => eb.and(buildPixelHistoryWhere(eb, params)))
-    .returning(["id", "user_id", "x", "y"])
+    .returning(["id", "user_id", "x", "y", "timestamp"])
     .execute();
 
   if (deletedEntries.length === 0) return;
@@ -462,6 +463,11 @@ export async function deletePixelHistoryEntries(
     params.canvasId,
     coordinatesUpdated,
   );
+
+  const earliestEntryTimestamp = deletedEntries.reduce((earliest, entry) => {
+    return entry.timestamp < earliest ? entry.timestamp : earliest;
+  }, deletedEntries[0].timestamp);
+  await setSnapshotDirtyTimestamp(params.canvasId, earliestEntryTimestamp);
 
   if (shouldBlockAuthors) {
     const authorIds = new Set(deletedEntries.map((entry) => entry.user_id));
@@ -488,7 +494,7 @@ export async function restorePixelHistoryEntries(
       .where("user_id", "in", userIdsArray)
       .where("canvas_id", "in", canvasIdsArray)
       .where("erased_at", "is not", null)
-      .returning(["canvas_id", "x", "y"])
+      .returning(["canvas_id", "x", "y", "timestamp"])
       .execute();
 
     return rows;
@@ -499,15 +505,33 @@ export async function restorePixelHistoryEntries(
   }
 
   const coordinatesByCanvas = new Map<number, Point[]>();
+  const earliestEntryTimestampsByCanvas = new Map<number, Date>();
   for (const entry of restoredEntries) {
     const coordinates = coordinatesByCanvas.get(entry.canvas_id) ?? [];
     coordinates.push({ x: entry.x, y: entry.y });
     coordinatesByCanvas.set(entry.canvas_id, coordinates);
+
+    if (!earliestEntryTimestampsByCanvas.has(entry.canvas_id)) {
+      earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
+    } else {
+      const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id)!;
+      if (entry.timestamp < existing) {
+        earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
+      }
+    }
   }
 
   await Promise.all(
-    Array.from(coordinatesByCanvas.entries(), async ([canvasId, coordinates]) =>
-      restorePixelsAfterHistoryModification(canvasId, coordinates),
+    Array.from(
+      coordinatesByCanvas.entries(),
+      async ([canvasId, coordinates]) => {
+        await restorePixelsAfterHistoryModification(canvasId, coordinates);
+
+        await setSnapshotDirtyTimestamp(
+          canvasId,
+          earliestEntryTimestampsByCanvas.get(canvasId)!,
+        );
+      },
     ),
   );
 }
