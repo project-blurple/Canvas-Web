@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import {
   CanvasExportParamModel,
   type CanvasExportScale,
@@ -33,34 +34,44 @@ import {
 } from "@/services/canvasService";
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
+import { addSpanAttributes } from "@/utils/otel";
 import { pixelRouter } from "./pixel";
 
 export const canvasRouter = typedRouter(Router());
 
 canvasRouter.use("/:canvasId/pixel", pixelRouter);
 
-canvasRouter.get("/", async (_req, res) => {
+canvasRouter.get("/", async (req, res) => {
   const canvases = await getCanvases();
   res.status(200).json(canvases);
+
+  addSpanAttributes(req, { "response.size": canvases.length });
 });
 
-canvasRouter.get("/current/info", async (_req, res) => {
+canvasRouter.get("/current/info", async (req, res) => {
   const canvasInfo = await getCurrentCanvasInfo();
   res.status(200).json(canvasInfo);
+
+  addSpanAttributes(req, { "canvas.id": canvasInfo?.id });
 });
 
 canvasRouter.get(
   "/:canvasId/info",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "canvas.id": req.params.canvasId });
+
     const canvasInfo = await getCanvasInfo(req.params.canvasId);
     res.status(200).json(canvasInfo);
   },
 );
 
-canvasRouter.get("/current", async (_req, res) => {
+canvasRouter.get("/current", async (req, res) => {
   const [canvasId, cachedCanvas] = await getCurrentCanvas();
-  await sendCachedCanvas(res, canvasId, cachedCanvas);
+  addSpanAttributes(req, { "canvas.id": canvasId });
+
+  const fileSize = await sendCachedCanvas(res, canvasId, cachedCanvas);
+  addSpanAttributes(req, { "response.export.size.bytes": fileSize });
 });
 
 canvasRouter.get(
@@ -68,15 +79,25 @@ canvasRouter.get(
   validate({ params: CanvasExportParamModel, query: OptionalFrameBoundsModel }),
   async (req, res) => {
     const scale = req.params.scale;
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "export.scale": scale,
+      "bounds.x0": req.query?.x0,
+      "bounds.y0": req.query?.y0,
+      "bounds.x1": req.query?.x1,
+      "bounds.y1": req.query?.y1,
+    });
 
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    await sendCachedCanvas(
+    const fileSize = await sendCachedCanvas(
       res,
       req.params.canvasId,
       cachedCanvas,
       scale,
       req.query,
     );
+
+    addSpanAttributes(req, { "response.export.size.bytes": fileSize });
   },
 );
 
@@ -84,8 +105,16 @@ canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "canvas.id": req.params.canvasId });
+
     const cachedCanvas = await getCanvasPng(req.params.canvasId);
-    await sendCachedCanvas(res, req.params.canvasId, cachedCanvas);
+    const fileSize = await sendCachedCanvas(
+      res,
+      req.params.canvasId,
+      cachedCanvas,
+    );
+
+    addSpanAttributes(req, { "response.export.size.bytes": fileSize });
   },
 );
 
@@ -93,8 +122,14 @@ canvasRouter.get(
   "/:canvasId/cooldown/@me",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "canvas.id": req.params.canvasId });
+
     assertLoggedIn(req);
     const profile = req.user;
+
+    addSpanAttributes(req, {
+      "user.id": profile.id,
+    });
 
     const cooldownEndTime = await getUserCanvasCooldown(
       req.params.canvasId,
@@ -112,12 +147,23 @@ canvasRouter.post(
   requireCanvasAdmin,
   validate({ body: CreateCanvasBodyModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.name": req.body.name,
+      "canvas.width": req.body.width,
+      "canvas.height": req.body.height,
+      "canvas.start_coordinates": req.body.startCoordinates?.map(String),
+      "canvas.all_colors_global": req.body.allColorsGlobal,
+      "canvas.cooldown.duration": req.body.cooldownDuration,
+    });
+
     const canvas = await createCanvas(req.body);
     res.status(201).json(canvas);
     void audit(req, "admin", "canvas.create", {
       resourceId: canvas.id,
       metadata: req.body,
     });
+
+    addSpanAttributes(req, { "canvas.id": canvas.id });
   },
 );
 
@@ -126,6 +172,13 @@ canvasRouter.put(
   requireCanvasAdmin,
   validate({ params: CanvasIdParamModel, body: EditCanvasBodyModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "canvas.name": req.body.name,
+      "canvas.all_colors_global": req.body.allColorsGlobal,
+      "canvas.cooldown.duration": req.body.cooldownDuration,
+    });
+
     const canvas = await editCanvas({
       canvasId: req.params.canvasId,
       ...req.body,
@@ -145,6 +198,12 @@ canvasRouter.post(
   async (req, res) => {
     const { canvasId } = req.params;
     const { authorId, data } = req.body;
+
+    addSpanAttributes(req, {
+      "canvas.id": canvasId,
+      "author.id": authorId,
+      "paste.pixel_count": data.length,
+    });
 
     await pasteCanvasData(canvasId, BigInt(authorId), data);
 
@@ -179,6 +238,8 @@ canvasRouter.delete(
   requireCanvasAdmin,
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "canvas.id": req.params.canvasId });
+
     await clearCachedCanvas(req.params.canvasId);
     res.status(204).end();
 
@@ -197,7 +258,7 @@ async function sendCachedCanvas(
   cachedCanvas: CachedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
   bounds?: FrameBoundsInput,
-): Promise<void> {
+): Promise<number | undefined> {
   if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);
 
@@ -207,8 +268,9 @@ async function sendCachedCanvas(
       );
     }
 
+    const canvasStat = await stat(canvasPath);
     res.sendFile(canvasPath);
-    return;
+    return canvasStat.size;
   }
 
   const stream =
@@ -241,4 +303,19 @@ async function sendCachedCanvas(
         `inline; filename="${getCanvasFilename(canvasId, false, scale, bounds)}"`,
       ),
   );
+
+  return await new Promise<number>((resolve, reject) => {
+    let contentLength = 0;
+
+    stream.on("data", (chunk: Buffer | string) => {
+      contentLength +=
+        typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
+    });
+
+    stream.on("error", reject);
+
+    stream.on("end", () => {
+      resolve(contentLength);
+    });
+  });
 }

@@ -1,0 +1,587 @@
+"use client";
+
+import { type CanvasInfo, CanvasPlaceState } from "@blurple-canvas-web/types";
+import type { SelectChangeEvent } from "@mui/material";
+import { MenuItem, Select, Switch, styled } from "@mui/material";
+import { ListRestart, Plus, X } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
+import { BasicButton, DestructiveButton } from "@/components/button";
+import CanvasIcon from "@/components/CanvasIcon";
+import {
+  CanvasPreviewCard,
+  EventCanvasCard,
+} from "@/components/canvas/CanvasPreviewCard";
+import NumberField from "@/components/NumberField";
+import { useCanvasContext } from "@/contexts";
+import { useCanvasList, useEventInfo, useUpdateCanvasInfo } from "@/hooks";
+import {
+  useClearCanvasCache,
+  useCreateCanvas,
+} from "@/hooks/queries/useCanvasInfo";
+import AdminDashboard from "../AdminDashboard";
+
+const AdminCanvasTabBlock = styled("section")`
+  display: block;
+  max-width: 80rem;
+  width: 100%;
+`;
+
+const CanvasInfoWrapper = styled("div")`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+`;
+
+const CanvasList = styled("div")`
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  width: 100%;
+
+  & > button {
+    flex: 0 0 10rem;
+    inline-size: 10rem;
+  }
+`;
+
+const AddCanvasCard = styled(EventCanvasCard)`
+  align-items: center;
+  justify-content: center;
+`;
+
+const CanvasContents = styled("form")`
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 40rem;
+  width: 100%;
+`;
+
+const CanvasHeader = styled("h1")`
+  align-items: center;
+  display: flex;
+  font-size: 1.5rem;
+  font-weight: 600;
+  gap: 0.5rem;
+`;
+
+const Table = styled("table")`
+  & td,
+  & th {
+    padding: 0.25rem 1rem;
+  }
+`;
+
+const CanvasDimensions = styled("code")`
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+`;
+
+const TextInput = styled("input")`
+  padding-block: 6px;
+  padding-inline: 8px;
+`;
+
+const ErrorText = styled("div")`
+  color: #e04848;
+  font-size: 0.85rem;
+  margin-top: 4px;
+`;
+
+const SaveStatusText = styled("p")`
+  font-size: 0.875rem;
+  font-weight: 600;
+  min-height: 1.25rem;
+`;
+
+const ButtonWrapper = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const createDefaults = {
+  allColorsGlobal: false,
+  cooldownDuration: 0,
+  height: 1,
+  placeState: CanvasPlaceState.NoOne,
+  name: "",
+  width: 1,
+  startCoordinates: [1, 1],
+} as const satisfies CanvasSettingsFormValues;
+
+type FormMode = "edit" | "create";
+
+interface CanvasSettingsFormValues extends Pick<
+  CanvasInfo,
+  | "allColorsGlobal"
+  | "cooldownDuration"
+  | "height"
+  | "placeState"
+  | "name"
+  | "width"
+  | "startCoordinates"
+> {}
+
+function areCanvasSettingsEqual(
+  left: CanvasSettingsFormValues,
+  right: CanvasSettingsFormValues,
+) {
+  return (
+    left.allColorsGlobal === right.allColorsGlobal &&
+    left.cooldownDuration === right.cooldownDuration &&
+    left.height === right.height &&
+    left.placeState === right.placeState &&
+    left.name === right.name &&
+    left.width === right.width &&
+    left.startCoordinates[0] === right.startCoordinates[0] &&
+    left.startCoordinates[1] === right.startCoordinates[1]
+  );
+}
+
+interface CanvasSettingsFormProps {
+  activeCanvas: CanvasInfo;
+  formValues: CanvasSettingsFormValues;
+  isDirty: boolean;
+  mode: FormMode;
+  saveConfirmation: {
+    canvasId: CanvasInfo["id"];
+    values: CanvasSettingsFormValues;
+  } | null;
+  onSavingChange?: (isSaving: boolean) => void;
+  onFormValuesChange: (values: CanvasSettingsFormProps["formValues"]) => void;
+  onSaved: (canvasId: CanvasInfo["id"]) => void | Promise<void>;
+}
+
+function CanvasSettingsForm({
+  activeCanvas,
+  formValues,
+  isDirty,
+  mode,
+  saveConfirmation,
+  onSavingChange,
+  onFormValuesChange,
+  onSaved,
+}: CanvasSettingsFormProps) {
+  const updateCanvasInfo = useUpdateCanvasInfo(activeCanvas.id);
+  const createCanvas = useCreateCanvas();
+  const isSaving = createCanvas.isPending || updateCanvasInfo.isPending;
+
+  useEffect(() => {
+    onSavingChange?.(isSaving);
+  }, [isSaving, onSavingChange]);
+
+  const showSaveConfirmation =
+    saveConfirmation !== null &&
+    saveConfirmation.canvasId === activeCanvas.id &&
+    areCanvasSettingsEqual(formValues, saveConfirmation.values);
+
+  // Initialize form values when activeCanvas changes
+  useEffect(() => {
+    onFormValuesChange({
+      allColorsGlobal: activeCanvas.allColorsGlobal,
+      cooldownDuration: activeCanvas.cooldownDuration ?? 0,
+      height: activeCanvas.height,
+      placeState: activeCanvas.placeState,
+      name: activeCanvas.name,
+      width: activeCanvas.width,
+      startCoordinates: activeCanvas.startCoordinates,
+    });
+  }, [activeCanvas, onFormValuesChange]);
+
+  function handlePlaceStateChange(event: SelectChangeEvent<CanvasPlaceState>) {
+    onFormValuesChange({
+      ...formValues,
+      placeState: event.target.value as CanvasPlaceState,
+    });
+  }
+
+  function handleAllColorsGlobalChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    onFormValuesChange({
+      ...formValues,
+      allColorsGlobal: event.target.checked,
+    });
+  }
+
+  function handleCooldownDurationChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      cooldownDuration: value ?? 0,
+    });
+  }
+
+  function handleNameChange(event: React.ChangeEvent<HTMLInputElement>) {
+    onFormValuesChange({
+      ...formValues,
+      name: event.target.value,
+    });
+  }
+
+  function handleWidthChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      width: value ?? 0,
+    });
+  }
+
+  function handleHeightChange(value: number | null) {
+    onFormValuesChange({
+      ...formValues,
+      height: value ?? 0,
+    });
+  }
+
+  function resetForm() {
+    if (mode === "create") {
+      onFormValuesChange({ ...createDefaults });
+    } else {
+      onFormValuesChange({
+        allColorsGlobal: activeCanvas.allColorsGlobal,
+        cooldownDuration: activeCanvas.cooldownDuration ?? 0,
+        height: activeCanvas.height,
+        placeState: activeCanvas.placeState,
+        name: activeCanvas.name,
+        width: activeCanvas.width,
+        startCoordinates: activeCanvas.startCoordinates,
+      });
+    }
+  }
+
+  function isFormInvalid(values = formValues) {
+    return values.name.trim().length === 0;
+  }
+
+  async function handleSaveChanges(event: React.SubmitEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (isFormInvalid()) {
+      toast.error("Name cannot be empty.");
+      return;
+    }
+
+    if (mode === "create") {
+      const response = await toast
+        .promise(
+          createCanvas.mutateAsync({
+            allColorsGlobal: formValues.allColorsGlobal,
+            cooldownDuration: formValues.cooldownDuration,
+            height: formValues.height,
+            placeState: formValues.placeState,
+            name: formValues.name,
+            width: formValues.width,
+            startCoordinates: formValues.startCoordinates,
+          }),
+          {
+            loading: "Creating canvas…",
+            success: "Canvas created!",
+            error: "Couldn’t create canvas. Please try again.",
+          },
+        )
+        .unwrap();
+      await onSaved(response.data.id);
+    } else {
+      const updatePromise = updateCanvasInfo.mutateAsync({
+        allColorsGlobal: formValues.allColorsGlobal,
+        cooldownDuration: formValues.cooldownDuration,
+        placeState: formValues.placeState,
+        name: formValues.name,
+      });
+
+      toast.promise(updatePromise, {
+        loading: "Saving changes…",
+        success: "Changes saved!",
+        error: "Couldn’t save changes. Please try again.",
+      });
+
+      await updatePromise;
+      await onSaved(activeCanvas.id);
+    }
+  }
+
+  return (
+    <CanvasContents onSubmit={handleSaveChanges}>
+      <CanvasHeader>
+        <CanvasIcon size={20} />
+        {mode === "create" ?
+          formValues.name || "New canvas"
+        : activeCanvas.name}
+      </CanvasHeader>
+      <Table>
+        <tbody>
+          <tr>
+            <td>Name</td>
+            <td>
+              <TextInput
+                onChange={handleNameChange}
+                type="text"
+                value={formValues.name}
+              />
+              {isFormInvalid() && <ErrorText>Name cannot be empty</ErrorText>}
+            </td>
+          </tr>
+          <tr>
+            <td>Dimensions</td>
+            <td>
+              <CanvasDimensions>
+                {mode === "create" ?
+                  <NumberField
+                    min={1}
+                    onValueChange={handleWidthChange}
+                    value={formValues.width}
+                  />
+                : activeCanvas.width}
+                <X size={12} />
+                {mode === "create" ?
+                  <NumberField
+                    min={1}
+                    onValueChange={handleHeightChange}
+                    value={formValues.height}
+                  />
+                : activeCanvas.height}
+              </CanvasDimensions>
+            </td>
+          </tr>
+          <tr>
+            <td>Cooldown (s)</td>
+            <td>
+              <NumberField
+                min={0}
+                onValueChange={handleCooldownDurationChange}
+                value={formValues.cooldownDuration}
+              />
+            </td>
+          </tr>
+          <tr>
+            <td>Place state</td>
+            <td>
+              <Select
+                size="small"
+                value={formValues.placeState}
+                onChange={handlePlaceStateChange}
+              >
+                <MenuItem value={CanvasPlaceState.NoOne}>No one</MenuItem>
+                <MenuItem value={CanvasPlaceState.NoNewUsers}>
+                  No new users
+                </MenuItem>
+                <MenuItem value={CanvasPlaceState.Anyone}>Anyone</MenuItem>
+              </Select>
+            </td>
+          </tr>
+          <tr>
+            <td>Global colors</td>
+            <td>
+              <Switch
+                type="checkbox"
+                checked={formValues.allColorsGlobal}
+                onChange={handleAllColorsGlobalChange}
+              />
+            </td>
+          </tr>
+        </tbody>
+      </Table>
+      {showSaveConfirmation && (
+        // temporary, will be replaced with toast notification in the future
+        <SaveStatusText aria-live="polite">Saved</SaveStatusText>
+      )}
+      <ButtonWrapper>
+        <BasicButton
+          disabled={!isDirty || isFormInvalid() || isSaving}
+          type="submit"
+        >
+          {mode === "create" ? "Create canvas" : "Save changes"}
+        </BasicButton>
+        <DestructiveButton
+          disabled={!isDirty || isSaving}
+          type="reset"
+          onClick={resetForm}
+        >
+          <ListRestart />
+        </DestructiveButton>
+      </ButtonWrapper>
+    </CanvasContents>
+  );
+}
+
+function AdminCanvasTab() {
+  const router = useRouter();
+  const { data: canvases = [], isLoading: canvasListIsLoading } =
+    useCanvasList();
+  const { canvas: activeCanvas } = useCanvasContext();
+  const { data: event, isLoading: eventIsLoading } = useEventInfo();
+  const [mode, setMode] = useState<FormMode>("edit");
+  const [saveConfirmation, setSaveConfirmation] = useState<{
+    canvasId: CanvasInfo["id"];
+    values: CanvasSettingsFormValues;
+  } | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const clearCanvasCache = useClearCanvasCache(activeCanvas.id);
+
+  canvases.sort((a, b) =>
+    a.eventId === event?.id ? -1
+    : b.eventId === event?.id ? 1
+    : 0,
+  );
+
+  const [formValues, setFormValues] = useState<CanvasSettingsFormValues>({
+    allColorsGlobal:
+      activeCanvas?.allColorsGlobal ?? createDefaults.allColorsGlobal,
+    cooldownDuration:
+      activeCanvas?.cooldownDuration ?? createDefaults.cooldownDuration,
+    height: activeCanvas?.height ?? createDefaults.height,
+    placeState: activeCanvas?.placeState ?? createDefaults.placeState,
+    name: activeCanvas?.name ?? createDefaults.name,
+    width: activeCanvas?.width ?? createDefaults.width,
+    startCoordinates:
+      activeCanvas?.startCoordinates ?? createDefaults.startCoordinates,
+  });
+
+  useEffect(() => {
+    if (mode === "create") {
+      setFormValues({ ...createDefaults });
+    } else if (activeCanvas) {
+      setFormValues({
+        allColorsGlobal:
+          activeCanvas.allColorsGlobal ?? createDefaults.allColorsGlobal,
+        cooldownDuration:
+          activeCanvas.cooldownDuration ?? createDefaults.cooldownDuration,
+        height: activeCanvas.height ?? createDefaults.height,
+        placeState: activeCanvas.placeState ?? createDefaults.placeState,
+        name: activeCanvas.name ?? createDefaults.name,
+        width: activeCanvas.width ?? createDefaults.width,
+        startCoordinates:
+          activeCanvas.startCoordinates ?? createDefaults.startCoordinates,
+      });
+    }
+  }, [mode, activeCanvas]);
+
+  useEffect(() => {
+    if (
+      saveConfirmation !== null &&
+      activeCanvas &&
+      saveConfirmation.canvasId !== activeCanvas.id
+    ) {
+      setSaveConfirmation(null);
+    }
+  }, [activeCanvas, saveConfirmation]);
+  const isDirty = useMemo(() => {
+    if (mode === "create") {
+      return (
+        formValues.placeState !== createDefaults.placeState ||
+        formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
+        formValues.cooldownDuration !== createDefaults.cooldownDuration ||
+        formValues.name !== createDefaults.name ||
+        formValues.width !== createDefaults.width ||
+        formValues.height !== createDefaults.height
+      );
+    }
+    if (!activeCanvas) return false;
+    return (
+      formValues.placeState !== activeCanvas.placeState ||
+      formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
+      (formValues.cooldownDuration !== activeCanvas.cooldownDuration &&
+        activeCanvas.cooldownDuration !== null) ||
+      formValues.name !== activeCanvas.name ||
+      formValues.width !== activeCanvas.width ||
+      formValues.height !== activeCanvas.height
+    );
+  }, [formValues, activeCanvas, mode]);
+
+  const isLoading = canvasListIsLoading || eventIsLoading;
+  const isCanvasSelectionDisabled = isDirty || isSaving;
+
+  return (
+    <AdminCanvasTabBlock>
+      <CanvasInfoWrapper>
+        {isLoading ?
+          <CanvasIcon
+            loading
+            size={64}
+            style={{
+              color: "var(--discord-blurple)",
+              margin: "auto",
+              opacity: 0.5,
+            }}
+          />
+        : canvases.length === 0 ?
+          <div>No canvases found.</div>
+        : <>
+            <CanvasList>
+              <AddCanvasCard
+                disabled={isCanvasSelectionDisabled}
+                onClick={() => setMode("create")}
+                aria-current={mode === "create"}
+              >
+                <Plus />
+              </AddCanvasCard>
+              {canvases.map((canvasItem) => (
+                <CanvasPreviewCard
+                  canvas={canvasItem}
+                  currentEventId={event?.id}
+                  key={canvasItem.id}
+                  disabled={isCanvasSelectionDisabled}
+                  onClick={() => {
+                    router.push(
+                      `/canvas/${encodeURIComponent(canvasItem.id)}/admin/canvas`,
+                    );
+                    setMode("edit");
+                  }}
+                  aria-current={
+                    activeCanvas?.id === canvasItem.id && mode === "edit"
+                  }
+                />
+              ))}
+            </CanvasList>
+            <CanvasSettingsForm
+              activeCanvas={activeCanvas}
+              formValues={formValues}
+              isDirty={isDirty}
+              mode={mode}
+              saveConfirmation={saveConfirmation}
+              onSavingChange={setIsSaving}
+              onFormValuesChange={setFormValues}
+              onSaved={(savedCanvasId) => {
+                setSaveConfirmation({
+                  canvasId: savedCanvasId,
+                  values: formValues,
+                });
+                router.push(`/canvas/${savedCanvasId}/admin/canvas`);
+              }}
+            />
+            {mode !== "create" && (
+              <DestructiveButton
+                onClick={async () => {
+                  toast.promise(clearCanvasCache.mutateAsync(), {
+                    loading: "Clearing canvas cache…",
+                    success: "Canvas cache cleared",
+                    error: "Couldn’t clear canvas cache. Please try again.",
+                  });
+                }}
+              >
+                Clear cached image
+              </DestructiveButton>
+            )}
+          </>
+        }
+      </CanvasInfoWrapper>
+    </AdminCanvasTabBlock>
+  );
+}
+
+export default function CanvasAdminPage() {
+  return (
+    <AdminDashboard>
+      <AdminCanvasTab />
+    </AdminDashboard>
+  );
+}

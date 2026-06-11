@@ -1,0 +1,358 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../../src/client/core/generated"
+  previewFeatures     = ["views"]
+  moduleFormat        = "cjs"
+  engineType          = "client"
+  importFileExtension = ""
+}
+
+generator kysely {
+  provider           = "prisma-kysely"
+  output             = "../../src/client/core/kysely"
+  fileName           = "types.ts"
+  bigIntTypeOverride = "bigint"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model blacklist {
+  user_id    BigInt   @id
+  user       user     @relation(fields: [user_id], references: [id])
+  date_added DateTime @default(now()) @db.Timestamptz(6)
+}
+
+model canvas {
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  place_state              String                     @default("no_one") // no_one | no_new_users | anyone
+  // It's theoretically possible to have a canvas without an event. E.g. An off-season canvas
+  event_id                 Int?
+  event                    event?                     @relation(fields: [event_id], references: [id])
+  width                    Int
+  height                   Int
+  cooldown_length          Int?
+  // The top-left coordinate from the user-perspective. For users, this is (1, 1)
+  start_coordinates        Int[]                      @default([1, 1])
+  all_colors_global        Boolean                    @default(false)
+  frames                   frame[]
+  pixels                   pixel[]
+  history                  history[]
+  cooldowns                cooldown[]
+  user_stats               user_stats[]
+  guild_stats              guild_stats[]
+  leaderboard              leaderboard[]
+  leaderboard_guild        leaderboard_guild[]
+  notices                  notice[]
+  canvas_stats             canvas_stats?
+  history_snapshot_windows history_snapshot_windows[]
+}
+
+model color {
+  id             Int             @id @default(autoincrement())
+  code           String
+  emoji_name     String?
+  emoji_id       BigInt?
+  global         Boolean         @default(true)
+  name           String
+  rgba           Int[]
+  pixels         pixel[]
+  history        history[]
+  user_stats     user_stats[]
+  guild_stats    guild_stats[]
+  participations participation[]
+}
+
+model cooldown {
+  user_id       BigInt
+  user          user      @relation(fields: [user_id], references: [id])
+  canvas_id     Int
+  canvas        canvas    @relation(fields: [canvas_id], references: [id])
+  // A cooldown might be set to null to skip the cooldown
+  cooldown_time DateTime? @db.Timestamptz(6)
+
+  @@id([user_id, canvas_id])
+}
+
+model discord_user_profile {
+  user_id             BigInt              @id
+  username            String
+  profile_picture_url String
+  history             history[]
+  leaderboard_guild   leaderboard_guild[]
+  leaderboard         leaderboard[]
+  user                user                @relation(fields: [user_id], references: [id])
+}
+
+model discord_guild_record {
+  guild_id BigInt  @id
+  name     String
+  guild    guild[]
+}
+
+model event {
+  id           Int             @id
+  name         String
+  canvases     canvas[]
+  participants participation[]
+  info         info[]
+  event_stats  event_stats?
+}
+
+model frame {
+  id             String  @id
+  canvas_id      Int
+  canvas         canvas  @relation(fields: [canvas_id], references: [id])
+  // There is a database check that requires one of them to be set
+  owner_user_id  BigInt?
+  owner_guild_id BigInt?
+  name           String
+  x_0            Int
+  x_1            Int
+  y_0            Int
+  y_1            Int
+  style_id       Int?
+}
+
+model guild {
+  id                   BigInt                @id
+  discord_guild_record discord_guild_record? @relation(fields: [id], references: [guild_id])
+  manager_role         BigInt?
+  invite               String?
+  history              history[]
+  participations       participation[]
+  guild_stats          guild_stats[]
+  leaderboard          leaderboard_guild[]
+}
+
+model history {
+  id                   BigInt                @id @default(autoincrement())
+  erased_at            DateTime?             @db.Timestamptz(6)
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  x                    Int
+  y                    Int
+  color_id             Int
+  color                color                 @relation(fields: [color_id], references: [id])
+  timestamp            DateTime              @db.Timestamptz(6)
+  guild_id             BigInt?
+  guild                guild?                @relation(fields: [guild_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id], map: "discord_user_profile_user_id_fkey")
+}
+
+/// This is a special table that will only ever have one row. The title being the primary key
+/// is only to make it compatible with Prisma.
+model info {
+  title                   String   @id
+  canvas_admin            BigInt[]
+  current_event_id        Int
+  current_event           event    @relation(fields: [current_event_id], references: [id])
+  cached_canvas_ids       Int[]
+  highlight_color         Int?
+  admin_server_id         BigInt
+  current_emoji_server_id BigInt
+  host_server_id          BigInt
+  event_role_id           BigInt?
+  default_canvas_id       Int
+}
+
+model participation {
+  guild_id BigInt
+  guild    guild  @relation(fields: [guild_id], references: [id])
+  event_id Int
+  event    event  @relation(fields: [event_id], references: [id])
+  // Not all participants may have a color, or it might not be set straight away
+  color_id Int?
+  color    color? @relation(fields: [color_id], references: [id])
+
+  @@id([guild_id, event_id])
+}
+
+model pixel {
+  canvas_id Int
+  canvas    canvas @relation(fields: [canvas_id], references: [id])
+  x         Int
+  y         Int
+  color_id  Int
+  color     color  @relation(fields: [color_id], references: [id])
+
+  @@id([canvas_id, x, y])
+  @@unique([canvas_id, x, y])
+}
+
+model user {
+  id                   BigInt                @id
+  current_canvas_id    Int?
+  skip_confirm         Boolean               @default(false)
+  cooldown_remind      Boolean               @default(false)
+  blacklist            blacklist?
+  cooldowns            cooldown[]
+  history              history[]
+  user_stats           user_stats[]
+  leaderboard          leaderboard[]
+  leaderboard_guild    leaderboard_guild[]
+  discord_user_profile discord_user_profile?
+  audit_logs           audit_log[]
+}
+
+model session {
+  id        String   @id
+  sid       String   @unique
+  data      String
+  expiresAt DateTime @db.Timestamptz(6)
+}
+
+model notice {
+  id         Int       @id @default(autoincrement())
+  type       String    @default("info") // info | warning | error
+  header     String?
+  content    String?
+  priority   Int       @default(0)
+  start_at   DateTime? @db.Timestamptz(6)
+  end_at     DateTime? @db.Timestamptz(6)
+  persisted  Boolean   @default(false)
+  canvas_id  Int?
+  canvas     canvas?   @relation(fields: [canvas_id], references: [id])
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+}
+
+model audit_log {
+  id            BigInt   @id @default(autoincrement())
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+  actor_id      BigInt
+  actor         user     @relation(fields: [actor_id], references: [id])
+  actor_role    String // "admin" | "moderator"
+  action        String // e.g. "notice.create", "history.delete"
+  resource_type String?
+  resource_id   String?
+  metadata      Json?
+
+  @@index([created_at(sort: Desc)])
+  @@index([actor_id, created_at(sort: Desc)])
+  @@index([action, created_at(sort: Desc)])
+  @@index([resource_type, resource_id])
+}
+
+view user_stats {
+  user_id                BigInt
+  user                   user     @relation(fields: [user_id], references: [id])
+  canvas_id              Int
+  canvas                 canvas   @relation(fields: [canvas_id], references: [id])
+  total_pixels           Int
+  rank                   Int
+  most_frequent_color_id Int
+  most_frequent_color    color    @relation(fields: [most_frequent_color_id], references: [id])
+  color_count            Int
+  // place_frequency        Unsupported("interval")
+  most_recent_timestamp  DateTime @db.Timestamptz(6)
+
+  @@unique([user_id, canvas_id])
+}
+
+view guild_stats {
+  guild_id               BigInt
+  guild                  guild    @relation(fields: [guild_id], references: [id])
+  canvas_id              Int
+  canvas                 canvas   @relation(fields: [canvas_id], references: [id])
+  total_pixels           Int
+  most_frequent_color_id Int
+  most_frequent_color    color    @relation(fields: [most_frequent_color_id], references: [id])
+  color_count            Int
+  // place_frequency        Unsupported("interval")
+  most_recent_timestamp  DateTime @db.Timestamptz(6)
+
+  @@unique([guild_id, canvas_id])
+}
+
+view leaderboard {
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
+  total_pixels         Int
+  rank                 Int
+
+  @@unique([user_id, canvas_id])
+}
+
+view leaderboard_guild {
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  guild_id             BigInt
+  guild                guild                 @relation(fields: [guild_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
+  total_pixels         Int
+  rank                 Int
+
+  @@unique([user_id, canvas_id, guild_id])
+}
+
+view color_place_frequency {
+  user_id          BigInt
+  canvas_id        Int
+  median_time_diff Unsupported("interval")
+
+  @@unique([user_id, canvas_id])
+}
+
+view color_place_frequency_guild {
+  guild_id         BigInt
+  canvas_id        Int
+  median_time_diff Unsupported("interval")
+
+  @@unique([guild_id, canvas_id])
+}
+
+view most_frequent_color_guild {
+  guild_id  BigInt
+  canvas_id Int
+  color_id  Int
+  count     Int
+
+  @@unique([guild_id, canvas_id])
+}
+
+view most_frequent_color {
+  user_id   BigInt
+  canvas_id Int
+  color_id  Int
+  count     Int
+
+  @@unique([user_id, canvas_id])
+}
+
+view canvas_stats {
+  canvas_id      Int
+  canvas         canvas   @relation(fields: [canvas_id], references: [id])
+  total_users    Int
+  total_pixels   Int
+  last_placed_at DateTime @db.Timestamptz(6)
+
+  @@unique([canvas_id])
+}
+
+view event_stats {
+  event_id     Int
+  event        event @relation(fields: [event_id], references: [id])
+  total_users  Int
+  total_pixels Int
+
+  @@unique([event_id])
+}
+
+view history_snapshot_windows {
+  canvas_id     Int
+  canvas        canvas   @relation(fields: [canvas_id], references: [id])
+  bucket_start  DateTime @db.Timestamptz(6)
+  bucket_end    DateTime @db.Timestamptz(6)
+  history_count Int
+
+  @@unique([canvas_id, bucket_start])
+}

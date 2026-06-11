@@ -111,7 +111,7 @@ describe("Canvas Pixels Tests", () => {
   });
 
   it("Gets canvas pixels", async () => {
-    const pixels = await getCanvasPixels(1);
+    const pixels = await getCanvasPixels(1, 2, 2);
     expect(pixels.length).toBe(4);
     expect(pixels).toStrictEqual([
       [88, 101, 242, 127],
@@ -175,7 +175,11 @@ describe("Create Canvas Tests", () => {
       throw new Error("Expected the canvas to be created");
     }
 
-    const pixels = await getCanvasPixels(createdCanvas.id);
+    const pixels = await getCanvasPixels(
+      createdCanvas.id,
+      createdCanvas.width,
+      createdCanvas.height,
+    );
     expect(pixels).toHaveLength(6);
     expect(pixels).toStrictEqual([
       [88, 101, 242, 127],

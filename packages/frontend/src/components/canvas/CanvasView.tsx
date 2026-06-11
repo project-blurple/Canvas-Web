@@ -4,18 +4,14 @@ import {
   type CanvasInfo,
   CanvasPlaceState,
   type Frame,
+  type PixelHistoryOverlayPixel,
   type PlacePixelSocket,
   type Point,
   SocketEvents,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import {
-  Maximize2,
-  Minimize2,
-  PanelRightClose,
-  PanelRightOpen,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
@@ -30,6 +26,7 @@ import {
   useCanvasImage,
   useCanvasSearchParams,
   useIsFullscreenAvailable,
+  useIsWebKit,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
@@ -39,7 +36,9 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
-import VisuallyHidden from "../VisuallyHidden";
+import { getAutoPanOffset } from "./autoPan";
+import CanvasViewControls from "./CanvasViewControls";
+import { PixelGrid } from "./PixelGrid";
 import {
   addPoints,
   diffPoints,
@@ -49,6 +48,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
+import { useCanvasMomentum } from "./useCanvasMomentum";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -87,6 +87,10 @@ const CanvasWrapper = styled("div")`
 
   & {
     user-select: none;
+  }
+
+  &:is(:focus-visible, :focus-within) {
+    outline: var(--focus-outline);
   }
 `;
 
@@ -158,59 +162,6 @@ const InviteButton = styled(Button)`
   }
 `;
 
-const BaseFullscreenButton = styled(Button, {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  inset-inline-end: 0.5rem;
-  inset-inline-end: ${(p) =>
-    p.$isPanelVisible &&
-    p.$isFullscreen &&
-    css`
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100vi - 1rem))
-      );
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100dvi - 1rem))
-      );
-    `};
-
-  color: white;
-  position: absolute;
-  text-decoration: none;
-  border-color: transparent;
-  min-width: auto;
-  padding: 0.5rem;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: inherit;
-      box-shadow: 0 0 10px oklch(0 0 0 / 25%);
-    }
-  }
-`;
-
-const FullscreenButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-  inset-block-start: 0.5rem;
-  z-index: 1;
-
-  #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-  #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  }
-
-  ${({ theme }) => theme.breakpoints.down("md")} {
-    display: none;
-  }
-`;
-
-const FullscreenPanelButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  inset-block-start: 4rem;
-  z-index: 3;
-`;
-
 const FullscreenPanelOverlay = styled("div")`
   box-sizing: border-box;
   height: 100%;
@@ -234,6 +185,8 @@ const CanvasImageWrapper = styled("div", {
   isLoading: boolean;
   isLaunching: boolean;
 }>`
+  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
+  position: relative;
   transition: filter var(--transition-duration-medium) ease;
   ${({ isLoading }) =>
     isLoading &&
@@ -241,8 +194,6 @@ const CanvasImageWrapper = styled("div", {
       cursor: wait;
       filter: grayscale(80%);
     `}
-
-  position: relative;
 
   img {
     ${({ isLaunching }) =>
@@ -425,14 +376,21 @@ const MAX_ZOOM = 100;
 const MIN_ZOOM_FACTOR = 0.9;
 const FRAME_FIT_FILL_RATIO = 0.75;
 
-const PAN_DECAY = 0.75;
-
 // This is to avoid weird business with the reticle not sizing properly
 const RETICLE_ORIGINAL_SCALE = 10;
 const RETICLE_ORIGINAL_SIZE = 14;
 const RETICLE_SIZE = RETICLE_ORIGINAL_SIZE * 10;
 const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
 const PREVIEW_PIXEL_SIZE = 0.8 * RETICLE_ORIGINAL_SCALE * 10;
+
+const ARROW_KEY_DELTAS = {
+  ArrowLeft: { x: -1, y: 0 },
+  ArrowRight: { x: 1, y: 0 },
+  ArrowUp: { x: 0, y: -1 },
+  ArrowDown: { x: 0, y: 1 },
+} as const satisfies Record<string, Point>;
+const ARROW_KEY_JUMP_STEP_SIZE = 10;
+const PIXEL_SCROLL_MARGIN = 80;
 
 const pointerEvents: Map<number, PointerEvent> = new Map();
 const previousPointerEvents: Map<number, PointerEvent> = new Map();
@@ -486,6 +444,8 @@ interface CanvasViewProps {
     typeof ActionPanel
   >;
   canvasLabel?: string;
+  searchOverlayPixels?: PixelHistoryOverlayPixel[] | null;
+  searchOverlayVisible?: boolean;
   showInvite?: boolean;
   showNotices?: boolean;
   showReticle?: boolean;
@@ -494,6 +454,8 @@ interface CanvasViewProps {
 export default function CanvasView({
   actionPanel,
   canvasLabel,
+  searchOverlayPixels = null,
+  searchOverlayVisible = false,
   showInvite = true,
   showNotices = true,
   showReticle = true,
@@ -512,12 +474,13 @@ export default function CanvasView({
     showSelectedBounds,
     setSelectedBounds,
   } = useSelectedBoundsContext();
-  const { canvas, setCanvas } = useCanvasContext();
+  const { canvas } = useCanvasContext();
   const {
     containerRef,
     coords,
     isReticleVisible,
     offset,
+    setSelectedPixelColor,
     setCoords,
     setOffset,
     setZoom,
@@ -532,13 +495,16 @@ export default function CanvasView({
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
+  const offsetRef = useRef(offset);
+  offsetRef.current = offset;
+  // Last pointer movement (screen px), used to keep gliding after the drag ends.
+  const lastPanVelocityRef = useRef<Point>(ORIGIN);
 
   const [initialZoom, setInitialZoom] = useState(1);
-  const [velocity, setVelocity] = useState<Point>({ x: 0, y: 0 });
-  const [controlledPan, setControlledPan] = useState(false);
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGridVisible, setIsGridVisible] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -552,15 +518,7 @@ export default function CanvasView({
    * If the user spoof their user agent, this is not my problem.
    * @see https://bugs.webkit.org/show_bug.cgi?id=27684
    */
-  const isWebKit = useMemo(() => {
-    const { userAgent: ua, vendor } = navigator;
-    const isProbablyWebKit =
-      vendor === "Apple Computer, Inc." ||
-      ua.includes("AppleWebKit/") ||
-      ua.includes("Safari/");
-    const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
-    return isProbablyWebKit && isNotChromium;
-  }, []);
+  const isWebKit = useIsWebKit();
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -570,7 +528,6 @@ export default function CanvasView({
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
   });
-  const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
@@ -666,30 +623,12 @@ export default function CanvasView({
         setOffset(ORIGIN);
       }
 
-      setVelocity(ORIGIN);
+      stopPan();
       setIsLoading(false);
       setIsLaunching(false);
       clearOverlay();
     },
     [canvas.id, initialFrameFromSearchParams],
-  );
-
-  useEffect(
-    function switchToCanvasFromSearchParams() {
-      if (hasAppliedInitialCanvasRef.current) return;
-
-      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
-      if (targetCanvasId === null || targetCanvasId === canvas.id) {
-        hasAppliedInitialCanvasRef.current = true;
-        return;
-      }
-
-      hasAppliedInitialCanvasRef.current = true;
-      void setCanvas(targetCanvasId).catch(() => {
-        // If URL canvas does not exist, keep default canvas.
-      });
-    },
-    [canvas.id, setCanvas],
   );
 
   useEffect(() => {
@@ -1070,13 +1009,20 @@ export default function CanvasView({
     [clampOffset, setOffset],
   );
 
+  // Inertial panning shared by pointer-drag release and keyboard glide.
+  const {
+    fling: flingPan,
+    glideBy: glidePan,
+    stop: stopPan,
+  } = useCanvasMomentum({ setOffset, clampOffset, zoomRef });
+
   const handlePan = useCallback(
     (offsetDelta: { x: number; y: number }): void => {
       // Disable transitions while panning
       setIsZooming(false);
-      const scaledOffsetDelta = multiplyPoint(offsetDelta, zoomRef.current);
-      setVelocity({ x: scaledOffsetDelta.x, y: scaledOffsetDelta.y });
-      updateOffset(scaledOffsetDelta);
+      // Remember the movement so the canvas can keep gliding once released.
+      lastPanVelocityRef.current = offsetDelta;
+      updateOffset(multiplyPoint(offsetDelta, zoomRef.current));
 
       setFrame(null);
     },
@@ -1133,13 +1079,14 @@ export default function CanvasView({
 
       // Don't disable handlers if there are still pointers down
       if (pointerEvents.size > 0) return;
-      setControlledPan(false);
+      // Carry the last pointer velocity into a smooth glide to rest.
+      flingPan(lastPanVelocityRef.current);
 
       elem.removeEventListener("pointermove", handlePointerMove);
       elem.removeEventListener("pointerup", handlePointerUp);
       elem.removeEventListener("pointercancel", handlePointerUp);
     },
-    [handlePointerMove],
+    [handlePointerMove, flingPan],
   );
 
   /**
@@ -1155,37 +1102,16 @@ export default function CanvasView({
         // No idea if this is the right way to define the pointerEvents
         pointerEvents.set(event.pointerId, event as unknown as PointerEvent);
       }
-      setControlledPan(true);
+      // Interrupt any in-flight glide so the new grab takes over immediately.
+      stopPan();
+      lastPanVelocityRef.current = ORIGIN;
 
       elem.addEventListener("pointermove", handlePointerMove);
       elem.addEventListener("pointerup", handlePointerUp);
       elem.addEventListener("pointercancel", handlePointerUp);
     },
-    [handlePointerMove, handlePointerUp],
+    [handlePointerMove, handlePointerUp, stopPan],
   );
-
-  // Could potentially get replaced by a transition animation with ease, however this will work on Safari
-  // biome-ignore lint/correctness/useExhaustiveDependencies: only create the interval when controlledPan changes to prevent recursive calls
-  useEffect(() => {
-    if (controlledPan) return;
-    // could use a circular buffer to store the max velocity over the last few DOM event triggers for a smoother decay
-    // extracting the `currentVelocity` like this just seems to make it work over using straight up `velocity`. Thanks ChatSkibidi
-    let currentVelocity = { ...velocity };
-    const interval = setInterval(() => {
-      if (currentVelocity.x < 0.1 && currentVelocity.y < 0.1) {
-        setVelocity({ x: 0, y: 0 });
-        clearInterval(interval);
-        return;
-      }
-      updateOffset(currentVelocity);
-      currentVelocity = {
-        x: currentVelocity.x * PAN_DECAY,
-        y: currentVelocity.y * PAN_DECAY,
-      };
-      setVelocity(currentVelocity);
-    }, 16);
-    return () => clearInterval(interval);
-  }, [controlledPan]); // Only restart if `controlledPan` changes
 
   /***********************************
    * SELECTING PIXEL FUNCTIONALITY.  *
@@ -1196,7 +1122,11 @@ export default function CanvasView({
    */
   const handleCanvasClick = useCallback(
     (event: PointerEvent): void => {
-      if (!(event.currentTarget instanceof HTMLElement) || !event.isPrimary)
+      if (
+        !(event.currentTarget instanceof HTMLElement) ||
+        !event.isPrimary ||
+        event.button !== 0
+      )
         return;
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
@@ -1213,6 +1143,25 @@ export default function CanvasView({
     [zoom, setCoords],
   );
 
+  useEffect(
+    function sampleCurrentPixel() {
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!coords || !ctx) {
+        setSelectedPixelColor(null);
+        return;
+      }
+      try {
+        const { data } = ctx.getImageData(coords.x, coords.y, 1, 1);
+        setSelectedPixelColor([data[0], data[1], data[2], data[3]]);
+      } catch {
+        setSelectedPixelColor(null);
+      }
+      // No clean-up. This Effect is a hack; the selected pixel colour should be derived within
+      // render lifecycle. Hopefully we clean it up at some point.
+    },
+    [coords, setSelectedPixelColor],
+  );
+
   useEffect(() => {
     canvasImageWrapperRef.current?.addEventListener(
       "pointerdown",
@@ -1226,11 +1175,60 @@ export default function CanvasView({
       );
   }, [handleCanvasClick]);
 
-  const reticleOffset = calculateReticleOffset(coords);
+  const handleArrowKeyDown = useCallback(
+    (event: React.KeyboardEvent) => {
+      if (!coords) return;
 
-  const toggleFullscreenPanel = useCallback(() => {
-    setFullscreenPanelVisible((visible) => !visible);
-  }, [setFullscreenPanelVisible]);
+      const delta =
+        ARROW_KEY_DELTAS[event.key as keyof typeof ARROW_KEY_DELTAS];
+      if (!delta) return;
+
+      event.preventDefault();
+
+      setIsZooming(false);
+
+      const step = event.shiftKey ? ARROW_KEY_JUMP_STEP_SIZE : 1;
+      const newCoords = {
+        x: clamp(coords.x + delta.x * step, 0, canvas.width - 1),
+        y: clamp(coords.y + delta.y * step, 0, canvas.height - 1),
+      };
+
+      setCoords(newCoords);
+
+      const container = containerRef.current;
+      if (!container) return;
+
+      const { clientWidth: containerWidth, clientHeight: containerHeight } =
+        container;
+      const zoom = zoomRef.current;
+      const offset = offsetRef.current;
+      const padding = Math.min(
+        PIXEL_SCROLL_MARGIN,
+        containerWidth / 4,
+        containerHeight / 4,
+      );
+
+      const nextOffset = getAutoPanOffset({
+        oldCoords: coords,
+        newCoords,
+        offset,
+        container: { width: containerWidth, height: containerHeight },
+        canvas: { width: canvas.width, height: canvas.height },
+        zoom,
+        padding,
+      });
+
+      // Glide toward the auto-pan target instead of snapping, reusing the same
+      // inertia as pointer panning. The reticle still moves instantly.
+      const offsetDelta = diffPoints(nextOffset, offset);
+      if (offsetDelta.x !== 0 || offsetDelta.y !== 0) {
+        glidePan(offsetDelta);
+      }
+    },
+    [canvas.width, canvas.height, containerRef, coords, glidePan, setCoords],
+  );
+
+  const reticleOffset = calculateReticleOffset(coords);
 
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
@@ -1247,46 +1245,53 @@ export default function CanvasView({
     }
   }, [containerRef]);
 
+  const toggleFullscreenPanel = useCallback(() => {
+    setFullscreenPanelVisible((visible) => !visible);
+  }, [setFullscreenPanelVisible]);
+
+  const toggleGridVisible = useCallback(() => {
+    setIsGridVisible((visible) => !visible);
+  }, []);
+
+  const canvasViewControls = useMemo(
+    () => ({
+      fullscreen: {
+        isActive: isFullscreen,
+        isAvailable: canUseFullscreen,
+        toggle: toggleFullscreen,
+      },
+      panel: {
+        isActive: isFullscreenPanelVisible,
+        toggle: toggleFullscreenPanel,
+      },
+      grid: {
+        isActive: isGridVisible,
+        toggle: toggleGridVisible,
+      },
+    }),
+    [
+      canUseFullscreen,
+      isFullscreen,
+      isFullscreenPanelVisible,
+      isGridVisible,
+      toggleFullscreen,
+      toggleFullscreenPanel,
+      toggleGridVisible,
+    ],
+  );
+
   return (
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
       ref={containerRef}
+      onKeyDown={handleArrowKeyDown}
       onPointerDown={handlePointerDown}
+      tabIndex={0}
     >
       {showNotices && <Notices />}
-      {canUseFullscreen && (
-        <FullscreenButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          aria-pressed={isFullscreen}
-          onClick={toggleFullscreen}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          {isFullscreen ?
-            <Minimize2 />
-          : <Maximize2 />}
-        </FullscreenButton>
-      )}
-      {canUseFullscreen && isFullscreen && (
-        <FullscreenPanelButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          onClick={toggleFullscreenPanel}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          <VisuallyHidden>
-            {isFullscreenPanelVisible ?
-              "Hide action panel"
-            : "Show action panel"}
-          </VisuallyHidden>
-          {isFullscreenPanelVisible ?
-            <PanelRightClose />
-          : <PanelRightOpen />}
-        </FullscreenPanelButton>
-      )}
+
+      <CanvasViewControls {...canvasViewControls} />
+
       {showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
@@ -1343,6 +1348,7 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
+
         {showSelectedBounds && (
           <SelectedBoundsOverlay
             canvasWidth={canvas.width}
@@ -1357,6 +1363,7 @@ export default function CanvasView({
             zoom={zoom}
           />
         )}
+
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1375,6 +1382,15 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
+
+        <PixelGrid zoom={zoom} hidden={!isGridVisible} />
+
+        <ComplexSearchOverlay
+          canvasHeight={canvas.height}
+          canvasWidth={canvas.width}
+          pixels={searchOverlayPixels}
+          visible={searchOverlayVisible}
+        />
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay

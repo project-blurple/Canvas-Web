@@ -5,16 +5,12 @@ import { Header } from "@/components/header";
 
 interface LayoutWithHeaderProps {
   children?: ReactNode;
-  isCanvasPage?: boolean;
 }
 
-export default function LayoutWithHeader({
-  children,
-  isCanvasPage = false,
-}: LayoutWithHeaderProps) {
+export default function LayoutWithHeader({ children }: LayoutWithHeaderProps) {
   return (
     <>
-      <Header isCanvasPage={isCanvasPage} />
+      <Header />
       {children}
     </>
   );

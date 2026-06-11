@@ -1,4 +1,13 @@
 services:
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: migrator
+    env_file:
+      - ./packages/backend/.env
+    restart: "no"
+
   backend:
     build:
       context: .
@@ -7,13 +16,19 @@ services:
         PORT: 8000
     volumes:
       - ./packages/backend/static:/app/static
+      - backend_snapshot_data:/app/data/snapshots
     env_file:
       - ./packages/backend/.env
     environment:
       # Overwrite the port set in the .env file to ensure it matches the exposed port.
       - PORT=8000
+      - OTEL_SERVICE_NAME=canvas-backend
+      - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
     ports:
       - 8000:8000
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -30,6 +45,51 @@ services:
     ports:
       - 3000:3000
 
+  opensearch:
+    image: opensearchproject/opensearch:2.9.0
+    environment:
+      - cluster.name=opensearch-cluster
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl -k -u admin:admin https://localhost:9200/_cluster/health || exit 1",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 60s
+
+  jaeger:
+    image: jaegertracing/jaeger:2.19.0
+    command:
+      - --config=/jaeger/jaeger.yaml
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    volumes:
+      - ./jaeger.yaml:/jaeger/jaeger.yaml
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
+    depends_on:
+      - jaeger
+    env_file:
+      - ./.env.oauth
+    environment:
+      - OAUTH2_PROXY_REDIRECT_URL=http://jaeger.localhost/oauth2/callback
+      - OAUTH2_PROXY_UPSTREAMS=http://jaeger:16686
+    ports:
+      - "4180:4180"
+
   caddy:
     image: caddy:2.7-alpine
 
@@ -40,6 +100,7 @@ services:
     depends_on:
       - backend
       - frontend
+      - oauth2-proxy
     volumes:
       # copy local ./Caddyfile to /etc/caddy/Caddyfile on docker
       - ./Caddyfile:/etc/caddy/Caddyfile
@@ -49,3 +110,5 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  opensearch_data:
+  backend_snapshot_data:

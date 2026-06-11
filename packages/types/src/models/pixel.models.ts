@@ -15,6 +15,7 @@ export const PlacePixelBodyModel = z.object({
   x: z.number().int().nonnegative(),
   y: z.number().int().nonnegative(),
   colorId: z.number().int().nonnegative(),
+  turnstileToken: z.string().min(1).optional(),
 });
 
 const PlacePixelArrayElement = z.object({

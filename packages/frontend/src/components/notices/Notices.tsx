@@ -1,4 +1,5 @@
 import { styled } from "@mui/material";
+import { uniq } from "es-toolkit";
 import { useCallback, useMemo, useState } from "react";
 import useLocalStorage from "@/app/settings/useLocalStorage";
 import { useCanvasContext } from "@/contexts";
@@ -46,9 +47,7 @@ export default function Notices() {
 
       const n = notices.find((x) => x.id === Number.parseInt(id, 10));
       if (persist && n && n.persisted === false) {
-        const nextArr = Array.from(
-          new Set([...(persistedDismissed ?? []), id]),
-        );
+        const nextArr = uniq([...(persistedDismissed ?? []), id]);
         setPersistedDismissed(nextArr);
       }
     },

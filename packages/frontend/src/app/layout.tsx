@@ -10,18 +10,13 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config/clientConfig";
 import serverConfig from "@/config/serverConfig";
-import {
-  ActionPanelProvider,
-  AuthProvider,
-  CanvasProvider,
-  CanvasViewProvider,
-  QueryClientProvider,
-  SelectedBoundsProvider,
-  SelectedColorProvider,
-  SelectedFrameProvider,
-} from "@/contexts";
+import "../styles/core.css";
+import { AuthProvider, CanvasProvider, QueryClientProvider } from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
+import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { Toaster, type ToasterProps } from "sonner";
+import CanvasIcon from "@/components/CanvasIcon";
 import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
@@ -31,7 +26,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#23272a",
+  themeColor: "#5865f2",
 };
 
 /**
@@ -80,7 +75,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
 
 const defaultCanvasInfo = {
   id: 1,
-  name: "Something went wrong...",
+  name: "Something went wrong…",
   placeState: CanvasPlaceState.NoOne,
   width: 600,
   height: 600,
@@ -90,6 +85,14 @@ const defaultCanvasInfo = {
   allColorsGlobal: false,
   cooldownDuration: 0,
 } satisfies CanvasInfo;
+
+const toasterIcons = {
+  success: <CircleCheck />,
+  info: <Info />,
+  warning: <TriangleAlert />,
+  error: <CircleAlert />,
+  loading: <CanvasIcon loading />,
+} as const satisfies ToasterProps["icons"];
 
 export default async function RootLayout({
   children,
@@ -115,19 +118,22 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
     <AppRouterCacheProvider>
       <QueryClientProvider>
         <AuthProvider profile={profile}>
-          <SelectedColorProvider>
-            <SelectedFrameProvider>
-              <CanvasProvider mainCanvasInfo={canvasInfo}>
-                <ActionPanelProvider>
-                  <CanvasViewProvider>
-                    <SelectedBoundsProvider>
-                      <AppProviders>{children}</AppProviders>
-                    </SelectedBoundsProvider>
-                  </CanvasViewProvider>
-                </ActionPanelProvider>
-              </CanvasProvider>
-            </SelectedFrameProvider>
-          </SelectedColorProvider>
+          <CanvasProvider mainCanvasInfo={canvasInfo}>
+            <AppProviders>
+              {children}
+              <Toaster
+                icons={toasterIcons}
+                position="bottom-left" // bottom right overlaps with the action panel
+                theme="dark"
+                toastOptions={{
+                  style: {
+                    backgroundColor: "var(--discord-legacy-not-quite-black)",
+                    boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
+                  },
+                }}
+              />
+            </AppProviders>
+          </CanvasProvider>
         </AuthProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>

@@ -44,7 +44,7 @@
     "clean": "rm -rf -- build/ && pnpm purge"
   },
   "dependencies": {
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",

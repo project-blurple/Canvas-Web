@@ -1,4 +1,4 @@
-import type { Prisma } from "../../client/generated/client";
+import type { Prisma } from "../../client/core/generated/client";
 
 // These are all the colors available in the 2024 event
 export const colorSeedData = [
