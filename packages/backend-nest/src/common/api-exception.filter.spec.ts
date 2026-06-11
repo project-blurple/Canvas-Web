@@ -1,8 +1,17 @@
 import type { ArgumentsHost } from "@nestjs/common";
 import { HttpException, Logger } from "@nestjs/common";
+import { Test, type TestingModule } from "@nestjs/testing";
 import type { Response } from "express";
 import { ZodSerializationException } from "nestjs-zod";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 import { z } from "zod";
 import { ApiExceptionFilter } from "./api-exception.filter";
 import { BadRequestError } from "./errors/bad-request.error";
@@ -16,12 +25,23 @@ type MockResponse = Response & {
 };
 
 describe("ApiExceptionFilter", () => {
+  let moduleRef: TestingModule;
   let filter: ApiExceptionFilter;
   let response: MockResponse;
   let host: ArgumentsHost;
 
+  beforeAll(async () => {
+    moduleRef = await Test.createTestingModule({
+      providers: [ApiExceptionFilter],
+    }).compile();
+    filter = moduleRef.get(ApiExceptionFilter);
+  });
+
+  afterAll(async () => {
+    await moduleRef.close();
+  });
+
   beforeEach(() => {
-    filter = new ApiExceptionFilter();
     response = {
       headersSent: false,
       status: vi.fn().mockReturnThis(),
