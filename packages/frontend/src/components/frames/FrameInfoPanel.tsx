@@ -84,7 +84,6 @@ export default function FrameInfoPanel({
 }: {
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
-  drawerIsLarge: boolean;
 }) {
   return (
     <>
