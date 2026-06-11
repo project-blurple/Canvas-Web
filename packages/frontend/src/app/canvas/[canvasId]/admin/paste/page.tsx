@@ -16,7 +16,7 @@ import { BasicButton } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
-import { useCanvasContext } from "@/contexts";
+import { useCanvasContext, useImageOverlayContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { useCanvasPaste } from "@/hooks/queries/usePaste";
 import AdminDashboard from "../AdminDashboard";
@@ -390,6 +390,11 @@ function AdminPasteTab() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null,
   );
+  const {
+    setImageOverlay,
+    setShowOverlay,
+    setTopLeftCoordinates: setContextTopLeftCoordinates,
+  } = useImageOverlayContext();
   const [pasteWrapperMinHeight, setPasteWrapperMinHeight] = useState<string>();
 
   const pasteWrapperRef = useRef<HTMLDivElement>(null);
@@ -423,6 +428,37 @@ function AdminPasteTab() {
       }
     },
     [uploadedImage],
+  );
+
+  useEffect(() => {
+    if (!uploadedImage) {
+      setImageOverlay(null);
+      setShowOverlay(false);
+      return;
+    }
+
+    setImageOverlay({
+      alt: "Preview of uploaded image",
+      file: uploadedImage.file,
+      height: uploadedImage.height,
+      width: uploadedImage.width,
+    });
+    setContextTopLeftCoordinates(topLeftCoordinates);
+    setShowOverlay(true);
+  }, [
+    setContextTopLeftCoordinates,
+    setImageOverlay,
+    setShowOverlay,
+    topLeftCoordinates,
+    uploadedImage,
+  ]);
+
+  useEffect(
+    () => () => {
+      setImageOverlay(null);
+      setShowOverlay(false);
+    },
+    [setImageOverlay, setShowOverlay],
   );
 
   const actionPanel = (

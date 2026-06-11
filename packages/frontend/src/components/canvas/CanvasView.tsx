@@ -11,14 +11,11 @@ import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
-import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
   useActionPanelContext,
   useCanvasContext,
   useCanvasViewContext,
-  useSelectedBoundsContext,
-  useSelectedColorContext,
   useSelectedFrameContext,
 } from "@/contexts";
 import {
@@ -35,6 +32,7 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
+import CanvasOverlays from "./CanvasOverlays";
 import CanvasViewControls from "./CanvasViewControls";
 import { PixelGrid } from "./PixelGrid";
 import {
@@ -48,7 +46,6 @@ import {
 } from "./point";
 
 const CanvasWrapper = styled("div")`
-  position: relative;
   background-color: var(--discord-legacy-not-quite-black);
   border-radius: var(--card-border-radius);
   border: var(--card-border);
@@ -70,6 +67,7 @@ const CanvasWrapper = styled("div")`
 
   ${({ theme }) => theme.breakpoints.down("md")} {
     border-radius: 0;
+  import CanvasOverlays from "./CanvasOverlays";
   }
 
   &:active {
@@ -85,20 +83,6 @@ const CanvasWrapper = styled("div")`
   & {
     user-select: none;
   }
-`;
-
-const ReticleContainer = styled("div")`
-  pointer-events: none;
-  position: absolute;
-  z-index: 1;
-`;
-
-const Reticle = styled("img")`
-  image-rendering: pixelated;
-`;
-
-const PreviewPixel = styled("div")`
-  position: absolute;
 `;
 
 const sharedLabelStyles = css`
@@ -371,25 +355,10 @@ const FRAME_FIT_FILL_RATIO = 0.75;
 
 const PAN_DECAY = 0.75;
 
-// This is to avoid weird business with the reticle not sizing properly
-const RETICLE_ORIGINAL_SCALE = 10;
-const RETICLE_ORIGINAL_SIZE = 14;
-const RETICLE_SIZE = RETICLE_ORIGINAL_SIZE * 10;
-const RETICLE_SCALE = 1 / (RETICLE_ORIGINAL_SCALE * 10);
-const PREVIEW_PIXEL_SIZE = 0.8 * RETICLE_ORIGINAL_SCALE * 10;
-
 const pointerEvents: Map<number, PointerEvent> = new Map();
 const previousPointerEvents: Map<number, PointerEvent> = new Map();
 // Used to handle pointer events when there are multiple pointers down
 let pointerSyncCounter = 0;
-
-function calculateReticleOffset(coords: Point | null): Point {
-  if (!coords) return { x: 0, y: 0 };
-  return {
-    x: (coords.x - (RETICLE_SIZE - 1) / 2) / RETICLE_SCALE,
-    y: (coords.y - (RETICLE_SIZE - 1) / 2) / RETICLE_SCALE,
-  };
-}
 
 function getViewForFrame({
   frame,
@@ -450,21 +419,11 @@ export default function CanvasView({
   const canvasImageWrapperRef = useRef<HTMLDivElement>(null);
   const canvasPanAndZoomRef = useRef<HTMLDivElement>(null);
 
-  const { color } = useSelectedColorContext();
   const { frame, setFrame } = useSelectedFrameContext();
-  const {
-    canEdit,
-    minHeight,
-    minWidth,
-    selectedBounds,
-    showSelectedBounds,
-    setSelectedBounds,
-  } = useSelectedBoundsContext();
   const { canvas } = useCanvasContext();
   const {
     containerRef,
     coords,
-    isReticleVisible,
     offset,
     setSelectedPixelColor,
     setCoords,
@@ -1172,8 +1131,6 @@ export default function CanvasView({
       );
   }, [handleCanvasClick]);
 
-  const reticleOffset = calculateReticleOffset(coords);
-
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
@@ -1257,55 +1214,7 @@ export default function CanvasView({
             : undefined,
         }}
       >
-        <ReticleContainer
-          style={{
-            scale: RETICLE_SCALE,
-            display: showReticle && isReticleVisible ? undefined : "none",
-            ...(coords && {
-              transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
-            }),
-          }}
-        >
-          {color && (
-            <PreviewPixel
-              style={{
-                width: PREVIEW_PIXEL_SIZE,
-                height: PREVIEW_PIXEL_SIZE,
-                top: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                left: (RETICLE_SIZE - PREVIEW_PIXEL_SIZE) / 2,
-                backgroundColor: `rgba(${color?.rgba.join()})`,
-              }}
-            />
-          )}
-          <Reticle
-            src="/images/reticle.png"
-            alt="Reticle"
-            className="reticle"
-            style={{
-              width: RETICLE_SIZE,
-              height: RETICLE_SIZE,
-              // These min sizes prevent the reticle being squished which causes it to be misalignment.
-              minWidth: RETICLE_SIZE,
-              minHeight: RETICLE_SIZE,
-            }}
-          />
-        </ReticleContainer>
-
-        {showSelectedBounds && (
-          <SelectedBoundsOverlay
-            canvasWidth={canvas.width}
-            canvasHeight={canvas.height}
-            canEdit={canEdit}
-            minHeight={minHeight}
-            minWidth={minWidth}
-            selectedBounds={selectedBounds}
-            reticleScale={RETICLE_SCALE}
-            reticleSize={RETICLE_SIZE}
-            setSelectedBounds={setSelectedBounds}
-            zoom={zoom}
-          />
-        )}
-
+        <CanvasOverlays showReticle={showReticle} />
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}

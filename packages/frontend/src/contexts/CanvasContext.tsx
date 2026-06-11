@@ -7,6 +7,7 @@ import { createContext, useContext, useEffect } from "react";
 import {
   ActionPanelProvider,
   CanvasViewProvider,
+  ImageOverlayProvider,
   SelectedBoundsProvider,
   SelectedColorProvider,
   SelectedFrameProvider,
@@ -97,9 +98,11 @@ export const CanvasProvider = ({
         <SelectedFrameProvider key={activeCanvas.id}>
           <ActionPanelProvider>
             <CanvasViewProvider key={activeCanvas.id}>
-              <SelectedBoundsProvider key={activeCanvas.id}>
-                {children}
-              </SelectedBoundsProvider>
+              <ImageOverlayProvider>
+                <SelectedBoundsProvider key={activeCanvas.id}>
+                  {children}
+                </SelectedBoundsProvider>
+              </ImageOverlayProvider>
             </CanvasViewProvider>
           </ActionPanelProvider>
         </SelectedFrameProvider>
