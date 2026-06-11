@@ -52,12 +52,29 @@ export async function setSnapshotDirtyTimestamp(
   canvasId: CanvasInfo["id"],
   timestamp: Date,
 ) {
-  await snapshotPrisma.snapshot_cursor.upsert({
-    where: { canvas_id: canvasId },
-    create: {
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    return;
+  }
+
+  const updated = await snapshotPrisma.snapshot_cursor.updateMany({
+    where: {
       canvas_id: canvasId,
+      OR: [
+        { dirty_from_timestamp: { gt: timestamp } },
+        { dirty_from_timestamp: null },
+      ],
+    },
+    data: {
       dirty_from_timestamp: timestamp,
     },
-    update: { dirty_from_timestamp: timestamp },
   });
+
+  if (updated.count === 0) {
+    await snapshotPrisma.snapshot_cursor.create({
+      data: {
+        canvas_id: canvasId,
+        dirty_from_timestamp: timestamp,
+      },
+    });
+  }
 }

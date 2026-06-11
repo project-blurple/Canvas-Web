@@ -2,24 +2,22 @@ import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { restorePixelHistoryEntries } from "./historyService";
 
-interface BlocklistRow {
-  user_id: bigint;
-  date_added: Date;
-  username: string | null;
-  profile_picture_url: string | null;
-}
-
 export async function getBlocklist(): Promise<BlocklistEntry[]> {
-  const blocklist = await prisma.$queryRaw<BlocklistRow[]>`
-    SELECT
-      b.user_id,
-      b.date_added,
-      dup.username,
-      dup.profile_picture_url
-    FROM blacklist b
-    LEFT JOIN discord_user_profile dup ON b.user_id = dup.user_id
-    ORDER BY b.date_added DESC
-  `;
+  const blocklist = await prisma.$kysely
+    .selectFrom("blacklist")
+    .leftJoin(
+      "discord_user_profile",
+      "discord_user_profile.user_id",
+      "blacklist.user_id",
+    )
+    .select((_eb) => [
+      "blacklist.user_id",
+      "blacklist.date_added",
+      "discord_user_profile.username",
+      "discord_user_profile.profile_picture_url",
+    ])
+    .orderBy("blacklist.date_added", "desc")
+    .execute();
 
   return blocklist.map((entry) => ({
     userId: entry.user_id.toString(),

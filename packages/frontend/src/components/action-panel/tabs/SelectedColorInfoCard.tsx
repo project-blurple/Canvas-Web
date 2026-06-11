@@ -3,7 +3,6 @@ import { styled } from "@mui/material";
 import { useAuthContext, useCanvasContext } from "@/contexts";
 import {
   RecheckMembershipsLink,
-  RecheckMembershipsStatus,
   useRecheckMemberships,
 } from "../../RecheckMemberships";
 
@@ -40,10 +39,6 @@ const Code = styled("code")`
   line-height: 1.1;
 `;
 
-const RecheckStatusLine = styled(RecheckMembershipsStatus)`
-  grid-column: 1 / -1;
-`;
-
 interface ColorInfoCardProps extends Omit<
   React.ComponentPropsWithRef<typeof Wrapper>,
   "color"
@@ -75,9 +70,6 @@ export default function ColorInfoCard({
       </a>
     : guildName;
 
-  const partnerGated =
-    !color.global && !canvas.allColorsGlobal && !userInServer;
-
   return (
     <Wrapper {...props}>
       <Heading>{colorName}</Heading>
@@ -97,11 +89,11 @@ export default function ColorInfoCard({
             <RecheckMembershipsLink controller={recheckMutation}>
               Refresh here
             </RecheckMembershipsLink>
+            .
           </Subtitle>
         : <Subtitle>
             Exclusive to {guildNameNode}. <a href="/signin">Log in</a> to use.
           </Subtitle>)}
-      {partnerGated && <RecheckStatusLine controller={recheckMutation} />}
     </Wrapper>
   );
 }

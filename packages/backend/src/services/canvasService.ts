@@ -15,7 +15,7 @@ import {
 } from "@blurple-canvas-web/types";
 import sharp from "sharp";
 import type z from "zod";
-import { type canvas, Prisma, prisma } from "@/client";
+import { type canvas, prisma } from "@/client";
 import config from "@/config";
 import { NotFoundError, UnprocessableError } from "@/errors";
 import { socketHandler } from "@/index";
@@ -178,17 +178,6 @@ export function unlockedCanvasToPngStream(
         .png();
 }
 
-interface CanvasSummaryRow {
-  id: number;
-  name: string;
-  event_id: number | null;
-  locked: boolean;
-  last_pixel_timestamp: Date | null;
-  width: number;
-  height: number;
-  cooldown_length: number;
-}
-
 /**
  * Retrieves canvas summary info for all canvases.
  *
@@ -198,31 +187,37 @@ interface CanvasSummaryRow {
 export async function getCanvases(
   eventId?: BlurpleEvent["id"],
 ): Promise<CanvasSummary[]> {
-  const whereSql =
-    eventId === undefined ?
-      Prisma.sql`TRUE`
-    : Prisma.sql`c.event_id = ${eventId}`;
-
-  const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
-    SELECT
-      c.id,
-      c.name,
-      c.event_id,
-      c.locked,
-      c.width,
-      c.height,
-      c.cooldown_length,
-      MAX(h.timestamp) AS last_pixel_timestamp
-    FROM canvas c
-    LEFT JOIN history h
-      ON h.canvas_id = c.id
-      AND h.erased_at IS NULL
-    WHERE ${whereSql}
-    GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
-    ORDER BY
-      MAX(h.timestamp) DESC NULLS LAST,
-      c.id DESC
-  `;
+  const canvases = await prisma.$kysely
+    .selectFrom("canvas")
+    .leftJoin("history", (join) =>
+      join
+        .onRef("history.canvas_id", "=", "canvas.id")
+        .on("history.erased_at", "is", null),
+    )
+    .select((eb) => [
+      "canvas.id",
+      "canvas.name",
+      "canvas.event_id",
+      "canvas.locked",
+      "canvas.width",
+      "canvas.height",
+      "canvas.cooldown_length",
+      eb.fn.max("history.timestamp").as("last_pixel_timestamp"),
+    ])
+    .$if(eventId !== undefined, (qb) =>
+      qb.where("canvas.event_id", "=", eventId as number),
+    )
+    .groupBy([
+      "canvas.id",
+      "canvas.name",
+      "canvas.event_id",
+      "canvas.locked",
+      "canvas.width",
+      "canvas.height",
+    ])
+    .orderBy("last_pixel_timestamp", (ob) => ob.desc().nullsLast())
+    .orderBy("canvas.id", "desc")
+    .execute();
 
   return canvases.map((canvas) => ({
     id: canvas.id,
@@ -438,7 +433,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
     if (cachedCanvas) {
       if (cachedCanvas.isLocked !== canvas.locked) {
         console.debug(
-          `Canvas ${canvasId} lock status has changed. Updating cache...`,
+          `Canvas ${canvasId} lock status has changed. Updating cache…`,
         );
         // Ensure on-disk files are removed and cache entry cleared so we regenerate below
         await clearCanvasFromFileSystem(canvasId);

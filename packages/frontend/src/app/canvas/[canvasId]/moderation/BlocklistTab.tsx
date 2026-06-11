@@ -2,6 +2,7 @@ import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useId, useMemo, useState } from "react";
+import { toast } from "sonner";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -124,9 +125,10 @@ function BlocklistUserEntry({
           <StyledUsername>{username}</StyledUsername>
           <UserIdButton
             type="button"
-            onClick={async () =>
-              await navigator.clipboard.writeText(userId.toString())
-            }
+            onClick={async () => {
+              void (await navigator.clipboard.writeText(userId.toString()));
+              toast.success("Copied user ID");
+            }}
           >
             <code aria-hidden>{userId}</code>
             <VisuallyHidden>User ID {userId}. Click to copy.</VisuallyHidden>

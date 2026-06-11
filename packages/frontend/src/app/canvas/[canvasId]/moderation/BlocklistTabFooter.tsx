@@ -3,7 +3,7 @@ import { Chip, css, TextField } from "@mui/material";
 import { useIsMutating } from "@tanstack/react-query";
 import { TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/button";
+import { BasicButton } from "@/components/button";
 import { AutocompleteInput } from "@/components/input/Input";
 
 const BlocklistFooter = styled("footer")`
@@ -54,18 +54,6 @@ const BlocklistIdChip = styled(Chip, {
         color: white;
       }
     `}
-`;
-
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: white;
-  flex-shrink: 0;
-  width: auto;
-
-  &:hover,
-  &:focus-visible {
-    border-color: oklch(from var(--discord-white) l c h / 36%);
-  }
 `;
 
 interface BlocklistFooterSectionProps {
@@ -209,7 +197,7 @@ function BlocklistAddSection({
             )}
           />
         </BlocklistAutocompleteWrapper>
-        <StyledButton
+        <BasicButton
           type="button"
           disabled={
             userIdsToBlock.length === 0 ||
@@ -224,7 +212,7 @@ function BlocklistAddSection({
           }}
         >
           Block
-        </StyledButton>
+        </BasicButton>
       </BlocklistAddBody>
     </BlocklistAddWrapper>
   );
@@ -252,14 +240,14 @@ function BlocklistRemoveSection({
         />{" "}
         Restore erased pixel history
       </label>
-      <StyledButton
+      <BasicButton
         form={selectionFormId}
         type="submit"
         disabled={selectedUsers.size === 0 || Boolean(isRemoving)}
       >
-        Remove {selectedUsers.size} user
-        {selectedUsers.size !== 1 ? "s" : ""} from blocklist
-      </StyledButton>
+        Remove {selectedUsers.size}&nbsp;
+        {selectedUsers.size !== 1 ? "users" : "user"} from blocklist
+      </BasicButton>
     </BlocklistAddWrapper>
   );
 }

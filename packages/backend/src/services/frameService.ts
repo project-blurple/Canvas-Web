@@ -394,7 +394,7 @@ export async function createFrame(
       .padStart(6, "0");
 
     try {
-      await prisma.frame.create({
+      return await prisma.frame.create({
         data: {
           id,
           canvas_id: canvasId,
@@ -406,7 +406,6 @@ export async function createFrame(
           y_1: y1,
         },
       });
-      return;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

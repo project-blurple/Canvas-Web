@@ -2,6 +2,7 @@
 
 import type { PaletteColorSummary } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { toast } from "sonner";
 import { PrimitiveButton } from "./button";
 import VisuallyHidden from "./VisuallyHidden";
 
@@ -48,7 +49,14 @@ export default function ColorCodeChip({
 }: ColorCodeChipProps) {
   const { code: colorCode } = color;
 
-  const copyCode = async () => await navigator.clipboard.writeText(colorCode);
+  const copyCode = async () => {
+    void (await navigator.clipboard.writeText(colorCode));
+    toast.success(
+      <>
+        Copied <code>{colorCode}</code>
+      </>,
+    );
+  };
 
   return (
     <StyledButton onClick={copyCode} {...props}>

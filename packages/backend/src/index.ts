@@ -1,3 +1,4 @@
+import "./tracing";
 import config from "@/config";
 import { createApp } from "./app";
 import { startSnapshotScheduler } from "./services/snapshot";

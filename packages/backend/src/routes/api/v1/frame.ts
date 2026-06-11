@@ -28,6 +28,7 @@ import {
 } from "@/services/frameService";
 import { generateTimelapse } from "@/services/timelapseService";
 import { normalizeBounds } from "@/utils";
+import { addSpanAttributes } from "@/utils/otel";
 
 export const frameRouter = typedRouter(Router());
 
@@ -35,6 +36,11 @@ frameRouter.get(
   "/:frameId@:scale.png",
   validate({ params: ExportFrameParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "frame.id": req.params.frameId,
+      "export.scale": req.params.scale,
+    });
+
     const scale = req.params.scale;
 
     const stream = await exportFrameAsStream({
@@ -50,6 +56,14 @@ frameRouter.get(
         res.sendStatus(500);
       }
     });
+
+    let contentLength = 0;
+
+    stream.on("data", (chunk: Buffer | string) => {
+      contentLength +=
+        typeof chunk === "string" ? Buffer.byteLength(chunk) : chunk.length;
+    });
+
     stream.pipe(
       res
         .status(200)
@@ -62,6 +76,12 @@ frameRouter.get(
           `inline; filename="frame-${req.params.frameId}.png"`,
         ),
     );
+
+    stream.on("end", () => {
+      addSpanAttributes(req, {
+        "response.export.size.bytes": contentLength,
+      });
+    });
   },
 );
 
@@ -102,8 +122,12 @@ frameRouter.get(
   "/:frameId",
   validate({ params: FrameIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
     const frame = await getFrameById(req.params.frameId);
     res.status(200).json(frame);
+
+    addSpanAttributes(req, { "canvas.id": frame.canvasId });
   },
 );
 
@@ -111,6 +135,11 @@ frameRouter.get(
   "/user/:userId/:canvasId",
   validate({ params: UserCanvasParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "user.id": req.params.userId,
+      "canvas.id": req.params.canvasId,
+    });
+
     const frames = await getFramesByUserId(
       req.params.userId,
       req.params.canvasId,
@@ -119,6 +148,8 @@ frameRouter.get(
       data: frames,
       hasReachedMaxFrames: frames.length >= config.frames.maxAllowedUser,
     });
+
+    addSpanAttributes(req, { "response.size": frames.length });
   },
 );
 
@@ -126,6 +157,11 @@ frameRouter.get(
   "/guilds/:canvasId",
   validate({ params: CanvasIdParamModel, query: FrameGuildIdsQueryModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "guild.id": req.query.guildIds.map(String),
+    });
+
     const { guildIds } = req.query;
     const frames = await getFramesByGuildIds(guildIds, req.params.canvasId);
 
@@ -143,6 +179,8 @@ frameRouter.get(
       data: frames,
       hasReachedMaxFrames: hasReachedMaxFramesMap,
     });
+
+    addSpanAttributes(req, { "response.size": frames.length });
   },
 );
 
@@ -152,6 +190,15 @@ frameRouter.put(
   requireLoggedIn,
   validate({ params: FrameIdParamModel, body: FrameDataParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "frame.id": req.params.frameId,
+      "frame.name": req.body.name,
+      "frame.x0": req.body.x0,
+      "frame.y0": req.body.y0,
+      "frame.x1": req.body.x1,
+      "frame.y1": req.body.y1,
+    });
+
     assertLoggedIn(req);
 
     const { x0, y0, x1, y1 } = normalizeBounds(req.body);
@@ -179,6 +226,8 @@ frameRouter.delete(
   requireLoggedIn,
   validate({ params: FrameIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
     assertLoggedIn(req);
 
     await withDiscordAccessToken(req.session, async (accessToken) =>
@@ -194,6 +243,17 @@ frameRouter.post(
   requireLoggedIn,
   validate({ body: CreateFrameBodyModel }),
   async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.body.canvasId,
+      "frame.name": req.body.name,
+      "frame.owner.type": req.body.owner.type,
+      "frame.owner.id": req.body.owner.id,
+      "frame.bounds.x0": req.body.x0,
+      "frame.bounds.y0": req.body.y0,
+      "frame.bounds.x1": req.body.x1,
+      "frame.bounds.y1": req.body.y1,
+    });
+
     assertLoggedIn(req);
 
     const { canvasId, owner, name } = req.body;
@@ -221,5 +281,7 @@ frameRouter.post(
         ),
     );
     res.status(201).json(frame);
+
+    addSpanAttributes(req, { "frame.id": frame.id });
   },
 );

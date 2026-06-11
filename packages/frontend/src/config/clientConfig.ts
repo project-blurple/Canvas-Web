@@ -7,6 +7,8 @@ const config = {
   discordServerInvite:
     process.env.NEXT_PUBLIC_DISCORD_SERVER_INVITE ||
     "https://projectblurple.com",
+  captchaEnabled: process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === "true",
+  turnstileSiteKey: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
   showBotCommands: process.env.NEXT_PUBLIC_SHOW_BOT_COMMANDS === "true",
 } as const;
 
