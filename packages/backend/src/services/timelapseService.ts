@@ -747,8 +747,8 @@ export async function generateTimelapse({
     const isFullCanvasBounds =
       clampedBounds.x0 === 0 &&
       clampedBounds.y0 === 0 &&
-      clampedBounds.x1 === canvas.width - 1 &&
-      clampedBounds.y1 === canvas.height - 1;
+      clampedBounds.x1 === canvas.width &&
+      clampedBounds.y1 === canvas.height;
 
     if (!isFullCanvasBounds) {
       cropBounds = clampedBounds;
