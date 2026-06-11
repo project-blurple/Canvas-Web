@@ -45,5 +45,5 @@ export const CanvasExportParamModel = z.object({
 });
 
 export const CanvasTimelapseParamModel = z.object({
-  raw: z.coerce.boolean().optional(),
+  raw: z.stringbool().optional(),
 });

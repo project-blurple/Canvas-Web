@@ -36,7 +36,7 @@ const END_CARD_BACKGROUND_COLOR = {
   alpha: 1,
 } as const;
 
-interface generateTimelapseParams {
+interface GenerateTimelapseParams {
   canvasId: CanvasInfo["id"];
   start?: Date;
   end?: Date;
@@ -685,7 +685,7 @@ export async function generateTimelapse({
   scale,
   backgroundColor = [35, 39, 42, 255],
   raw = false,
-}: generateTimelapseParams): Promise<Buffer> {
+}: GenerateTimelapseParams): Promise<Buffer> {
   // TODO: Configurable speed
 
   if (raw) {

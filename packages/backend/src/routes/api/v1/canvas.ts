@@ -116,6 +116,15 @@ canvasRouter.get(
       "timelapse.raw": raw,
     });
 
+    const canvas = await getCanvasInfo(req.params.canvasId);
+
+    if (!canvas.isLocked) {
+      res.status(400).json({
+        error: "Timelapse generation is only available for locked canvases",
+      });
+      return;
+    }
+
     const buffer = await generateTimelapse(
       raw ?
         {

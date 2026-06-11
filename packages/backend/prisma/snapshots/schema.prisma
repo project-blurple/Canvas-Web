@@ -46,7 +46,7 @@ model timelapse_manifest {
   scale                Int
   frame_rate           Int
   end_hold_duration_ms Int
-  show_end_card        Boolean
+  show_end_card        Boolean   @default(true)
   background_color     String
   cache_key            String    @unique
   file_path            String
