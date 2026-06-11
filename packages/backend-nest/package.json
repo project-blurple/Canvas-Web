@@ -52,7 +52,9 @@
     "@nestjs/config": "^4.0.4",
     "@nestjs/core": "^11.0.1",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-socket.io": "11.1.24",
     "@nestjs/swagger": "^11.4.4",
+    "@nestjs/websockets": "11.1.24",
     "@prisma/adapter-pg": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "@quixo3/prisma-session-store": "^3.1.19",
@@ -65,6 +67,7 @@
     "prisma-extension-kysely": "^4.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "socket.io": "4.8.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -85,6 +88,7 @@
     "prettier": "^3.4.2",
     "prisma": "^7.7.0",
     "prisma-kysely": "^3.1.0",
+    "socket.io-client": "4.8.3",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-loader": "^9.5.2",
