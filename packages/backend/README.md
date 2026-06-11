@@ -25,15 +25,15 @@ pnpm build
 Then apply schema changes and seed test data:
 
 ```sh
-pnpm prisma:migrate
-pnpm prisma:seed
+pnpm prisma:core:migrate
+pnpm prisma:core:seed
 ```
 
 If you do not want to use the test data, you should at least add the web guild
 (used internally) via:
 
 ```sh
-pnpm prisma:seed --seedings web_guild
+pnpm prisma:core:seed --seedings web_guild
 ```
 
 ### Running
@@ -77,10 +77,10 @@ database tables used.
 
 Whenever you make changes to the database schema, you need to create a new
 migration. This is done using Prisma Migrate, which generates SQL migration
-files based on changes to the `schema.prisma` file.
+files based on changes to `prisma/core/schema.prisma`.
 
 For instructions on how to create and manage database migrations using Prisma
-Migrate, see [MIGRATIONS_README.md](./prisma/MIGRATIONS_README.md).
+Migrate, see [MIGRATIONS_README.md](./prisma/core/MIGRATIONS_README.md).
 
 ### Tracing (OpenTelemetry & Jaeger)
 

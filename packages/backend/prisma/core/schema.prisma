@@ -1,6 +1,6 @@
 generator client {
   provider            = "prisma-client"
-  output              = "../src/client/generated"
+  output              = "../../src/client/core/generated"
   previewFeatures     = ["views"]
   moduleFormat        = "cjs"
   engineType          = "client"
@@ -9,7 +9,7 @@ generator client {
 
 generator kysely {
   provider           = "prisma-kysely"
-  output             = "../src/client/kysely"
+  output             = "../../src/client/core/kysely"
   fileName           = "types.ts"
   bigIntTypeOverride = "bigint"
 }

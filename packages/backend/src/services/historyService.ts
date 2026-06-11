@@ -6,7 +6,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import type { Expression, ExpressionBuilder, SqlBool } from "kysely";
 import { prisma } from "@/client";
-import type { DB } from "@/client/kysely/types";
+import type { DB } from "@/client/core/kysely/types";
 import { addUsersToBlocklist } from "./blocklistService";
 import { toPaletteColorSummary } from "./paletteService";
 import {
@@ -511,10 +511,10 @@ export async function restorePixelHistoryEntries(
     coordinates.push({ x: entry.x, y: entry.y });
     coordinatesByCanvas.set(entry.canvas_id, coordinates);
 
-    if (!earliestEntryTimestampsByCanvas.has(entry.canvas_id)) {
+    const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id);
+    if (!existing) {
       earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
     } else {
-      const existing = earliestEntryTimestampsByCanvas.get(entry.canvas_id)!;
       if (entry.timestamp < existing) {
         earliestEntryTimestampsByCanvas.set(entry.canvas_id, entry.timestamp);
       }
@@ -529,6 +529,7 @@ export async function restorePixelHistoryEntries(
 
         await setSnapshotDirtyTimestamp(
           canvasId,
+          // biome-ignore lint/style/noNonNullAssertion: is generated above, will always exist
           earliestEntryTimestampsByCanvas.get(canvasId)!,
         );
       },

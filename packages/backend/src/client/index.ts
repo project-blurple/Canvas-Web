@@ -6,8 +6,8 @@ import {
   PostgresQueryCompiler,
 } from "kysely";
 import kyselyExtension from "prisma-extension-kysely";
-import { PrismaClient } from "@/client/generated/client";
-import type { DB } from "@/client/kysely/types";
+import { PrismaClient } from "@/client/core/generated/client";
+import type { DB } from "@/client/core/kysely/types";
 import config from "@/config";
 
 const adapter = new PrismaPg(config.databaseUrl);
@@ -26,4 +26,4 @@ export const prisma = new PrismaClient({ adapter }).$extends(
   }),
 );
 
-export * from "@/client/generated/client";
+export * from "@/client/core/generated/client";
