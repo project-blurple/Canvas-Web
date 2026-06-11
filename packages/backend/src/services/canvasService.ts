@@ -433,7 +433,7 @@ async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
     if (cachedCanvas) {
       if (cachedCanvas.isLocked !== canvas.locked) {
         console.debug(
-          `Canvas ${canvasId} lock status has changed. Updating cache...`,
+          `Canvas ${canvasId} lock status has changed. Updating cache…`,
         );
         // Ensure on-disk files are removed and cache entry cleared so we regenerate below
         await clearCanvasFromFileSystem(canvasId);

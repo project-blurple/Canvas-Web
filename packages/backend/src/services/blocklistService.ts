@@ -10,7 +10,7 @@ export async function getBlocklist(): Promise<BlocklistEntry[]> {
       "discord_user_profile.user_id",
       "blacklist.user_id",
     )
-    .select((eb) => [
+    .select((_eb) => [
       "blacklist.user_id",
       "blacklist.date_added",
       "discord_user_profile.username",

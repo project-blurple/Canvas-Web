@@ -5,13 +5,14 @@ import { styled } from "@mui/material";
 import { CircleAlert, X } from "lucide-react";
 import NextImage from "next/image";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { CanvasWrapper } from "@/app/Main";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
-import { Button } from "@/components/button";
+import { BasicButton } from "@/components/button";
 import { CanvasView } from "@/components/canvas";
 import NumberField from "@/components/NumberField";
 import { SlideableDrawer } from "@/components/slideable-drawer";
@@ -49,12 +50,7 @@ const PasteWrapper = styled(CanvasWrapper)`
   column-gap: 1rem;
 `;
 
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-white);
-`;
-
-const FullWidthStyledButton = styled(StyledButton)`
+const FullWidthStyledButton = styled(BasicButton)`
   width: 100%;
 `;
 
@@ -142,19 +138,15 @@ const AuthorIdInput = styled("input")`
 
 interface AdminDashboardPasteActionPanelProps {
   uploadedImage: UploadedImage | null;
-  uploadError: string | null;
   topLeftCoordinates: Point;
   setUploadedImage: (image: UploadedImage | null) => void;
-  setUploadError: (error: string | null) => void;
   setTopLeftCoordinates: (coordinates: Point) => void;
 }
 
 function AdminDashboardPasteActionPanel({
   uploadedImage,
-  uploadError,
   topLeftCoordinates,
   setUploadedImage,
-  setUploadError,
   setTopLeftCoordinates,
 }: AdminDashboardPasteActionPanelProps) {
   const { canvas } = useCanvasContext();
@@ -184,7 +176,7 @@ function AdminDashboardPasteActionPanel({
 
     if (!file.type.startsWith("image/")) {
       setUploadedImage(null);
-      setUploadError("Please choose an image file.");
+      toast.error("Please choose an image file.");
       return;
     }
 
@@ -196,7 +188,7 @@ function AdminDashboardPasteActionPanel({
       if (width > canvas.width || height > canvas.height) {
         URL.revokeObjectURL(src);
         setUploadedImage(null);
-        setUploadError(
+        toast.error(
           `Image must fit within the canvas size of ${canvas.width}x${canvas.height}.`,
         );
         return;
@@ -211,11 +203,10 @@ function AdminDashboardPasteActionPanel({
         height,
         data: imageData,
       });
-      setUploadError(null);
     } catch {
       URL.revokeObjectURL(src);
       setUploadedImage(null);
-      setUploadError("Could not read the selected image.");
+      toast.error("Could not read the selected image.");
     }
   }
 
@@ -240,14 +231,21 @@ function AdminDashboardPasteActionPanel({
   async function onPasteClick() {
     if (!uploadedImage || !mappedData || !palette || !authorId) return;
 
-    await doCanvasPaste.mutateAsync({
-      authorId,
-      data: mappedData.map((entry) => [
-        entry.x + topLeftCoordinates.x - canvas.startCoordinates[0],
-        entry.y + topLeftCoordinates.y - canvas.startCoordinates[1],
-        entry.colorId,
-      ]),
-    });
+    toast.promise(
+      doCanvasPaste.mutateAsync({
+        authorId,
+        data: mappedData.map((entry) => [
+          entry.x + topLeftCoordinates.x - canvas.startCoordinates[0],
+          entry.y + topLeftCoordinates.y - canvas.startCoordinates[1],
+          entry.colorId,
+        ]),
+      }),
+      {
+        loading: "Pasting image to canvas…",
+        success: "Image pasted to canvas!",
+        error: "Couldn’t paste image to canvas. Please try again.",
+      },
+    );
   }
 
   const [startX, startY] = canvas.startCoordinates;
@@ -272,7 +270,6 @@ function AdminDashboardPasteActionPanel({
             accept="image/*"
             onChange={onUploadChange}
           />
-          {uploadError && <ErrorText role="alert">{uploadError}</ErrorText>}
         </div>
       </ActionPanelTabBody>
       {uploadedImage && (
@@ -393,7 +390,6 @@ function AdminPasteTab() {
   const [uploadedImage, setUploadedImage] = useState<UploadedImage | null>(
     null,
   );
-  const [uploadError, setUploadError] = useState<string | null>(null);
   const [pasteWrapperMinHeight, setPasteWrapperMinHeight] = useState<string>();
 
   const pasteWrapperRef = useRef<HTMLDivElement>(null);
@@ -432,10 +428,8 @@ function AdminPasteTab() {
   const actionPanel = (
     <AdminDashboardPasteActionPanel
       uploadedImage={uploadedImage}
-      uploadError={uploadError}
       topLeftCoordinates={topLeftCoordinates}
       setUploadedImage={setUploadedImage}
-      setUploadError={setUploadError}
       setTopLeftCoordinates={setTopLeftCoordinates}
     />
   );

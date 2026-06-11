@@ -3,7 +3,6 @@
 import type {
   CanvasInfo,
   Frame,
-  PixelColor,
   PixelHistoryOverlayPixel,
   PlacePixelSocket,
   Point,
@@ -37,8 +36,8 @@ import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
 import { getAutoPanOffset } from "./autoPan";
-import { CanvasGrid } from "./CanvasGrid";
 import CanvasViewControls from "./CanvasViewControls";
+import { PixelGrid } from "./PixelGrid";
 import {
   addPoints,
   diffPoints,
@@ -185,6 +184,8 @@ const CanvasImageWrapper = styled("div", {
   isLoading: boolean;
   isLaunching: boolean;
 }>`
+  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
+  position: relative;
   transition: filter var(--transition-duration-medium) ease;
   ${({ isLoading }) =>
     isLoading &&
@@ -192,10 +193,6 @@ const CanvasImageWrapper = styled("div", {
       cursor: wait;
       filter: grayscale(80%);
     `}
-
-  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
-  // box-shadow means the shadow only shows on the edges, and doesn't affect the backing color of the translucent pixels in the canvas
-  position: relative;
 
   img {
     ${({ isLaunching }) =>
@@ -534,18 +531,6 @@ export default function CanvasView({
   const hasAppliedInitialFrameRef = useRef(false);
 
   const canUseFullscreen = useIsFullscreenAvailable();
-
-  const samplePixelColor = useCallback((point: Point): PixelColor | null => {
-    const ctx = offscreenCanvasRef.current?.getContext("2d");
-    if (!ctx) return null;
-
-    try {
-      const data = ctx.getImageData(point.x, point.y, 1, 1).data;
-      return [data[0], data[1], data[2], data[3]];
-    } catch {
-      return null;
-    }
-  }, []);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -1136,7 +1121,11 @@ export default function CanvasView({
    */
   const handleCanvasClick = useCallback(
     (event: PointerEvent): void => {
-      if (!(event.currentTarget instanceof HTMLElement) || !event.isPrimary)
+      if (
+        !(event.currentTarget instanceof HTMLElement) ||
+        !event.isPrimary ||
+        event.button !== 0
+      )
         return;
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
@@ -1153,14 +1142,24 @@ export default function CanvasView({
     [zoom, setCoords],
   );
 
-  useEffect(() => {
-    if (!coords) {
-      setSelectedPixelColor(null);
-      return;
-    }
-
-    setSelectedPixelColor(samplePixelColor(coords));
-  }, [coords, samplePixelColor, setSelectedPixelColor]);
+  useEffect(
+    function sampleCurrentPixel() {
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!coords || !ctx) {
+        setSelectedPixelColor(null);
+        return;
+      }
+      try {
+        const { data } = ctx.getImageData(coords.x, coords.y, 1, 1);
+        setSelectedPixelColor([data[0], data[1], data[2], data[3]]);
+      } catch {
+        setSelectedPixelColor(null);
+      }
+      // No clean-up. This Effect is a hack; the selected pixel colour should be derived within
+      // render lifecycle. Hopefully we clean it up at some point.
+    },
+    [coords, setSelectedPixelColor],
+  );
 
   useEffect(() => {
     canvasImageWrapperRef.current?.addEventListener(
@@ -1383,7 +1382,7 @@ export default function CanvasView({
           />
         </CanvasImageWrapper>
 
-        <CanvasGrid zoom={zoom} hidden={!isGridVisible} />
+        <PixelGrid zoom={zoom} hidden={!isGridVisible} />
 
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
