@@ -1,6 +1,7 @@
 # Creating Prisma Migrations
 
-This guide explains how to create and manage database migrations using Prisma Migrate.
+This guide explains how to create and manage database migrations using Prisma
+Migrate.
 
 ## Quick Start
 
@@ -26,7 +27,8 @@ Run the migration command to generate a migration file:
 pnpm prisma migrate dev --name <migration_name>
 ```
 
-Replace `<migration_name>` with a descriptive name for your changes, using snake_case. For example:
+Replace `<migration_name>` with a descriptive name for your changes, using
+snake_case. For example:
 
 ```bash
 pnpm prisma migrate dev --name add_published_field_to_posts
@@ -60,13 +62,15 @@ pnpm prisma migrate dev --name add_published_field_to_posts
 ## Tips
 
 - Use `pnpm prisma migrate status` to see which migrations have been applied
-- Migration files are immutable once created—if you need to fix a mistake, create a new migration
-- Never manually edit SQL in migration files; instead, create a new migration with corrections
+- Migration files are immutable once created—if you need to fix a mistake,
+  create a new migration
+- Never manually edit SQL in migration files; instead, create a new migration
+  with corrections
 
 ## Further Documentation
 
-For comprehensive information about Prisma Migrate, visit the official documentation:
-https://www.prisma.io/docs/orm/prisma-migrate/getting-started
+For comprehensive information about Prisma Migrate, visit the official
+documentation: https://www.prisma.io/docs/orm/prisma-migrate/getting-started
 
 This includes advanced topics like:
 
