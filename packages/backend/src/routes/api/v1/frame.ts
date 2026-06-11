@@ -89,8 +89,13 @@ frameRouter.get(
   "/:frameId.mp4",
   validate({ params: FrameIdParamModel }),
   async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
     const frame = await getFrameById(req.params.frameId);
     const canvas = await getCanvasInfo(frame.canvasId);
+
+    addSpanAttributes(req, { "canvas.id": frame.canvasId });
+
     if (!canvas.isLocked) {
       res.status(400).json({
         error: "Timelapse generation is only available for locked canvases",
@@ -99,6 +104,11 @@ frameRouter.get(
     }
 
     const { start, end } = await getFramePlacementTimestamps(frame.id);
+
+    addSpanAttributes(req, {
+      "timelapse.start": start?.toISOString(),
+      "timelapse.end": end?.toISOString(),
+    });
 
     const buffer = await generateTimelapse({
       canvasId: frame.canvasId,
@@ -115,6 +125,8 @@ frameRouter.get(
         `inline; filename="canvas-${frame.canvasId}-frame-${frame.id}-timelapse.mp4"`,
       )
       .send(buffer);
+
+    // TODO: add response.size span attribute
   },
 );
 

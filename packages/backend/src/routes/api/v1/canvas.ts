@@ -111,6 +111,11 @@ canvasRouter.get(
   async (req, res) => {
     const raw = req.query.raw || false;
 
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "timelapse.raw": raw,
+    });
+
     const buffer = await generateTimelapse(
       raw ?
         {
@@ -127,6 +132,8 @@ canvasRouter.get(
         `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.${raw ? "webm" : "mp4"}"`,
       )
       .send(buffer);
+
+    // TODO: add response.size span attribute
   },
 );
 
