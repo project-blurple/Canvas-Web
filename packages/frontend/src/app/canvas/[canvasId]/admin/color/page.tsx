@@ -2,10 +2,7 @@
 
 import type { Palette } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import {
-  partitionPaletteByOwner,
-  partitionPaletteByParticipation,
-} from "@/components/action-panel/tabs/place/PlacePixelTab";
+import { partition } from "es-toolkit";
 import CanvasIcon from "@/components/CanvasIcon";
 import { StaticSwatch } from "@/components/swatch";
 import { useCanvasContext } from "@/contexts";
@@ -92,9 +89,11 @@ function AdminColorTab() {
     true,
   );
   const [mainColors, partnerColors] =
-    palette ? partitionPaletteByOwner(palette) : [[], []];
-  const [participatingColors, nonParticipatingColors] =
-    partitionPaletteByParticipation(partnerColors);
+    palette ? partition(palette, (color) => color.global) : [[], []];
+  const [participatingColors, nonParticipatingColors] = partition(
+    partnerColors,
+    (color) => Boolean(color.guildId),
+  );
 
   return (
     <AdminColorTabBlock>

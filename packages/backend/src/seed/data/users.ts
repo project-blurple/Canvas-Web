@@ -1,6 +1,6 @@
 const generatedUserCount = 20;
 
-import type { Prisma } from "../../client/generated/client";
+import type { Prisma } from "../../client/core/generated/client";
 
 export function discordUserProfileSeedData(): Prisma.discord_user_profileCreateManyInput[] {
   const users: Prisma.discord_user_profileCreateManyInput[] = [

@@ -4,8 +4,28 @@ import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createContext, useContext, useEffect } from "react";
+import {
+  ActionPanelProvider,
+  CanvasViewProvider,
+  SelectedBoundsProvider,
+  SelectedColorProvider,
+  SelectedFrameProvider,
+} from "@/contexts";
 import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
 import { socket } from "@/socket";
+
+function useSubscribeToCanvasUpdates() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    const onCanvasUpdate = () => {
+      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
+      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
+    };
+
+    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
+    return () => void socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
+  }, [queryClient]);
+}
 
 interface CanvasContextType {
   canvas: CanvasInfo;
@@ -36,7 +56,6 @@ export const CanvasProvider = ({
   children,
   mainCanvasInfo,
 }: CanvasProviderProps) => {
-  const queryClient = useQueryClient();
   const params = useParams();
 
   const canvasId =
@@ -50,22 +69,13 @@ export const CanvasProvider = ({
     initialData: canvasId === mainCanvasInfo.id ? mainCanvasInfo : undefined,
   });
 
-  useEffect(() => {
-    const onCanvasUpdate = (_canvas: CanvasInfo) => {
-      void queryClient.invalidateQueries({ queryKey: ["canvas"] });
-      void queryClient.invalidateQueries({ queryKey: ["canvasInfo"] });
-    };
+  useSubscribeToCanvasUpdates();
 
-    socket.on(SocketEvents.canvasUpdate, onCanvasUpdate);
-
-    return () => {
-      socket.off(SocketEvents.canvasUpdate, onCanvasUpdate);
-    };
-  }, [queryClient]);
-
-  // When we connect, we want to make sure any pixels placed since now get included in the
-  // response. This is because in the time it takes for the image to load some pixels may have
-  // already been placed.
+  /**
+   * When we connect, we want to make sure any pixels placed since now get included in the
+   * response. This is because in the time it takes for the image to load some pixels may have
+   * already been placed.
+   */
   useEffect(() => {
     socket.auth = {
       canvasId,
@@ -84,7 +94,17 @@ export const CanvasProvider = ({
 
   return (
     <CanvasContext.Provider value={{ canvas: activeCanvas }}>
-      {children}
+      <SelectedColorProvider key={activeCanvas.id}>
+        <SelectedFrameProvider key={activeCanvas.id}>
+          <ActionPanelProvider>
+            <CanvasViewProvider key={activeCanvas.id}>
+              <SelectedBoundsProvider key={activeCanvas.id}>
+                {children}
+              </SelectedBoundsProvider>
+            </CanvasViewProvider>
+          </ActionPanelProvider>
+        </SelectedFrameProvider>
+      </SelectedColorProvider>
     </CanvasContext.Provider>
   );
 };

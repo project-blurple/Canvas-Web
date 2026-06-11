@@ -1,10 +1,17 @@
 generator client {
   provider            = "prisma-client"
-  output              = "../src/client/generated"
+  output              = "../../src/client/core/generated"
   previewFeatures     = ["views"]
   moduleFormat        = "cjs"
   engineType          = "client"
   importFileExtension = ""
+}
+
+generator kysely {
+  provider           = "prisma-kysely"
+  output             = "../../src/client/core/kysely"
+  fileName           = "types.ts"
+  bigIntTypeOverride = "bigint"
 }
 
 datasource db {

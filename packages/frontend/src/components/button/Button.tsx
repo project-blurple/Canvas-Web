@@ -8,4 +8,8 @@ export const Button = styled(MuiButton)`
   &:active {
     scale: 99%;
   }
+
+  & .MuiButton-startIcon {
+    margin-left: 0;
+  }
 `;

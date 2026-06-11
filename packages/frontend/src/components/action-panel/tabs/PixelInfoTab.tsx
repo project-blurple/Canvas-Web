@@ -1,7 +1,8 @@
 import type { PixelHistoryRecord } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { useId, useState } from "react";
-import { ButtonSupplement } from "@/components/button";
+import { toast } from "sonner";
+import { ButtonSupplement, DynamicButton } from "@/components/button";
 import Pagination from "@/components/Pagination";
 import TimelineControls from "@/components/timeline/TimelineControls";
 import {
@@ -20,7 +21,6 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "./ActionPanelTabBody";
-import { TooltipDynamicButton } from "./ActionPanelTooltip";
 import CoordinatesCard from "./CoordinatesCard";
 import PixelHistoryListItem from "./PixelHistoryListItem";
 
@@ -204,10 +204,10 @@ export default function PixelInfoTab({
       )}
       <ActionPanelTabBody>
         {adjustedCoords && (
-          <TooltipDynamicButton
-            tooltipTitle="Copied"
-            onAction={() => {
-              navigator.clipboard.writeText(pixelUrl);
+          <DynamicButton
+            onAction={async () => {
+              void (await navigator.clipboard.writeText(pixelUrl));
+              toast.success("Copied pixel link");
             }}
             color={pixelHistory?.[0]?.color.rgba ?? null}
           >
@@ -215,7 +215,7 @@ export default function PixelInfoTab({
             <ButtonSupplement>
               ({adjustedCoords.x},&nbsp;{adjustedCoords.y})
             </ButtonSupplement>
-          </TooltipDynamicButton>
+          </DynamicButton>
         )}
       </ActionPanelTabBody>
       <TimelineControls />
