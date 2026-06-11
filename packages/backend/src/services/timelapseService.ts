@@ -323,6 +323,33 @@ async function extractTimelapseLastFrameBuffer({
   return lastFrameBuffer;
 }
 
+async function waitForStdinDrainOrError(
+  stdin: NodeJS.WritableStream,
+): Promise<void> {
+  return await new Promise((resolve, reject) => {
+    const onDrain = () => cleanup();
+    const onError = (error: Error) => cleanup(error);
+    const onClose = () =>
+      cleanup(new Error("ffmpeg stdin closed before drain"));
+
+    function cleanup(error?: Error) {
+      stdin.removeListener("drain", onDrain);
+      stdin.removeListener("error", onError);
+      stdin.removeListener("close", onClose);
+
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    }
+
+    stdin.once("drain", onDrain);
+    stdin.once("error", onError);
+    stdin.once("close", onClose);
+  });
+}
+
 async function streamImagePathsToFfmpegStdin({
   stdin,
   imagePaths,
@@ -333,11 +360,29 @@ async function streamImagePathsToFfmpegStdin({
   for (const imagePath of imagePaths) {
     const imageBuffer = await readFile(imagePath);
     if (!stdin.write(imageBuffer)) {
-      await new Promise((resolve) => stdin.once("drain", resolve));
+      await waitForStdinDrainOrError(stdin);
     }
   }
 
-  stdin.end();
+  await new Promise<void>((resolve, reject) => {
+    const onFinish = () => cleanup();
+    const onError = (error: Error) => cleanup(error);
+
+    function cleanup(error?: Error) {
+      stdin.removeListener("finish", onFinish);
+      stdin.removeListener("error", onError);
+
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    }
+
+    stdin.once("finish", onFinish);
+    stdin.once("error", onError);
+    stdin.end();
+  });
 }
 
 function buildMainVideoEncodeArgs({
