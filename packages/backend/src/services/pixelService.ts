@@ -3,7 +3,6 @@ import type {
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
-
 import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
@@ -248,16 +247,30 @@ export async function placePixel(
   await prisma.$transaction(async (tx) => {
     // only update the cooldown table if the canvas has a cooldown
     if (futureCooldown) {
-      const rows = await tx.$queryRaw<[{ user_id: bigint }?]>`
-        INSERT INTO cooldown (user_id, canvas_id, cooldown_time)
-        VALUES (${userId}::bigint, ${canvasId}::integer, ${futureCooldown}::timestamptz)
-        ON CONFLICT (user_id, canvas_id) DO UPDATE
-          SET cooldown_time = EXCLUDED.cooldown_time
-          WHERE cooldown.cooldown_time IS NULL
-             OR cooldown.cooldown_time <= ${placementTime}::timestamptz
-        RETURNING user_id
-      `;
-      if (rows.length === 0) {
+      const row = await tx.$kysely
+        .insertInto("cooldown")
+        .values({
+          user_id: userId,
+          canvas_id: canvasId,
+          cooldown_time: futureCooldown,
+        })
+        .onConflict((oc) =>
+          oc
+            .columns(["user_id", "canvas_id"])
+            .doUpdateSet({
+              cooldown_time: futureCooldown,
+            })
+            .where((eb) =>
+              eb.or([
+                eb("cooldown.cooldown_time", "is", null),
+                eb("cooldown.cooldown_time", "<=", placementTime),
+              ]),
+            ),
+        )
+        .returning("user_id")
+        .executeTakeFirst();
+
+      if (!row) {
         throw new ForbiddenError("Pixel placement is on cooldown");
       }
     }

@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import type { Prisma } from "../../client/generated/client";
+import type { Prisma } from "../../client/core/generated/client";
 // @ts-expect-error Node strip-types runtime needs explicit .ts extension.
 import { canvasSeedData } from "./events.ts";
 

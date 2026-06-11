@@ -32,9 +32,8 @@
     "check:fix": "pnpm --recursive run check:fix",
     "prepare": "husky",
     "clean": "pnpm --recursive run clean && pnpm purge",
-    "prisma:push": "pnpm --filter=backend run prisma:push",
-    "prisma:seed": "pnpm --filter=backend run prisma:seed --",
-    "prisma:migrate": "pnpm --filter=backend run prisma:migrate",
+    "prisma:seed": "pnpm --filter=backend run prisma:core:seed --",
+    "prisma:migrate": "pnpm --filter=backend run prisma:core:migrate",
     "db:resequence": "pnpm --filter=backend run db:resequence",
     "db:repair-canvas": "pnpm --filter=backend run db:repair-canvas --"
   },
@@ -51,7 +50,7 @@
   },
   "packageManager": "pnpm@11.5.0+sha512.dbfcc4f81cf48597afd4bc391ffdf12c11f1a9fb83a395bfa6b0a2d9cc2fd8ffebafdb1ccbd529632153f793904c2615b7f09fe1a345473fd1c35845172a8eb1",
   "devDependencies": {
-    "@biomejs/biome": "^2.4.12",
+    "@biomejs/biome": "^2.4.16",
     "@types/node": "^24.12.2",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",

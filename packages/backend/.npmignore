@@ -2,7 +2,6 @@
 .env
 .env.example
 examples.rest
-prisma.config.ts
 tsconfig.build.json
 tsconfig.json
 vitest.config.ts

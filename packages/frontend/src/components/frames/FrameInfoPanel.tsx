@@ -4,6 +4,7 @@ import {
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import {
   useAuthContext,
@@ -15,7 +16,6 @@ import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import { TooltipDynamicButton } from "../action-panel/tabs/ActionPanelTooltip";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { Button, DynamicButton } from "../button";
@@ -32,7 +32,7 @@ const FrameInfoPanelBodyShell = styled("div")`
   transition-property: grid-template-rows, transform;
   transition-timing-function: var(--ease-out-cubic);
 
-  &[aria-expanded="false"] {
+  @container --frame-tabpanel (height < 30rem) {
     grid-template-rows: 0fr;
     pointer-events: none;
     transform: translateY(3rem);
@@ -153,7 +153,7 @@ function FrameInfoPanelBody({
     const color = hexStringToPixelColor(selectedFrame.id);
 
     return (
-      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
+      <FrameInfoPanelBodyShell>
         <ActionPanelTabBody>
           <FrameInfoCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
@@ -167,15 +167,15 @@ function FrameInfoPanelBody({
           )}
           <ButtonWrapper>
             {selectedFrame.owner.type !== FrameOwnerType.System && (
-              <TooltipDynamicButton
-                color={color}
-                tooltipTitle="Copied"
-                onAction={() => {
-                  navigator.clipboard.writeText(frameUrl);
+              <DynamicButton
+                color={hexStringToPixelColor(selectedFrame.id)}
+                onAction={async () => {
+                  void (await navigator.clipboard.writeText(frameUrl));
+                  toast.success("Copied frame link");
                 }}
               >
                 Copy frame link
-              </TooltipDynamicButton>
+              </DynamicButton>
             )}
             <a href={downloadLink} target="_blank" rel="noopener noreferrer">
               <DynamicButton
@@ -194,7 +194,7 @@ function FrameInfoPanelBody({
 
   if (user) {
     return (
-      <FrameInfoPanelBodyShell aria-expanded={drawerIsLarge}>
+      <FrameInfoPanelBodyShell>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
           <StyledButton

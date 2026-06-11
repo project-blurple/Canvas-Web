@@ -109,3 +109,7 @@ export function calculateScale(pixelCount: number): number {
   if (pixelCount <= 360_000) return 2; // 600x600
   return 1;
 }
+
+export function isUnauthorizedError(error: unknown) {
+  return (error as { response?: { status?: number } }).response?.status === 401;
+}

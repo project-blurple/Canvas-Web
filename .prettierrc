@@ -1,3 +1,4 @@
 {
-    "experimentalTernaries": true
+  "experimentalTernaries": true,
+  "proseWrap": "always"
 }

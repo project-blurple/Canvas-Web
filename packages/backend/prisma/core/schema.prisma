@@ -1,10 +1,17 @@
 generator client {
   provider            = "prisma-client"
-  output              = "../src/client/generated"
+  output              = "../../src/client/core/generated"
   previewFeatures     = ["views"]
   moduleFormat        = "cjs"
   engineType          = "client"
   importFileExtension = ""
+}
+
+generator kysely {
+  provider           = "prisma-kysely"
+  output             = "../../src/client/core/kysely"
+  fileName           = "types.ts"
+  bigIntTypeOverride = "bigint"
 }
 
 datasource db {
@@ -18,28 +25,29 @@ model blacklist {
 }
 
 model canvas {
-  id                Int                 @id @default(autoincrement())
-  name              String
-  locked            Boolean             @default(true)
+  id                       Int                        @id @default(autoincrement())
+  name                     String
+  locked                   Boolean                    @default(true)
   // It's theoretically possible to have a canvas without an event. E.g. An off-season canvas
-  event_id          Int?
-  event             event?              @relation(fields: [event_id], references: [id])
-  width             Int
-  height            Int
-  cooldown_length   Int?
+  event_id                 Int?
+  event                    event?                     @relation(fields: [event_id], references: [id])
+  width                    Int
+  height                   Int
+  cooldown_length          Int?
   // The top-left coordinate from the user-perspective. For users, this is (1, 1)
-  start_coordinates Int[]               @default([1, 1])
-  all_colors_global Boolean             @default(false)
-  frames            frame[]
-  pixels            pixel[]
-  history           history[]
-  cooldowns         cooldown[]
-  user_stats        user_stats[]
-  guild_stats       guild_stats[]
-  leaderboard       leaderboard[]
-  leaderboard_guild leaderboard_guild[]
-  notices           notice[]
-  canvas_stats      canvas_stats?
+  start_coordinates        Int[]                      @default([1, 1])
+  all_colors_global        Boolean                    @default(false)
+  frames                   frame[]
+  pixels                   pixel[]
+  history                  history[]
+  cooldowns                cooldown[]
+  user_stats               user_stats[]
+  guild_stats              guild_stats[]
+  leaderboard              leaderboard[]
+  leaderboard_guild        leaderboard_guild[]
+  notices                  notice[]
+  canvas_stats             canvas_stats?
+  history_snapshot_windows history_snapshot_windows[]
 }
 
 model color {
@@ -337,4 +345,14 @@ view event_stats {
   total_pixels Int
 
   @@unique([event_id])
+}
+
+view history_snapshot_windows {
+  canvas_id     Int
+  canvas        canvas   @relation(fields: [canvas_id], references: [id])
+  bucket_start  DateTime @db.Timestamptz(6)
+  bucket_end    DateTime @db.Timestamptz(6)
+  history_count Int
+
+  @@unique([canvas_id, bucket_start])
 }

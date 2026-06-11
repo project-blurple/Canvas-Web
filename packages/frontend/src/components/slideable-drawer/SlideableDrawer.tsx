@@ -44,10 +44,13 @@ const DrawerWrapper = styled("div")<{ drawerHeight: number }>`
 
 const HandleWrapper = styled("div")`
   cursor: grab;
-  padding-block: 0.8rem 0;
-  padding-inline: auto;
   display: flex;
+  padding-block-start: 0.8rem;
+  padding-inline: auto;
   place-content: center;
+  &:active {
+    cursor: grabbing;
+  }
 `;
 
 const Handle = styled("div")`

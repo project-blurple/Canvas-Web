@@ -11,6 +11,10 @@ const { updateCachedCanvasPixelMock } = vi.hoisted(() => ({
   updateCachedCanvasPixelMock: vi.fn(),
 }));
 
+const { snapshotCursorUpsertMock } = vi.hoisted(() => ({
+  snapshotCursorUpsertMock: vi.fn(async () => ({})),
+}));
+
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
@@ -20,6 +24,14 @@ vi.mock("@/index", () => ({
 
 vi.mock("./canvasService", () => ({
   updateCachedCanvasPixel: updateCachedCanvasPixelMock,
+}));
+
+vi.mock("@/client/snapshots", () => ({
+  snapshotPrisma: {
+    snapshot_cursor: {
+      upsert: snapshotCursorUpsertMock,
+    },
+  },
 }));
 
 /// These tests have been skipped as they are tightly coupled with the seeding data, which make these rather difficult to maintain.
