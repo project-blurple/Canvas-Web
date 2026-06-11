@@ -144,9 +144,7 @@ describe("Discord auth (e2e)", () => {
       const profileCookie = getSetCookies(response).find((cookie) =>
         cookie.startsWith("profile="),
       ) as string;
-      const [profileValue] = profileCookie
-        .slice("profile=".length)
-        .split(";");
+      const [profileValue] = profileCookie.slice("profile=".length).split(";");
 
       expect(JSON.parse(decodeURIComponent(profileValue))).toMatchObject({
         isCanvasAdmin: true,
@@ -330,9 +328,7 @@ describe("Discord auth (e2e)", () => {
         "/api/v1/discord/guilds/permissions-map",
       );
       expect(followUp.status).toBe(200);
-      expect(followUp.body.guilds[MANAGED_GUILD_ID].name).toBe(
-        "Renamed Guild",
-      );
+      expect(followUp.body.guilds[MANAGED_GUILD_ID].name).toBe("Renamed Guild");
       expect(mockDiscord.callCounts.guilds).toBe(2);
     });
   });
