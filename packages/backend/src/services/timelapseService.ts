@@ -411,10 +411,10 @@ async function appendTimelapseEndCardTail({
   }
 
   const tempPrefix = `${process.pid}-${Date.now()}`;
-  const tempTimelapsePath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.timelapse-${tempPrefix}.mp4`;
-  const tempTailPath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.tail-${tempPrefix}.mp4`;
-  const tempLastFramePath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.last-frame-${tempPrefix}.png`;
-  const tempEndCardPath = `${TIMELAPSE_END_CARD_IMAGE_PATH}.end-card-${tempPrefix}.png`;
+  const tempTimelapsePath = join(tmpdir(), `timelapse-${tempPrefix}.mp4`);
+  const tempTailPath = join(tmpdir(), `tail-${tempPrefix}.mp4`);
+  const tempLastFramePath = join(tmpdir(), `last-frame-${tempPrefix}.png`);
+  const tempEndCardPath = join(tmpdir(), `end-card-${tempPrefix}.png`);
   const transitionDurationSeconds = END_CARD_TRANSITION_DURATION_MS / 1000;
   const endCardDisplayDurationSeconds = END_CARD_DISPLAY_DURATION_MS / 1000;
   const endHoldDurationSeconds = endHoldDurationMs / 1000;
