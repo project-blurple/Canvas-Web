@@ -1,13 +1,14 @@
 "use client";
 
-import type {
-  CanvasInfo,
-  Frame,
-  PixelHistoryOverlayPixel,
-  PlacePixelSocket,
-  Point,
+import {
+  type CanvasInfo,
+  type Frame,
+  type PixelColor,
+  type PixelHistoryOverlayPixel,
+  type PlacePixelSocket,
+  type Point,
+  SocketEvents,
 } from "@blurple-canvas-web/types";
-import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
@@ -29,6 +30,7 @@ import {
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import { useEventListener } from "@/hooks/useEventListener";
 import { socket } from "@/socket";
 import { CANVAS_WRAPPER_CLASS_NAME, clamp, normalizeFrameBounds } from "@/util";
 import type { ActionPanel } from "../action-panel";
@@ -466,9 +468,9 @@ export default function CanvasView({
     coords,
     isReticleVisible,
     offset,
-    setSelectedPixelColor,
     setCoords,
     setOffset,
+    setSelectedPixelColor,
     setZoom,
     zoom,
   } = useCanvasViewContext();
@@ -517,38 +519,31 @@ export default function CanvasView({
 
   const canUseFullscreen = useIsFullscreenAvailable();
 
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const container = containerRef.current;
-      const fullscreenDocument = document as Document & {
-        webkitFullscreenElement?: Element | null;
-      };
-      const isCanvasFullscreen =
-        !!container &&
-        (document.fullscreenElement === container ||
-          fullscreenDocument.webkitFullscreenElement === container);
-      setIsFullscreen(isCanvasFullscreen);
-      if (!isCanvasFullscreen) {
-        setFullscreenPanelVisible(false);
-      }
+  const handleFullscreenChange = useCallback(() => {
+    const container = containerRef.current;
+    const fullscreenDocument = document as Document & {
+      webkitFullscreenElement?: Element | null;
     };
-
-    document.addEventListener("fullscreenchange", handleFullscreenChange);
-    // webkit fallback event for older Safari
-    document.addEventListener(
-      "webkitfullscreenchange",
-      handleFullscreenChange as EventListener,
-    );
-    handleFullscreenChange();
-
-    return () => {
-      document.removeEventListener("fullscreenchange", handleFullscreenChange);
-      document.removeEventListener(
-        "webkitfullscreenchange",
-        handleFullscreenChange as EventListener,
-      );
-    };
+    const isCanvasFullscreen =
+      !!container &&
+      (document.fullscreenElement === container ||
+        fullscreenDocument.webkitFullscreenElement === container);
+    setIsFullscreen(isCanvasFullscreen);
+    if (!isCanvasFullscreen) setFullscreenPanelVisible(false);
   }, [containerRef, setFullscreenPanelVisible]);
+
+  useEffect(() => {
+    handleFullscreenChange();
+  }, [handleFullscreenChange]);
+
+  const documentRef = useRef<Document>(document);
+  useEventListener("fullscreenchange", handleFullscreenChange, documentRef);
+  /** WebKit fallback event for older Safari */
+  useEventListener(
+    "webkitfullscreenchange" as "fullscreenchange",
+    handleFullscreenChange,
+    documentRef,
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: legacy
   const handleLoadImage = useCallback(
@@ -893,14 +888,13 @@ export default function CanvasView({
     [initialZoom],
   );
 
-  useEffect(() => {
-    /**
-     * When we zoom, not only do we need to scale the image, but to give the appearing of zooming
-     * in on a specific pixel, we need to offset the image so that the pixel we're zooming in on
-     * stays in the same place on the screen after the zoom.
-     */
-    const container = containerRef.current;
-    const handleWheel = (event: WheelEvent): void => {
+  /**
+   * When we zoom, not only do we need to scale the image, but to give the appearing of zooming
+   * in on a specific pixel, we need to offset the image so that the pixel we're zooming in on
+   * stays in the same place on the screen after the zoom.
+   */
+  const handleWheel = useCallback(
+    (event: WheelEvent): void => {
       event.preventDefault();
       // Ensures that the handler can be added to a parent element but only operates on the canvas image wrapper.
       // Applying the handler to lower elements for some isn't consistently picked up in certain browsers (Firefox and Chrome).
@@ -920,14 +914,10 @@ export default function CanvasView({
         1 + SCALE_FACTOR * Math.max(Math.abs(event.deltaY), 1);
       const scale = event.deltaY > 0 ? 1 / scaleMagnitude : 1 * scaleMagnitude;
       handleZoom(scale, pointerPosition, elem);
-    };
-
-    container?.addEventListener("wheel", handleWheel, {
-      passive: false,
-    });
-
-    return () => container?.removeEventListener("wheel", handleWheel);
-  }, [handleZoom, containerRef]);
+    },
+    [handleZoom],
+  );
+  useEventListener("wheel", handleWheel, containerRef, { passive: false });
 
   /********************************
    * PANNING FUNCTIONALITY.       *
@@ -1123,8 +1113,9 @@ export default function CanvasView({
         !(event.currentTarget instanceof HTMLElement) ||
         !event.isPrimary ||
         event.button !== 0
-      )
+      ) {
         return;
+      }
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
       const relativeMousePos = getRelativePointerPosition(canvas, event);
@@ -1139,6 +1130,7 @@ export default function CanvasView({
     },
     [zoom, setCoords],
   );
+  useEventListener("pointerdown", handleCanvasClick, canvasImageWrapperRef);
 
   useEffect(
     function sampleCurrentPixel() {
@@ -1158,19 +1150,6 @@ export default function CanvasView({
     },
     [coords, setSelectedPixelColor],
   );
-
-  useEffect(() => {
-    canvasImageWrapperRef.current?.addEventListener(
-      "pointerdown",
-      handleCanvasClick,
-    );
-
-    return () =>
-      canvasImageWrapperRef.current?.removeEventListener(
-        "pointerdown",
-        handleCanvasClick,
-      );
-  }, [handleCanvasClick]);
 
   const reticleOffset = calculateReticleOffset(coords);
 
@@ -1290,7 +1269,6 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
-
         {showSelectedBounds && (
           <SelectedBoundsOverlay
             canvasWidth={canvas.width}
@@ -1305,7 +1283,6 @@ export default function CanvasView({
             zoom={zoom}
           />
         )}
-
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1324,9 +1301,7 @@ export default function CanvasView({
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
         </CanvasImageWrapper>
-
         <PixelGrid zoom={zoom} hidden={!isGridVisible} />
-
         <ComplexSearchOverlay
           canvasHeight={canvas.height}
           canvasWidth={canvas.width}
