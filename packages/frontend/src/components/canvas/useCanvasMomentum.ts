@@ -22,6 +22,9 @@ const PAN_DECAY = 0.75;
  */
 const PAN_STOP_THRESHOLD = 0.1;
 
+const prefersReducedMotion = () =>
+  globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 interface UseCanvasMomentumParams {
   setOffset: Dispatch<SetStateAction<Point>>;
   clampOffset: (offset: Point, zoom: number) => Point;
@@ -85,16 +88,36 @@ export function useCanvasMomentum({
     frameRef.current ??= requestAnimationFrame(step);
   }, [step]);
 
+  /** Apply `delta` in a single jump, without animating. */
+  const snapBy = useCallback(
+    (delta: Point) => {
+      setOffset((prevOffset) =>
+        clampOffset(addPoints(prevOffset, delta), zoomRef.current),
+      );
+    },
+    [setOffset, clampOffset, zoomRef],
+  );
+
   const fling = useCallback(
     (velocity: Point) => {
+      if (prefersReducedMotion()) {
+        // Jump straight to where the decaying animation would have landed:
+        // the geometric series sums to velocity / (1 - PAN_DECAY).
+        snapBy(multiplyPoint(velocity, 1 / (1 - PAN_DECAY)));
+        return;
+      }
       velocityRef.current = velocity;
       ensureRunning();
     },
-    [ensureRunning],
+    [ensureRunning, snapBy],
   );
 
   const glideBy = useCallback(
     (delta: Point) => {
+      if (prefersReducedMotion()) {
+        snapBy(delta);
+        return;
+      }
       // A geometric series with ratio PAN_DECAY sums to v0 / (1 - PAN_DECAY), so
       // launching at delta * (1 - PAN_DECAY) lands the offset on `delta`. Adding
       // to the current velocity lets rapid key presses build on an in-flight
@@ -103,7 +126,7 @@ export function useCanvasMomentum({
       velocityRef.current = addPoints(velocityRef.current, launchVelocity);
       ensureRunning();
     },
-    [ensureRunning],
+    [ensureRunning, snapBy],
   );
 
   // Cleanup only: cancel a pending frame if we unmount mid-animation.
