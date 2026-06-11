@@ -102,7 +102,7 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("passes typed and coerced data through to the handler on success", async () => {
     const response = await request(app.getHttpServer())
-      .post("/test/42?page=3")
+      .post("/api/v1/test/42?page=3")
       .send({ name: "hello" });
 
     expect(response.status).toBe(201);
@@ -115,7 +115,7 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("returns 400 with the body errors when the body is invalid", async () => {
     const response = await request(app.getHttpServer())
-      .post("/test/42?page=3")
+      .post("/api/v1/test/42?page=3")
       .send({ name: "" });
 
     expect(response.status).toBe(400);
@@ -127,7 +127,7 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("returns 400 with the query errors when the query is invalid", async () => {
     const response = await request(app.getHttpServer())
-      .post("/test/42?page=oops")
+      .post("/api/v1/test/42?page=oops")
       .send({ name: "hello" });
 
     expect(response.status).toBe(400);
@@ -138,7 +138,7 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("returns 400 with the params errors when the params are invalid", async () => {
     const response = await request(app.getHttpServer())
-      .post("/test/not-a-number?page=3")
+      .post("/api/v1/test/not-a-number?page=3")
       .send({ name: "hello" });
 
     expect(response.status).toBe(400);
@@ -149,7 +149,7 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("returns the issues of a single source when multiple sources are invalid", async () => {
     const response = await request(app.getHttpServer())
-      .post("/test/not-a-number?page=oops")
+      .post("/api/v1/test/not-a-number?page=oops")
       .send({ name: "" });
 
     expect(response.status).toBe(400);
@@ -162,21 +162,21 @@ describe("Zod validation & serialization (e2e)", () => {
 
   it("does not run the handler when validation fails", async () => {
     await request(app.getHttpServer())
-      .post("/test/not-a-number?page=3")
+      .post("/api/v1/test/not-a-number?page=3")
       .send({ name: "hello" });
 
     expect(handlerRuns).toBe(0);
   });
 
   it("works without any schemas (passes through immediately)", async () => {
-    const response = await request(app.getHttpServer()).get("/healthz");
+    const response = await request(app.getHttpServer()).get("/api/v1/healthz");
 
     expect(response.status).toBe(204);
   });
 
   it("rejects parameters that are not typed with a zod DTO", async () => {
     const response = await request(app.getHttpServer()).get(
-      "/test/unvalidated/123",
+      "/api/v1/test/unvalidated/123",
     );
 
     expect(response.status).toBe(500);
@@ -184,7 +184,9 @@ describe("Zod validation & serialization (e2e)", () => {
   });
 
   it("serializes @ZodResponse bodies and strips unknown keys", async () => {
-    const response = await request(app.getHttpServer()).get("/widgets/valid");
+    const response = await request(app.getHttpServer()).get(
+      "/api/v1/widgets/valid",
+    );
 
     expect(response.status).toBe(200);
     expect(response.body).toStrictEqual({ id: 1, name: "ok" });
@@ -197,7 +199,9 @@ describe("Zod validation & serialization (e2e)", () => {
       .spyOn(Logger.prototype, "error")
       .mockImplementation(() => {});
 
-    const response = await request(app.getHttpServer()).get("/widgets/invalid");
+    const response = await request(app.getHttpServer()).get(
+      "/api/v1/widgets/invalid",
+    );
 
     expect(response.status).toBe(500);
     expect(response.body).toStrictEqual({
