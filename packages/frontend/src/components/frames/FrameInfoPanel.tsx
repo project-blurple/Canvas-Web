@@ -81,7 +81,6 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
 export default function FrameInfoPanel({
   enabled = true,
   setActivePanel,
-  drawerIsLarge,
 }: {
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
@@ -92,20 +91,15 @@ export default function FrameInfoPanel({
       <FullWidthScrollView>
         <FrameList enabled={enabled} />
       </FullWidthScrollView>
-      <FrameInfoPanelBody
-        setActivePanel={setActivePanel}
-        drawerIsLarge={drawerIsLarge}
-      />
+      <FrameInfoPanelBody setActivePanel={setActivePanel} />
     </>
   );
 }
 
 function FrameInfoPanelBody({
   setActivePanel,
-  drawerIsLarge,
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
-  drawerIsLarge?: boolean;
 }) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();

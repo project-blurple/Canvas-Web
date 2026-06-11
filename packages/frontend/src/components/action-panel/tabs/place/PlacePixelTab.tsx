@@ -18,7 +18,6 @@ import {
   useSelectedColorContext,
 } from "@/contexts";
 import { usePalette, usePlaySound } from "@/hooks";
-import { useElementIsLarge } from "@/hooks/useElementIsLarge";
 import useTurnstileToken from "@/hooks/useTurnstileToken";
 import { getUserGuildIds } from "@/util";
 import { Button, DynamicAnchorButton } from "../../../button";
