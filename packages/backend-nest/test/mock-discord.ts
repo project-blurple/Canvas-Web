@@ -177,7 +177,8 @@ export const onUnhandledRequest = (
   request: Request,
   print: { warning(): void; error(): void },
 ): void => {
-  if (new URL(request.url).hostname.endsWith("discord.com")) {
+  const hostname = new URL(request.url).hostname;
+  if (["discord.com", "discordapp.com"].includes(hostname)) {
     print.error();
   }
 };
