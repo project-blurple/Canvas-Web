@@ -147,10 +147,9 @@ export async function runSnapshotSchedulerCycle(): Promise<{
     }
 
     const shouldGenerate =
-      !cursor || // No cursor means this is the first snapshot, so we should generate.
-      (cursor.dirty_from_timestamp ?
+      cursor.dirty_from_timestamp ?
         cursor.dirty_from_timestamp <= window.bucket_end // If dirty_from_timestamp exists, only generate if the snapshot window end is after it
-      : cursor.last_processed_timestamp < window.bucket_end); // If no dirty_from_timestamp, generate if last processed is before window end.
+      : cursor.last_processed_timestamp < window.bucket_end; // If no dirty_from_timestamp, generate if last processed is before window end.
 
     if (!shouldGenerate) {
       skipped += 1;
