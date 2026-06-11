@@ -39,9 +39,9 @@ next-env.d.ts
 !.env.*.example
 
 # Prisma generated files
-**/backend/src/client/generated/*
+**/backend/src/client/core/generated/*
 **/backend/src/client/snapshots/generated/*
-**/backend/src/client/kysely/*
+**/backend/src/client/core/kysely/*
 
 
 ################################################################################

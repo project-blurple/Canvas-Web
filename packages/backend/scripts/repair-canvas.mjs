@@ -74,7 +74,7 @@ function parseOptions(argv) {
 const label = (canvas) => `Canvas ${canvas.id} (${canvas.name})`;
 
 /**
- * @type {import("../src/client/generated/client").PrismaClient}
+ * @type {import("../src/client/core/generated/client").PrismaClient}
  */
 const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
 
@@ -82,7 +82,7 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(databaseUrl) });
  * Returns a Map<"x:y", color_id> with the most recent non-erased history color
  * for every in-bounds coordinate that has any history. Coordinates without
  * history are absent from the map and should be treated as blank.
- * @param {import("../src/client/generated/client").canvas} canvas
+ * @param {import("../src/client/core/generated/client").canvas} canvas
  */
 async function latestHistoryByCoord(canvas) {
   const rows = await prisma.$queryRaw`
@@ -98,7 +98,7 @@ async function latestHistoryByCoord(canvas) {
 }
 
 /**
- * @param {import("../src/client/generated/client").canvas} canvas
+ * @param {import("../src/client/core/generated/client").canvas} canvas
  */
 async function deleteOutOfBoundsPixels(canvas) {
   const { count } = await prisma.pixel.deleteMany({
@@ -117,7 +117,7 @@ async function deleteOutOfBoundsPixels(canvas) {
 
 /**
  * @param {number} canvasId
- * @param {import("../src/client/generated/client").pixel[]} pixels
+ * @param {import("../src/client/core/generated/client").pixel[]} pixels
  */
 async function upsertPixelsInBatches(canvasId, pixels) {
   for (let i = 0; i < pixels.length; i += BATCH_SIZE) {
@@ -137,7 +137,7 @@ async function upsertPixelsInBatches(canvasId, pixels) {
 }
 
 /**
- * @param {import("../src/client/generated/client").canvas} canvas
+ * @param {import("../src/client/core/generated/client").canvas} canvas
  */
 async function fillMissingBlanks(canvas) {
   const expected = canvas.width * canvas.height;
@@ -183,7 +183,7 @@ async function fillMissingBlanks(canvas) {
 }
 
 /**
- * @param {import("../src/client/generated/client").canvas} canvas
+ * @param {import("../src/client/core/generated/client").canvas} canvas
  */
 async function reconcileAgainstHistory(canvas) {
   const [historyByCoord, deleted] = await Promise.all([
