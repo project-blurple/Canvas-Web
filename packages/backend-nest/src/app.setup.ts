@@ -1,6 +1,8 @@
 import "@/common/bigint-json";
 
+import { VersioningType } from "@nestjs/common";
 import type { NestExpressApplication } from "@nestjs/platform-express";
+import { configureSession } from "@/auth/session.setup";
 import { type AppConfig, appConfig } from "@/config/app.config";
 
 /**
@@ -16,6 +18,11 @@ export function configureApp(
   // from X-Forwarded-For.
   app.set("trust proxy", 1);
   app.enableCors({ origin: frontendUrl, credentials: true });
+
+  app.setGlobalPrefix("api");
+  app.enableVersioning({ type: VersioningType.URI, defaultVersion: "1" });
+
+  configureSession(app);
 
   return app;
 }
