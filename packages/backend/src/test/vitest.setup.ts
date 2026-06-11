@@ -7,8 +7,8 @@ import {
 } from "kysely";
 import kyselyExtension from "prisma-extension-kysely";
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
-import { Prisma, PrismaClient } from "@/client/generated/client";
-import type { DB } from "@/client/kysely/types";
+import { Prisma, PrismaClient } from "@/client/core/generated/client";
+import type { DB } from "@/client/core/kysely/types";
 
 // biome-ignore lint/style/noNonNullAssertion: Database URL is required for tests to run
 const adapter = new PrismaPg(process.env.DATABASE_URL!);

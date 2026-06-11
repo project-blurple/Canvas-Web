@@ -1,44 +1,49 @@
 "use client";
 
-import {
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  FormControlLabel,
-  styled,
-} from "@mui/material";
+import { styled } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts";
 import { useEventInfo } from "@/hooks";
 import type { ComplexPixelHistoryParams } from "@/hooks/queries/usePixelHistory";
-import { Button } from "../button";
+import { BasicButton, DestructiveButton } from "../button";
+import Dialog from "../Dialog";
 
 const StyledDialog = styled(Dialog)`
-  & .MuiDialog-paper {
-    box-shadow: none;
-    background-image: none;
+  gap: 0.75rem;
+
+  h2 {
+    color: var(--discord-white);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
   }
 `;
 
-const StyledButton = styled(Button)`
-  color: white;
-
-  &:hover,
-  &:focus-visible {
-    border-color: oklch(from var(--discord-white) l c h / 36%);
-  }
+const ButtonRow = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-block-start: 1rem;
 `;
 
-const RedButton = styled(StyledButton)`
-  &:hover,
-  &:focus-visible {
-    background-color: rgb(255, 0, 0);
+const StyledLabel = styled("label")`
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 1;
+
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
 
@@ -118,12 +123,15 @@ export default function ComplexSearchEraseHistory({
     setIsEraseConfirmOpen(false);
     const shouldBlockAuthors = blockWhileEraseRef.current?.checked ?? false;
 
-    try {
-      await performErase(shouldBlockAuthors);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to erase history");
-    }
+    toast.promise(performErase(shouldBlockAuthors), {
+      loading: `Erasing ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }...`,
+      success: `Successfully erased ${entriesCount.toLocaleString()} history ${
+        entriesCount !== 1 ? "entries" : "entry"
+      }${shouldBlockAuthors && " and blocked their authors"}.`,
+      error: `Couldn’t erase history`,
+    });
   }
 
   function handleCancelErase() {
@@ -134,45 +142,35 @@ export default function ComplexSearchEraseHistory({
 
   return (
     <>
-      <RedButton disabled={isDisabled} onClick={handleEraseHistory}>
+      <DestructiveButton disabled={isDisabled} onClick={handleEraseHistory}>
         Erase {entriesCount.toLocaleString()} history{" "}
         {entriesCount !== 1 ? "entries" : "entry"}
-      </RedButton>
+      </DestructiveButton>
       <StyledDialog
         open={isEraseConfirmOpen}
-        onClose={handleCancelErase}
-        aria-labelledby="erase-history-dialog-title"
-        aria-describedby="erase-history-dialog-description"
+        onRequestClose={handleCancelErase}
       >
-        <DialogTitle id="erase-history-dialog-title">
-          Erase history?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="erase-history-dialog-description">
-            Delete
-            {entriesCount.toLocaleString()} history&nbsp;
-            {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
-          </DialogContentText>
-          <FormControlLabel
-            control={
-              <Checkbox
-                size="small"
-                defaultChecked={false}
-                slotProps={{
-                  input: {
-                    ref: blockWhileEraseRef,
-                  },
-                }}
-              />
-            }
-            label={`Add ${usersLength.toLocaleString()} user${usersLength !== 1 ? "s" : ""} to blocklist`}
+        <h2 id="erase-history-dialog-title">Erase history?</h2>
+        <p id="erase-history-dialog-description">
+          Delete {entriesCount.toLocaleString()} history&nbsp;
+          {entriesCount !== 1 ? "entries" : "entry"}? This cannot be undone.
+        </p>
+        <StyledLabel>
+          <input
+            type="checkbox"
+            ref={blockWhileEraseRef}
             disabled={entriesCount === 0}
           />
-        </DialogContent>
-        <DialogActions>
-          <StyledButton onClick={handleCancelErase}>Cancel</StyledButton>
-          <RedButton onClick={handleConfirmErase}>Erase</RedButton>
-        </DialogActions>
+          <span>
+            {`Add ${usersLength.toLocaleString()} ${usersLength !== 1 ? "users" : "user"} to blocklist`}
+          </span>
+        </StyledLabel>
+        <ButtonRow>
+          <BasicButton onClick={handleCancelErase}>Cancel</BasicButton>
+          <DestructiveButton onClick={handleConfirmErase}>
+            Erase
+          </DestructiveButton>
+        </ButtonRow>
       </StyledDialog>
     </>
   );

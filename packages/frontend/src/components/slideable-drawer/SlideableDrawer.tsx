@@ -22,14 +22,15 @@ const DrawerWrapper = styled("div")<{ drawerHeight: number }>`
     border-radius: var(--card-border-radius);
     border: var(--card-border);
     background-color: var(--discord-legacy-not-quite-black);
-
-    position: absolute;
-    width: 100%;
+    bottom: 0;
     display: flex;
     flex-direction: column;
     gap: 0;
-    bottom: 0;
-    transition: height 0.5s ease;
+    position: absolute;
+    transition-duration: var(--transition-duration-slow);
+    transition-property: height;
+    transition-timing-function: var(--ease-out-quad);
+    width: 100%;
     &:active {
       transition: none;
     }
@@ -43,10 +44,13 @@ const DrawerWrapper = styled("div")<{ drawerHeight: number }>`
 
 const HandleWrapper = styled("div")`
   cursor: grab;
-  padding-block: 0.8rem 0;
-  padding-inline: auto;
   display: flex;
+  padding-block-start: 0.8rem;
+  padding-inline: auto;
   place-content: center;
+  &:active {
+    cursor: grabbing;
+  }
 `;
 
 const Handle = styled("div")`

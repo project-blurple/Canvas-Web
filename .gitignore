@@ -45,9 +45,38 @@ next-env.d.ts
 !.env.*.example
 
 # Prisma generated files
-**/backend/src/client/generated/*
+**/backend/src/client/core/generated/*
 **/backend/src/client/snapshots/generated/*
-**/backend/src/client/kysely/*
+**/backend/src/client/core/kysely/*
+
+# IDEs and editors
+.idea/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Temp directories
+.temp
+.tmp
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # IDEs and editors
 .idea/

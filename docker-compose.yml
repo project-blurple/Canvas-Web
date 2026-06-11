@@ -1,4 +1,13 @@
 services:
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+      target: migrator
+    env_file:
+      - ./packages/backend/.env
+    restart: "no"
+
   backend:
     build:
       context: .
@@ -7,6 +16,7 @@ services:
         PORT: 8000
     volumes:
       - ./packages/backend/static:/app/static
+      - backend_snapshot_data:/app/data/snapshots
     env_file:
       - ./packages/backend/.env
     environment:
@@ -16,6 +26,9 @@ services:
       - OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://jaeger:4318/v1/traces
     ports:
       - 8000:8000
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
 
   frontend:
     build:
@@ -98,3 +111,4 @@ volumes:
   caddy_data:
   caddy_config:
   opensearch_data:
+  backend_snapshot_data:

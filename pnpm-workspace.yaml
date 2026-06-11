@@ -8,12 +8,10 @@ packages:
 
 injectWorkspacePackages: true
 
-overrides:
-  protobufjs: ^7.5.5
-
 allowBuilds:
   "@nestjs/core": false
   "@prisma/engines": false
+  better-sqlite3: true
   "@scarf/scarf": false
   "@swc/core": false
   cpu-features: false

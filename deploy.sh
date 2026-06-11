@@ -6,6 +6,7 @@ docker container prune -f
 
 docker image rm blurple-canvas-web-backend
 docker image rm blurple-canvas-web-frontend
+docker image rm blurple-canvas-web-migrator
 
 git pull
 
