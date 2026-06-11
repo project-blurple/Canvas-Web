@@ -29,6 +29,11 @@
       "includes": [
         "packages/backend-nest/**"
       ],
+      "javascript": {
+        "parser": {
+          "unsafeParameterDecoratorsEnabled": true
+        }
+      },
       "linter": {
         "rules": {
           "style": {
