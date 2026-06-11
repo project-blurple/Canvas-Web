@@ -3,21 +3,10 @@ import {
   type GuildData,
   type GuildOwnedFrame,
 } from "@blurple-canvas-web/types";
-import {
-  Autocomplete,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-  InputLabel,
-  TextField,
-  ToggleButton,
-  ToggleButtonGroup,
-} from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { partition } from "es-toolkit";
 import {
   type Dispatch,
   type SetStateAction,
@@ -26,6 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import {
   useAuthContext,
@@ -36,25 +26,78 @@ import {
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
 import {
-  hexStringToPixelColor,
+  isUnauthorizedError,
   normalizeFrameBounds,
   type ViewBounds,
 } from "@/util";
+
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
-import CoordinatesCard from "../action-panel/tabs/CoordinatesCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { DynamicButton } from "../button";
-import { addPoints, tupleToPoint } from "../canvas/point";
+import BoundsSelect from "../BoundsSelect/BoundsSelect";
+import { BasicButton, Button, DestructiveButton } from "../button";
+import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const EditContainer = styled("div")`
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+`;
+
+const InputWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+`;
+
+const InputLabel = styled("label")`
+  opacity: 0.75;
+  font-size: 0.875rem;
+`;
+
+const OwnerTypeOptions = styled("div")`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const OwnerTypeOption = styled("label")`
+  align-items: center;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 8px;
+  border: var(--card-border);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.875rem;
+  gap: 0.5rem;
+  padding-block: 0.5rem;
+  padding-inline: 0.75rem;
+  user-select: none;
+
+  input {
+    margin: 0;
+  }
+`;
+
+const TextInput = styled("input")`
+  border: var(--card-border);
+  padding-block: 6px;
+  padding-inline: 8px;
+  background-color: var(--discord-legacy-not-quite-black);
+`;
+
+const Select = styled("select")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 8px;
+  border: var(--card-border);
+  color: inherit;
+  padding-block: 6px;
+  padding-inline: 8px;
+  width: 100%;
 `;
 
 const PreviewContainer = styled("div")`
@@ -69,14 +112,32 @@ const EditPreviewCanvas = styled(PreviewCanvas)`
 
 const ButtonRow = styled("div")`
   display: flex;
-  gap: 0.5rem;
+  flex-direction: row-reverse;
+  gap: 0.5em;
   inline-size: 100%;
-  padding: 0;
+}
+`;
 
-  > * {
-    flex: 1 1 0;
-    min-width: 0;
+const StyledDialog = styled(Dialog)`
+  gap: 0.5rem;
+
+  h2 {
+    color: var(--discord-white);
+    font-size: 1.5rem;
+    font-weight: 600;
   }
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+`;
+
+const DialogButtons = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
 `;
 
 type GuildEntry = [string, GuildData];
@@ -105,28 +166,21 @@ function splitGuildsByFramePresence(
   const guildIdsWithFrames = new Set(
     guildFrames.map((frame) => frame.owner.guild.guild_id),
   );
-
-  return managedGuildEntries.reduce<[GuildEntry[], GuildEntry[]]>(
-    (acc, entry) => {
-      const [guildId] = entry;
-      if (guildIdsWithFrames.has(guildId)) {
-        acc[0].push(entry);
-      } else {
-        acc[1].push(entry);
-      }
-      return acc;
-    },
-    [[], []],
+  return partition(managedGuildEntries, ([guildId]) =>
+    guildIdsWithFrames.has(guildId),
   );
 }
 
+export type Mode = "create" | "edit";
+
 export default function FrameEditPanel({
   setActivePanel,
-  isCreateMode,
+  mode,
 }: {
   setActivePanel: Dispatch<SetStateAction<FramePanelMode>>;
-  isCreateMode: boolean;
+  mode: Mode;
 }) {
+  const isCreateMode = mode === "create";
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const queryClient = useQueryClient();
@@ -266,8 +320,20 @@ export default function FrameEditPanel({
     return [...withFrames, ...withoutFrames];
   }, [managedGuildEntries, guildFrames]);
 
-  const selectedGuildOption =
-    guildOptions.find((option) => option.guildId === selectedGuildId) ?? null;
+  const groupedGuildOptions = useMemo(() => {
+    return guildOptions.reduce<
+      Array<{ group: string; options: GuildOption[] }>
+    >((groups, option) => {
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup?.group === option.group) {
+        lastGroup.options.push(option);
+        return groups;
+      }
+
+      groups.push({ group: option.group, options: [option] });
+      return groups;
+    }, []);
+  }, [guildOptions]);
 
   const isDirty = useMemo(() => {
     if (!isDirtyTrackingReady) return false;
@@ -348,7 +414,15 @@ export default function FrameEditPanel({
   });
 
   const createFrameMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async ({
+      name,
+      ownerType,
+      guildId,
+    }: {
+      name: string;
+      ownerType: FrameOwnerType;
+      guildId: string;
+    }) => {
       if (!user) {
         throw new Error("Must be logged in to create a frame");
       }
@@ -356,13 +430,13 @@ export default function FrameEditPanel({
       const requestUrl = `${config.apiUrl}/api/v1/frame`;
 
       const owner =
-        selectedOwner === FrameOwnerType.Guild ?
-          { type: FrameOwnerType.Guild, id: selectedGuildId }
+        ownerType === FrameOwnerType.Guild ?
+          { type: FrameOwnerType.Guild, id: guildId }
         : { type: FrameOwnerType.User, id: user.id };
 
       const body = {
         canvasId: canvas.id,
-        name: frameName,
+        name,
         owner,
         x0: frameBounds?.left ?? 0,
         y0: frameBounds?.top ?? 0,
@@ -389,14 +463,65 @@ export default function FrameEditPanel({
   const handleDeleteButtonAction = () => {
     setIsDeleteConfirmOpen(true);
   };
+  const handleDeleteAction = async () => {
+    setIsDeleteConfirmOpen(false);
+    if (!frameId) return;
 
-  const handleSaveAction = async () => {
+    const deletePromise = deleteFrameMutation.mutateAsync(frameId);
+    toast.promise(deletePromise, {
+      loading: "Deleting frame…",
+      success: "Frame deleted",
+      error: (error) =>
+        isUnauthorizedError(error) ?
+          "Your session has expired. Please log in again."
+        : "Couldn’t delete frame",
+    });
+    await deletePromise;
+
+    setSelectedFrame(null);
+    closeEditor();
+  };
+
+  const handleFormSubmit: React.SubmitEventHandler<HTMLFormElement> = async (
+    event,
+  ) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+    const submittedName = String(formData.get("frameName") ?? "").trim();
+    const submittedOwner = String(formData.get("ownerType") ?? "user");
+    const submittedGuildId = String(formData.get("guildId") ?? "");
+
+    if (isCreateMode) {
+      try {
+        await createFrameMutation.mutateAsync({
+          name: submittedName,
+          ownerType: submittedOwner as FrameOwnerType,
+          guildId: submittedGuildId,
+        });
+      } catch (e) {
+        console.error(e);
+        if (
+          (e as { response?: { status?: number } }).response?.status === 401
+        ) {
+          alert("Your session has expired. Please log in again.");
+          return;
+        }
+
+        alert("Failed to create frame");
+        return;
+      }
+
+      closeEditor();
+      return;
+    }
+
     try {
       if (!frameId || !frameBounds) return;
 
       await saveFrameMutation.mutateAsync({
         id: frameId,
-        name: frameName,
+        name: submittedName,
         bounds: frameBounds,
       });
     } catch (e) {
@@ -409,44 +534,8 @@ export default function FrameEditPanel({
       alert("Failed to save frame changes");
       return;
     }
+
     setSelectedFrame(null);
-    closeEditor();
-  };
-
-  const handleDeleteAction = async () => {
-    setIsDeleteConfirmOpen(false);
-
-    try {
-      if (!frameId) return;
-
-      await deleteFrameMutation.mutateAsync(frameId);
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return;
-      }
-
-      alert("Failed to delete frame");
-    } finally {
-      setSelectedFrame(null);
-      closeEditor();
-    }
-  };
-
-  const handleCreateAction = async () => {
-    try {
-      await createFrameMutation.mutateAsync();
-    } catch (e) {
-      console.error(e);
-      if ((e as { response?: { status?: number } }).response?.status === 401) {
-        alert("Your session has expired. Please log in again.");
-        return;
-      }
-
-      alert("Failed to create frame");
-      return;
-    }
     closeEditor();
   };
 
@@ -498,187 +587,212 @@ export default function FrameEditPanel({
 
   return (
     <>
-      <FullWidthScrollView>
-        <ActionPanelTabBody>
-          <EditContainer>
-            <ActionPanelPrimitives.SectionHeading>
-              {isCreateMode ? "Create frame" : "Edit frame"}
-            </ActionPanelPrimitives.SectionHeading>
-            <TextField
-              label="Name"
-              onChange={(e) => setFrameName(e.target.value)}
-              required
-              value={frameName}
-              variant="outlined"
-            />
-            <InputLabel>Owned by</InputLabel>
-            <ToggleButtonGroup
-              color="primary"
-              value={selectedOwner}
-              exclusive
-              onChange={(_, value) => {
-                if (value) {
-                  setSelectedOwner(value);
-                }
-              }}
-              disabled={!isCreateMode} // Can't change owner after frame is created
-            >
-              <ToggleButton value={FrameOwnerType.User}>You</ToggleButton>
-              <ToggleButton value={FrameOwnerType.Guild}>Server</ToggleButton>
-            </ToggleButtonGroup>
-            {selectedOwner === FrameOwnerType.Guild && (
-              <Autocomplete
-                options={guildOptions}
-                value={selectedGuildOption}
-                groupBy={(option) => option.group}
-                getOptionLabel={(option) => option.guild.name}
-                isOptionEqualToValue={(option, value) =>
-                  option.guildId === value.guildId
-                }
-                onChange={(_, value) =>
-                  setSelectedGuildId(value?.guildId ?? "")
-                }
-                disabled={!isCreateMode} // Can't change owner after frame is created
-                fullWidth
-                renderInput={(params) => (
-                  <TextField {...params} label="Server" />
+      <form onSubmit={handleFormSubmit}>
+        <FullWidthScrollView>
+          <ActionPanelTabBody>
+            <EditContainer>
+              <ActionPanelPrimitives.SectionHeading>
+                {isCreateMode ? "Create frame" : "Edit frame"}
+              </ActionPanelPrimitives.SectionHeading>
+              <InputWrapper>
+                <InputLabel htmlFor="frameName">Name</InputLabel>
+                <TextInput
+                  id="frameName"
+                  type="text"
+                  onChange={(e) => setFrameName(e.target.value)}
+                  required
+                  defaultValue={frameName}
+                  name="frameName"
+                />
+              </InputWrapper>
+
+              <InputWrapper>
+                <InputLabel as="div">Owned by</InputLabel>
+                <OwnerTypeOptions role="radiogroup" aria-label="Owned by">
+                  <OwnerTypeOption htmlFor="owner-user">
+                    <input
+                      type="radio"
+                      id="owner-user"
+                      name="ownerType"
+                      value="user"
+                      checked={selectedOwner === FrameOwnerType.User}
+                      onChange={() => setSelectedOwner(FrameOwnerType.User)}
+                      disabled={!isCreateMode} // Can't change owner after frame is created
+                    />
+                    <span>You</span>
+                  </OwnerTypeOption>
+                  <OwnerTypeOption htmlFor="owner-guild">
+                    <input
+                      type="radio"
+                      id="owner-guild"
+                      name="ownerType"
+                      value="guild"
+                      checked={selectedOwner === FrameOwnerType.Guild}
+                      onChange={() => setSelectedOwner(FrameOwnerType.Guild)}
+                      disabled={!isCreateMode} // Can't change owner after frame is created
+                    />
+                    <span>Server</span>
+                  </OwnerTypeOption>
+                </OwnerTypeOptions>
+                {selectedOwner === FrameOwnerType.Guild && (
+                  <Select
+                    id="guildId"
+                    name="guildId"
+                    value={selectedGuildId}
+                    onChange={(event) => setSelectedGuildId(event.target.value)}
+                    disabled={!isCreateMode} // Can't change owner after frame is created
+                    required
+                  >
+                    <option value="" disabled>
+                      Select a server
+                    </option>
+                    {groupedGuildOptions.map((group) => (
+                      <optgroup key={group.group} label={group.group}>
+                        {group.options.map((option) => (
+                          <option key={option.guildId} value={option.guildId}>
+                            {option.guild.name}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </Select>
                 )}
-              />
-            )}
-            {frameBounds && (
+              </InputWrapper>
+              {frameBounds && (
+                <InputWrapper>
+                  <InputLabel as="div">Frame bounds</InputLabel>
+                  <BoundsSelect
+                    canvas={canvas}
+                    selectedBounds={frameBounds}
+                    setSelectedBounds={setFrameBounds}
+                    showFrameButton={false}
+                  />
+                </InputWrapper>
+              )}
+            </EditContainer>
+            <PreviewContainer>
+              <ActionPanelPrimitives.SectionHeading>
+                Preview
+              </ActionPanelPrimitives.SectionHeading>
+              {frameBounds ?
+                <EditPreviewCanvas
+                  ref={previewCanvasRef}
+                  width={Math.max(1, Math.round(frameBounds.width))}
+                  height={Math.max(1, Math.round(frameBounds.height))}
+                  style={{
+                    aspectRatio: `${Math.max(1, frameBounds.width)} / ${Math.max(1, frameBounds.height)}`,
+                  }}
+                  aria-label="Selected frame preview"
+                />
+              : <p>Select a frame to preview it.</p>}
+            </PreviewContainer>
+          </ActionPanelTabBody>
+        </FullWidthScrollView>
+        <ActionPanelTabBody>
+          <ButtonRow>
+            {!isCreateMode ?
               <>
-                <CoordinatesCard
-                  coordinates={addPoints(
-                    { x: frameBounds.left, y: frameBounds.top },
-                    tupleToPoint(canvas.startCoordinates),
-                  )}
-                />
-                <CoordinatesCard
-                  coordinates={addPoints(
-                    { x: frameBounds.right - 1, y: frameBounds.bottom - 1 },
-                    tupleToPoint(canvas.startCoordinates),
-                  )}
-                />
+                <Button
+                  type="submit"
+                  disabled={
+                    !frameName ||
+                    !frameBounds ||
+                    !isDirty ||
+                    saveFrameMutation.isPending ||
+                    deleteFrameMutation.isPending
+                  }
+                >
+                  Save
+                </Button>
+                <DestructiveButton
+                  onClick={handleDeleteButtonAction}
+                  type="button"
+                  disabled={
+                    deleteFrameMutation.isPending || saveFrameMutation.isPending
+                  }
+                >
+                  Delete
+                </DestructiveButton>
               </>
-            )}
-          </EditContainer>
-          <PreviewContainer>
-            <ActionPanelPrimitives.SectionHeading>
-              Preview
-            </ActionPanelPrimitives.SectionHeading>
-            {frameBounds ?
-              <EditPreviewCanvas
-                ref={previewCanvasRef}
-                width={Math.max(1, Math.round(frameBounds.width))}
-                height={Math.max(1, Math.round(frameBounds.height))}
-                style={{
-                  aspectRatio: `${Math.max(1, frameBounds.width)} / ${Math.max(1, frameBounds.height)}`,
-                }}
-                aria-label="Selected frame preview"
-              />
-            : <p>Select a frame to preview it.</p>}
-          </PreviewContainer>
+            : <BasicButton
+                type="submit"
+                disabled={
+                  !frameName ||
+                  !frameBounds ||
+                  (!selectedGuildId && selectedOwner === "guild") ||
+                  isAtMaxFrames || // Only restrict when creating, not when editing
+                  createFrameMutation.isPending
+                }
+              >
+                {isAtMaxFrames ? "Maximum frames created" : "Create"}
+              </BasicButton>
+            }
+          </ButtonRow>
+          <BasicButton
+            onClick={handleBackAction}
+            type="button"
+            disabled={
+              saveFrameMutation.isPending ||
+              deleteFrameMutation.isPending ||
+              createFrameMutation.isPending
+            }
+          >
+            Back
+          </BasicButton>
         </ActionPanelTabBody>
-      </FullWidthScrollView>
-      <ActionPanelTabBody>
-        <ButtonRow>
-          {!isCreateMode ?
-            <>
-              <DynamicButton
-                color={hexStringToPixelColor(frameId)}
-                onAction={handleSaveAction}
-                disabled={!frameName || !frameBounds || !isDirty}
-              >
-                Save
-              </DynamicButton>
-              <DynamicButton
-                color={hexStringToPixelColor(frameId)}
-                onAction={handleDeleteButtonAction}
-              >
-                Delete
-              </DynamicButton>
-            </>
-          : <DynamicButton
-              color={hexStringToPixelColor(frameId)}
-              onAction={handleCreateAction}
-              disabled={
-                !frameName ||
-                !frameBounds ||
-                (!selectedGuildId && selectedOwner === FrameOwnerType.Guild) ||
-                isAtMaxFrames // Only restrict when creating, not when editing
-              }
-            >
-              {isAtMaxFrames ? "Maximum frames created" : "Create"}
-            </DynamicButton>
-          }
-        </ButtonRow>
-        <DynamicButton color={null} onAction={handleBackAction}>
-          Back
-        </DynamicButton>
-      </ActionPanelTabBody>
-      <Dialog
+      </form>
+      <StyledDialog
         open={isBackConfirmOpen}
-        onClose={() => setIsBackConfirmOpen(false)}
+        onRequestClose={() => setIsBackConfirmOpen(false)}
         aria-labelledby="frame-edit-discard-dialog-title"
         aria-describedby="frame-edit-discard-dialog-description"
       >
-        <DialogTitle id="frame-edit-discard-dialog-title">
-          Discard changes?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="frame-edit-discard-dialog-description">
-            You have unsaved changes to this frame. Are you sure you want to go
-            back and discard them?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <DynamicButton
-            color={null}
-            onAction={() => setIsBackConfirmOpen(false)}
+        <h2 id="frame-edit-discard-dialog-title">Discard changes?</h2>
+        <p id="frame-edit-discard-dialog-description">
+          You have unsaved changes to this frame. Are you sure you want to go
+          back and discard them?
+        </p>
+        <DialogButtons>
+          <BasicButton
+            type="button"
+            onClick={() => setIsBackConfirmOpen(false)}
           >
             Keep editing
-          </DynamicButton>
-          <DynamicButton
-            color={null}
-            onAction={() => {
+          </BasicButton>
+          <DestructiveButton
+            type="button"
+            onClick={() => {
               setIsBackConfirmOpen(false);
               closeEditor();
             }}
           >
             Discard
-          </DynamicButton>
-        </DialogActions>
-      </Dialog>
-      <Dialog
+          </DestructiveButton>
+        </DialogButtons>
+      </StyledDialog>
+      <StyledDialog
         open={isDeleteConfirmOpen}
-        onClose={() => setIsDeleteConfirmOpen(false)}
+        onRequestClose={() => setIsDeleteConfirmOpen(false)}
         aria-labelledby="frame-edit-delete-dialog-title"
         aria-describedby="frame-edit-delete-dialog-description"
       >
-        <DialogTitle id="frame-edit-delete-dialog-title">
-          Delete frame?
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="frame-edit-delete-dialog-description">
-            This will permanently delete this frame. Are you sure you want to
-            continue?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <DynamicButton
-            color={null}
-            onAction={() => setIsDeleteConfirmOpen(false)}
+        <h2 id="frame-edit-delete-dialog-title">Delete frame?</h2>
+        <p id="frame-edit-delete-dialog-description">
+          This will permanently delete this frame. Are you sure you want to
+          continue?
+        </p>
+        <DialogButtons>
+          <BasicButton
+            type="button"
+            onClick={() => setIsDeleteConfirmOpen(false)}
           >
             Cancel
-          </DynamicButton>
-          <DynamicButton
-            color={hexStringToPixelColor(frameId)}
-            onAction={handleDeleteAction}
-          >
+          </BasicButton>
+          <DestructiveButton type="button" onClick={handleDeleteAction}>
             Delete
-          </DynamicButton>
-        </DialogActions>
-      </Dialog>
+          </DestructiveButton>
+        </DialogButtons>
+      </StyledDialog>
     </>
   );
 }

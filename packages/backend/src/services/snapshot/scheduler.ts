@@ -78,33 +78,51 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   const now = new Date();
   const cutoff = getWindowCutoff(now);
 
-  const readyWindows = await prisma.$kysely
-    .selectFrom("history_snapshot_windows")
-    .select(["canvas_id", "bucket_start", "bucket_end", "history_count"])
-    .where("bucket_end", "<=", cutoff)
-    .orderBy("canvas_id", "asc")
-    .orderBy("bucket_start", "asc")
-    .execute();
+  const canvasIds = config.snapshot.availableForCanvases;
+  if (canvasIds.length === 0) {
+    return { processed: 0, skipped: 0 };
+  }
 
-  // Fetch cursor state for all canvases from the sidecar before processing.
-  const cursors = await snapshotPrisma.snapshot_cursor.findMany();
+  const cursors = await snapshotPrisma.snapshot_cursor.findMany({
+    where: { canvas_id: { in: canvasIds } },
+  });
   const cursorByCanvas = new Map<number, snapshot_cursor>();
-  for (const c of cursors) cursorByCanvas.set(c.canvas_id, c);
+  for (const cursor of cursors) cursorByCanvas.set(cursor.canvas_id, cursor);
 
-  for (const canvasId in config.snapshot.availableForCanvases) {
-    const canvasIdNum = Number.parseInt(canvasId, 10);
-
-    if (!cursorByCanvas.has(canvasIdNum)) {
+  for (const canvasId of canvasIds) {
+    if (!cursorByCanvas.has(canvasId)) {
       const newCursor = await snapshotPrisma.snapshot_cursor.create({
         data: {
-          canvas_id: canvasIdNum,
+          canvas_id: canvasId,
           last_processed_timestamp: new Date(0),
           dirty_from_timestamp: null,
         },
       });
-      cursorByCanvas.set(canvasIdNum, newCursor);
+      cursorByCanvas.set(canvasId, newCursor);
     }
   }
+
+  const earliestTimestampMs = Math.min(
+    ...Array.from(cursorByCanvas.values(), (cursor) => {
+      const effectiveTimestamp =
+        cursor.dirty_from_timestamp ?? cursor.last_processed_timestamp;
+      return (
+        Math.floor(effectiveTimestamp.getTime() / SNAPSHOT_WINDOW_MS) *
+        SNAPSHOT_WINDOW_MS
+      );
+    }),
+  );
+  const lowerBound = new Date(earliestTimestampMs);
+
+  const readyWindows = await prisma.$kysely
+    .selectFrom("history_snapshot_windows")
+    .select(["canvas_id", "bucket_start", "bucket_end", "history_count"])
+    .where("canvas_id", "in", canvasIds)
+    .where("bucket_start", ">=", lowerBound)
+    .where("bucket_end", "<=", cutoff)
+    .orderBy("canvas_id", "asc")
+    .orderBy("bucket_start", "asc")
+    .execute();
 
   let processed = 0;
   let skipped = 0;
@@ -118,13 +136,20 @@ export async function runSnapshotSchedulerCycle(): Promise<{
     }
 
     // Decide generation based solely on window + cursor state (cursor map loaded above).
-    const cursor = cursorByCanvas.get(canvasId) ?? null;
+    const cursor = cursorByCanvas.get(canvasId);
+    if (!cursor) {
+      // This should never happen since we ensure cursors exist for all canvases above, but just in case...
+      console.warn(
+        `No snapshot cursor found for canvas ${canvasId}, skipping snapshot generation for this cycle.`,
+      );
+      skipped += 1;
+      continue;
+    }
 
     const shouldGenerate =
-      !cursor || // No cursor means this is the first snapshot, so we should generate.
-      (cursor.dirty_from_timestamp ?
+      cursor.dirty_from_timestamp ?
         cursor.dirty_from_timestamp <= window.bucket_end // If dirty_from_timestamp exists, only generate if the snapshot window end is after it
-      : cursor.last_processed_timestamp < window.bucket_end); // If no dirty_from_timestamp, generate if last processed is before window end.
+      : cursor.last_processed_timestamp < window.bucket_end; // If no dirty_from_timestamp, generate if last processed is before window end.
 
     if (!shouldGenerate) {
       skipped += 1;
@@ -150,30 +175,25 @@ export async function runSnapshotSchedulerCycle(): Promise<{
       lastIncludedHistoryAt,
     });
 
-    // Update or create the cursor: set last_processed_timestamp and clear dirty when applicable.
+    // Update the cursor using the current DB value, not the stale in-memory cursor.
     const snapshotAt = window.bucket_end;
-    if (cursor) {
-      const shouldClearDirty =
-        cursor.dirty_from_timestamp != null &&
-        snapshotAt.getTime() >= cursor.dirty_from_timestamp.getTime();
-
-      await snapshotPrisma.snapshot_cursor.update({
+    await snapshotPrisma.$transaction([
+      snapshotPrisma.snapshot_cursor.update({
         where: { canvas_id: canvasId },
         data: {
           last_processed_timestamp: snapshotAt,
-          dirty_from_timestamp:
-            shouldClearDirty ? null : cursor.dirty_from_timestamp,
         },
-      });
-    } else {
-      await snapshotPrisma.snapshot_cursor.create({
-        data: {
+      }),
+      snapshotPrisma.snapshot_cursor.updateMany({
+        where: {
           canvas_id: canvasId,
-          last_processed_timestamp: snapshotAt,
+          dirty_from_timestamp: { lte: snapshotAt },
+        },
+        data: {
           dirty_from_timestamp: null,
         },
-      });
-    }
+      }),
+    ]);
 
     processed += 1;
   }
