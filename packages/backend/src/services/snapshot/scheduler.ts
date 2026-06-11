@@ -208,7 +208,7 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   return { processed, skipped };
 }
 
-async function evictStaleInvalidatedTimelapses(): Promise<void> {
+export async function evictStaleInvalidatedTimelapses(): Promise<void> {
   const staleThreshold = new Date(Date.now() - TIMELAPSE_INVALIDATION_TTL_MS);
 
   const staleManifests = await snapshotPrisma.timelapse_manifest.findMany({
