@@ -262,9 +262,12 @@ export class DiscordGuildService {
       console.error("Body", await response.json());
 
       const retryAfter = response.headers.get("retry-after");
-      /** @privateRemarks TODO: Update to Intl.DurationFormat once we target es2025 */
       const suffix =
-        retryAfter ? ` after ${Number.parseFloat(retryAfter)} s` : "";
+        retryAfter ?
+          new Intl.DurationFormat("en-US", { style: "narrow" }).format({
+            seconds: Math.ceil(Number.parseFloat(retryAfter)),
+          })
+        : "";
       throw new TooManyRequestsError(
         `Rate limited by Discord API. Please try again${suffix}.`,
       );
