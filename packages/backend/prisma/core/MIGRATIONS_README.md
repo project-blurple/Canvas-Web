@@ -7,7 +7,8 @@ Migrate.
 
 ### 1. Modify Your Schema
 
-Update the `schema.prisma` file in `prisma/core/` with your desired database changes.
+Update the `schema.prisma` file in `prisma/core/` with your desired database
+changes.
 
 ```prisma
 model Post {
