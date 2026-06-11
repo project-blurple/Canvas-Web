@@ -36,6 +36,7 @@ import SearchUserEntries, {
   type SearchUserSortBy,
   type SearchUserSortDirection,
 } from "./SearchUserEntry";
+import { toast } from "sonner";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -451,7 +452,17 @@ export default function ComplexSearchTab({
                   </SortSelect>
                 </SortControlRow>
                 <DownloadButton
-                  onClick={handleCsvDownload}
+                  onClick={() => {
+                    const toastId = toast.loading("Generating CSV...");
+                    setTimeout(() => {
+                      try {
+                        handleCsvDownload();
+                        toast.success("CSV downloaded!", { id: toastId });
+                      } catch {
+                        toast.error("Failed to generate CSV", { id: toastId });
+                      }
+                    }, 0);
+                  }}
                   disabled={
                     !historyData?.users ||
                     Object.keys(historyData.users).length === 0
