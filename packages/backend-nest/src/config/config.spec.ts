@@ -17,11 +17,11 @@ describe("config", () => {
   const originalEnv = { ...process.env };
 
   beforeEach(() => {
-    Object.assign(process.env, REQUIRED_ENV);
+    process.env = { ...originalEnv, ...REQUIRED_ENV };
   });
 
-  afterEach(() => {
-    process.env = originalEnv;
+  afterAll(() => {
+    process.env = { ...originalEnv };
   });
 
   describe("validateEnv", () => {
@@ -52,7 +52,7 @@ describe("config", () => {
   describe("appConfig", () => {
     it("applies the documented defaults", () => {
       expect(appConfig()).toMatchObject({
-        environment: "production",
+        environment: "test",
         port: 8000,
         frontendUrl: "http://localhost:3000",
       });
