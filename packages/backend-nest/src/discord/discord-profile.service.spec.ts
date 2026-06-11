@@ -3,11 +3,11 @@ import { Test, type TestingModule } from "@nestjs/testing";
 import { DatabaseModule } from "@/common/database/database.module";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { AppConfigModule } from "@/config/config.module";
-import { DiscordProfileService } from "@/discord/discord-profile.service";
-import { DiscordModule } from "@/discord/discord.module";
 import { testPrisma as prisma } from "@/test/database";
 import { seedDiscordProfiles } from "@/test/seed/discord-profiles";
 import { seedUsers } from "@/test/seed/users";
+import { DiscordModule } from "./discord.module";
+import { DiscordProfileService } from "./discord-profile.service";
 
 describe("DiscordProfileService", () => {
   let moduleRef: TestingModule;
