@@ -1,4 +1,4 @@
-minimumReleaseAge: 10080
+minimumReleaseAge: 0 # 10080 TEMPORARY
 
 packages:
   - "packages/backend"
