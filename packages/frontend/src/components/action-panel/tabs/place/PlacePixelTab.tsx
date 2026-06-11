@@ -67,8 +67,8 @@ const containerQuery = css`
     display: none;
   }
 `;
-const StyledBotPlaceCommandCard = styled(BotPlaceCommandCard)(containerQuery);
 const StyledColorInfoCard = styled(ColorInfoCard)(containerQuery);
+const StyledBotPlaceCommandCard = styled(BotPlaceCommandCard)(containerQuery);
 
 const SwatchSkeleton = styled(Skeleton)`
   aspect-ratio: 1;
