@@ -7,20 +7,26 @@ import {
   Controller,
   Get,
   HttpCode,
+  HttpStatus,
   Inject,
+  Logger,
   Param,
   Post,
   Req,
   Res,
-  UseGuards,
 } from "@nestjs/common";
+import {
+  ApiFoundResponse,
+  ApiNoContentResponse,
+  ApiOperation,
+} from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import type { SessionData } from "express-session";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 import passport from "passport";
 import { z } from "zod";
 
-import { LoggedInGuard } from "@/auth/guards/logged-in.guard";
+import { RequiresLogin } from "@/auth/require-auth.decorator";
 import { UnauthorizedError } from "@/common/errors/unauthorized.error";
 import { type AppConfig, appConfig } from "@/config/app.config";
 import { type SessionConfig, sessionConfig } from "@/config/session.config";
@@ -45,6 +51,8 @@ class GuildsResponseDto extends createZodDto(GuildsResponseSchema) {}
 
 @Controller("discord")
 export class DiscordController {
+  private readonly logger = new Logger(DiscordController.name);
+
   constructor(
     @Inject(appConfig.KEY) private readonly appCfg: AppConfig,
     @Inject(sessionConfig.KEY) private readonly sessionCfg: SessionConfig,
@@ -54,11 +62,30 @@ export class DiscordController {
   ) {}
 
   @Get()
+  @HttpCode(HttpStatus.FOUND)
+  @ApiOperation({
+    summary: "Log in with Discord",
+    description:
+      "Starts the Discord OAuth flow. Open this URL in a browser (not via " +
+      "“Try it out”) to log in and receive a session cookie.",
+  })
+  @ApiFoundResponse({ description: "Redirect to Discord's consent screen" })
   async login(@Req() req: Request, @Res() res: Response): Promise<void> {
     await this.authenticate(req, res);
   }
 
   @Get("callback")
+  @HttpCode(HttpStatus.FOUND)
+  @ApiOperation({
+    summary: "Discord OAuth callback",
+    description:
+      "Completes the OAuth flow: stores the Discord tokens in the session, " +
+      "sets the `connect.sid` and `profile` cookies, and redirects to the " +
+      "frontend. Called by Discord, not directly.",
+  })
+  @ApiFoundResponse({
+    description: "Redirect to the frontend (or its sign-in page on failure)",
+  })
   async callback(@Req() req: Request, @Res() res: Response): Promise<void> {
     await this.authenticate(req, res, {
       failureRedirect: `${this.appCfg.frontendUrl}/signin`,
@@ -98,7 +125,8 @@ export class DiscordController {
   }
 
   @Get("guilds/:guildId/permissions")
-  @UseGuards(LoggedInGuard)
+  @RequiresLogin()
+  @ApiOperation({ summary: "Get the user's permissions for a guild" })
   @ZodResponse({ type: GuildPermissionsResponseDto })
   async guildPermissions(
     @Param() params: GuildIdParamsDto,
@@ -115,7 +143,10 @@ export class DiscordController {
   }
 
   @Get("guilds/permissions-map")
-  @UseGuards(LoggedInGuard)
+  @RequiresLogin()
+  @ApiOperation({
+    summary: "Get the cached permission flags for all of the user's guilds",
+  })
   @ZodResponse({ type: GuildsResponseDto })
   async guildPermissionsMap(@Req() req: Request) {
     const guildFlags = await this.discordTokenService.withDiscordAccessToken(
@@ -134,11 +165,12 @@ export class DiscordController {
 
   // TODO: ratelimiting
   @Post("guilds/refresh")
-  @UseGuards(LoggedInGuard)
-  async refreshGuilds(
-    @Req() req: Request,
-    @Res() res: Response,
-  ): Promise<void> {
+  @RequiresLogin()
+  @ApiOperation({
+    summary: "Refresh the cached guild permission flags from Discord",
+  })
+  @ZodResponse({ status: HttpStatus.OK, type: GuildsResponseDto })
+  async refreshGuilds(@Req() req: Request): Promise<GuildsResponseDto> {
     const guildFlags = await this.discordTokenService.withDiscordAccessToken(
       req.session,
       (accessToken) =>
@@ -148,15 +180,13 @@ export class DiscordController {
         ),
     );
 
-    // Respond before the guild-record sync so the DB writes don't add
-    // latency, mirroring the old route.
-    res
-      .status(200)
-      .json({ guilds: guildFlags } satisfies z.infer<
-        typeof GuildsResponseSchema
-      >);
+    this.discordGuildService
+      .syncDiscordGuildRecords(guildFlags)
+      .catch((error) => {
+        this.logger.error(`Failed to sync guild records: ${error}`);
+      });
 
-    await this.discordGuildService.syncDiscordGuildRecords(guildFlags);
+    return { guilds: guildFlags };
   }
 
   /**
@@ -164,7 +194,9 @@ export class DiscordController {
    * the existing session cookie.
    */
   @Post("logout")
-  @HttpCode(204)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: "Log out" })
+  @ApiNoContentResponse({ description: "Session invalidated" })
   async logout(@Req() req: Request): Promise<void> {
     await new Promise<void>((resolve, reject) => {
       req.logout((error) => {
