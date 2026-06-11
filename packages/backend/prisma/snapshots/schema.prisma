@@ -51,6 +51,7 @@ model timelapse_manifest {
   cache_key            String    @unique
   file_path            String
   file_size_bytes      Int?
+  invalidated_at       DateTime?
   created_at           DateTime  @default(now())
   updated_at           DateTime  @updatedAt
 

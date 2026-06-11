@@ -128,6 +128,7 @@ function buildTimelapseManifestRecord(
     cache_key: cacheKey,
     file_path: filePath,
     file_size_bytes: fileSize,
+    invalidated_at: null,
   } as const;
 }
 
@@ -142,17 +143,6 @@ async function readCachedTimelapse(filePath: string): Promise<Buffer | null> {
 
 // Map of cacheKey -> Promise resolving to generated Buffer for in-flight requests
 const inFlightTimelapses = new Map<string, Promise<Buffer>>();
-
-async function getSnapshotCursorUpdatedAt(
-  canvasId: CanvasInfo["id"],
-): Promise<Date | null> {
-  const cursor = await snapshotPrisma.snapshot_cursor.findUnique({
-    where: { canvas_id: canvasId },
-    select: { updated_at: true },
-  });
-
-  return cursor?.updated_at ?? null;
-}
 
 async function writeCachedTimelapseFile({
   finalPath,
@@ -841,20 +831,14 @@ async function getOrCreateTimelapseFromCache(
   const timelapseFileName =
     cacheParams.raw ? `${cacheKey}.webm` : `${cacheKey}.mp4`;
   const timelapseFilePath = getTimelapseVideoPath(canvasId, timelapseFileName);
-  const currentCursorUpdatedAt = await getSnapshotCursorUpdatedAt(canvasId);
 
   const existingCache = await snapshotPrisma.timelapse_manifest.findUnique({
     where: { cache_key: cacheKey },
   });
 
-  if (
-    existingCache &&
-    currentCursorUpdatedAt &&
-    existingCache.updated_at >= currentCursorUpdatedAt
-  ) {
+  if (existingCache?.invalidated_at === null) {
     const cachedBuffer = await readCachedTimelapse(existingCache.file_path);
     if (cachedBuffer) {
-      // Return from cache
       return cachedBuffer;
     }
   }
