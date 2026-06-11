@@ -43,11 +43,20 @@ const StyledCopyIcon = styled(CopyIcon)`
   inline-size: 1.5rem;
 `;
 
-export default function BotCommandCard({ command }: { command: string }) {
+interface BotCommandCardProps extends React.ComponentPropsWithRef<
+  typeof Wrapper
+> {
+  command: string;
+}
+
+export default function BotCommandCard({
+  command,
+  ...props
+}: BotCommandCardProps) {
   if (config.showBotCommands === false) return null;
 
   return (
-    <Wrapper>
+    <Wrapper {...props}>
       <code>{command}</code>
       <CopyButton onClick={() => navigator.clipboard.writeText(command)}>
         <StyledCopyIcon aria-hidden />
@@ -57,7 +66,9 @@ export default function BotCommandCard({ command }: { command: string }) {
   );
 }
 
-export function BotPlaceCommandCard() {
+export function BotPlaceCommandCard(
+  props: Omit<React.ComponentPropsWithRef<typeof BotCommandCard>, "command">,
+) {
   const { adjustedCoords: coordinates } = useCanvasViewContext();
   const { color } = useSelectedColorContext();
 
@@ -65,5 +76,5 @@ export function BotPlaceCommandCard() {
   const { x, y } = coordinates;
   const command = `/place x:${x} y:${y} color:${color.code}`;
 
-  return <BotCommandCard command={command} />;
+  return <BotCommandCard command={command} {...props} />;
 }

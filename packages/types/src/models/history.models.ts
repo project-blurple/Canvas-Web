@@ -3,6 +3,8 @@ import z from "zod";
 export const PixelHistoryParamModel = z.object({
   x: z.coerce.number().int().nonnegative(),
   y: z.coerce.number().int().nonnegative(),
+  page: z.coerce.number().int().positive().optional(),
+  size: z.coerce.number().int().positive().optional(),
 });
 
 export const PixelHistoryComplexParamModel = z
@@ -11,6 +13,8 @@ export const PixelHistoryComplexParamModel = z
     y0: z.coerce.number().int().nonnegative(),
     x1: z.coerce.number().int().nonnegative().optional(),
     y1: z.coerce.number().int().nonnegative().optional(),
+    page: z.coerce.number().int().positive().optional(),
+    size: z.coerce.number().int().positive().optional(),
   })
   .superRefine(({ x1, y1 }, ctx) => {
     if ((x1 !== undefined) !== (y1 !== undefined)) {

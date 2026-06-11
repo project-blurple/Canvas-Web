@@ -1,4 +1,4 @@
-import type { Prisma } from "../../client/generated/client";
+import type { Prisma } from "../../client/core/generated/client";
 // @ts-expect-error Node strip-types runtime needs explicit .ts extension.
 import { colorSeedData } from "./colors.ts";
 

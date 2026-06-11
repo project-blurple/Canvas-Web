@@ -2,9 +2,10 @@ import { styled } from "@mui/material";
 import type React from "react";
 
 export const ActionPanelTabBody = styled("div")`
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: inherit;
   display: block flex;
   flex-direction: column;
-  background-color: var(--discord-legacy-not-quite-black);
   gap: 0.5rem;
 
   > * {

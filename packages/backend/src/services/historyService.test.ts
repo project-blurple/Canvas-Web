@@ -4,11 +4,33 @@ import { userIsBlocklisted } from "./blocklistService";
 import {
   deletePixelHistoryEntries,
   getPixelHistorySummary,
+  restorePixelHistoryEntries,
 } from "./historyService";
+
+const { updateCachedCanvasPixelMock } = vi.hoisted(() => ({
+  updateCachedCanvasPixelMock: vi.fn(),
+}));
+
+const { snapshotCursorUpsertMock } = vi.hoisted(() => ({
+  snapshotCursorUpsertMock: vi.fn(async () => ({})),
+}));
 
 vi.mock("@/index", () => ({
   socketHandler: {
     broadcastPixelPlacement: vi.fn(),
+    broadcastPixelBulkPlacement: vi.fn(),
+  },
+}));
+
+vi.mock("./canvasService", () => ({
+  updateCachedCanvasPixel: updateCachedCanvasPixelMock,
+}));
+
+vi.mock("@/client/snapshots", () => ({
+  snapshotPrisma: {
+    snapshot_cursor: {
+      upsert: snapshotCursorUpsertMock,
+    },
   },
 }));
 
@@ -26,9 +48,9 @@ describe.skip("historyService", () => {
         points: { x: 0, y: 0 },
       });
 
-      expect(history.totalEntries).toBe(4);
-      expect(history.pixelHistory).toHaveLength(4);
-      expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
+      expect(history.total).toBe(4);
+      expect(history.entries).toHaveLength(4);
+      expect(history.entries.map((entry) => entry.timestamp)).toEqual([
         new Date(7),
         new Date(3),
         new Date(2),
@@ -44,7 +66,7 @@ describe.skip("historyService", () => {
           lastPlaced: new Date(7),
         },
       });
-      expect(history.pixelHistory[0]).toMatchObject({
+      expect(history.entries[0]).toMatchObject({
         color: {
           id: 1,
           code: "blank",
@@ -78,9 +100,9 @@ describe.skip("historyService", () => {
         },
       });
 
-      expect(history.totalEntries).toBe(2);
-      expect(history.pixelHistory).toHaveLength(2);
-      expect(history.pixelHistory.map((entry) => entry.timestamp)).toEqual([
+      expect(history.total).toBe(2);
+      expect(history.entries).toHaveLength(2);
+      expect(history.entries.map((entry) => entry.timestamp)).toEqual([
         new Date(9),
         new Date(8),
       ]);
@@ -95,7 +117,7 @@ describe.skip("historyService", () => {
           lastPlaced: new Date(9),
         },
       });
-      expect(history.pixelHistory[0]).toMatchObject({
+      expect(history.entries[0]).toMatchObject({
         color: {
           id: 3,
           code: "red",
@@ -180,5 +202,165 @@ describe.skip("historyService", () => {
 
       await expect(userIsBlocklisted(1n)).resolves.toBe(false);
     });
+  });
+});
+
+describe("restorePixelHistoryEntries", () => {
+  async function setupMinimalCanvas() {
+    await prisma.event.create({
+      data: { id: 1, name: "Test Event" },
+    });
+    await prisma.discord_guild_record.create({
+      data: { guild_id: 1n, name: "Test Guild" },
+    });
+    await prisma.guild.create({
+      data: { id: 1n, invite: "test-guild" },
+    });
+    await prisma.user.createMany({
+      data: [{ id: 1n }, { id: 2n }, { id: 9n }],
+    });
+    await prisma.discord_user_profile.create({
+      data: {
+        username: "test_user_9",
+        profile_picture_url: "https://example.com/avatar9.png",
+        user: {
+          connect: { id: 9n },
+        },
+      },
+    });
+    await prisma.canvas.create({
+      data: {
+        id: 1,
+        event_id: 1,
+        name: "Test Canvas",
+        width: 2,
+        height: 2,
+        locked: false,
+        cooldown_length: 0,
+      },
+    });
+    await prisma.canvas.create({
+      data: {
+        id: 2,
+        event_id: 1,
+        name: "Test Canvas 2",
+        width: 2,
+        height: 2,
+        locked: false,
+        cooldown_length: 0,
+      },
+    });
+    await prisma.color.createMany({
+      data: [
+        {
+          id: 1,
+          code: "blank",
+          emoji_name: "pl_blank",
+          emoji_id: 540761786484391957n,
+          global: true,
+          name: "Blank",
+          rgba: [88, 101, 242, 127],
+        },
+        {
+          id: 2,
+          code: "red",
+          emoji_name: "pl_red",
+          emoji_id: 572564652559564810n,
+          global: true,
+          name: "Red",
+          rgba: [234, 35, 40, 255],
+        },
+        {
+          id: 3,
+          code: "blue",
+          emoji_name: "pl_blue",
+          emoji_id: 840064486374637608n,
+          global: true,
+          name: "Blue",
+          rgba: [0, 90, 166, 255],
+        },
+      ],
+    });
+  }
+
+  beforeEach(async () => {
+    await setupMinimalCanvas();
+    vi.clearAllMocks();
+  });
+
+  it("un-erases history and refreshes affected pixels", async () => {
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 0, y: 0, color_id: 1 },
+    });
+    await prisma.pixel.create({
+      data: { canvas_id: 1, x: 1, y: 0, color_id: 1 },
+    });
+
+    await prisma.history.createMany({
+      data: [
+        {
+          canvas_id: 1,
+          user_id: 9n,
+          x: 0,
+          y: 0,
+          color_id: 2,
+          timestamp: new Date("2024-01-01T00:00:00.000Z"),
+          erased_at: new Date("2024-01-02T00:00:00.000Z"),
+          guild_id: 1n,
+        },
+        {
+          canvas_id: 1,
+          user_id: 9n,
+          x: 1,
+          y: 0,
+          color_id: 3,
+          timestamp: new Date("2024-01-03T00:00:00.000Z"),
+          erased_at: new Date("2024-01-04T00:00:00.000Z"),
+          guild_id: 1n,
+        },
+        {
+          canvas_id: 2,
+          user_id: 9n,
+          x: 0,
+          y: 1,
+          color_id: 2,
+          timestamp: new Date("2024-01-05T00:00:00.000Z"),
+          erased_at: new Date("2024-01-06T00:00:00.000Z"),
+          guild_id: 1n,
+        },
+      ],
+    });
+
+    await restorePixelHistoryEntries([9n], [1]);
+
+    const restoredHistory = await prisma.history.findMany({
+      where: {
+        user_id: 9n,
+        canvas_id: 1,
+      },
+      orderBy: [{ x: "asc" }, { y: "asc" }],
+    });
+
+    expect(restoredHistory.every((entry) => entry.erased_at === null)).toBe(
+      true,
+    );
+
+    const restoredPixels = await prisma.pixel.findMany({
+      where: { canvas_id: 1 },
+      orderBy: [{ x: "asc" }, { y: "asc" }],
+    });
+
+    expect(restoredPixels).toMatchObject([
+      { x: 0, y: 0, color_id: 2 },
+      { x: 1, y: 0, color_id: 3 },
+    ]);
+    await expect(
+      prisma.history.findFirst({
+        where: { canvas_id: 2, user_id: 9n },
+      }),
+    ).resolves.toMatchObject({
+      erased_at: expect.any(Date),
+    });
+    expect(updateCachedCanvasPixelMock).toHaveBeenCalledTimes(2);
   });
 });

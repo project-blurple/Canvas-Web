@@ -9,14 +9,19 @@ export function useCanvasCooldown(
 ) {
   const { enabled = true } = options ?? {};
 
-  const getCanvasCooldown = async () => {
+  const getCanvasCooldown = async (): Promise<Cooldown> => {
     const { data } = await axios.get<Cooldown>(
       `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvasId)}/cooldown/@me`,
       {
         withCredentials: true,
       },
     );
-    return data;
+    return {
+      cooldownEndTime:
+        data.cooldownEndTime == null ?
+          undefined
+        : Date.now() + data.cooldownEndTime,
+    };
   };
 
   return useQuery<Cooldown>({

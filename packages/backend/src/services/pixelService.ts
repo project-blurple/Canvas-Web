@@ -3,7 +3,6 @@ import type {
   PixelColor,
   Point,
 } from "@blurple-canvas-web/types";
-
 import { type color, type Prisma, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
@@ -243,40 +242,35 @@ export async function placePixel(
   color: Pick<PaletteColor, "id" | "rgba">,
 ) {
   const placementTime = new Date();
-  let { currentCooldown, futureCooldown } = await getCooldown(
-    canvasId,
-    userId,
-    placementTime,
-  );
+  const { futureCooldown } = await getCooldown(canvasId, userId, placementTime);
 
   await prisma.$transaction(async (tx) => {
     // only update the cooldown table if the canvas has a cooldown
     if (futureCooldown) {
-      // create the cooldown if it doesn't exist already
-      if (!currentCooldown) {
-        const cooldown = await tx.cooldown.create({
-          data: {
-            user_id: userId,
-            canvas_id: canvasId,
-            cooldown_time: futureCooldown,
-          },
-        });
-        currentCooldown = cooldown.cooldown_time;
-      }
-      // Perform an update with an attempt at an optimistic query
-      const updateCooldown = await tx.cooldown.update({
-        where: {
-          user_id_canvas_id: {
-            user_id: userId,
-            canvas_id: canvasId,
-          },
-          cooldown_time: currentCooldown,
-        },
-        data: {
+      const row = await tx.$kysely
+        .insertInto("cooldown")
+        .values({
+          user_id: userId,
+          canvas_id: canvasId,
           cooldown_time: futureCooldown,
-        },
-      });
-      if (!updateCooldown) {
+        })
+        .onConflict((oc) =>
+          oc
+            .columns(["user_id", "canvas_id"])
+            .doUpdateSet({
+              cooldown_time: futureCooldown,
+            })
+            .where((eb) =>
+              eb.or([
+                eb("cooldown.cooldown_time", "is", null),
+                eb("cooldown.cooldown_time", "<=", placementTime),
+              ]),
+            ),
+        )
+        .returning("user_id")
+        .executeTakeFirst();
+
+      if (!row) {
         throw new ForbiddenError("Pixel placement is on cooldown");
       }
     }

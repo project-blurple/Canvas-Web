@@ -1,167 +1,165 @@
 # <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/86000a76-a73b-4abe-8c61-05dbfecbec40" width="24" height="24" /> Blurple Canvas Web
 
-## <img src="https://github.com/project-blurple/Canvas-Web/assets/33956381/02ac039f-67da-4aeb-a7be-c0363fee3917" width="20" height="20" /> Project Blurple
-
-[Project Blurple](https://projectblurple.com) is an annual, week-long, community-run event which celebrates Discord’s anniversary. Part of this is Blurple Canvas where people in participating servers create pixel art on a shared canvas.
-
-Blurple Canvas Web is a web alternative to the [existing Discord bot](https://github.com/Rocked03/Blurple-Canvas) Discord bot, which brings canvas to the web!
-
-If you’d like a bit more context, [we have a wiki!](https://github.com/project-blurple/Canvas-Web/wiki)
-
-## 🧚 Features
-
-### Viewing canvases
-
-- **View canvases.** View the current canvas (if/when there is an active event), or view archived canvases from past events. Pick which canvas to view from the dropdown in the navbar.
-- **Pan and zoom.** Pan around the canvas by dragging, and scroll to zoom.
-- **Live updates.** When there’s an ongoing Project Blurple event, the active canvas will update in real time as people place pixels.
-- **Pixel history.** Select a pixel to see what colours have been placed there, and who placed it.
-
-### Placing pixels
-
-> [!NOTE]
-> Pixel placement is only enabled for active canvases that are part of an ongoing event. Once that event ends, the canvas is locked.
-
-- **Sign in with Discord.** Anyone can view canvases (no account needed), but you’ll need to sign with Discord to place pixels. (You can also sign out.)
-- **View colour palette.** As you switch between events, see the colours which were/are allowed on that canvas.
-- **Place pixels.** When there is an active Project Blurple event (and you aren’t in cooldown), you can place pixels on the canvas.
-  - **…Or not.** Placing pixels via Blurple Canvas Web can be disabled by unsetting an environment variable when deploying.
-- **Bot command.** When you select a pixel and colour, it’ll show the `/place` Discord bot command for placing a pixel—along with a button to copy it.
-- **Partnered colours.** Each server partnered with the Project Blurple event gets a _unique_ pixel colour which can only be used from within that server. For these, Blurple Canvas Web gives a link to join the server.
-
-### Statistics
-
-- **Leaderboard.** View the top 10 participants for each canvas, ranked by the number of pixels they’ve placed on that canvas.
-- **User stats.** View your own stats for each canvas, including how you rank against everyone else for that canvas (by pixels placed) and your most frequently used colour—among other details.
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/347c5873-6859-40c1-a6de-25a326aad2a6" width="450" height="450" alt="Final canvas from 2026" />
+</p>
 
 ## 🥪 Tech stack & repo structure
 
 This is a [monorepo](https://monorepo.tools), with three packages:
 
-- **[@blurple-canvas-web/backend](/packages/backend#readme)**: The [Node](https://nodejs.org)–[Express](https://expressjs.com) back-end server
-- **[@blurple-canvas-web/frontend](/packages/frontend#readme)**: The [Next.js](https://nextjs.org) front-end
-- **[@blurple-canvas-web/types](/packages/types#readme)**: Where [TypeScript](https://www.typescriptlang.org) types shared by the front- and back-end live
+- **[@blurple-canvas-web/backend](/packages/backend#readme)**: The
+  [Node](https://nodejs.org)–[Express](https://expressjs.com) back-end server
+- **[@blurple-canvas-web/frontend](/packages/frontend#readme)**: The
+  [Next.js](https://nextjs.org) front-end
+- **[@blurple-canvas-web/types](/packages/types#readme)**: Where
+  [TypeScript](https://www.typescriptlang.org) types shared by the front- and
+  back-end live
 
-All packages are written in [TypeScript](https://www.typescriptlang.org). **backend** talks to the same [PostgreSQL](http://www.postgresql.org) as the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot. [Prisma](https://www.prisma.io) serves as the ORM layer. **frontend** uses [Axios](https://axios-http.com) and [TanStack Query](https://tanstack.com/query) to query the **backend** API. Realtime canvas updates are pushed to clients with [Socket.IO](https://socket.io). Testing is conducted with [Vitest](https://vitest.dev). [GitHub Actions](https://docs.github.com/en/actions) handles CI.
+Worth noting:
+
+- this web app succeeds the now-deprecated
+  [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;
+- **backend** talks to the same [PostgreSQL](http://www.postgresql.org) as the
+  old bot;
+- [Prisma](https://www.prisma.io) serves as the ORM layer.
+- With the odd exception, **frontend** makes queries to the **backend** API with
+  [TanStack Query](https://tanstack.com/query).
+- Realtime canvas updates are pushed to clients with
+  [Socket.IO](https://socket.io). Primarily, this is for streaming pixels to
+  everyone as they get placed.
+- We make a bit of an effort to do right by the
+  [Web Accessibility Content Guidelines](https://www.w3.org/TR/WCAG21).[^wcag]
+
+[^wcag]: Plenty of room to improve, we realise.
 
 ## 🌱 Getting started
 
 ### ☑️ Prerequisites
 
-> [!WARNING]
-> Windows users, these instructions assume you use [WSL](https://learn.microsoft.com/en-us/windows/wsl). You’re welcome to use PowerShell—things still work—but you’ll have to “translate” these steps for yourself.
+> [!WARNING] Windows users, these instructions assume you use
+> [WSL](https://learn.microsoft.com/en-us/windows/wsl). You’re welcome to use
+> PowerShell—things still work—but you’ll have to “translate” these steps for
+> yourself.
 
-**Install [Node Version Manager](https://github.com/nvm-sh/nvm).** If you don’t use Homebrew, see [github.com/nvm-sh/nvm](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating) for other ways to install.
+**[nvm](https://github.com/nvm-sh/nvm) & [Node.js](https://nodejs.org).** Node
+Version Manger optional but recommended. Just make sure your Node version
+matches [`/.nvmrc`](/.nvmrc).
 
 ```sh
-brew install nvm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash  # …or… `brew install nvm`
+nvm --version   # Shouldn’t error
+nvm install
+node --version  # Should match .nvmrc
 ```
 
-**Use the appropriate version of Node.** You may be prompted to run `nvm install`. (If for whatever reason you aren’t using nvm, make sure to install _and use_ the Node version specified in [`/.nvmrc`](/.nvmrc).)
+**[Corepack](https://nodejs.org/api/corepack.html) & [pnpm](https://pnpm.io).**
+Corepack optional but recommended. If you’d prefer installing pnpm some other
+way, [go ahead](https://pnpm.io/installation).
 
 ```sh
-nvm use
-```
-
-**Install and enable [Corepack](https://nodejs.org/api/corepack.html).** We use [pnpm](https://pnpm.io) to manage dependencies. We recommend using Corepack to manage your pnpm version, but if you’d prefer installing pnpm a different way, [go ahead](https://pnpm.io/installation).
-
-```sh
-npm install --global corepack // or `brew install corepack`
+npm install --global corepack  # or `brew install corepack`
 corepack enable pnpm
+corepack --version             # Shouldn’t error
+pnpm --version                 # Should match package.json → engines
 ```
 
-**Verify pnpm is working.** This command should report the version number specified in the [root manifest file](/package.json).
+**[PostgreSQL](https://www.postgresql.org) 17+.** 👉
+[postgresql.org/download](https://www.postgresql.org/download)
 
-```sh
-pnpm --version
-```
-
-Our schema and views require **PostgreSQL 9.4 or newer.**+.
-
-### 🤫 Secrets & environment variables
-
-The **[backend](/packages/backend/.env.example)** and **[frontend](/packages/frontend/.env.example)** packages need to have some environment variables set work correctly (in `/packages/backend/.env` and `/packages/frontend/.env`, respectively). Consult the `.env.example` files in each of those packages to see what variables are needed, and contact one of the [contributors](https://github.com/project-blurple/Canvas-Web/graphs/contributors) if you need any secrets.
-
-### 🚀 Build & deploy
-
-**Install dependencies.** Run this from the monorepo root, and it will install dependencies for all packages.
+### 🧱 Install dependencies
 
 ```sh
 pnpm install
 ```
 
-**Set up the database.** Make sure the `DATABASE_URL` environment variable in `packages/backend/.env` is set correctly.
+### 🤫 Secrets & environment variables
 
-If you already have PostgreSQL running, point `DATABASE_URL` at that instance.
+The **[backend](/packages/backend/.env.example)** and
+**[frontend](/packages/frontend/.env.example)** packages need to have some
+environment variables set work correctly (in `/packages/backend/.env` and
+`/packages/frontend/.env`, respectively). Consult the `.env.example` files in
+each of those packages to see what variables are needed, and contact one of the
+[maintainers](#-maintainers) if you need any secrets.
 
-For local development, install PostgreSQL locally, create a database (for example, `canvas`), and set `DATABASE_URL` in `packages/backend/.env` to that database.
+### 💽 Database
 
-Before pushing schema changes or seeding, build the backend once so generated scripts can import the built client:
+Create a database (for example, `canvas`); and set `DATABASE_URL` in
+`packages/backend/.env` to point to it.
 
-```sh
-pnpm -F backend build
-```
-
-Then, from the monorepo root:
-
-```sh
-pnpm prisma:migrate
-pnpm prisma:seed
-```
-
-**Deploy!** With hot-reloading:
+With the database server running:
 
 ```sh
-pnpm dev
+pnpm install
+# Build backend once, so generated scripts can import the built client
+pnpm -F backend run build
+# Set up database
+pnpm run prisma:migrate && pnpm run prisma:seed
 ```
 
-Or without:
+### 🚀 Build & deploy
+
+From repo root:
 
 ```sh
-pnpm build && pnpm start
+pnpm run dev                      # with hot reloading…
+pnpm run build && pnpm run start  # …or without
 ```
 
-If you want to run the front- and back-ends in different terminals[^filter]:
-
-[^filter]: These are shorthand for `pnpm --filter @blurple-canvas-web/backend dev` and `pnpm --filter @blurple-canvas-web/frontend dev`.
+If you want to run the front- and back-ends in different terminals:
 
 ```sh
-# Start the back-end
-pnpm -F backend dev
+pnpm -F backend run dev
+pnpm -F frontend run dev
 ```
 
-```sh
-# Start the front-end
-pnpm -F frontend dev
-```
+## 🤓 Maintainers
 
-## 🤓 Contributors
+Availabilities and contributions ebb and flow but, at the moment, these are
+probably the most reasonable people to contact if you need to get in touch with
+a core contributor: [@rocked03](https://sjou.dev), [@jaskfla](https://lai.nz),
+[@stijnvdkolk](https://github.com/stijnvdkolk).
 
-Blurple Canvas Web started as a [SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750) project at [Waipapa Taumata Rau](https://www.auckland.ac.nz). We are Team Golden Giraffes.[^team-name]
+<details>
+<summary>🦒 The OG team</summary>
 
-[^team-name]: Not sure we would’ve chosen this name for ourselves, though…
+Blurple Canvas Web started as a
+[SOFTENG 750](https://courseoutline.auckland.ac.nz/dco/course/SOFTENG/750)
+project at [Waipapa Taumata Rau](https://www.auckland.ac.nz).[^team-name]
 
-- Aaron Guo
-- Emily Zou
+[^team-name]:
+    Dig back
+    [far enough in the commit history](https://github.com/project-blurple/Canvas-Web/tree/32549bada3a5636045955beb35812c3e09ef074e),
+    and you’ll find that we once had the team name
+    [Golden Giraffes](https://github.com/project-blurple/Canvas-Web/blob/32549bada3a5636045955beb35812c3e09ef074e/group-image/Golden%20Giraffes.webp).
+    Not sure we would’ve chosen this name for ourselves, though…
+
+- [Aaron Guo](https://github.com/PolarWolf314)
+- [Emily Zou](https://github.com/boxy8)
 - [Henry Wang](http://henryh.wang)
 - [Jasper Lai](https://lai.nz)
 - [Josh Jeffers](https://pumbas.net)
 - [Samuel Ou](https://sjou.dev)
 
-![](./group-image/Golden%20Giraffes.webp)
+</details>
 
 ## 💌 Acknowledgements
 
-Blurple Canvas Web wouldn’t exist without these lovely people and projects. Thanks to:
+Blurple Canvas Web wouldn’t exist without these lovely people and projects.
+Thanks to:
 
-- [Project Blurple](https://projectblurple.com) and the Project Blurple community, for obvious reasons;
-- [Rocked03](https://rocked03.dev) for creating the [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord bot;[^samuel]
-- the [Place Atlas Initiative](https://github.com/placeAtlas) for their efforts cataloguing r/Place;
-- [Josh Wardle](https://www.powerlanguage.co.uk) and [r/Place](https://www.reddit.com/r/place) participants (no introduction needed); and
+- [Project Blurple](https://projectblurple.com)and the Project Blurple
+  community, which Blurple Canvas was spun out of;
+- [Rocked03](https://rocked03.dev) for creating the
+  [Blurple Canvas](https://github.com/Rocked03/Blurple-Canvas) Discord
+  bot;[^samuel]
+- the [Place Atlas Initiative](https://github.com/placeAtlas) for their efforts
+  cataloguing r/Place;
+- [Josh Wardle](https://www.powerlanguage.co.uk) and
+  [r/Place](https://www.reddit.com/r/place) participants (no introduction
+  needed); and
 - you, for your interest in this project!
 
-[^samuel]: Pretty sure Samuel isn’t happy about me putting him on this list. Tough cookies.&emsp;—Jasper
-
-## 📜 Licence
-
-The code for Blurple Canvas Web is licensed under the [Apache License, Version 2.0](https://github.com/project-blurple/Canvas-Web?tab=License-1-ov-file#readme).
+[^samuel]:
+    Pretty sure Samuel isn’t happy about me putting him on this list. Tough
+    cookies.&emsp;—Jasper

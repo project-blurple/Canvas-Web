@@ -1,17 +1,28 @@
 import fs from "node:fs";
 import type {
   BlurpleEvent,
+  CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
+  OptionalFrameBoundsModel,
   PixelColor,
   PlacePixelArray,
   Point,
 } from "@blurple-canvas-web/types";
-import { PNG } from "pngjs";
-import { type canvas, Prisma, prisma } from "@/client";
+import {
+  CANVAS_EXPORT_SCALES,
+  DEFAULT_CANVAS_EXPORT_SCALE,
+} from "@blurple-canvas-web/types";
+import sharp from "sharp";
+import type z from "zod";
+import { type canvas, prisma } from "@/client";
 import config from "@/config";
-import { NotFoundError } from "@/errors";
+import { NotFoundError, UnprocessableError } from "@/errors";
 import { socketHandler } from "@/index";
+import {
+  pixelsToRgbaBuffer,
+  saveCanvasToFileSystem,
+} from "@/services/exportService";
 import { getCurrentEvent } from "./eventService";
 import { getEventPalette } from "./paletteService";
 import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
@@ -22,7 +33,7 @@ import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
  */
 interface LockedCanvas {
   isLocked: true;
-  canvasPath: string;
+  canvasPaths: Partial<Record<CanvasExportScale, string>>;
 }
 
 /**
@@ -44,25 +55,49 @@ export type CachedCanvas = LockedCanvas | UnlockedCanvas;
  * or if the image is locked (and therefore cannot be modified) the path to the canvas image on the
  * file system.
  */
-const CANVAS_CACHE: Map<number, CachedCanvas> = new Map();
+const CANVAS_CACHE = new Map<number, CachedCanvas>();
+const CANVAS_LOADS = new Map<number, Promise<CachedCanvas>>();
 
 export function initializeCache(): void {
   // look through the files in the canvas directory and build the locked cache object from them
+  const lockedCanvasPaths = new Map<
+    number,
+    Partial<Record<CanvasExportScale, string>>
+  >();
+
   for (const filename of fs.readdirSync(config.paths.canvases)) {
-    const match = filename.match(/^blurple-canvas__(\d+)__locked.png$/);
+    const match = filename.match(
+      /^blurple-canvas__(\d+)__locked(?:@(\d+)x)?\.png$/,
+    );
 
     if (!match) {
-      return;
+      continue;
     }
 
     const canvasId = Number.parseInt(match[1], 10);
+    const scale = (
+      match[2] ?
+        Number.parseInt(match[2], 10)
+      : 1) as CanvasExportScale;
     const canvasPath = `${config.paths.canvases}/${filename}`;
 
     console.log(`Loaded cached canvas ${canvasPath}`);
 
+    const canvasPaths = lockedCanvasPaths.get(canvasId) ?? {};
+    canvasPaths[scale] = canvasPath;
+    lockedCanvasPaths.set(canvasId, canvasPaths);
+  }
+
+  for (const [canvasId, canvasPaths] of lockedCanvasPaths) {
+    const canvasPath = getLockedCanvasPath(canvasPaths, 1);
+
+    if (!canvasPath) {
+      continue;
+    }
+
     CANVAS_CACHE.set(canvasId, {
       isLocked: true,
-      canvasPath: `${config.paths.canvases}/${filename}`,
+      canvasPaths,
     });
   }
 }
@@ -75,33 +110,72 @@ export function initializeCache(): void {
  * @param isLocked Whether the canvas is locked or not
  * @returns The generated filename
  */
-export function getCanvasFilename(canvasId: number, isLocked = false): string {
-  return `blurple-canvas__${canvasId}__${isLocked ? "locked" : Date.now()}.png`;
+export function getCanvasFilename(
+  canvasId: number,
+  isLocked = false,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
+  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
+): string {
+  const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
+  const boundsSuffix =
+    bounds ? `_${bounds.x0}x${bounds.y0}_${bounds.x1}x${bounds.y1}` : "";
+
+  return `blurple-canvas__${canvasId}__${isLocked ? "locked" : Date.now()}${boundsSuffix}${scaleSuffix}.png`;
 }
 
 /**
- * Converts an unlocked canvas from the cache to a PNG image.
+ * Converts an unlocked canvas from the cache to PNG bytes.
  *
  * @param unlockedCanvas The unlocked canvas to convert
- * @returns The PNG image
+ * @returns The PNG bytes
  */
-export function unlockedCanvasToPng(unlockedCanvas: UnlockedCanvas): PNG {
-  return pixelsToPng(
+export async function unlockedCanvasToPng(
+  unlockedCanvas: UnlockedCanvas,
+): Promise<Buffer> {
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
     unlockedCanvas.width,
     unlockedCanvas.height,
-    unlockedCanvas.pixels,
   );
+
+  return sharp(rawBuffer, {
+    raw: {
+      width: unlockedCanvas.width,
+      height: unlockedCanvas.height,
+      channels: 4,
+    },
+  })
+    .png()
+    .toBuffer();
 }
 
-interface CanvasSummaryRow {
-  id: number;
-  name: string;
-  event_id: number | null;
-  locked: boolean;
-  last_pixel_timestamp: Date | null;
-  width: number;
-  height: number;
-  cooldown_length: number;
+export function unlockedCanvasToPngStream(
+  unlockedCanvas: UnlockedCanvas,
+  scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
+): NodeJS.ReadableStream {
+  const rawBuffer = pixelsToRgbaBuffer(
+    unlockedCanvas.pixels,
+    unlockedCanvas.width,
+    unlockedCanvas.height,
+  );
+
+  const image = sharp(rawBuffer, {
+    raw: {
+      width: unlockedCanvas.width,
+      height: unlockedCanvas.height,
+      channels: 4,
+    },
+  });
+
+  return scale === 1 ?
+      image.png()
+    : image
+        .resize({
+          width: unlockedCanvas.width * scale,
+          height: unlockedCanvas.height * scale,
+          kernel: sharp.kernel.nearest,
+        })
+        .png();
 }
 
 /**
@@ -113,31 +187,37 @@ interface CanvasSummaryRow {
 export async function getCanvases(
   eventId?: BlurpleEvent["id"],
 ): Promise<CanvasSummary[]> {
-  const whereSql =
-    eventId === undefined ?
-      Prisma.sql`TRUE`
-    : Prisma.sql`c.event_id = ${eventId}`;
-
-  const canvases = await prisma.$queryRaw<CanvasSummaryRow[]>`
-    SELECT
-      c.id,
-      c.name,
-      c.event_id,
-      c.locked,
-      c.width,
-      c.height,
-      c.cooldown_length,
-      MAX(h.timestamp) AS last_pixel_timestamp
-    FROM canvas c
-    LEFT JOIN history h
-      ON h.canvas_id = c.id
-      AND h.erased_at IS NULL
-    WHERE ${whereSql}
-    GROUP BY c.id, c.name, c.event_id, c.locked, c.width, c.height
-    ORDER BY
-      MAX(h.timestamp) DESC NULLS LAST,
-      c.id DESC
-  `;
+  const canvases = await prisma.$kysely
+    .selectFrom("canvas")
+    .leftJoin("history", (join) =>
+      join
+        .onRef("history.canvas_id", "=", "canvas.id")
+        .on("history.erased_at", "is", null),
+    )
+    .select((eb) => [
+      "canvas.id",
+      "canvas.name",
+      "canvas.event_id",
+      "canvas.locked",
+      "canvas.width",
+      "canvas.height",
+      "canvas.cooldown_length",
+      eb.fn.max("history.timestamp").as("last_pixel_timestamp"),
+    ])
+    .$if(eventId !== undefined, (qb) =>
+      qb.where("canvas.event_id", "=", eventId as number),
+    )
+    .groupBy([
+      "canvas.id",
+      "canvas.name",
+      "canvas.event_id",
+      "canvas.locked",
+      "canvas.width",
+      "canvas.height",
+    ])
+    .orderBy("last_pixel_timestamp", (ob) => ob.desc().nullsLast())
+    .orderBy("canvas.id", "desc")
+    .execute();
 
   return canvases.map((canvas) => ({
     id: canvas.id,
@@ -289,43 +369,27 @@ export function updateCachedCanvasPixel(
   cachedCanvas.pixels[pixelIndex] = color;
 }
 
-export async function getCanvasPixels(canvasId: number): Promise<PixelColor[]> {
+export async function getCanvasPixels(
+  canvasId: number,
+  width: number,
+  height: number,
+): Promise<PixelColor[]> {
   const pixels = (await prisma.pixel.findMany({
     select: {
+      x: true,
+      y: true,
       color: {
         select: { rgba: true },
       },
     },
     where: { canvas_id: canvasId },
-    orderBy: [{ y: "asc" }, { x: "asc" }],
-  })) as { color: { rgba: PixelColor } }[];
+  })) as { x: number; y: number; color: { rgba: PixelColor } }[];
 
-  return pixels.map((pixel) => pixel.color.rgba);
-}
-
-function pixelsToPng(width: number, height: number, pixels: PixelColor[]): PNG {
-  const image = new PNG({ width, height, filterType: 0 });
-
-  pixels.forEach((color, index) => {
-    const imageIndex = index * 4;
-    image.data[imageIndex] = color[0];
-    image.data[imageIndex + 1] = color[1];
-    image.data[imageIndex + 2] = color[2];
-    image.data[imageIndex + 3] = color[3];
-  });
-
-  return image;
-}
-
-function saveCanvasToFileSystem(canvas: canvas, pixels: PixelColor[]): string {
-  const filename = getCanvasFilename(canvas.id, canvas.locked);
-  const path = `${config.paths.canvases}/${filename}`;
-
-  pixelsToPng(canvas.width, canvas.height, pixels)
-    .pack()
-    .pipe(fs.createWriteStream(path));
-
-  return path;
+  const flat: PixelColor[] = new Array(width * height);
+  for (const pixel of pixels) {
+    flat[pixel.y * width + pixel.x] = pixel.color.rgba;
+  }
+  return flat;
 }
 
 async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
@@ -333,7 +397,14 @@ async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
 
   try {
     if (cachedCanvas?.isLocked) {
-      await fs.promises.rm(cachedCanvas.canvasPath);
+      const uniquePaths = new Set([...Object.values(cachedCanvas.canvasPaths)]);
+
+      await Promise.all(
+        [...uniquePaths].map(async (canvasPath) => {
+          await fs.promises.rm(canvasPath, { force: true });
+        }),
+      );
+
       console.debug(`Cleared canvas ${canvasId} from file system`);
     }
   } catch {
@@ -344,54 +415,107 @@ async function clearCanvasFromFileSystem(canvasId: number): Promise<void> {
 }
 
 async function getOrFetchCacheCanvas(canvasId: number): Promise<CachedCanvas> {
-  const canvas = await prisma.canvas.findFirst({
-    where: { id: canvasId },
-  });
-
-  if (!canvas) {
-    throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+  const inFlightLoad = CANVAS_LOADS.get(canvasId);
+  if (inFlightLoad) {
+    return inFlightLoad;
   }
 
-  const cachedCanvas = CANVAS_CACHE.get(canvasId);
-  if (cachedCanvas) {
-    if (cachedCanvas.isLocked !== canvas.locked) {
-      console.debug(
-        `Canvas ${canvasId} lock status has changed. Updating cache...`,
-      );
-      clearCanvasFromFileSystem(canvasId);
-    } else {
-      console.debug(`Cache hit for canvas ${canvasId}`);
-      return cachedCanvas;
-    }
-  } else {
-    console.debug(`Cache miss for canvas ${canvasId}`);
-  }
-
-  const pixels = await getCanvasPixels(canvasId);
-  const unlockedCanvas: UnlockedCanvas = {
-    isLocked: false,
-    width: canvas.width,
-    height: canvas.height,
-    pixels,
-  };
-
-  if (canvas.locked) {
-    const path = saveCanvasToFileSystem(canvas, pixels);
-    CANVAS_CACHE.set(canvasId, {
-      isLocked: true,
-      canvasPath: path,
+  const loadPromise = (async () => {
+    const canvas = await prisma.canvas.findFirst({
+      where: { id: canvasId },
     });
 
-    console.debug(`Canvas ${canvasId} saved to ${path}`);
-  } else {
-    CANVAS_CACHE.set(canvasId, unlockedCanvas);
-    console.debug(`Canvas ${canvasId} cached in memory`);
-  }
+    if (!canvas) {
+      throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+    }
 
-  // We always want to return the unlocked canvas, even if the image is locked as sometimes the
-  // image hasn’t finished being written to the file system when Express tries to send it in the
-  // response.
-  return unlockedCanvas;
+    const cachedCanvas = CANVAS_CACHE.get(canvasId);
+    if (cachedCanvas) {
+      if (cachedCanvas.isLocked !== canvas.locked) {
+        console.debug(
+          `Canvas ${canvasId} lock status has changed. Updating cache…`,
+        );
+        // Ensure on-disk files are removed and cache entry cleared so we regenerate below
+        await clearCanvasFromFileSystem(canvasId);
+        CANVAS_CACHE.delete(canvasId);
+      } else {
+        console.debug(`Cache hit for canvas ${canvasId}`);
+
+        // If this is a locked canvas, verify the cache is complete. If any expected
+        // export scale is missing, clear the cache and treat as a miss so we generate
+        // all sizes atomically via `saveCanvasToFileSystem` below.
+        if (cachedCanvas.isLocked) {
+          const locked = cachedCanvas as LockedCanvas;
+          const missing = CANVAS_EXPORT_SCALES.some(
+            (s) => !locked.canvasPaths[s],
+          );
+
+          if (missing) {
+            console.debug(
+              `Cached locked canvas ${canvasId} is incomplete; clearing to regenerate all sizes.`,
+            );
+            await clearCanvasFromFileSystem(canvasId);
+            CANVAS_CACHE.delete(canvasId);
+          } else {
+            return cachedCanvas;
+          }
+        } else {
+          return cachedCanvas;
+        }
+      }
+    } else {
+      console.debug(`Cache miss for canvas ${canvasId}`);
+    }
+
+    const pixels = await getCanvasPixels(canvasId, canvas.width, canvas.height);
+    const unlockedCanvas: UnlockedCanvas = {
+      isLocked: false,
+      width: canvas.width,
+      height: canvas.height,
+      pixels,
+    };
+
+    if (canvas.locked) {
+      const canvasPaths = await saveCanvasToFileSystem(canvas, pixels);
+      const canvasPath = getLockedCanvasPath(canvasPaths, 1);
+
+      if (!canvasPath) {
+        throw new Error(
+          `Failed to create locked canvas files for canvas ${canvasId}`,
+        );
+      }
+
+      CANVAS_CACHE.set(canvasId, {
+        isLocked: true,
+        canvasPaths,
+      });
+
+      console.debug(`Canvas ${canvasId} saved to ${canvasPath}`);
+    } else {
+      CANVAS_CACHE.set(canvasId, unlockedCanvas);
+      console.debug(`Canvas ${canvasId} cached in memory`);
+    }
+
+    // We always want to return the unlocked canvas, even if the image is locked as sometimes the
+    // image hasn’t finished being written to the file system when Express tries to send it in the
+    // response.
+    return unlockedCanvas;
+  })();
+
+  CANVAS_LOADS.set(canvasId, loadPromise);
+
+  try {
+    return await loadPromise;
+  } finally {
+    CANVAS_LOADS.delete(canvasId);
+  }
+}
+
+export function getLockedCanvasPath(
+  canvasPaths: Partial<Record<CanvasExportScale, string>>,
+  scale: CanvasExportScale,
+): string | undefined {
+  return canvasPaths[scale];
 }
 
 interface CreateCanvasParams {
@@ -500,8 +624,6 @@ export async function editCanvas({
 
   socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
 
-  socketHandler.broadcastCanvasUpdate(canvasToCanvasInfo(canvas));
-
   return canvas;
 }
 
@@ -535,7 +657,7 @@ export async function pasteCanvasData(
   }
 
   if (!canvas.event_id) {
-    throw new Error(
+    throw new UnprocessableError(
       `Canvas with ID ${canvasId} is not associated with an event`,
     );
   }

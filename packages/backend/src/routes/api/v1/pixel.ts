@@ -1,6 +1,5 @@
 import {
   CanvasIdParamModel,
-  type DiscordUserProfile,
   PlacePixelArrayBodyModel,
   PlacePixelBodyModel,
   type Point,
@@ -9,6 +8,7 @@ import { Router } from "express";
 import config from "@/config";
 import { ForbiddenError, UnauthorizedError } from "@/errors";
 import { socketHandler } from "@/index";
+import { assertLoggedIn } from "@/middleware/canvasAuth";
 import { pixelPlacementLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
@@ -21,6 +21,8 @@ import {
   validatePixel,
   validateUser,
 } from "@/services/pixelService";
+import { verifyTurnstileToken } from "@/services/turnstileService";
+import { addSpanAttributes } from "@/utils/otel";
 import { historyRouter } from "./history";
 
 export const pixelRouter = typedRouter(Router({ mergeParams: true }));
@@ -70,11 +72,19 @@ pixelRouter.post(
     }
 
     const { x, y, colorId } = req.body;
-    const profile = req.user as DiscordUserProfile;
+    assertLoggedIn(req);
+    const profile = req.user;
 
-    if (!profile?.id) {
-      throw new UnauthorizedError("User is not authenticated");
-    }
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "color.id": colorId,
+      "coordinate.x": x,
+      "coordinate.y": y,
+      "turnstile.provided": Boolean(req.body.turnstileToken),
+      "pixel.place.success": false,
+    });
+
+    await verifyTurnstileToken(req.body.turnstileToken ?? "");
 
     const coordinates: Point = { x, y };
     const guildFlags = await withDiscordAccessToken(
@@ -88,6 +98,11 @@ pixelRouter.post(
       validatePixel(req.params.canvasId, coordinates, true),
       validateUser(BigInt(profile.id)),
     ]);
+
+    addSpanAttributes(req, {
+      "color.name": color.name,
+    });
+
     const { futureCooldown } = await placePixel(
       req.params.canvasId,
       BigInt(profile.id),
@@ -96,10 +111,18 @@ pixelRouter.post(
     );
     if (!futureCooldown) {
       res.status(201).json({ cooldownEndTime: null });
+      addSpanAttributes(req, {
+        "pixel.place.cooldown": false,
+        "pixel.place.success": true,
+      });
       return;
     }
-    res
-      .status(201)
-      .json({ cooldownEndTime: futureCooldown.valueOf() - Date.now() });
+
+    const cooldownMs = futureCooldown.valueOf() - Date.now();
+    res.status(201).json({ cooldownEndTime: cooldownMs });
+    addSpanAttributes(req, {
+      "pixel.place.cooldown": cooldownMs,
+      "pixel.place.success": true,
+    });
   },
 );

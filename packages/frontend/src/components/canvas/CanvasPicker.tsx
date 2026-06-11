@@ -3,6 +3,7 @@
 import type { CanvasSummary } from "@blurple-canvas-web/types";
 import { NativeSelect, nativeSelectClasses, styled } from "@mui/material";
 import { ChevronsUpDown } from "lucide-react";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasInfo, useCanvasList, useEventInfo } from "@/hooks";
 
@@ -66,12 +67,15 @@ const canvasToSelectOption = ({ id, name }: CanvasSummary) => (
 );
 
 export default function CanvasPicker() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useParams();
   const { data: canvases = [], isLoading: canvasListIsLoading } =
     useCanvasList();
   const { data: mainCanvas, isLoading: mainCanvasIsLoading } = useCanvasInfo();
   const { data: currentEvent, isLoading: currentEventIsLoading } =
     useEventInfo();
-  const { canvas: activeCanvas, setCanvas } = useCanvasContext();
+  const { canvas: activeCanvas } = useCanvasContext();
 
   const isLoading =
     false &&
@@ -84,7 +88,14 @@ export default function CanvasPicker() {
   const pastCanvases = canvases.filter(({ id }) => id !== currentEvent?.id);
 
   function handleChangeCanvas(event: React.ChangeEvent<HTMLSelectElement>) {
-    setCanvas(Number.parseInt(event.target.value, 10));
+    const newCanvasId = event.target.value;
+    const currentCanvasId = params?.canvasId as string | undefined;
+    if (currentCanvasId) {
+      const restOfPath = pathname.slice(`/canvas/${currentCanvasId}`.length);
+      router.push(`/canvas/${newCanvasId}${restOfPath}`);
+    } else {
+      router.push(`/canvas/${newCanvasId}`);
+    }
   }
 
   return (

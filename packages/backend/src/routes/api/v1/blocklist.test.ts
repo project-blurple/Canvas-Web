@@ -1,4 +1,5 @@
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import {
   addUsersToBlocklist,
   getBlocklist,
@@ -15,6 +16,10 @@ vi.mock("@/services/blocklistService", () => ({
   addUsersToBlocklist: vi.fn(),
   getBlocklist: vi.fn(),
   removeUsersFromBlocklist: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -113,6 +118,16 @@ describe("Blocklist route tests", () => {
     ]);
     expect(addUsersToBlocklist).toHaveBeenCalledTimes(1);
     expect(addUsersToBlocklist).toHaveBeenCalledWith([1n, 2n]);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "blocklist.add",
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          userIds: ["1", "2"],
+        }),
+      }),
+    );
   });
 
   it("removes users from the blocklist for a moderator", async () => {
@@ -130,7 +145,33 @@ describe("Blocklist route tests", () => {
 
     expect(response.body).toStrictEqual({});
     expect(removeUsersFromBlocklist).toHaveBeenCalledTimes(1);
-    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n]);
+    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n], []);
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "blocklist.remove",
+      expect.objectContaining({
+        metadata: { userIds: ["9"] },
+      }),
+    );
+  });
+
+  it("passes the restore flag when removing users from the blocklist", async () => {
+    const app = createApp({ authenticated: true, moderator: true });
+    vi.mocked(isCanvasModerator).mockResolvedValueOnce(true);
+    vi.mocked(removeUsersFromBlocklist).mockResolvedValueOnce(undefined);
+
+    await request(app)
+      .delete("/api/v1/blocklist")
+      .set("Test-User-Id", "1")
+      .send({
+        userId: ["9", "10"],
+        shouldRestoreHistoryForCanvasId: [1],
+      })
+      .type("json")
+      .expect(204);
+
+    expect(removeUsersFromBlocklist).toHaveBeenCalledWith([9n, 10n], [1]);
   });
 
   it("returns 401 when blocklist access is unauthenticated", async () => {

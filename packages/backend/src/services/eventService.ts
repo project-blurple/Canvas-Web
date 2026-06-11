@@ -88,5 +88,6 @@ export async function editEvent(
       name: newName,
     },
   });
+
   return await assignIsCurrentEvent(event);
 }

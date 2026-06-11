@@ -2,6 +2,7 @@
 
 import { css, styled } from "@mui/material";
 import Image from "next/image";
+import { useCanvasContext } from "@/contexts/CanvasContext";
 import { CanvasPicker } from "../canvas";
 import Nav, { NavLink } from "./Nav";
 
@@ -58,9 +59,11 @@ const Logo = styled(Image)(
 );
 
 export default function Header() {
+  const { canvas } = useCanvasContext();
+
   return (
     <Wrapper>
-      <CompositeLogo href="/">
+      <CompositeLogo href={`/canvas/${canvas.id}`}>
         <Logo
           alt="Blurple Canvas logo"
           src="/images/blurple-canvas-logo~dark.svg"
