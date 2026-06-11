@@ -1,5 +1,6 @@
 import {
   type CanvasInfo,
+  type PixelColor,
   type PlacePixelSocket,
   SocketEvents,
 } from "@blurple-canvas-web/types";
@@ -64,17 +65,19 @@ export class SocketHandler {
         },
       });
 
-      console.log(
-        `[Socket ${socket.id}]: Synchronizing client requires ${pixels.length} pixels to be sent`,
-      );
+      if (pixels.length > 0) {
+        console.log(
+          `[Socket ${socket.id}]: Synchronizing client requires ${pixels.length} pixels to be sent`,
+        );
 
-      this.broadcastPixelBulkPlacement(canvasId, {
-        pixels: pixels.map((pixel) => ({
-          x: pixel.x,
-          y: pixel.y,
-          rgba: pixel.color.rgba,
-        })),
-      });
+        this.broadcastPixelBulkPlacement(canvasId, {
+          pixels: pixels.map((pixel) => ({
+            x: pixel.x,
+            y: pixel.y,
+            rgba: pixel.color.rgba as PixelColor,
+          })),
+        });
+      }
     } catch (error) {
       console.error(
         `[Socket ${socket.id}]: Error fetching new placed pixels: ${error}`,
@@ -98,5 +101,9 @@ export class SocketHandler {
 
   public broadcastCanvasUpdate(payload: CanvasInfo) {
     this.io.emit(SocketEvents.canvasUpdate, payload);
+  }
+
+  public broadcastNoticeUpdate() {
+    this.io.emit(SocketEvents.noticeUpdate);
   }
 }

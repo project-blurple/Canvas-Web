@@ -1,6 +1,7 @@
 import {
   type DiscordUserProfile,
   type Frame,
+  type FrameOwnerInput,
   FrameOwnerType,
   type GuildOwnedFrame,
   type UserOwnedFrame,
@@ -13,7 +14,6 @@ import {
   NotFoundError,
   UnprocessableError,
 } from "@/errors";
-import type { FrameOwnerInput } from "@/models/frame.models";
 import { PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
@@ -47,21 +47,21 @@ async function findFrameForType(frameId: string) {
 
 type FrameDbRecord = NonNullable<Awaited<ReturnType<typeof findFrameForType>>>;
 
-type UserOwnerRecord = {
+interface UserOwnerRecord {
   user_id: bigint;
   username: string;
   profile_picture_url: string;
-};
+}
 
-type GuildOwnerRecord = {
+interface GuildOwnerRecord {
   guild_id: bigint;
   name: string;
-};
+}
 
-type OwnerLookup = {
+interface OwnerLookup {
   usersById: Map<bigint, UserOwnerRecord>;
   guildsById: Map<bigint, GuildOwnerRecord>;
-};
+}
 
 function partitionOwnerIds(frames: FrameDbRecord[]) {
   const userIds = new Set<bigint>();
@@ -394,7 +394,7 @@ export async function createFrame(
       .padStart(6, "0");
 
     try {
-      await prisma.frame.create({
+      return await prisma.frame.create({
         data: {
           id,
           canvas_id: canvasId,
@@ -406,7 +406,6 @@ export async function createFrame(
           y_1: y1,
         },
       });
-      return;
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&

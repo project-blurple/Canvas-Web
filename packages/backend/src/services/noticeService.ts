@@ -1,7 +1,6 @@
-import type { Notice, NoticeType } from "@blurple-canvas-web/types";
+import type { Notice, NoticeBody, NoticeType } from "@blurple-canvas-web/types";
 import { type notice as NoticeDbModel, prisma } from "@/client";
 import { BadRequestError } from "@/errors";
-import type { NoticeBody } from "@/models/notice.models";
 
 function noticeFromDb(notice: NoticeDbModel): Notice {
   return {
@@ -10,23 +9,23 @@ function noticeFromDb(notice: NoticeDbModel): Notice {
     header: notice.header,
     content: notice.content,
     priority: notice.priority,
-    startAt: notice.start_at,
-    endAt: notice.end_at,
+    startAt: notice.start_at?.toISOString() ?? null,
+    endAt: notice.end_at?.toISOString() ?? null,
     persisted: notice.persisted,
     canvasId: notice.canvas_id,
-    createdAt: notice.created_at,
+    createdAt: notice.created_at.toISOString(),
   };
 }
 
 function isNoticeActive(notice: Notice): boolean {
+  // A notice without startAt has not been scheduled and is never active.
+  // The input invariant ensures endAt can only be set when startAt is also set.
+  if (!notice.startAt) return false;
+
   const now = new Date();
-  const hasStarted = notice.startAt ? now >= new Date(notice.startAt) : null;
-  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : null;
-  return (
-    (hasStarted === true && hasEnded === false) ||
-    (hasStarted === true && hasEnded === null) ||
-    (hasStarted === null && hasEnded === false) // this case should theoretically never exist
-  );
+  const hasStarted = now >= new Date(notice.startAt);
+  const hasEnded = notice.endAt ? now >= new Date(notice.endAt) : false;
+  return hasStarted && !hasEnded;
 }
 
 function normalizeNoticeWindow({
@@ -36,29 +35,11 @@ function normalizeNoticeWindow({
   startAt?: Date | null;
   endAt?: Date | null;
 }): { startAt?: Date | null; endAt?: Date | null } {
-  const normalizedStartAt =
-    (
-      endAt !== undefined &&
-      endAt !== null &&
-      (startAt === undefined || startAt === null)
-    ) ?
-      new Date()
-    : startAt;
-
-  if (
-    normalizedStartAt !== undefined &&
-    normalizedStartAt !== null &&
-    endAt !== undefined &&
-    endAt !== null &&
-    endAt <= normalizedStartAt
-  ) {
+  if (startAt != null && endAt != null && endAt <= startAt) {
     throw new BadRequestError("endAt must be after startAt");
   }
 
-  return {
-    startAt: normalizedStartAt,
-    endAt,
-  };
+  return { startAt, endAt };
 }
 
 export async function getNotices(activeOnly: boolean): Promise<Notice[]> {

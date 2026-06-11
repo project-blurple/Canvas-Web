@@ -1,6 +1,7 @@
 import express from "express";
 import request from "supertest";
 import { errorHandler } from "@/middleware/errorHandler";
+import { audit } from "@/services/auditLogService";
 import { isCanvasInCurrentEvent } from "@/services/canvasService";
 import {
   isCanvasAdmin,
@@ -16,6 +17,10 @@ import { historyRouter } from "./history";
 vi.mock("@/services/historyService", () => ({
   deletePixelHistoryEntries: vi.fn(),
   getPixelHistorySummary: vi.fn(),
+}));
+
+vi.mock("@/services/auditLogService", () => ({
+  audit: vi.fn(async () => {}),
 }));
 
 vi.mock("@/services/discordGuildService", () => ({
@@ -55,7 +60,7 @@ describe("History route tests", () => {
 
   it("returns pixel history for a single coordinate", async () => {
     const responseBody = {
-      pixelHistory: [
+      entries: [
         {
           id: "1",
           color: { id: 1, name: "Red", code: "FF00" },
@@ -65,7 +70,9 @@ describe("History route tests", () => {
           userProfile: null,
         },
       ],
-      totalEntries: 1,
+      total: 1,
+      page: 1,
+      size: 20,
       historyIds: ["1"],
       users: {
         "1": {
@@ -105,8 +112,10 @@ describe("History route tests", () => {
 
   it("returns pixel history for a range and user filter", async () => {
     const responseBody = {
-      pixelHistory: [],
-      totalEntries: 0,
+      entries: [],
+      total: 0,
+      page: 1,
+      size: 20,
       historyIds: [],
       users: {},
     };
@@ -156,8 +165,10 @@ describe("History route tests", () => {
 
   it("returns pixel history for a range and excluded color filter", async () => {
     const responseBody = {
-      pixelHistory: [],
-      totalEntries: 0,
+      entries: [],
+      total: 0,
+      page: 1,
+      size: 20,
       historyIds: [],
       users: {},
     };
@@ -258,6 +269,18 @@ describe("History route tests", () => {
       },
       true,
     );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "moderator",
+      "pixel_history.delete",
+      expect.objectContaining({
+        resourceId: 1,
+        metadata: expect.objectContaining({
+          shouldBlockAuthors: true,
+          forced: false,
+        }),
+      }),
+    );
   });
 
   it("returns 403 when deleting history for a canvas not in current event", async () => {
@@ -321,6 +344,18 @@ describe("History route tests", () => {
         colorFilter: undefined,
       },
       true,
+    );
+    expect(audit).toHaveBeenCalledWith(
+      expect.anything(),
+      "admin",
+      "pixel_history.delete",
+      expect.objectContaining({
+        resourceId: 1,
+        metadata: expect.objectContaining({
+          shouldBlockAuthors: true,
+          forced: true,
+        }),
+      }),
     );
   });
 

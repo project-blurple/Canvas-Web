@@ -1,21 +1,16 @@
 "use client";
 
-import {
-  type CanvasInfo,
-  type Frame,
-  type PlacePixelSocket,
-  type Point,
-  SocketEvents,
+import type {
+  CanvasInfo,
+  Frame,
+  PixelHistoryOverlayPixel,
+  PlacePixelSocket,
+  Point,
 } from "@blurple-canvas-web/types";
+import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import {
-  Maximize2,
-  Minimize2,
-  PanelRightClose,
-  PanelRightOpen,
-} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import CanvasImageMask from "@/components/canvas/CanvasImageMask";
+import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
 import SelectedBoundsOverlay from "@/components/canvas/SelectedBoundsOverlay";
 import config from "@/config/clientConfig";
 import {
@@ -30,6 +25,7 @@ import {
   useCanvasImage,
   useCanvasSearchParams,
   useIsFullscreenAvailable,
+  useIsWebKit,
 } from "@/hooks";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import type { CanvasSearchParams } from "@/hooks/useCanvasSearchParams";
@@ -39,7 +35,8 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
-import VisuallyHidden from "../VisuallyHidden";
+import CanvasViewControls from "./CanvasViewControls";
+import { PixelGrid } from "./PixelGrid";
 import {
   addPoints,
   diffPoints,
@@ -158,59 +155,6 @@ const InviteButton = styled(Button)`
   }
 `;
 
-const BaseFullscreenButton = styled(Button, {
-  shouldForwardProp: (prop: string) =>
-    !["$isPanelVisible", "$isFullscreen"].includes(prop),
-})<{ $isPanelVisible?: boolean; $isFullscreen?: boolean }>`
-  inset-inline-end: 0.5rem;
-  inset-inline-end: ${(p) =>
-    p.$isPanelVisible &&
-    p.$isFullscreen &&
-    css`
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100vi - 1rem))
-      );
-      inset-inline-end: calc(
-        min(var(--action-panel-width), calc(100dvi - 1rem))
-      );
-    `};
-
-  color: white;
-  position: absolute;
-  text-decoration: none;
-  border-color: transparent;
-  min-width: auto;
-  padding: 0.5rem;
-
-  @media (hover: hover) and (pointer: fine) {
-    &:hover {
-      border-color: inherit;
-      box-shadow: 0 0 10px oklch(0 0 0 / 25%);
-    }
-  }
-`;
-
-const FullscreenButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 1rem 0.5rem 0.5rem;
-  inset-block-start: 0.5rem;
-  z-index: 1;
-
-  #${CANVAS_WRAPPER_CLASS_NAME}:fullscreen &,
-  #${CANVAS_WRAPPER_CLASS_NAME}:-webkit-full-screen & {
-    border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  }
-
-  ${({ theme }) => theme.breakpoints.down("md")} {
-    display: none;
-  }
-`;
-
-const FullscreenPanelButton = styled(BaseFullscreenButton)`
-  border-radius: 0.5rem 0.5rem 0.5rem 1rem;
-  inset-block-start: 4rem;
-  z-index: 3;
-`;
-
 const FullscreenPanelOverlay = styled("div")`
   box-sizing: border-box;
   height: 100%;
@@ -234,6 +178,8 @@ const CanvasImageWrapper = styled("div", {
   isLoading: boolean;
   isLaunching: boolean;
 }>`
+  box-shadow: 0 0 100px 0 rgba(0 0 0 / 0.15);
+  position: relative;
   transition: filter var(--transition-duration-medium) ease;
   ${({ isLoading }) =>
     isLoading &&
@@ -241,8 +187,6 @@ const CanvasImageWrapper = styled("div", {
       cursor: wait;
       filter: grayscale(80%);
     `}
-
-  position: relative;
 
   img {
     ${({ isLaunching }) =>
@@ -486,6 +430,8 @@ interface CanvasViewProps {
     typeof ActionPanel
   >;
   canvasLabel?: string;
+  searchOverlayPixels?: PixelHistoryOverlayPixel[] | null;
+  searchOverlayVisible?: boolean;
   showInvite?: boolean;
   showNotices?: boolean;
   showReticle?: boolean;
@@ -494,6 +440,8 @@ interface CanvasViewProps {
 export default function CanvasView({
   actionPanel,
   canvasLabel,
+  searchOverlayPixels = null,
+  searchOverlayVisible = false,
   showInvite = true,
   showNotices = true,
   showReticle = true,
@@ -512,12 +460,13 @@ export default function CanvasView({
     showSelectedBounds,
     setSelectedBounds,
   } = useSelectedBoundsContext();
-  const { canvas, setCanvas } = useCanvasContext();
+  const { canvas } = useCanvasContext();
   const {
     containerRef,
     coords,
     isReticleVisible,
     offset,
+    setSelectedPixelColor,
     setCoords,
     setOffset,
     setZoom,
@@ -539,7 +488,7 @@ export default function CanvasView({
   // Only applies to when zooming is triggered by wheel event
   const [isZooming, setIsZooming] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [maskCoordinates, setMaskCoordinates] = useState<Point[]>([]);
+  const [isGridVisible, setIsGridVisible] = useState(false);
   // const canvasCtxRef = useRef<OffscreenCanvasRenderingContext2D | null>(null);
   const offscreenCanvasRef = useRef<OffscreenCanvas | null>(null);
   const currentCanvasIDRef = useRef(0);
@@ -548,31 +497,12 @@ export default function CanvasView({
   // Maximum amount of pixels that can be overlaid. From testing on an M1 Pro, seems to be around 100
   const pixelOverlayThreshold = 50;
 
-  const addMaskCoordinate = useCallback((point: Point) => {
-    setMaskCoordinates((prev) => {
-      for (const p of prev) if (p.x === point.x && p.y === point.y) return prev;
-      return [...prev, point];
-    });
-  }, []);
-
-  const clearMaskCoordinates = useCallback(() => {
-    setMaskCoordinates([]);
-  }, []);
-
   /**
    * Transition animation on canvas pan and zoom is blurred on Safari and needs to be disabled.
    * If the user spoof their user agent, this is not my problem.
    * @see https://bugs.webkit.org/show_bug.cgi?id=27684
    */
-  const isWebKit = useMemo(() => {
-    const { userAgent: ua, vendor } = navigator;
-    const isProbablyWebKit =
-      vendor === "Apple Computer, Inc." ||
-      ua.includes("AppleWebKit/") ||
-      ua.includes("Safari/");
-    const isNotChromium = !ua.includes("Chrome/") && !ua.includes("Chromium/");
-    return isProbablyWebKit && isNotChromium;
-  }, []);
+  const isWebKit = useIsWebKit();
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -582,7 +512,6 @@ export default function CanvasView({
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
   });
-  const hasAppliedInitialCanvasRef = useRef(false);
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
 
@@ -686,24 +615,6 @@ export default function CanvasView({
     [canvas.id, initialFrameFromSearchParams],
   );
 
-  useEffect(
-    function switchToCanvasFromSearchParams() {
-      if (hasAppliedInitialCanvasRef.current) return;
-
-      const targetCanvasId = initialCanvasSearchParamsRef.current.canvasId;
-      if (targetCanvasId === null || targetCanvasId === canvas.id) {
-        hasAppliedInitialCanvasRef.current = true;
-        return;
-      }
-
-      hasAppliedInitialCanvasRef.current = true;
-      void setCanvas(targetCanvasId).catch(() => {
-        // If URL canvas does not exist, keep default canvas.
-      });
-    },
-    [canvas.id, setCanvas],
-  );
-
   useEffect(() => {
     // Stops placing pixels from reloading the canvas
     if (currentCanvasIDRef.current === canvas.id) return;
@@ -757,8 +668,14 @@ export default function CanvasView({
       payload: PlacePixelSocket.Payload,
       clearBeforePaint: boolean,
     ) => {
-      if (clearBeforePaint && payload.rgba[3] < 255) {
-        ctx.clearRect(payload.x, payload.y, 1, 1);
+      if (payload.rgba[3] < 255) {
+        if (clearBeforePaint) {
+          ctx.clearRect(payload.x, payload.y, 1, 1);
+        } else {
+          const backgroundColor = "rgba(35, 35, 40, 1)";
+          ctx.fillStyle = backgroundColor;
+          ctx.fillRect(payload.x, payload.y, 1, 1);
+        }
       }
 
       const [r, g, b, a] = payload.rgba;
@@ -768,7 +685,6 @@ export default function CanvasView({
 
     const refreshCanvasImage = () => {
       clearOverlay();
-      clearMaskCoordinates();
       offscreenCanvasRef.current?.convertToBlob().then((blob) => {
         if (!imageRef.current) return;
         const oldSrc = imageRef.current.src;
@@ -813,10 +729,6 @@ export default function CanvasView({
         // flush the overlaid pixels and update canvas image
         refreshCanvasImage();
       } else {
-        if (payload.rgba[3] < 255) {
-          addMaskCoordinate({ x: payload.x, y: payload.y });
-        }
-
         // overlay the pixel without any changes
         overlayCountRef.current++;
         overlayPixel(payload);
@@ -847,9 +759,6 @@ export default function CanvasView({
       }
 
       for (const pixel of payload.pixels) {
-        if (pixel.rgba[3] < 255) {
-          addMaskCoordinate({ x: pixel.x, y: pixel.y });
-        }
         overlayCountRef.current++;
         overlayPixel(pixel);
       }
@@ -920,6 +829,7 @@ export default function CanvasView({
     // canvasImageWrapper.children only gets populated per DOM update.
     // This means that if the pixels are overlaid in a for loop, `clearOverlay` doesn't run during the loop.
     // Keep this in mind when testing for performance.
+    console.debug("[Live Updating]: Clearing overlaid pixels");
     const canvasImageWrapper = canvasImageWrapperRef.current;
     if (!canvasImageWrapper) return;
     // Clears all overlaid pixels and retains the original image
@@ -1209,7 +1119,11 @@ export default function CanvasView({
    */
   const handleCanvasClick = useCallback(
     (event: PointerEvent): void => {
-      if (!(event.currentTarget instanceof HTMLElement) || !event.isPrimary)
+      if (
+        !(event.currentTarget instanceof HTMLElement) ||
+        !event.isPrimary ||
+        event.button !== 0
+      )
         return;
       const canvas = event.currentTarget;
       // Use boundingClientRect for more accurate pixel positioning
@@ -1224,6 +1138,25 @@ export default function CanvasView({
       setCoords(boundedCanvasPos);
     },
     [zoom, setCoords],
+  );
+
+  useEffect(
+    function sampleCurrentPixel() {
+      const ctx = offscreenCanvasRef.current?.getContext("2d");
+      if (!coords || !ctx) {
+        setSelectedPixelColor(null);
+        return;
+      }
+      try {
+        const { data } = ctx.getImageData(coords.x, coords.y, 1, 1);
+        setSelectedPixelColor([data[0], data[1], data[2], data[3]]);
+      } catch {
+        setSelectedPixelColor(null);
+      }
+      // No clean-up. This Effect is a hack; the selected pixel colour should be derived within
+      // render lifecycle. Hopefully we clean it up at some point.
+    },
+    [coords, setSelectedPixelColor],
   );
 
   useEffect(() => {
@@ -1241,10 +1174,6 @@ export default function CanvasView({
 
   const reticleOffset = calculateReticleOffset(coords);
 
-  const toggleFullscreenPanel = useCallback(() => {
-    setFullscreenPanelVisible((visible) => !visible);
-  }, [setFullscreenPanelVisible]);
-
   const toggleFullscreen = useCallback(async () => {
     const container = containerRef.current;
     if (!container) return;
@@ -1260,6 +1189,41 @@ export default function CanvasView({
     }
   }, [containerRef]);
 
+  const toggleFullscreenPanel = useCallback(() => {
+    setFullscreenPanelVisible((visible) => !visible);
+  }, [setFullscreenPanelVisible]);
+
+  const toggleGridVisible = useCallback(() => {
+    setIsGridVisible((visible) => !visible);
+  }, []);
+
+  const canvasViewControls = useMemo(
+    () => ({
+      fullscreen: {
+        isActive: isFullscreen,
+        isAvailable: canUseFullscreen,
+        toggle: toggleFullscreen,
+      },
+      panel: {
+        isActive: isFullscreenPanelVisible,
+        toggle: toggleFullscreenPanel,
+      },
+      grid: {
+        isActive: isGridVisible,
+        toggle: toggleGridVisible,
+      },
+    }),
+    [
+      canUseFullscreen,
+      isFullscreen,
+      isFullscreenPanelVisible,
+      isGridVisible,
+      toggleFullscreen,
+      toggleFullscreenPanel,
+      toggleGridVisible,
+    ],
+  );
+
   return (
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
@@ -1267,39 +1231,9 @@ export default function CanvasView({
       onPointerDown={handlePointerDown}
     >
       {showNotices && <Notices />}
-      {canUseFullscreen && (
-        <FullscreenButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
-          aria-pressed={isFullscreen}
-          onClick={toggleFullscreen}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          {isFullscreen ?
-            <Minimize2 />
-          : <Maximize2 />}
-        </FullscreenButton>
-      )}
-      {canUseFullscreen && isFullscreen && (
-        <FullscreenPanelButton
-          $isFullscreen={isFullscreen}
-          $isPanelVisible={isFullscreenPanelVisible}
-          onClick={toggleFullscreenPanel}
-          onPointerDown={(event) => event.stopPropagation()}
-          type="button"
-        >
-          <VisuallyHidden>
-            {isFullscreenPanelVisible ?
-              "Hide action panel"
-            : "Show action panel"}
-          </VisuallyHidden>
-          {isFullscreenPanelVisible ?
-            <PanelRightClose />
-          : <PanelRightOpen />}
-        </FullscreenPanelButton>
-      )}
+
+      <CanvasViewControls {...canvasViewControls} />
+
       {showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
@@ -1356,6 +1290,7 @@ export default function CanvasView({
             }}
           />
         </ReticleContainer>
+
         {showSelectedBounds && (
           <SelectedBoundsOverlay
             canvasWidth={canvas.width}
@@ -1370,6 +1305,7 @@ export default function CanvasView({
             zoom={zoom}
           />
         )}
+
         <CanvasImageWrapper
           aria-busy={isLaunching || isLoading}
           ref={canvasImageWrapperRef}
@@ -1387,14 +1323,16 @@ export default function CanvasView({
             // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
             style={{ minWidth: canvas.width, minHeight: canvas.height }}
           />
-          {maskCoordinates && maskCoordinates.length > 0 && (
-            <CanvasImageMask
-              canvasHeight={canvas.height}
-              canvasWidth={canvas.width}
-              coordinates={maskCoordinates}
-            />
-          )}
         </CanvasImageWrapper>
+
+        <PixelGrid zoom={zoom} hidden={!isGridVisible} />
+
+        <ComplexSearchOverlay
+          canvasHeight={canvas.height}
+          canvasWidth={canvas.width}
+          pixels={searchOverlayPixels}
+          visible={searchOverlayVisible}
+        />
       </div>
       {isFullscreen && isFullscreenPanelVisible && (
         <FullscreenPanelOverlay

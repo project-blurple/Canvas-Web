@@ -11,7 +11,8 @@ COPY packages/backend/package.json ./packages/backend/
 
 COPY packages/backend ./packages/backend
 COPY packages/types ./packages/types
-RUN pnpm ci --no-optional
+# RUN pnpm ci --no-optional
+RUN pnpm ci
 
 ENV NODE_ENV=production
 
@@ -20,7 +21,12 @@ RUN pnpm --filter backend build
 # Use --ignore-scripts so that the Prisma postinstall script doesn't run.
 # --no-optional is very important as otherwise the optional prisma peer dependency of @prisma/client
 # is installed, which includes React, and a number of other frontend packages we don't want.
-RUN pnpm --filter backend deploy --prod --no-optional --ignore-scripts deploy
+# RUN pnpm --filter backend deploy --prod --no-optional --ignore-scripts deploy
+RUN pnpm --filter backend deploy --prod --ignore-scripts deploy
+
+FROM builder AS migrator
+WORKDIR /app/packages/backend
+CMD ["pnpm", "prisma:migrate"]
 
 #
 # Production stage

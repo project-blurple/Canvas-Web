@@ -15,6 +15,7 @@ const StyledObject = styled("object")`
   aspect-ratio: 1;
   border-radius: calc(infinity * 1px);
   border: var(--card-border);
+  overflow: clip;
 `;
 
 const AvatarImage = styled("img")`

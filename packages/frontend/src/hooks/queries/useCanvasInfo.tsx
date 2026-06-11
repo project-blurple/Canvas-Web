@@ -4,18 +4,12 @@ import type { CanvasInfo, CanvasInfoRequest } from "@blurple-canvas-web/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios, { type AxiosError, type AxiosResponse } from "axios";
 import config from "@/config/clientConfig";
+import { fetchCanvasInfo } from "./serverFetch";
 
 export function useCanvasInfo(canvasId?: CanvasInfo["id"]) {
-  const getMainCanvasInfo = async () => {
-    const response = await axios.get<CanvasInfoRequest.ResBody>(
-      `${config.apiUrl}/api/v1/canvas/${canvasId ? encodeURIComponent(canvasId) : "current"}/info`,
-    );
-    return response.data;
-  };
-
   return useQuery<CanvasInfoRequest.ResBody>({
     queryKey: ["canvasInfo", canvasId],
-    queryFn: getMainCanvasInfo,
+    queryFn: () => fetchCanvasInfo(canvasId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });

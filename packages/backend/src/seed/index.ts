@@ -4,7 +4,7 @@ import process from "node:process";
 import { parseArgs } from "node:util";
 import { PrismaPg } from "@prisma/adapter-pg";
 // @ts-expect-error Runtime uses built JS Prisma client; no declaration file is emitted.
-import { PrismaClient } from "../../build/client/generated/client.js";
+import { PrismaClient } from "../../build/client/core/generated/client.js";
 import {
   canvasSeedData,
   colorSeedData,
@@ -75,7 +75,7 @@ async function runSeedingStep(
   action?: () => Promise<void>,
 ): Promise<void> {
   const startedAt = performance.now();
-  logWithTiming(`Seeding ${step}...`);
+  logWithTiming(`Seeding ${step}…`);
   await action?.();
   logWithTiming(
     `Seeded ${step} (${Math.round(performance.now() - startedAt)}ms)`,
@@ -157,21 +157,17 @@ async function main() {
     for (const seeding of sortedSeedings) {
       switch (seeding) {
         case "guild":
-          await prisma.guild
-            .deleteMany({
-              where: { id: { not: 0 } },
-            })
-            .catch();
+          await prisma.guild.deleteMany({
+            where: { id: { not: 0 } },
+          });
           break;
         case "web_guild":
-          await prisma.guild
-            .deleteMany({
-              where: { id: 0 },
-            })
-            .catch();
+          await prisma.guild.deleteMany({
+            where: { id: 0 },
+          });
           break;
         default:
-          await prisma[seeding].deleteMany().catch();
+          await prisma[seeding].deleteMany();
       }
     }
   });
