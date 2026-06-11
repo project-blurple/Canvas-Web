@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import seedAll from "@/test";
 import { userIsBlocklisted } from "./blocklistService";
@@ -235,7 +236,7 @@ describe("restorePixelHistoryEntries", () => {
         name: "Test Canvas",
         width: 2,
         height: 2,
-        locked: false,
+        place_state: CanvasPlaceState.Anyone,
         cooldown_length: 0,
       },
     });
@@ -246,7 +247,7 @@ describe("restorePixelHistoryEntries", () => {
         name: "Test Canvas 2",
         width: 2,
         height: 2,
-        locked: false,
+        place_state: CanvasPlaceState.Anyone,
         cooldown_length: 0,
       },
     });
