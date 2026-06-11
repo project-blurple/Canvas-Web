@@ -17,6 +17,7 @@ allowBuilds:
   cpu-features: false
   esbuild: false
   ffmpeg-static: true
+  msw: false
   prisma: false
   protobufjs: false
   sharp: false
