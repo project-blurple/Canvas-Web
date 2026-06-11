@@ -131,34 +131,6 @@ canvasRouter.get(
 );
 
 canvasRouter.get(
-  "/:canvasId.mp4",
-  validate({
-    params: CanvasIdParamModel,
-    query: CanvasTimelapseParamModel,
-  }),
-  async (req, res) => {
-    const raw = req.query.raw || false;
-
-    const buffer = await generateTimelapse(
-      raw ?
-        {
-          canvasId: req.params.canvasId,
-          raw: true,
-        }
-      : { canvasId: req.params.canvasId },
-    );
-    res
-      .status(200)
-      .type(raw ? "webm" : "mp4")
-      .setHeader(
-        "Content-Disposition",
-        `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.${raw ? "webm" : "mp4"}"`,
-      )
-      .send(buffer);
-  },
-);
-
-canvasRouter.get(
   "/:canvasId",
   validate({ params: CanvasIdParamModel }),
   async (req, res) => {
