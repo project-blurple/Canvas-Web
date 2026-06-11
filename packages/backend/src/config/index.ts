@@ -13,6 +13,42 @@ function requiredEnv(key: keyof NodeJS.ProcessEnv): string {
   return value;
 }
 
+function parseBooleanEnv(value: string | undefined): boolean {
+  return value === "true";
+}
+
+function parseCanvasAllowlistEnv(value: string | undefined): number[] {
+  if (!value) {
+    return [];
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    throw new Error(`Invalid SNAPSHOTS_AVAILABLE_FOR_CANVASES value: ${value}`);
+  }
+
+  if (!Array.isArray(parsed)) {
+    throw new Error(
+      "SNAPSHOTS_AVAILABLE_FOR_CANVASES must be a JSON array of canvas ids",
+    );
+  }
+
+  const canvasIds = new Set<number>();
+  for (const entry of parsed) {
+    if (typeof entry !== "number" || !Number.isInteger(entry) || entry <= 0) {
+      throw new Error(
+        "SNAPSHOTS_AVAILABLE_FOR_CANVASES must contain only positive integer canvas ids",
+      );
+    }
+
+    canvasIds.add(entry);
+  }
+
+  return [...canvasIds];
+}
+
 const config = {
   /**
    * In development mode, secure cookies are not used for sending the profile. This is because
@@ -22,11 +58,27 @@ const config = {
   api: {
     port: process.env.PORT ? Number.parseInt(process.env.PORT, 10) : 8000,
   },
+  snapshot: {
+    generateSnapshots: parseBooleanEnv(process.env.GENERATE_SNAPSHOTS),
+    availableForCanvases: parseCanvasAllowlistEnv(
+      process.env.SNAPSHOTS_AVAILABLE_FOR_CANVASES,
+    ),
+    schedulerIntervalMs:
+      process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS ?
+        Number.parseInt(process.env.SNAPSHOT_SCHEDULER_INTERVAL_MS, 10)
+      : 60_000,
+  },
   paths: {
     root: path.resolve(),
     canvases: path.resolve("static", "canvas"),
   },
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  tracing: {
+    serviceName: process.env.OTEL_SERVICE_NAME || "canvas-backend",
+    otlpTracesEndpoint:
+      process.env.OTEL_EXPORTER_OTLP_TRACES_ENDPOINT ||
+      "http://localhost:4318/v1/traces",
+  },
   // having a random secret would mess with persistent sessions
   expressSessionSecret:
     process.env.EXPRESS_SESSION_SECRET || "change the secret in production",
@@ -57,6 +109,8 @@ const config = {
   },
   discordServerInvite: process.env.DISCORD_SERVER_INVITE,
   botApiKey: process.env.BOT_API_KEY,
+  captchaEnabled: process.env.CAPTCHA_ENABLED === "true",
+  turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY,
   databaseUrl: requiredEnv("DATABASE_URL"),
 } as const;
 

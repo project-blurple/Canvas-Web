@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import { LockKeyhole as LockIcon } from "lucide-react";
+import { LockKeyhole as LockIcon, Pipette } from "lucide-react";
 import { PrimitiveButton } from "../button";
 import VisuallyHidden from "../VisuallyHidden";
 import { StaticSwatch } from "./StaticSwatch";
@@ -7,7 +7,10 @@ import { StaticSwatch } from "./StaticSwatch";
 const StyledSwatch = styled(StaticSwatch, {
   shouldForwardProp: () => true,
 })`
+  align-items: center;
   border-width: 3px;
+  display: flex;
+  justify-content: center;
   position: relative;
   transition: var(--transition-duration-fast) ease;
   transition-property: border-color, outline-width, padding, scale;
@@ -71,5 +74,13 @@ export function InteractiveSwatch({
         </DisabledLockOverlay>
       )}
     </StyledSwatch>
+  );
+}
+
+export function EyedropperSwatch(props: InteractiveSwatchProps) {
+  return (
+    <InteractiveSwatch {...props}>
+      <Pipette />
+    </InteractiveSwatch>
   );
 }

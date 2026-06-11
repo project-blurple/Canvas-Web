@@ -24,8 +24,9 @@ import {
 } from "@/hooks/queries/usePixelHistory";
 import type { ViewBounds } from "@/util";
 import { durationFormatNarrow } from "@/util/intl";
+import { BasicHighlightButton } from "../button/BasicButtons";
 import {
-  ComplexSearchBoundsSelect,
+  BoundsSelect,
   ComplexSearchColorSelect,
   ComplexSearchDateSelect,
   ComplexSearchUserSelect,
@@ -484,11 +485,12 @@ export default function ComplexSearchTab({
               History search
             </ActionPanelPrimitives.SectionHeading>
             <Form onSubmit={handleSearchSubmit}>
-              <ComplexSearchBoundsSelect
+              <BoundsSelect
                 canvas={canvas}
                 selectedBounds={selectedBounds}
                 setSelectedBounds={setSelectedBounds}
                 disabled={isLoading}
+                style={{ marginBlock: "1em" }}
               />
               <ComplexSearchColorSelect
                 value={selectedColorIds}
@@ -512,11 +514,14 @@ export default function ComplexSearchTab({
                 setToTime={setToTime}
                 disabled={isLoading}
               />
-              <DynamicButton type="submit" disabled={!boundsValid || isLoading}>
+              <BasicHighlightButton
+                type="submit"
+                disabled={!boundsValid || isLoading}
+              >
                 {!historyQuery.isLoading ?
-                  `Search (${pixelsInBounds.toLocaleString()} pixel${pixelsInBounds !== 1 ? "s" : ""})`
-                : "Searching..."}
-              </DynamicButton>
+                  `Search (${pixelsInBounds.toLocaleString()} ${pixelsInBounds !== 1 ? "pixels" : "pixel"})`
+                : "Searching…"}
+              </BasicHighlightButton>
             </Form>
           </search>
         </ActionPanelTabBody>

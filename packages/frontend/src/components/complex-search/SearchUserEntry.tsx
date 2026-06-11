@@ -6,6 +6,7 @@ import type {
 import { styled } from "@mui/material";
 import { Copy } from "lucide-react";
 import { useMemo } from "react";
+import { toast } from "sonner";
 import { useCanvasContext } from "@/contexts";
 import { usePalette } from "@/hooks";
 import { rgbaToCssColor } from "@/util/color";
@@ -175,9 +176,10 @@ function SearchUserEntry({ userId, summary, colorById }: SearchUserEntryProps) {
         })}
       </ColorChipList>
       <UserIdButton
-        onClick={async () =>
-          void (await navigator.clipboard.writeText(userId.toString()))
-        }
+        onClick={async () => {
+          void (await navigator.clipboard.writeText(userId.toString()));
+          toast.success("Copied user ID");
+        }}
       >
         <code aria-hidden>{userId}</code>
         <Copy
