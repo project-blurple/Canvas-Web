@@ -7,9 +7,10 @@ import { ApiExceptionFilter } from "@/common/api-exception.filter";
 import { DatabaseModule } from "@/common/database/database.module";
 import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
+import { RealtimeModule } from "@/realtime/realtime.module";
 
 @Module({
-  imports: [AppConfigModule, DatabaseModule, AuthModule],
+  imports: [AppConfigModule, DatabaseModule, AuthModule, RealtimeModule],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
