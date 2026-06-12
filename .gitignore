@@ -3,6 +3,7 @@
 **/backend/static/snapshots
 **/backend/static/timelapse
 **/backend/data/snapshots
+**/backend-nest/static/canvas
 
 # Prisma generated files
 **/backend/src/client/core/generated/*
