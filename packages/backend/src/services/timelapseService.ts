@@ -841,18 +841,6 @@ async function getOrCreateTimelapseFromCache(
   const generationPromise = (async () => {
     await mkdir(getTimelapseCanvasDirectory(canvasId), { recursive: true });
 
-    // Ensure a raw frames-only timelapse (end_hold_duration_ms = 0) is generated
-    // and cached before producing the augmented timelapse. This lets callers
-    // request the raw variant later without re-encoding the frames.
-    const rawCacheParams: TimelapseCacheParams = {
-      ...cacheParams,
-      endHoldDurationMs: null,
-      showEndCard: false,
-    };
-    const rawCacheKey = buildTimelapseCacheKey(rawCacheParams);
-    const rawFileName = `${rawCacheKey}.webm`;
-    const rawFilePath = getTimelapseVideoPath(canvasId, rawFileName);
-
     const rawBuffer = await encodeMainVideoFromImages({
       imagePaths,
       frameRate: cacheParams.frameRate,
@@ -863,30 +851,11 @@ async function getOrCreateTimelapseFromCache(
     });
 
     if (cacheParams.raw) {
-      try {
-        const rawSize = await writeCachedTimelapseFile({
-          finalPath: rawFilePath,
-          buffer: rawBuffer,
-        });
-
-        const rawManifest = buildTimelapseManifestRecord(
-          cacheParams,
-          rawCacheKey,
-          rawFilePath,
-          rawSize,
-        );
-
-        await snapshotPrisma.timelapse_manifest.upsert({
-          where: { cache_key: rawCacheKey },
-          create: rawManifest,
-          update: rawManifest,
-        });
-      } catch (err) {
-        await unlink(rawFilePath).catch(() => undefined);
-        throw err;
-      }
-
-      return rawFilePath;
+      return await writeCachedRawTimelapse({
+        canvasId,
+        cacheParams,
+        rawBuffer,
+      });
     }
 
     const videoDimensions = getTimelapseVideoDimensions({
@@ -940,4 +909,48 @@ async function getOrCreateTimelapseFromCache(
   } finally {
     inFlightTimelapses.delete(cacheKey);
   }
+}
+
+async function writeCachedRawTimelapse({
+  canvasId,
+  cacheParams,
+  rawBuffer,
+}: {
+  canvasId: CanvasInfo["id"];
+  cacheParams: TimelapseCacheParams;
+  rawBuffer: Buffer;
+}): Promise<string> {
+  const rawCacheParams: TimelapseCacheParams = {
+    ...cacheParams,
+    endHoldDurationMs: null,
+    showEndCard: false,
+  };
+  const rawCacheKey = buildTimelapseCacheKey(rawCacheParams);
+  const rawFileName = `${rawCacheKey}.webm`;
+  const rawFilePath = getTimelapseVideoPath(canvasId, rawFileName);
+
+  try {
+    const rawSize = await writeCachedTimelapseFile({
+      finalPath: rawFilePath,
+      buffer: rawBuffer,
+    });
+
+    const rawManifest = buildTimelapseManifestRecord(
+      cacheParams,
+      rawCacheKey,
+      rawFilePath,
+      rawSize,
+    );
+
+    await snapshotPrisma.timelapse_manifest.upsert({
+      where: { cache_key: rawCacheKey },
+      create: rawManifest,
+      update: rawManifest,
+    });
+  } catch (err) {
+    await unlink(rawFilePath).catch(() => undefined);
+    throw err;
+  }
+
+  return rawFilePath;
 }
