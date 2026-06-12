@@ -125,7 +125,7 @@ canvasRouter.get(
       return;
     }
 
-    const buffer = await generateTimelapse(
+    const filePath = await generateTimelapse(
       raw ?
         {
           canvasId: req.params.canvasId,
@@ -133,6 +133,13 @@ canvasRouter.get(
         }
       : { canvasId: req.params.canvasId },
     );
+
+    const fileStats = await stat(filePath);
+
+    addSpanAttributes(req, {
+      "response.size": fileStats.size,
+    });
+
     res
       .status(200)
       .type(raw ? "webm" : "mp4")
@@ -140,9 +147,14 @@ canvasRouter.get(
         "Content-Disposition",
         `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.${raw ? "webm" : "mp4"}"`,
       )
-      .send(buffer);
-
-    // TODO: add response.size span attribute
+      .sendFile(filePath, (err) => {
+        if (err) {
+          console.error(
+            `Failed to send timelapse file ${filePath}:`,
+            err.message,
+          );
+        }
+      });
   },
 );
 

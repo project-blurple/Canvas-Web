@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import {
   CanvasIdParamModel,
   CreateFrameBodyModel,
@@ -110,11 +111,17 @@ frameRouter.get(
       "timelapse.end": end?.toISOString(),
     });
 
-    const buffer = await generateTimelapse({
+    const filePath = await generateTimelapse({
       canvasId: frame.canvasId,
       start,
       end,
       bounds: { ...frame },
+    });
+
+    const fileStats = await stat(filePath);
+
+    addSpanAttributes(req, {
+      "response.size": fileStats.size,
     });
 
     res
@@ -124,9 +131,14 @@ frameRouter.get(
         "Content-Disposition",
         `inline; filename="canvas-${frame.canvasId}-frame-${frame.id}-timelapse.mp4"`,
       )
-      .send(buffer);
-
-    // TODO: add response.size span attribute
+      .sendFile(filePath, (err) => {
+        if (err) {
+          console.error(
+            `Failed to send timelapse file ${filePath}:`,
+            err.message,
+          );
+        }
+      });
   },
 );
 

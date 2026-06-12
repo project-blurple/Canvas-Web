@@ -132,17 +132,17 @@ function buildTimelapseManifestRecord(
   } as const;
 }
 
-async function readCachedTimelapse(filePath: string): Promise<Buffer | null> {
+async function checkCachedTimelapseExists(filePath: string): Promise<boolean> {
   try {
     await stat(filePath);
-    return await readFile(filePath);
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
-// Map of cacheKey -> Promise resolving to generated Buffer for in-flight requests
-const inFlightTimelapses = new Map<string, Promise<Buffer>>();
+// Map of cacheKey -> Promise resolving to generated file path for in-flight requests
+const inFlightTimelapses = new Map<string, Promise<string>>();
 
 async function writeCachedTimelapseFile({
   finalPath,
@@ -649,72 +649,47 @@ async function encodeMainVideoFromImages({
   const scaleFilter = `,scale=trunc(iw*${scale}/2)*2:trunc(ih*${scale}/2)*2:flags=neighbor`;
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
 
-  const mainVideoBuffer =
-    raw ?
-      await (async () => {
-        const tempOutputPath = join(
-          tmpdir(),
-          `${process.pid}-${Date.now()}.webm`,
-        );
+  const tempOutputPath = join(
+    tmpdir(),
+    `${process.pid}-${Date.now()}.${raw ? "webm" : "mp4"}`,
+  );
 
-        try {
-          await runFfmpegProcess({
-            ffmpegPath,
-            args: buildMainVideoEncodeArgs({
-              frameRate,
-              ffmpegBackgroundColor,
-              filterGraph,
-              outputPath: tempOutputPath,
-              outputFormat: "webm",
-            }),
-            captureStdout: false,
-            onProcess: async (proc) => {
-              const stdin = proc.stdin;
-              if (!stdin) {
-                throw new Error("ffmpeg did not expose stdin");
-              }
-
-              await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
-            },
-          });
-
-          const outputBuffer = await readFile(tempOutputPath);
-          if (!outputBuffer.length) {
-            throw new Error("ffmpeg produced empty output");
-          }
-
-          return outputBuffer;
-        } finally {
-          await unlink(tempOutputPath).catch(() => undefined);
+  try {
+    await runFfmpegProcess({
+      ffmpegPath,
+      args: buildMainVideoEncodeArgs({
+        frameRate,
+        ffmpegBackgroundColor,
+        filterGraph,
+        outputPath: tempOutputPath,
+        outputFormat: raw ? "webm" : "mp4",
+      }),
+      captureStdout: false,
+      onProcess: async (proc) => {
+        const stdin = proc.stdin;
+        if (!stdin) {
+          throw new Error("ffmpeg did not expose stdin");
         }
-      })()
-    : await runFfmpegProcess({
-        ffmpegPath,
-        args: buildMainVideoEncodeArgs({
-          frameRate,
-          ffmpegBackgroundColor,
-          filterGraph,
-          outputPath: "pipe:1",
-          outputFormat: "mp4",
-        }),
-        captureStdout: true,
-        onProcess: async (proc) => {
-          const stdin = proc.stdin;
-          if (!stdin) {
-            throw new Error("ffmpeg did not expose stdin");
-          }
 
-          await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
-        },
-      });
+        await streamImagePathsToFfmpegStdin({ stdin, imagePaths });
+      },
+    });
 
-  if (!mainVideoBuffer) {
-    throw new Error("ffmpeg produced empty output");
+    const mainVideoBuffer = await readFile(tempOutputPath);
+    if (!mainVideoBuffer.length) {
+      throw new Error("ffmpeg produced empty output");
+    }
+
+    return mainVideoBuffer;
+  } finally {
+    await unlink(tempOutputPath).catch(() => undefined);
   }
-
-  return mainVideoBuffer;
 }
 
+/**
+ * Generates a timelapse video and returns the file path to the cached video.
+ * The video is written to disk and can be streamed to clients using res.sendFile().
+ */
 export async function generateTimelapse({
   canvasId,
   start,
@@ -726,7 +701,7 @@ export async function generateTimelapse({
   scale,
   backgroundColor = [35, 39, 42, 255],
   raw = false,
-}: GenerateTimelapseParams): Promise<Buffer> {
+}: GenerateTimelapseParams): Promise<string> {
   // TODO: Configurable speed
 
   if (raw) {
@@ -830,7 +805,7 @@ export async function generateTimelapse({
 async function getOrCreateTimelapseFromCache(
   cacheParams: TimelapseCacheParams,
   imagePaths: string[],
-): Promise<Buffer> {
+): Promise<string> {
   const canvasId = cacheParams.canvasId;
 
   const cacheKey = buildTimelapseCacheKey(cacheParams);
@@ -843,9 +818,11 @@ async function getOrCreateTimelapseFromCache(
   });
 
   if (existingCache?.invalidated_at === null) {
-    const cachedBuffer = await readCachedTimelapse(existingCache.file_path);
-    if (cachedBuffer) {
-      return cachedBuffer;
+    const fileExists = await checkCachedTimelapseExists(
+      existingCache.file_path,
+    );
+    if (fileExists) {
+      return existingCache.file_path;
     }
   }
 
@@ -904,7 +881,7 @@ async function getOrCreateTimelapseFromCache(
         throw err;
       }
 
-      return rawBuffer;
+      return rawFilePath;
     }
 
     const videoDimensions = getTimelapseVideoDimensions({
@@ -948,14 +925,13 @@ async function getOrCreateTimelapseFromCache(
       throw error;
     }
 
-    return generatedBuffer;
+    return timelapseFilePath;
   })();
 
   inFlightTimelapses.set(cacheKey, generationPromise);
 
   try {
-    const result = await generationPromise;
-    return result;
+    return await generationPromise;
   } finally {
     inFlightTimelapses.delete(cacheKey);
   }
