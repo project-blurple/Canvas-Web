@@ -61,6 +61,13 @@ export class CanvasCacheService implements OnApplicationBootstrap {
     this.initializeCache();
   }
 
+  static withPngMetadata(
+    image: sharp.Sharp,
+    scale: CanvasExportScale,
+  ): sharp.Sharp {
+    return image.withMetadata({ density: 72 * scale }).withIccProfile("srgb");
+  }
+
   /**
    * Generates a filename for a canvas image. If the canvas is not locked (and
    * therefore, can change) the filename will include the current timestamp.
@@ -253,13 +260,14 @@ export class CanvasCacheService implements OnApplicationBootstrap {
       CANVAS_EXPORT_SCALES.map(async (scale) => {
         const path = `${this.appCfg.paths.canvases}/${this.getCanvasFilename(canvas.id, true, scale)}`;
 
-        await baseImage
-          .clone()
-          .resize({
+        await CanvasCacheService.withPngMetadata(
+          baseImage.clone().resize({
             width: canvas.width * scale,
             height: canvas.height * scale,
             kernel: sharp.kernel.nearest,
-          })
+          }),
+          scale,
+        )
           .png()
           .toFile(path);
 

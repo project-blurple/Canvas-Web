@@ -281,10 +281,22 @@ export class CanvasService {
       }),
     );
 
-    const lowestX = Math.min(...entries.map(({ x }) => x));
-    const lowestY = Math.min(...entries.map(({ y }) => y));
-    const highestX = Math.max(...entries.map(({ x }) => x));
-    const highestY = Math.max(...entries.map(({ y }) => y));
+    const lowestX = entries.reduce(
+      (min, entry) => Math.min(min, entry.x),
+      entries[0].x,
+    );
+    const lowestY = entries.reduce(
+      (min, entry) => Math.min(min, entry.y),
+      entries[0].y,
+    );
+    const highestX = entries.reduce(
+      (max, entry) => Math.max(max, entry.x),
+      entries[0].x,
+    );
+    const highestY = entries.reduce(
+      (max, entry) => Math.max(max, entry.y),
+      entries[0].y,
+    );
 
     if (
       lowestX < 0 ||
@@ -305,10 +317,9 @@ export class CanvasService {
     );
 
     if (invalidColorIds.length > 0) {
+      const formatter = new Intl.ListFormat();
       throw new Error(
-        `Data contains color IDs that are not in the event palette: ${invalidColorIds.join(
-          ", ",
-        )}`,
+        `Data contains color IDs that are not in the event palette: ${formatter.format(invalidColorIds.map((id) => id.toString()))}`,
       );
     }
 
