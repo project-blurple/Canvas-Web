@@ -41,15 +41,16 @@ export class ExportService {
       },
     });
 
-    return scale === 1 ?
-        image.png()
-      : image
-          .resize({
-            width: unlockedCanvas.width * scale,
-            height: unlockedCanvas.height * scale,
-            kernel: sharp.kernel.nearest,
-          })
-          .png();
+    const resized =
+      scale === 1 ? image : (
+        image.resize({
+          width: unlockedCanvas.width * scale,
+          height: unlockedCanvas.height * scale,
+          kernel: sharp.kernel.nearest,
+        })
+      );
+
+    return CanvasCacheService.withPngMetadata(resized, scale).png();
   }
 
   /**
@@ -97,14 +98,15 @@ export class ExportService {
       const cropHeight = height * scale;
 
       const fileStream = createReadStream(canvasPath);
-      const transformer = sharp()
-        .extract({
+      const transformer = CanvasCacheService.withPngMetadata(
+        sharp().extract({
           left: cropX,
           top: cropY,
           width: cropWidth,
           height: cropHeight,
-        })
-        .png();
+        }),
+        scale,
+      ).png();
 
       const output = new PassThrough();
 
@@ -136,7 +138,10 @@ export class ExportService {
         })
       );
 
-    const transformer = resized.png();
+    const transformer = CanvasCacheService.withPngMetadata(
+      resized,
+      scale,
+    ).png();
     const output = new PassThrough();
 
     pipeline(transformer, output).catch((error: unknown) => {

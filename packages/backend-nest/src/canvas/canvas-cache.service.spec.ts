@@ -1,6 +1,7 @@
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { CANVAS_EXPORT_SCALES } from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
 import sharp from "sharp";
 
@@ -14,15 +15,20 @@ import { seedEvents } from "@/test/seed/events";
 import { seedPixels } from "@/test/seed/pixels";
 import { CanvasCacheService } from "./canvas-cache.service";
 
+function fileExists(filePath: string): Promise<boolean> {
+  return fs.access(filePath).then(
+    () => true,
+    () => false,
+  );
+}
+
 describe("CanvasCacheService", () => {
   let moduleRef: TestingModule;
   let service: CanvasCacheService;
   let canvasesPath: string;
 
   beforeEach(async () => {
-    canvasesPath = await fs.promises.mkdtemp(
-      path.join(os.tmpdir(), "canvas-cache-"),
-    );
+    canvasesPath = await fs.mkdtemp(path.join(os.tmpdir(), "canvas-cache-"));
 
     moduleRef = await Test.createTestingModule({
       imports: [AppConfigModule, DatabaseModule],
@@ -46,8 +52,10 @@ describe("CanvasCacheService", () => {
   });
 
   afterEach(async () => {
-    await moduleRef.close();
-    await fs.promises.rm(canvasesPath, { recursive: true, force: true });
+    await Promise.all([
+      moduleRef.close(),
+      fs.rm(canvasesPath, { recursive: true, force: true }),
+    ]);
   });
 
   /** Writes a locked canvas PNG into the canvases directory. */
@@ -122,21 +130,25 @@ describe("CanvasCacheService", () => {
       expect(await sharp(canvas1xPath).metadata()).toMatchObject({
         width: 2,
         height: 2,
+        density: 72,
+        icc: expect.any(Buffer),
       });
 
       expect(await sharp(canvas2xPath).metadata()).toMatchObject({
         width: 4,
         height: 4,
+        density: 144,
       });
 
       expect(await sharp(canvas4xPath).metadata()).toMatchObject({
         width: 8,
         height: 8,
+        density: 288,
       });
 
-      for (const scale of [1, 2, 4] as const) {
+      for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
-          fs.existsSync(
+          await fileExists(
             path.join(canvasesPath, service.getCanvasFilename(9, true, scale)),
           ),
         ).toBe(true);
@@ -148,9 +160,9 @@ describe("CanvasCacheService", () => {
 
       await service.clearCachedCanvas(9);
 
-      for (const scale of [1, 2, 4] as const) {
+      for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
-          fs.existsSync(
+          await fileExists(
             path.join(canvasesPath, service.getCanvasFilename(9, true, scale)),
           ),
         ).toBe(false);
@@ -177,9 +189,9 @@ describe("CanvasCacheService", () => {
       const refreshed = await service.getCanvasPng(9);
       expect(refreshed.isLocked).toBe(false);
 
-      for (const scale of [1, 2, 4] as const) {
+      for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
-          fs.existsSync(
+          await fileExists(
             path.join(canvasesPath, service.getCanvasFilename(9, true, scale)),
           ),
         ).toBe(false);
@@ -199,9 +211,9 @@ describe("CanvasCacheService", () => {
       const lockedCanvas = await service.getCanvasPng(1);
 
       expect(lockedCanvas.isLocked).toBe(true);
-      for (const scale of [1, 2, 4] as const) {
+      for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
-          fs.existsSync(
+          await fileExists(
             path.join(canvasesPath, service.getCanvasFilename(1, true, scale)),
           ),
         ).toBe(true);
@@ -240,10 +252,10 @@ describe("CanvasCacheService", () => {
         throw new Error("Expected locked canvas cache entries");
       }
 
-      for (const scale of [1, 2, 4] as const) {
+      for (const scale of CANVAS_EXPORT_SCALES) {
         const canvasPath = canvas.canvasPaths[scale];
         expect(canvasPath).toBeDefined();
-        expect(fs.existsSync(canvasPath as string)).toBe(true);
+        expect(await fileExists(canvasPath as string)).toBe(true);
       }
 
       expect(await sharp(canvas.canvasPaths[4]).metadata()).toMatchObject({
