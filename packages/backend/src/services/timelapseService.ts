@@ -36,6 +36,12 @@ const END_CARD_BACKGROUND_COLOR = {
   alpha: 1,
 } as const;
 
+type VideoFormat = "webm" | "mp4";
+
+function getTimelapseVideoFormat(raw: boolean): VideoFormat {
+  return raw ? "webm" : "mp4";
+}
+
 interface GenerateTimelapseParams {
   canvasId: CanvasInfo["id"];
   start?: Date;
@@ -386,7 +392,7 @@ function buildMainVideoEncodeArgs({
   ffmpegBackgroundColor: string;
   filterGraph: string;
   outputPath: string;
-  outputFormat: "mp4" | "webm";
+  outputFormat: VideoFormat;
 }): string[] {
   return [
     // general flags: suppress banner, only show errors
@@ -651,7 +657,7 @@ async function encodeMainVideoFromImages({
 
   const tempOutputPath = join(
     tmpdir(),
-    `${process.pid}-${Date.now()}.${raw ? "webm" : "mp4"}`,
+    `${process.pid}-${Date.now()}.${getTimelapseVideoFormat(raw)}`,
   );
 
   try {
@@ -662,7 +668,7 @@ async function encodeMainVideoFromImages({
         ffmpegBackgroundColor,
         filterGraph,
         outputPath: tempOutputPath,
-        outputFormat: raw ? "webm" : "mp4",
+        outputFormat: getTimelapseVideoFormat(raw),
       }),
       captureStdout: false,
       onProcess: async (proc) => {
@@ -809,8 +815,7 @@ async function getOrCreateTimelapseFromCache(
   const canvasId = cacheParams.canvasId;
 
   const cacheKey = buildTimelapseCacheKey(cacheParams);
-  const timelapseFileName =
-    cacheParams.raw ? `${cacheKey}.webm` : `${cacheKey}.mp4`;
+  const timelapseFileName = `${cacheKey}.${getTimelapseVideoFormat(cacheParams.raw)}`;
   const timelapseFilePath = getTimelapseVideoPath(canvasId, timelapseFileName);
 
   const existingCache = await snapshotPrisma.timelapse_manifest.findUnique({
