@@ -450,6 +450,8 @@ async function appendTimelapseEndCardTail({
   const tempTailPath = join(tmpdir(), `tail-${tempPrefix}.mp4`);
   const tempLastFramePath = join(tmpdir(), `last-frame-${tempPrefix}.png`);
   const tempEndCardPath = join(tmpdir(), `end-card-${tempPrefix}.png`);
+  const tempConcatListPath = join(tmpdir(), `concat-list-${tempPrefix}.txt`);
+  const tempConcatPath = join(tmpdir(), `concat-${tempPrefix}.mp4`);
   const transitionDurationSeconds = END_CARD_TRANSITION_DURATION_MS / 1000;
   const endCardDisplayDurationSeconds = END_CARD_DISPLAY_DURATION_MS / 1000;
   const endHoldDurationSeconds = endHoldDurationMs / 1000;
@@ -470,6 +472,12 @@ async function appendTimelapseEndCardTail({
         height: videoHeight,
       }),
     );
+
+    // Write concat demuxer list file for stream copy concatenation
+    const concatListContent = `file '${tempTimelapsePath}'
+file '${tempTailPath}'`;
+    await writeFile(tempConcatListPath, concatListContent);
+
     await runFfmpegProcess({
       ffmpegPath,
       // Build a temporary "tail" video containing:
@@ -555,44 +563,40 @@ async function appendTimelapseEndCardTail({
       onProcess: async () => undefined,
     });
 
-    const tailBuffer = await runFfmpegProcess({
+    // MP4 muxer requires seekable output, so write to a temp file instead of piping
+    await runFfmpegProcess({
       ffmpegPath,
-      // Concatenate the previously-generated main timelapse file and the tail file,
-      // writing the combined MP4 to stdout for capture.
+      // Concatenate the main timelapse and tail using the concat demuxer with stream copy.
+      // Both inputs use identical H.264/yuv420p/MP4 encoding, so no re-encoding is needed.
       args: [
         // general flags
         "-hide_banner",
         "-loglevel",
         "error",
 
-        // INPUT 0: the main timelapse we just wrote
+        // Use concat demuxer to splice files without re-encoding
+        "-f",
+        "concat",
+        "-safe",
+        "0",
         "-i",
-        tempTimelapsePath,
-        // INPUT 1: the tail we produced above
-        "-i",
-        tempTailPath,
+        tempConcatListPath,
 
-        // FILTER: normalize pts and concat main + tail into a single video stream
-        "-filter_complex",
-        "[0:v]setpts=PTS-STARTPTS[main];[1:v]setpts=PTS-STARTPTS[tail];[main][tail]concat=n=2:v=1:a=0[v]",
+        // Stream copy: copy both video and audio streams without re-encoding
+        "-c",
+        "copy",
 
-        // map, disable audio, encode, and emit to stdout (pipe:1) for capture
-        "-map",
-        "[v]",
-        "-an",
-        "-c:v",
-        "libx264",
-        "-pix_fmt",
-        "yuv420p",
-        "-movflags",
-        "frag_keyframe+empty_moov",
+        // Write to temp file (MP4 muxer requires seekable output)
         "-f",
         "mp4",
-        "pipe:1",
+        tempConcatPath,
       ],
-      captureStdout: true,
       onProcess: async () => undefined,
     });
+
+    // Read the concatenated video from the temp file
+    const { readFile } = await import("fs/promises");
+    const tailBuffer = await readFile(tempConcatPath);
 
     if (!tailBuffer) {
       throw new Error("ffmpeg produced empty output");
@@ -604,6 +608,8 @@ async function appendTimelapseEndCardTail({
     await unlink(tempTailPath).catch(() => undefined);
     await unlink(tempLastFramePath).catch(() => undefined);
     await unlink(tempEndCardPath).catch(() => undefined);
+    await unlink(tempConcatListPath).catch(() => undefined);
+    await unlink(tempConcatPath).catch(() => undefined);
   }
 }
 
