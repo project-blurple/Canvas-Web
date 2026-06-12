@@ -22,5 +22,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  plugins: [swc.vite({ module: { type: "es6" } })],
+  plugins: [
+    swc.vite({
+      module: { type: "es6" },
+      // tsconfig targets ES2025, which @swc/core does not know about yet.
+      jsc: { target: "es2024" },
+    }),
+  ],
 });
