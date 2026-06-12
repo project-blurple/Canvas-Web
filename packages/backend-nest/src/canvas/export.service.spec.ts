@@ -34,7 +34,7 @@ async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-/** Decodes a PNG into a flat `[r, g, b, a]` pixel list. */
+/** Decodes a PNG into a list of `[r, g, b, a]` pixels. */
 async function decodePng(
   png: Buffer,
 ): Promise<{ width: number; height: number; pixels: number[][] }> {
@@ -103,7 +103,7 @@ describe("ExportService", () => {
     expect(decoded).toStrictEqual({
       width: 2,
       height: 2,
-      pixels: [BLANK, BLURPLE, RED, BLANK].map((color) => [...color]),
+      pixels: [BLANK, BLURPLE, RED, BLANK],
     });
   });
 
@@ -121,7 +121,7 @@ describe("ExportService", () => {
     expect(decoded).toStrictEqual({
       width: 1,
       height: 1,
-      pixels: [[...BLURPLE]],
+      pixels: [BLURPLE],
     });
   });
 
@@ -135,16 +135,20 @@ describe("ExportService", () => {
       scale: 2,
     });
 
-    const decoded = await decodePng(await streamToBuffer(stream));
+    const png = await streamToBuffer(stream);
+    const decoded = await decodePng(png);
 
     // The [red, blank] row, doubled in both directions.
-    const scaledRow = [RED, RED, BLANK_SCALED, BLANK_SCALED].map((color) => [
-      ...color,
-    ]);
+    const scaledRow = [RED, RED, BLANK_SCALED, BLANK_SCALED];
     expect(decoded).toStrictEqual({
       width: 4,
       height: 2,
       pixels: [...scaledRow, ...scaledRow],
+    });
+
+    expect(await sharp(png).metadata()).toMatchObject({
+      density: 144,
+      icc: expect.any(Buffer),
     });
   });
 
@@ -163,7 +167,8 @@ describe("ExportService", () => {
       scale: 2,
     });
 
-    const decoded = await decodePng(await streamToBuffer(stream));
+    const png = await streamToBuffer(stream);
+    const decoded = await decodePng(png);
 
     const scaledRow = [RED, RED, BLANK_SCALED, BLANK_SCALED].map((color) => [
       ...color,
@@ -172,6 +177,11 @@ describe("ExportService", () => {
       width: 4,
       height: 2,
       pixels: [...scaledRow, ...scaledRow],
+    });
+
+    expect(await sharp(png).metadata()).toMatchObject({
+      density: 144,
+      icc: expect.any(Buffer),
     });
   });
 
