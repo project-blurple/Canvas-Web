@@ -14,6 +14,7 @@ import {
   requireCanvasAdmin,
   requireCanvasModerator,
 } from "@/middleware/canvasAuth";
+import { historyQueryLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { audit } from "@/services/auditLogService";
@@ -28,6 +29,7 @@ export const historyRouter = typedRouter(Router({ mergeParams: true }));
 
 historyRouter.get(
   "/",
+  historyQueryLimiter,
   validate({ params: CanvasIdParamModel, query: PixelHistoryParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
