@@ -31,6 +31,17 @@ export function assertLoggedIn<R extends AnyRequest>(
   }
 }
 
+export function isLoggedIn<R extends AnyRequest>(
+  req: R,
+): req is AuthenticatedRequest<R> {
+  try {
+    assertLoggedIn(req);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function requireLoggedIn(
   req: Request,
   _res: Response,

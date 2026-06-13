@@ -10,6 +10,7 @@ import { Router } from "express";
 import type { z } from "zod";
 import {
   assertLoggedIn,
+  isLoggedIn,
   requireCanvasAdmin,
   requireCanvasModerator,
 } from "@/middleware/canvasAuth";
@@ -37,13 +38,15 @@ historyRouter.get(
       "query.size": req.query.size,
     });
 
+    const loggedIn = isLoggedIn(req);
+
     const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
       {
         canvasId: req.params.canvasId,
         points: { x: req.query.x, y: req.query.y },
-        page: req.query.page,
-        size: req.query.size,
+        page: loggedIn ? req.query.page : 1,
+        size: loggedIn ? req.query.size : 1,
       },
       false,
     );
