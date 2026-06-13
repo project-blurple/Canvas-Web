@@ -13,6 +13,7 @@ import {
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
+import BadRequestError from "@/errors/BadRequestError";
 import {
   assertLoggedIn,
   requireCanvasAdmin,
@@ -124,20 +125,15 @@ canvasRouter.get(
     const canvas = await getCanvasInfo(req.params.canvasId);
 
     if (!canvas.isLocked) {
-      res.status(400).json({
-        error: "Timelapse generation is only available for locked canvases",
-      });
-      return;
+      throw new BadRequestError(
+        "Timelapse generation is only available for locked canvases",
+      );
     }
 
-    const filePath = await generateTimelapse(
-      raw ?
-        {
-          canvasId: req.params.canvasId,
-          raw: true,
-        }
-      : { canvasId: req.params.canvasId },
-    );
+    const filePath = await generateTimelapse({
+      canvasId: req.params.canvasId,
+      raw,
+    });
 
     const fileStats = await stat(filePath);
 

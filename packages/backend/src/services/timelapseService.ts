@@ -36,6 +36,8 @@ const END_CARD_BACKGROUND_COLOR = {
   alpha: 1,
 } as const;
 
+const notQuiteBlackRgba: PaletteColor["rgba"] = [35, 39, 42, 255];
+
 type VideoFormat = "webm" | "mp4";
 
 function getTimelapseVideoFormat(raw: boolean): VideoFormat {
@@ -705,11 +707,9 @@ export async function generateTimelapse({
   endHoldDurationMs = 2000,
   showEndCard = true,
   scale,
-  backgroundColor = [35, 39, 42, 255],
+  backgroundColor = notQuiteBlackRgba,
   raw = false,
 }: GenerateTimelapseParams): Promise<string> {
-  // TODO: Configurable speed
-
   if (raw) {
     endHoldDurationMs = null;
     scale = 1;
