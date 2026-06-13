@@ -4,6 +4,7 @@ import {
   type CanvasExportScale,
   CanvasIdParamModel,
   CanvasPasteBodyModel,
+  CanvasPlaceState,
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -258,7 +259,7 @@ async function sendCachedCanvas(
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
   bounds?: FrameBoundsInput,
 ): Promise<number | undefined> {
-  if (cachedCanvas.isLocked) {
+  if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);
 
     if (!canvasPath) {

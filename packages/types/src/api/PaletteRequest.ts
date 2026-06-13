@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import type { EventIdParamModel, PaletteQueryModel } from "../models";
-import type { PaletteSchema } from "../palette";
+import type { EventIdParamModel, PaletteQueryModel } from "../models/index.js";
+import type { PaletteSchema } from "../palette.js";
 
 export type Params = z.infer<typeof EventIdParamModel>;
 export type ResBody = z.infer<typeof PaletteSchema>;

@@ -3,13 +3,13 @@ import type {
   FrameSchema,
   GuildOwnedFrameSchema,
   UserOwnedFrameSchema,
-} from "../frame";
+} from "../frame.js";
 import type {
   CanvasIdParamModel,
   FrameGuildIdsQueryModel,
   FrameIdParamModel,
   UserCanvasParamModel,
-} from "../models";
+} from "../models/index.js";
 
 export type Params = Partial<
   z.infer<typeof FrameIdParamModel> &

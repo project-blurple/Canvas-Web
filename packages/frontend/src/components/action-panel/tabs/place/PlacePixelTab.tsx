@@ -1,7 +1,8 @@
-import type {
-  DiscordUserProfile,
-  Palette,
-  PaletteColor,
+import {
+  CanvasPlaceState,
+  type DiscordUserProfile,
+  type Palette,
+  type PaletteColor,
 } from "@blurple-canvas-web/types";
 import { css, Skeleton, styled } from "@mui/material";
 import { AxiosError } from "axios";
@@ -128,7 +129,7 @@ export default function PlacePixelTab({
 }: PlacePixelTabProps) {
   const { user } = useAuthContext();
   const {
-    canvas: { allColorsGlobal, isLocked: readOnly, webPlacingEnabled },
+    canvas: { allColorsGlobal, placeState, webPlacingEnabled },
   } = useCanvasContext();
   const { cooldownEndTime, setCooldownEndTime } = useActionPanelContext();
   const { signOut } = useAuthContext();
@@ -140,9 +141,12 @@ export default function PlacePixelTab({
     turnstileElement,
     getToken,
     reset: resetToken,
-  } = useTurnstileToken(Boolean(user && !readOnly && webPlacingEnabled));
+  } = useTurnstileToken(
+    Boolean(user && placeState !== CanvasPlaceState.NoOne && webPlacingEnabled),
+  );
 
-  const canPrefetchTurnstile = !!user && !readOnly && webPlacingEnabled;
+  const canPrefetchTurnstile =
+    !!user && placeState !== CanvasPlaceState.NoOne && webPlacingEnabled;
 
   useEffect(() => {
     // Prefetch a turnstile token when the tab mounts and placing is allowed
@@ -212,7 +216,7 @@ export default function PlacePixelTab({
     (!selectedColor || selectedColor.global || allColorsGlobal || userInServer);
 
   const isJoinServerShown =
-    (!(canPlacePixel && user) || readOnly) &&
+    (!(canPlacePixel && user) || placeState === CanvasPlaceState.NoOne) &&
     !selectedColor?.global &&
     serverInvite;
 
@@ -303,7 +307,9 @@ export default function PlacePixelTab({
               {selectedColor?.guildName ?? "server"}
             </DynamicAnchorButton>
           )}
-          {!readOnly && <StyledBotPlaceCommandCard />}
+          {placeState !== CanvasPlaceState.NoOne && (
+            <StyledBotPlaceCommandCard />
+          )}
         </ActionPanelTabBody>
       </Form>
     </PlacePixelTabBlock>

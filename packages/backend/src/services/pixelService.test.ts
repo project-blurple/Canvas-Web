@@ -1,5 +1,5 @@
 import { fail } from "node:assert";
-import type { PaletteColor } from "@blurple-canvas-web/types";
+import { CanvasPlaceState, type PaletteColor } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 import { BadRequestError, ForbiddenError, NotFoundError } from "@/errors";
 import seedAll, {
@@ -397,7 +397,7 @@ describe("Place Pixel Tests", () => {
     const canvas = await getCanvasPng(canvasId);
 
     // Necessary for Typescript to correctly identify which of the union types are applicable.
-    if (canvas.isLocked) {
+    if (canvas.placeState === CanvasPlaceState.NoOne) {
       fail("Canvas should not be locked");
     }
 
@@ -417,7 +417,7 @@ describe("Place Pixel Tests", () => {
 
     const updatedCanvas = await getCanvasPng(canvasId);
 
-    if (updatedCanvas.isLocked) {
+    if (updatedCanvas.placeState === CanvasPlaceState.NoOne) {
       fail("Canvas should not be locked");
     }
 
@@ -498,7 +498,7 @@ describe("Restore Pixels After History Deletion Tests", () => {
         name: "Test Canvas",
         width: 2,
         height: 2,
-        locked: false,
+        place_state: CanvasPlaceState.Anyone,
         cooldown_length: 0,
       },
     });

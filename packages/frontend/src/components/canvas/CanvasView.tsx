@@ -1,13 +1,14 @@
 "use client";
 
-import type {
-  CanvasInfo,
-  Frame,
-  PixelHistoryOverlayPixel,
-  PlacePixelSocket,
-  Point,
+import {
+  type CanvasInfo,
+  CanvasPlaceState,
+  type Frame,
+  type PixelHistoryOverlayPixel,
+  type PlacePixelSocket,
+  type Point,
+  SocketEvents,
 } from "@blurple-canvas-web/types";
-import { SocketEvents } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ComplexSearchOverlay from "@/components/canvas/ComplexSearchOverlay";
@@ -710,7 +711,7 @@ export default function CanvasView({
     };
 
     // If the canvas is locked, we don't need to listen for updates.
-    if (canvas.isLocked) {
+    if (canvas.placeState === CanvasPlaceState.NoOne) {
       return;
     }
 

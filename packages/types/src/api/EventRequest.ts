@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import type { BlurpleEventSchema } from "../event";
-import type { EventIdParamModel } from "../models";
+import type { BlurpleEventSchema } from "../event.js";
+import type { EventIdParamModel } from "../models/index.js";
 
 export type Params = z.infer<typeof EventIdParamModel>;
 export type ResBody = z.infer<typeof BlurpleEventSchema>;

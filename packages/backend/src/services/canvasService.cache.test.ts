@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import sharp from "sharp";
 import { prisma } from "@/client";
 import config from "@/config";
@@ -28,7 +29,7 @@ describe("Canvas cache concurrency tests", () => {
     const createdCanvas = await prisma.canvas.create({
       data: {
         name: "Concurrent Cache Canvas",
-        locked: false,
+        place_state: CanvasPlaceState.Anyone,
         width: 2,
         height: 2,
         event_id: null,
@@ -54,7 +55,7 @@ describe("Canvas cache concurrency tests", () => {
       ]);
 
       expect(firstCanvas).toStrictEqual(secondCanvas);
-      expect(firstCanvas.isLocked).toBe(false);
+      expect(firstCanvas.placeState).toBe(CanvasPlaceState.Anyone);
       expect(findFirstSpy).toHaveBeenCalledTimes(1);
       expect(findManySpy).toHaveBeenCalledTimes(1);
     } finally {
@@ -99,12 +100,12 @@ describe("Locked canvas PNG cache tests", () => {
 
       const canvas = await getCanvasPng(createdCanvas.id);
 
-      if (!canvas.isLocked) {
+      if (canvas.placeState !== CanvasPlaceState.NoOne) {
         throw new Error("Expected locked canvas cache entries");
       }
 
       expect(canvas).toMatchObject({
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         canvasPaths: expect.objectContaining({
           1: expect.stringContaining(getCanvasFilename(createdCanvas.id, true)),
           2: expect.stringContaining(

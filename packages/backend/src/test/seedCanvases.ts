@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
 
 // Only use 2 canvases for testing purposes
@@ -13,7 +14,7 @@ export default async function () {
       ...testCanvas,
       id: 1,
       name: "Unlocked Canvas",
-      locked: false,
+      place_state: CanvasPlaceState.Anyone,
       event_id: 1,
       cooldown_length: 30,
     },
@@ -23,7 +24,7 @@ export default async function () {
       ...testCanvas,
       id: 9,
       name: "Locked Canvas",
-      locked: true,
+      place_state: CanvasPlaceState.NoOne,
       event_id: 9,
     },
   });

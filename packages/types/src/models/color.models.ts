@@ -1,6 +1,6 @@
 import z from "zod";
-import { EventIdParamModel } from "./event.models";
-import { GuildIdParamModel } from "./guild.models";
+import { EventIdParamModel } from "./event.models.js";
+import { GuildIdParamModel } from "./guild.models.js";
 
 export const ColorIdParamModel = z.object({
   colorId: z.coerce.number().int().positive(),
