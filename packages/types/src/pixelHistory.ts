@@ -1,7 +1,7 @@
 import z from "zod";
-import { DiscordUserProfileSchema } from "./discordUserProfile";
-import { paginatedSchema } from "./pagination";
-import { PaletteColorSummarySchema } from "./palette";
+import { DiscordUserProfileSchema } from "./discordUserProfile.js";
+import { paginatedSchema } from "./pagination.js";
+import { PaletteColorSummarySchema } from "./palette.js";
 
 export const PixelHistoryRecordSchema = z.object({
   id: z.string(),

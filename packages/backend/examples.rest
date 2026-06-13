@@ -83,7 +83,7 @@ Content-Type: application/json
   "name": "Canvas 2023 - Updated",
   "allColorsGlobal": true,
   "cooldownDuration": 45,
-  "isLocked": false
+  "placeState": "no_one"
 }
 
 ### Pixel

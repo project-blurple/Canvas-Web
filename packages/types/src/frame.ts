@@ -1,6 +1,6 @@
 import z from "zod";
-import { DiscordGuildRecordSchema } from "./discordGuildRecord";
-import { DiscordUserProfileSchema } from "./discordUserProfile";
+import { DiscordGuildRecordSchema } from "./discordGuildRecord.js";
+import { DiscordUserProfileSchema } from "./discordUserProfile.js";
 
 /**
  * Enum-like map of valid frame owner types. Available both as runtime values

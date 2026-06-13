@@ -1,5 +1,14 @@
 import z from "zod";
 
+export const CanvasPlaceState = {
+  NoOne: "no_one",
+  NoNewUsers: "no_new_users",
+  Anyone: "anyone",
+} as const;
+
+export type CanvasPlaceState =
+  (typeof CanvasPlaceState)[keyof typeof CanvasPlaceState];
+
 export const CanvasInfoSchema = z.object({
   id: z.number().int().positive(),
   name: z.string(),
@@ -9,7 +18,7 @@ export const CanvasInfoSchema = z.object({
     z.number().int().nonnegative(),
     z.number().int().nonnegative(),
   ]),
-  isLocked: z.boolean(),
+  placeState: z.enum(CanvasPlaceState),
   eventId: z.number().int().nullable(),
   webPlacingEnabled: z.boolean(),
   allColorsGlobal: z.boolean(),
@@ -22,7 +31,7 @@ export const CanvasSummarySchema = CanvasInfoSchema.pick({
   id: true,
   name: true,
   eventId: true,
-  isLocked: true,
+  placeState: true,
   width: true,
   height: true,
 });
