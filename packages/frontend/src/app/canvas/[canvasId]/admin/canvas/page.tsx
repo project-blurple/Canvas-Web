@@ -1,7 +1,8 @@
 "use client";
 
-import type { CanvasInfo } from "@blurple-canvas-web/types";
-import { Switch, styled } from "@mui/material";
+import { type CanvasInfo, CanvasPlaceState } from "@blurple-canvas-web/types";
+import type { SelectChangeEvent } from "@mui/material";
+import { MenuItem, Select, Switch, styled } from "@mui/material";
 import { ListRestart, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -112,7 +113,7 @@ const createDefaults = {
   allColorsGlobal: false,
   cooldownDuration: 0,
   height: 1,
-  isLocked: true,
+  placeState: CanvasPlaceState.NoOne,
   name: "",
   width: 1,
   startCoordinates: [1, 1],
@@ -125,7 +126,7 @@ interface CanvasSettingsFormValues extends Pick<
   | "allColorsGlobal"
   | "cooldownDuration"
   | "height"
-  | "isLocked"
+  | "placeState"
   | "name"
   | "width"
   | "startCoordinates"
@@ -139,7 +140,7 @@ function areCanvasSettingsEqual(
     left.allColorsGlobal === right.allColorsGlobal &&
     left.cooldownDuration === right.cooldownDuration &&
     left.height === right.height &&
-    left.isLocked === right.isLocked &&
+    left.placeState === right.placeState &&
     left.name === right.name &&
     left.width === right.width &&
     left.startCoordinates[0] === right.startCoordinates[0] &&
@@ -190,17 +191,17 @@ function CanvasSettingsForm({
       allColorsGlobal: activeCanvas.allColorsGlobal,
       cooldownDuration: activeCanvas.cooldownDuration ?? 0,
       height: activeCanvas.height,
-      isLocked: activeCanvas.isLocked,
+      placeState: activeCanvas.placeState,
       name: activeCanvas.name,
       width: activeCanvas.width,
       startCoordinates: activeCanvas.startCoordinates,
     });
   }, [activeCanvas, onFormValuesChange]);
 
-  function handleIsLockedChange(event: React.ChangeEvent<HTMLInputElement>) {
+  function handlePlaceStateChange(event: SelectChangeEvent<CanvasPlaceState>) {
     onFormValuesChange({
       ...formValues,
-      isLocked: event.target.checked,
+      placeState: event.target.value as CanvasPlaceState,
     });
   }
 
@@ -249,7 +250,7 @@ function CanvasSettingsForm({
         allColorsGlobal: activeCanvas.allColorsGlobal,
         cooldownDuration: activeCanvas.cooldownDuration ?? 0,
         height: activeCanvas.height,
-        isLocked: activeCanvas.isLocked,
+        placeState: activeCanvas.placeState,
         name: activeCanvas.name,
         width: activeCanvas.width,
         startCoordinates: activeCanvas.startCoordinates,
@@ -275,7 +276,7 @@ function CanvasSettingsForm({
             allColorsGlobal: formValues.allColorsGlobal,
             cooldownDuration: formValues.cooldownDuration,
             height: formValues.height,
-            isLocked: formValues.isLocked,
+            placeState: formValues.placeState,
             name: formValues.name,
             width: formValues.width,
             startCoordinates: formValues.startCoordinates,
@@ -292,7 +293,7 @@ function CanvasSettingsForm({
       const updatePromise = updateCanvasInfo.mutateAsync({
         allColorsGlobal: formValues.allColorsGlobal,
         cooldownDuration: formValues.cooldownDuration,
-        isLocked: formValues.isLocked,
+        placeState: formValues.placeState,
         name: formValues.name,
       });
 
@@ -361,14 +362,19 @@ function CanvasSettingsForm({
             </td>
           </tr>
           <tr>
-            <td>Locked</td>
+            <td>Place state</td>
             <td>
-              <Switch
-                type="checkbox"
-                checked={formValues.isLocked}
-                onChange={handleIsLockedChange}
-                disabled={mode === "create"}
-              />
+              <Select
+                size="small"
+                value={formValues.placeState}
+                onChange={handlePlaceStateChange}
+              >
+                <MenuItem value={CanvasPlaceState.NoOne}>No one</MenuItem>
+                <MenuItem value={CanvasPlaceState.NoNewUsers}>
+                  No new users
+                </MenuItem>
+                <MenuItem value={CanvasPlaceState.Anyone}>Anyone</MenuItem>
+              </Select>
             </td>
           </tr>
           <tr>
@@ -433,7 +439,7 @@ function AdminCanvasTab() {
     cooldownDuration:
       activeCanvas?.cooldownDuration ?? createDefaults.cooldownDuration,
     height: activeCanvas?.height ?? createDefaults.height,
-    isLocked: activeCanvas?.isLocked ?? createDefaults.isLocked,
+    placeState: activeCanvas?.placeState ?? createDefaults.placeState,
     name: activeCanvas?.name ?? createDefaults.name,
     width: activeCanvas?.width ?? createDefaults.width,
     startCoordinates:
@@ -450,7 +456,7 @@ function AdminCanvasTab() {
         cooldownDuration:
           activeCanvas.cooldownDuration ?? createDefaults.cooldownDuration,
         height: activeCanvas.height ?? createDefaults.height,
-        isLocked: activeCanvas.isLocked ?? createDefaults.isLocked,
+        placeState: activeCanvas.placeState ?? createDefaults.placeState,
         name: activeCanvas.name ?? createDefaults.name,
         width: activeCanvas.width ?? createDefaults.width,
         startCoordinates:
@@ -471,7 +477,7 @@ function AdminCanvasTab() {
   const isDirty = useMemo(() => {
     if (mode === "create") {
       return (
-        formValues.isLocked !== createDefaults.isLocked ||
+        formValues.placeState !== createDefaults.placeState ||
         formValues.allColorsGlobal !== createDefaults.allColorsGlobal ||
         formValues.cooldownDuration !== createDefaults.cooldownDuration ||
         formValues.name !== createDefaults.name ||
@@ -481,7 +487,7 @@ function AdminCanvasTab() {
     }
     if (!activeCanvas) return false;
     return (
-      formValues.isLocked !== activeCanvas.isLocked ||
+      formValues.placeState !== activeCanvas.placeState ||
       formValues.allColorsGlobal !== activeCanvas.allColorsGlobal ||
       (formValues.cooldownDuration !== activeCanvas.cooldownDuration &&
         activeCanvas.cooldownDuration !== null) ||

@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { CanvasIdParamModel } from "./canvas.models";
+import { CanvasIdParamModel } from "./canvas.models.js";
 
 export const SnapshotRangeQueryModel = z
   .object({

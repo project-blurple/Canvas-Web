@@ -56,6 +56,8 @@ export async function setSnapshotDirtyTimestamp(
     return;
   }
 
+  const invalidationTime = new Date();
+
   const updated = await snapshotPrisma.snapshot_cursor.updateMany({
     where: {
       canvas_id: canvasId,
@@ -66,6 +68,17 @@ export async function setSnapshotDirtyTimestamp(
     },
     data: {
       dirty_from_timestamp: timestamp,
+    },
+  });
+
+  await snapshotPrisma.timelapse_manifest.updateMany({
+    where: {
+      canvas_id: canvasId,
+      effective_end_at: { gte: timestamp },
+      invalidated_at: null,
+    },
+    data: {
+      invalidated_at: invalidationTime,
     },
   });
 

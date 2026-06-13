@@ -1,7 +1,8 @@
-import type {
-  CanvasInfo,
-  CanvasInfoRequest,
-  DiscordUserProfile,
+import {
+  type CanvasInfo,
+  type CanvasInfoRequest,
+  CanvasPlaceState,
+  type DiscordUserProfile,
 } from "@blurple-canvas-web/types";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v13-appRouter";
 import axios from "axios";
@@ -9,6 +10,7 @@ import type { Metadata, Viewport } from "next";
 import { cookies } from "next/headers";
 import config from "@/config/clientConfig";
 import serverConfig from "@/config/serverConfig";
+import "../styles/core.css";
 import {
   AuthProvider,
   CanvasProvider,
@@ -79,7 +81,7 @@ async function getServerSideCanvasInfo(): Promise<CanvasInfo> {
 const defaultCanvasInfo = {
   id: 1,
   name: "Something went wrong…",
-  isLocked: true,
+  placeState: CanvasPlaceState.NoOne,
   width: 600,
   height: 600,
   startCoordinates: [1, 1],

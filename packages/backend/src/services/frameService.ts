@@ -455,45 +455,31 @@ export async function assertMaxOwnerFramesNotExceeded({
   }
 }
 
-interface FramePlacementTimestampRow {
-  start_at: Date;
-  end_at: Date;
-}
-
 export async function getFramePlacementTimestamps(frameId: string): Promise<{
   start: Date;
   end: Date;
 }> {
-  const rows = await prisma.$queryRaw<FramePlacementTimestampRow[]>`
-    WITH frame_bounds AS (
-      SELECT
-        id,
-        canvas_id,
-        x_0,
-        y_0,
-        x_1,
-        y_1
-      FROM frame
-      WHERE id ILIKE ${frameId}
-      LIMIT 1
-    )
-    SELECT
-      MIN(h.timestamp) AS start_at,
-      MAX(h.timestamp) AS end_at
-    FROM frame_bounds fb
-    INNER JOIN history h
-      ON h.canvas_id = fb.canvas_id
-      AND h.erased_at IS NULL
-      AND h.x >= fb.x_0
-      AND h.x < fb.x_1
-      AND h.y >= fb.y_0
-      AND h.y < fb.y_1
-    GROUP BY fb.id
-  `;
+  const frame = await findFrameForType(frameId);
 
-  const [row] = rows;
+  if (!frame) {
+    throw new NotFoundError("Frame not found or has no placement history");
+  }
 
-  if (!row) {
+  const row = await prisma.$kysely
+    .selectFrom("history")
+    .select([
+      (eb) => eb.fn.min("timestamp").as("start_at"),
+      (eb) => eb.fn.max("timestamp").as("end_at"),
+    ])
+    .where("canvas_id", "=", frame.canvas_id)
+    .where("erased_at", "is", null)
+    .where("x", ">=", frame.x_0)
+    .where("x", "<", frame.x_1)
+    .where("y", ">=", frame.y_0)
+    .where("y", "<", frame.y_1)
+    .executeTakeFirst();
+
+  if (!row || row.start_at === null || row.end_at === null) {
     throw new NotFoundError("Frame not found or has no placement history");
   }
 

@@ -1,5 +1,5 @@
 import z from "zod";
-import { PaletteColorSummarySchema } from "./palette";
+import { PaletteColorSummarySchema } from "./palette.js";
 
 export const UserStatsSchema = z.object({
   userId: z.string(),

@@ -1,18 +1,20 @@
 "use client";
 
-import { type CanvasInfo, SocketEvents } from "@blurple-canvas-web/types";
+import {
+  type CanvasInfo,
+  CanvasPlaceState,
+  SocketEvents,
+} from "@blurple-canvas-web/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
 import { createContext, useContext, useEffect } from "react";
-import {
-  ActionPanelProvider,
-  CanvasViewProvider,
-  SelectedBoundsProvider,
-  SelectedColorProvider,
-  SelectedFrameProvider,
-} from "@/contexts";
-import { fetchCanvasInfo } from "@/hooks/queries/serverFetch";
-import { socket } from "@/socket";
+import { fetchCanvasInfo } from "../hooks/queries/serverFetch";
+import { socket } from "../socket";
+import { ActionPanelProvider } from "./ActionPanelContext";
+import { CanvasViewProvider } from "./CanvasViewContext";
+import { SelectedBoundsProvider } from "./SelectedBoundsContext";
+import { SelectedColorProvider } from "./SelectedColorContext";
+import { SelectedFrameProvider } from "./SelectedFrameContext";
 
 function useSubscribeToCanvasUpdates() {
   const queryClient = useQueryClient();
@@ -38,7 +40,7 @@ const CanvasContext = createContext<CanvasContextType>({
     width: 0,
     height: 0,
     startCoordinates: [0, 0],
-    isLocked: false,
+    placeState: CanvasPlaceState.Anyone,
     eventId: null,
     webPlacingEnabled: false,
     allColorsGlobal: false,

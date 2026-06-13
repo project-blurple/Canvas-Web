@@ -13,15 +13,16 @@ CREATE TABLE "timelapse_manifest" (
     "scale" INTEGER NOT NULL,
     "frame_rate" INTEGER NOT NULL,
     "end_hold_duration_ms" INTEGER NOT NULL,
+    "show_end_card" BOOLEAN NOT NULL DEFAULT 1,
     "background_color" TEXT NOT NULL,
     "cache_key" TEXT NOT NULL,
     "file_path" TEXT NOT NULL,
     "file_size_bytes" INTEGER,
+    "invalidated_at" DATETIME,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL
 );
 
--- CreateIndex
 CREATE INDEX "timelapse_manifest_canvas_id_effective_start_at_effective_end_at_idx"
 ON "timelapse_manifest"("canvas_id", "effective_start_at", "effective_end_at");
 

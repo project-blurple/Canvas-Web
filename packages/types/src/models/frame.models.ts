@@ -1,7 +1,10 @@
 import z from "zod";
-import { FrameOwnerType } from "../frame";
-import { CanvasExportScaleSchema, CanvasIdParamModel } from "./canvas.models";
-import { DiscordSnowflakeSchema } from "./snowflake";
+import { FrameOwnerType } from "../frame.js";
+import {
+  CanvasExportScaleSchema,
+  CanvasIdParamModel,
+} from "./canvas.models.js";
+import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const FrameIdParamModel = z.object({
   frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, unlink, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { prisma } from "@/client";
 import { type snapshot_cursor, snapshotPrisma } from "@/client/snapshots";
@@ -11,6 +11,7 @@ import {
 } from "./snapshotPolicy";
 
 const SNAPSHOT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const TIMELAPSE_INVALIDATION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 let isRunning = false;
 let timer: NodeJS.Timeout | null = null;
@@ -209,6 +210,38 @@ export async function runSnapshotSchedulerCycle(): Promise<{
   return { processed, skipped };
 }
 
+export async function evictStaleInvalidatedTimelapses(): Promise<void> {
+  const staleThreshold = new Date(Date.now() - TIMELAPSE_INVALIDATION_TTL_MS);
+
+  const staleManifests = await snapshotPrisma.timelapse_manifest.findMany({
+    where: {
+      invalidated_at: { lt: staleThreshold },
+    },
+    select: {
+      id: true,
+      file_path: true,
+    },
+  });
+
+  if (staleManifests.length === 0) {
+    return;
+  }
+
+  for (const manifest of staleManifests) {
+    await unlink(manifest.file_path).catch(() => undefined);
+  }
+
+  await snapshotPrisma.timelapse_manifest.deleteMany({
+    where: {
+      id: { in: staleManifests.map((manifest) => manifest.id) },
+    },
+  });
+
+  console.log(
+    `Evicted ${staleManifests.length} stale invalidated timelapse(s).`,
+  );
+}
+
 export function startSnapshotScheduler(): () => void {
   if (!isSnapshotGenerationEnabled()) {
     return () => undefined;
@@ -220,13 +253,16 @@ export function startSnapshotScheduler(): () => void {
     }
 
     isRunning = true;
-    void runSnapshotSchedulerCycle()
-      .catch((error: unknown) => {
+    void (async () => {
+      try {
+        await runSnapshotSchedulerCycle();
+        await evictStaleInvalidatedTimelapses();
+      } catch (error: unknown) {
         console.error("Snapshot scheduler cycle failed", error);
-      })
-      .finally(() => {
+      } finally {
         isRunning = false;
-      });
+      }
+    })();
   };
 
   console.log(
