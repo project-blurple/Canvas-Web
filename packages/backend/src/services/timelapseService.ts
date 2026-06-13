@@ -38,6 +38,14 @@ const END_CARD_BACKGROUND_COLOR = {
 
 const notQuiteBlackRgba: PaletteColor["rgba"] = [35, 39, 42, 255];
 
+const APP_TEMP_DIR_NAME = "com.blurplecanvas.canvas/timelapse";
+
+async function getAppTempDir(): Promise<string> {
+  const appTempDir = join(tmpdir(), APP_TEMP_DIR_NAME);
+  await mkdir(appTempDir, { recursive: true });
+  return appTempDir;
+}
+
 type VideoFormat = "webm" | "mp4";
 
 function getTimelapseVideoFormat(raw: boolean): VideoFormat {
@@ -454,12 +462,13 @@ async function appendTimelapseEndCardTail({
   }
 
   const tempPrefix = `${process.pid}-${Date.now()}`;
-  const tempTimelapsePath = join(tmpdir(), `timelapse-${tempPrefix}.mp4`);
-  const tempTailPath = join(tmpdir(), `tail-${tempPrefix}.mp4`);
-  const tempLastFramePath = join(tmpdir(), `last-frame-${tempPrefix}.png`);
-  const tempEndCardPath = join(tmpdir(), `end-card-${tempPrefix}.png`);
-  const tempConcatListPath = join(tmpdir(), `concat-list-${tempPrefix}.txt`);
-  const tempConcatPath = join(tmpdir(), `concat-${tempPrefix}.mp4`);
+  const appTempDir = await getAppTempDir();
+  const tempTimelapsePath = join(appTempDir, `timelapse-${tempPrefix}.mp4`);
+  const tempTailPath = join(appTempDir, `tail-${tempPrefix}.mp4`);
+  const tempLastFramePath = join(appTempDir, `last-frame-${tempPrefix}.png`);
+  const tempEndCardPath = join(appTempDir, `end-card-${tempPrefix}.png`);
+  const tempConcatListPath = join(appTempDir, `concat-list-${tempPrefix}.txt`);
+  const tempConcatPath = join(appTempDir, `concat-${tempPrefix}.mp4`);
   const transitionDurationSeconds = END_CARD_TRANSITION_DURATION_MS / 1000;
   const endCardDisplayDurationSeconds = END_CARD_DISPLAY_DURATION_MS / 1000;
   const endHoldDurationSeconds = endHoldDurationMs / 1000;
@@ -658,7 +667,7 @@ async function encodeMainVideoFromImages({
   const filterGraph = `${baseFilterGraph}${cropFilter}${scaleFilter}`;
 
   const tempOutputPath = join(
-    tmpdir(),
+    await getAppTempDir(),
     `${process.pid}-${Date.now()}.${getTimelapseVideoFormat(raw)}`,
   );
 
