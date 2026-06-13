@@ -3,7 +3,7 @@ import {
   type CanvasSummary,
 } from "@blurple-canvas-web/types";
 import { css, styled } from "@mui/material";
-import { Grip, History, Lock, Radio, Users, X } from "lucide-react";
+import { Grip, History, Lock, Radio, UserLock, Users, X } from "lucide-react";
 import { useCanvasImage, useCanvasStats } from "@/hooks";
 import { dateToRelativeTime } from "@/util/text";
 import CanvasIcon from "../CanvasIcon";
@@ -142,9 +142,12 @@ export function CanvasPreviewCard({
         <EventCanvasNameWrapper>
           <EventCanvasName>{canvas.name}</EventCanvasName>
           {currentEventId === canvas.eventId && <Radio size={16} />}
-          {[CanvasPlaceState.NoOne, CanvasPlaceState.NoNewUsers].includes(
-            canvas.placeState,
-          ) && <Lock size={16} />}
+          {canvas.placeState === CanvasPlaceState.NoOne && (
+            <Lock size={16} aria-label="Locked" />
+          )}
+          {canvas.placeState === CanvasPlaceState.NoNewUsers && (
+            <UserLock size={16} aria-label="Closed to new users" />
+          )}
         </EventCanvasNameWrapper>
         <EventCanvasCoords>
           {canvas.width}

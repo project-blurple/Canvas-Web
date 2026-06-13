@@ -33,7 +33,7 @@ import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
  * file system.
  */
 interface LockedCanvas {
-  placeState: CanvasPlaceState.NoOne;
+  placeState: typeof CanvasPlaceState.NoOne;
   canvasPaths: Partial<Record<CanvasExportScale, string>>;
 }
 
@@ -43,7 +43,9 @@ interface LockedCanvas {
  * most of the time to build a canvas image from scratch is fetching the pixels from the database).
  */
 interface UnlockedCanvas {
-  placeState: CanvasPlaceState.Anyone | CanvasPlaceState.NoNewUsers;
+  placeState:
+    | typeof CanvasPlaceState.Anyone
+    | typeof CanvasPlaceState.NoNewUsers;
   width: number;
   height: number;
   pixels: PixelColor[];

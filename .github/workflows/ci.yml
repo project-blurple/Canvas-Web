@@ -97,12 +97,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build types
-        if: matrix.package != 'types'
-        run: pnpm --filter types build
-
       - name: Build
-        run: pnpm --filter ${{ matrix.package }} build
+        run: pnpm --filter ${{ matrix.package }}... build
 
   backend_tests:
     name: Backend tests

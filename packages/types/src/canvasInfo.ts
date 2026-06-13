@@ -1,10 +1,13 @@
 import z from "zod";
 
-export enum CanvasPlaceState {
-  NoOne = "no_one",
-  NoNewUsers = "no_new_users",
-  Anyone = "anyone",
-}
+export const CanvasPlaceState = {
+  NoOne: "no_one",
+  NoNewUsers: "no_new_users",
+  Anyone: "anyone",
+} as const;
+
+export type CanvasPlaceState =
+  (typeof CanvasPlaceState)[keyof typeof CanvasPlaceState];
 
 export const CanvasInfoSchema = z.object({
   id: z.number().int().positive(),
