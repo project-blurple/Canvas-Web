@@ -1,7 +1,3 @@
-/**
- * FFmpeg process management and utilities.
- */
-
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";

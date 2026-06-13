@@ -1,7 +1,3 @@
-/**
- * Timelapse caching utilities and manifest management.
- */
-
 import { createHash } from "node:crypto";
 import { rename, stat, unlink, writeFile } from "node:fs/promises";
 import type { TimelapseCacheParams } from "./types";

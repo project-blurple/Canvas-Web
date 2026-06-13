@@ -1,8 +1,3 @@
-/**
- * Timelapse service types, constants, and video format utilities.
- * Consolidated from original constants, types, and timelapseUtils.
- */
-
 import type {
   CanvasExportScale,
   CanvasInfo,

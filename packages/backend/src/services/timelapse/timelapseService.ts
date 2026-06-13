@@ -1,8 +1,4 @@
-/**
- * Timelapse service: generation, orchestration, and cache coordination.
- */
-
-import { mkdir } from "node:fs/promises";
+import { mkdir, unlink } from "node:fs/promises";
 import { snapshotPrisma } from "@/client/snapshots";
 import {
   getTimelapseCanvasDirectory,
@@ -234,7 +230,6 @@ export async function getOrCreateTimelapseFromCache(
         update: manifestRecord,
       });
     } catch (error) {
-      const { unlink } = await import("fs/promises");
       await unlink(timelapseFilePath).catch(() => undefined);
       throw error;
     }
@@ -260,7 +255,6 @@ export async function writeCachedRawTimelapse({
   cacheParams: TimelapseCacheParams;
   rawBuffer: Buffer;
 }): Promise<string> {
-  const { unlink } = await import("fs/promises");
   const rawCacheParams: TimelapseCacheParams = {
     ...cacheParams,
     endHoldDurationMs: null,

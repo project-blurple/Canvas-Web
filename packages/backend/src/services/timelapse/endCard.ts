@@ -1,7 +1,3 @@
-/**
- * End-card generation and composition utilities for timelapse videos.
- */
-
 import { readFile, unlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import ffmpegStatic from "ffmpeg-static";

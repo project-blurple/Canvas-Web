@@ -1,7 +1,3 @@
-/**
- * Timelapse video encoding logic.
- */
-
 import { readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { PaletteColor } from "@blurple-canvas-web/types";
