@@ -24,6 +24,8 @@ import {
   TIMELAPSE_END_CARD_IMAGE_PATH,
 } from "@/snapshot/paths";
 import { type Bounds, calculateScale, clamp, normalizeBounds } from "@/utils";
+import type { TimelapseType, VideoFormat } from "@/utils/timelapseUtils";
+import { getTimelapseVideoFormat } from "@/utils/timelapseUtils";
 import { getCanvasInfo } from "./canvasService";
 import { getSnapshots } from "./snapshot/snapshotService";
 
@@ -46,12 +48,6 @@ async function getAppTempDir(): Promise<string> {
   return appTempDir;
 }
 
-type VideoFormat = "webm" | "mp4";
-
-function getTimelapseVideoFormat(raw: boolean): VideoFormat {
-  return raw ? "webm" : "mp4";
-}
-
 interface GenerateTimelapseParams {
   canvasId: CanvasInfo["id"];
   start?: Date;
@@ -62,7 +58,7 @@ interface GenerateTimelapseParams {
   showEndCard?: boolean;
   scale?: CanvasExportScale;
   backgroundColor?: PaletteColor["rgba"];
-  raw?: boolean;
+  raw?: TimelapseType;
 }
 
 interface TimelapseCacheParams {
@@ -79,7 +75,7 @@ interface TimelapseCacheParams {
   showEndCard: boolean;
   scale: CanvasExportScale;
   backgroundColor: PaletteColor["rgba"];
-  raw: boolean;
+  raw: TimelapseType;
 }
 
 function buildTimelapseCacheKey({
@@ -644,7 +640,7 @@ async function encodeMainVideoFromImages({
   backgroundColor: PaletteColor["rgba"];
   cropBounds?: Bounds;
   scale: CanvasExportScale;
-  raw: boolean;
+  raw: TimelapseType;
 }): Promise<Buffer> {
   const ffmpegPath = ffmpegStatic;
 
@@ -717,9 +713,9 @@ export async function generateTimelapse({
   showEndCard = true,
   scale,
   backgroundColor = notQuiteBlackRgba,
-  raw = false,
+  raw = "default",
 }: GenerateTimelapseParams): Promise<string> {
-  if (raw) {
+  if (raw === "raw") {
     endHoldDurationMs = null;
     scale = 1;
     showEndCard = false;
@@ -859,7 +855,7 @@ async function getOrCreateTimelapseFromCache(
       raw: cacheParams.raw,
     });
 
-    if (cacheParams.raw) {
+    if (cacheParams.raw === "raw") {
       return await writeCachedRawTimelapse({
         canvasId,
         cacheParams,

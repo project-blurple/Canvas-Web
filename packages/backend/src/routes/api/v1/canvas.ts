@@ -132,7 +132,7 @@ canvasRouter.get(
 
     const filePath = await generateTimelapse({
       canvasId: req.params.canvasId,
-      raw,
+      raw: raw ? "raw" : "default",
     });
 
     const fileStats = await stat(filePath);
