@@ -31,7 +31,7 @@ import {
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
-import { generateTimelapse } from "@/services/timelapseService";
+import { generateTimelapse } from "@/services/timelapse/timelapseService";
 import { normalizeBounds } from "@/utils";
 import { addSpanAttributes } from "@/utils/otel";
 

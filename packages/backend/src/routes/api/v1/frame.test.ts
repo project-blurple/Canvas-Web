@@ -44,7 +44,7 @@ vi.mock("@/services/exportService", () => ({
   exportFrameAsStream: vi.fn(),
 }));
 
-vi.mock("@/services/timelapseService", () => ({
+vi.mock("@/services/timelapse/timelapseService", () => ({
   generateTimelapse: vi.fn(),
 }));
 

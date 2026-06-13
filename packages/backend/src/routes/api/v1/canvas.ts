@@ -39,7 +39,7 @@ import {
 } from "@/services/canvasService";
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
-import { generateTimelapse } from "@/services/timelapseService";
+import { generateTimelapse } from "@/services/timelapse/timelapseService";
 import { addSpanAttributes } from "@/utils/otel";
 import { pixelRouter } from "./pixel";
 
