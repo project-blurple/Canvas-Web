@@ -85,7 +85,8 @@ export const TimelineProvider = ({
   const { data: snapshots } = useSnapshots(canvas.id);
 
   const [timelineIsActive, setTimelineIsActive] = useState(false);
-  const timelineIsAvailable = canvas.timelineEnabled && canvas.isLocked;
+  const timelineIsAvailable =
+    canvas.timelineEnabled && canvas.placeState === "no_one";
 
   const sourceVideo = useCanvasTimelineVideo(canvas.id, timelineIsActive);
 
