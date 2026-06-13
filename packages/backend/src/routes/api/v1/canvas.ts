@@ -125,7 +125,7 @@ canvasRouter.get(
 
     const canvas = await getCanvasInfo(req.params.canvasId);
 
-    if (!canvas.isLocked) {
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
       throw new BadRequestError(
         "Timelapse generation is only available for locked canvases",
       );

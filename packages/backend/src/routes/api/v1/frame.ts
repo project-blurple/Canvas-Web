@@ -1,6 +1,7 @@
 import { stat } from "node:fs/promises";
 import {
   CanvasIdParamModel,
+  CanvasPlaceState,
   CreateFrameBodyModel,
   ExportFrameParamModel,
   FrameDataParamModel,
@@ -102,7 +103,7 @@ frameRouter.get(
 
     addSpanAttributes(req, { "canvas.id": frame.canvasId });
 
-    if (!canvas.isLocked) {
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
       res.status(400).json({
         error: "Timelapse generation is only available for locked canvases",
       });
