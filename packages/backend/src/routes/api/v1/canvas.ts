@@ -5,6 +5,7 @@ import {
   CanvasIdParamModel,
   CanvasPasteBodyModel,
   CanvasPlaceState,
+  CanvasTimelapseParamModel,
   type Cooldown,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -13,7 +14,12 @@ import {
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import { assertLoggedIn, requireCanvasAdmin } from "@/middleware/canvasAuth";
+import BadRequestError from "@/errors/BadRequestError";
+import {
+  assertLoggedIn,
+  requireCanvasAdmin,
+  requireCanvasModerator,
+} from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { audit } from "@/services/auditLogService";
@@ -34,6 +40,7 @@ import {
 } from "@/services/canvasService";
 import { exportCanvasBoundsAsStream } from "@/services/exportService";
 import { getUserCanvasCooldown } from "@/services/pixelService";
+import { generateTimelapse } from "@/services/timelapse/timelapseService";
 import { addSpanAttributes } from "@/utils/otel";
 import { pixelRouter } from "./pixel";
 
@@ -98,6 +105,58 @@ canvasRouter.get(
     );
 
     addSpanAttributes(req, { "response.export.size.bytes": fileSize });
+  },
+);
+
+canvasRouter.get(
+  "/:canvasId.mp4",
+  requireCanvasModerator, // Temporary restriction until better timelapse restrictions are implemented https://github.com/project-blurple/Canvas-Web/issues/774
+  validate({
+    params: CanvasIdParamModel,
+    query: CanvasTimelapseParamModel,
+  }),
+  async (req, res) => {
+    const raw = req.query.raw || false;
+
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "timelapse.raw": raw,
+    });
+
+    const canvas = await getCanvasInfo(req.params.canvasId);
+
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
+      throw new BadRequestError(
+        "Timelapse generation is only available for locked canvases",
+      );
+    }
+
+    const filePath = await generateTimelapse({
+      canvasId: req.params.canvasId,
+      raw: raw ? "raw" : "default",
+    });
+
+    const fileStats = await stat(filePath);
+
+    addSpanAttributes(req, {
+      "response.size": fileStats.size,
+    });
+
+    res
+      .status(200)
+      .type(raw ? "webm" : "mp4")
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${req.params.canvasId}-timelapse${raw ? "-raw" : ""}.${raw ? "webm" : "mp4"}"`,
+      )
+      .sendFile(filePath, (err) => {
+        if (err) {
+          console.error(
+            `Failed to send timelapse file ${filePath}:`,
+            err.message,
+          );
+        }
+      });
   },
 );
 

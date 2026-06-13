@@ -12,6 +12,7 @@ allowBuilds:
   better-sqlite3: true
   cpu-features: false
   esbuild: false
+  ffmpeg-static: true
   prisma: false
   protobufjs: false
   sharp: false

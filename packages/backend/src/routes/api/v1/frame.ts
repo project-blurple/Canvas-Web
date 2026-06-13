@@ -1,5 +1,7 @@
+import { stat } from "node:fs/promises";
 import {
   CanvasIdParamModel,
+  CanvasPlaceState,
   CreateFrameBodyModel,
   ExportFrameParamModel,
   FrameDataParamModel,
@@ -9,10 +11,15 @@ import {
 } from "@blurple-canvas-web/types";
 import { Router } from "express";
 import config from "@/config";
-import { assertLoggedIn, requireLoggedIn } from "@/middleware/canvasAuth";
+import {
+  assertLoggedIn,
+  requireCanvasModerator,
+  requireLoggedIn,
+} from "@/middleware/canvasAuth";
 import { frameMutationLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
+import { getCanvasInfo } from "@/services/canvasService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import { exportFrameAsStream } from "@/services/exportService";
 import {
@@ -21,9 +28,11 @@ import {
   deleteFrame,
   editFrame,
   getFrameById,
+  getFramePlacementTimestamps,
   getFramesByGuildIds,
   getFramesByUserId,
 } from "@/services/frameService";
+import { generateTimelapse } from "@/services/timelapse/timelapseService";
 import { normalizeBounds } from "@/utils";
 import { addSpanAttributes } from "@/utils/otel";
 
@@ -79,6 +88,63 @@ frameRouter.get(
         "response.export.size.bytes": contentLength,
       });
     });
+  },
+);
+
+frameRouter.get(
+  "/:frameId.mp4",
+  requireCanvasModerator, // Temporary restriction until better timelapse restrictions are implemented https://github.com/project-blurple/Canvas-Web/issues/774
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
+    const frame = await getFrameById(req.params.frameId);
+    const canvas = await getCanvasInfo(frame.canvasId);
+
+    addSpanAttributes(req, { "canvas.id": frame.canvasId });
+
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
+      res.status(400).json({
+        error: "Timelapse generation is only available for locked canvases",
+      });
+      return;
+    }
+
+    const { start, end } = await getFramePlacementTimestamps(frame.id);
+
+    addSpanAttributes(req, {
+      "timelapse.start": start?.toISOString(),
+      "timelapse.end": end?.toISOString(),
+    });
+
+    const filePath = await generateTimelapse({
+      canvasId: frame.canvasId,
+      start,
+      end,
+      bounds: { ...frame },
+    });
+
+    const fileStats = await stat(filePath);
+
+    addSpanAttributes(req, {
+      "response.size": fileStats.size,
+    });
+
+    res
+      .status(200)
+      .type("mp4")
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${frame.canvasId}-frame-${frame.id}-timelapse.mp4"`,
+      )
+      .sendFile(filePath, (err) => {
+        if (err) {
+          console.error(
+            `Failed to send timelapse file ${filePath}:`,
+            err.message,
+          );
+        }
+      });
   },
 );
 
