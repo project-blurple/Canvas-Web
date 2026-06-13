@@ -13,7 +13,11 @@ import {
   OptionalFrameBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
-import { assertLoggedIn, requireCanvasAdmin } from "@/middleware/canvasAuth";
+import {
+  assertLoggedIn,
+  requireCanvasAdmin,
+  requireCanvasModerator,
+} from "@/middleware/canvasAuth";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { audit } from "@/services/auditLogService";
@@ -104,6 +108,7 @@ canvasRouter.get(
 
 canvasRouter.get(
   "/:canvasId.mp4",
+  requireCanvasModerator, // Temporary restriction until better timelapse restrictions are implemented https://github.com/project-blurple/Canvas-Web/issues/774
   validate({
     params: CanvasIdParamModel,
     query: CanvasTimelapseParamModel,
