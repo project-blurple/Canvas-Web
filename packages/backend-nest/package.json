@@ -85,6 +85,7 @@
     "@types/passport": "^1.0.17",
     "@types/passport-oauth2": "^1.8.0",
     "@types/supertest": "^7.0.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "msw": "^2.14.6",
     "prettier": "^3.4.2",
     "prisma": "^7.7.0",

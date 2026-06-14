@@ -8,6 +8,7 @@ import { ApiExceptionFilter } from "@/common/api-exception.filter";
 import { DatabaseModule } from "@/common/database/database.module";
 import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
+import { PixelModule } from "@/pixel/pixel.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
 
 @Module({
@@ -17,6 +18,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     AuthModule,
     RealtimeModule,
     CanvasModule,
+    PixelModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
