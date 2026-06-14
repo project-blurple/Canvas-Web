@@ -39,6 +39,8 @@ const createApp = ({ authenticated = false, moderator = false } = {}) => {
     req.session = {} as typeof req.session;
     if (authenticated) {
       req.session.discordAccessToken = "test-access-token";
+      // Ensure req.user exists for isLoggedIn check
+      req.user = req.user || ({ id: "test-user-id" } as any);
     }
     if (moderator && req.user) {
       req.user = {
@@ -58,7 +60,7 @@ describe("History route tests", () => {
     vi.clearAllMocks();
   });
 
-  it("returns pixel history for a single coordinate", async () => {
+  it("returns pixel history for a single coordinate when not logged in", async () => {
     const responseBody = {
       entries: [
         {
@@ -72,7 +74,7 @@ describe("History route tests", () => {
       ],
       total: 1,
       page: 1,
-      size: 20,
+      size: 1,
       historyIds: ["1"],
       users: {
         "1": {
@@ -105,6 +107,62 @@ describe("History route tests", () => {
           x: 2,
           y: 3,
         },
+        page: 1,
+        size: 1,
+      },
+      false,
+    );
+  });
+
+  it("returns pixel history with custom pagination when logged in", async () => {
+    const responseBody = {
+      entries: [
+        {
+          id: "1",
+          color: { id: 1, name: "Red", code: "FF00" },
+          timestamp: new Date(0).toISOString(),
+          guildId: null,
+          userId: "1",
+          userProfile: null,
+        },
+      ],
+      total: 100,
+      page: 2,
+      size: 20,
+      historyIds: ["1"],
+      users: {
+        "1": {
+          count: 1,
+          colors: {
+            "1": 1,
+          },
+          firstPlaced: new Date(0).toISOString(),
+          lastPlaced: new Date().toISOString(),
+        },
+      },
+    };
+    vi.mocked(getPixelHistorySummary).mockResolvedValueOnce(
+      responseBody as unknown as Awaited<
+        ReturnType<typeof getPixelHistorySummary>
+      >,
+    );
+
+    const app = createApp({ authenticated: true });
+    const response = await request(app)
+      .get("/api/v1/canvas/1/pixel/history?x=2&y=3&page=2&size=20")
+      .expect(200);
+
+    expect(response.body).toMatchObject(responseBody);
+    expect(getPixelHistorySummary).toHaveBeenCalledTimes(1);
+    expect(getPixelHistorySummary).toHaveBeenCalledWith(
+      {
+        canvasId: 1,
+        points: {
+          x: 2,
+          y: 3,
+        },
+        page: 2,
+        size: 20,
       },
       false,
     );
