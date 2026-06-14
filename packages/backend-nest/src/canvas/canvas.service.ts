@@ -372,6 +372,25 @@ export class CanvasService {
     }
   }
 
+  /**
+   * Whether the given canvas belongs to the current event. Used by the
+   * moderator history-erase policy guard (admins bypass it via the force
+   * endpoint).
+   */
+  async isCanvasInCurrentEvent(canvasId: number): Promise<boolean> {
+    const canvas = await this.prisma.canvas.findUnique({
+      where: { id: canvasId },
+      select: { eventId: true },
+    });
+
+    if (!canvas) {
+      throw new NotFoundError(`There is no canvas with ID ${canvasId}`);
+    }
+
+    const currentEventId = await this.getCurrentEventId();
+    return canvas.eventId === currentEventId;
+  }
+
   private async getCurrentEventId(): Promise<number> {
     const info = await this.prisma.info.findFirst({
       select: {
