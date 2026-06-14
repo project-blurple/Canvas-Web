@@ -3,7 +3,9 @@ import { z } from "zod";
 
 // Load .env via dotenvx (workspace standard) once, at first import — before
 // @nestjs/config evaluates `validate` or any registerAs factory.
-dotenvx.config({ ignore: ["MISSING_ENV_FILE"], quiet: true });
+if (!process.env.VITEST) {
+  dotenvx.config({ ignore: ["MISSING_ENV_FILE"], quiet: true });
+}
 
 const requiredString = z.string().min(1);
 
