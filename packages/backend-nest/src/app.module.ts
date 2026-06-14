@@ -3,11 +3,13 @@ import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ZodSerializerInterceptor } from "nestjs-zod";
 
 import { AuthModule } from "@/auth/auth.module";
+import { BlocklistModule } from "@/blocklist/blocklist.module";
 import { CanvasModule } from "@/canvas/canvas.module";
 import { ApiExceptionFilter } from "@/common/api-exception.filter";
 import { DatabaseModule } from "@/common/database/database.module";
 import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
+import { HistoryModule } from "@/history/history.module";
 import { PixelModule } from "@/pixel/pixel.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
 
@@ -19,6 +21,8 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     RealtimeModule,
     CanvasModule,
     PixelModule,
+    BlocklistModule,
+    HistoryModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

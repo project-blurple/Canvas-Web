@@ -3,6 +3,7 @@ import { Test, type TestingModule } from "@nestjs/testing";
 
 import { BlocklistService } from "@/blocklist/blocklist.service";
 import { CanvasCacheService } from "@/canvas/canvas-cache.service";
+import { PixelReconciliationService } from "@/canvas/pixel-reconciliation.service";
 import { DatabaseModule } from "@/common/database/database.module";
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { ForbiddenError } from "@/common/errors/forbidden.error";
@@ -39,6 +40,10 @@ describe("PixelService", () => {
         BlocklistService,
         CanvasCacheService,
         { provide: BroadcastService, useValue: broadcastService },
+        {
+          provide: PixelReconciliationService,
+          useValue: { restoreErasedHistory: vi.fn() },
+        },
       ],
     }).compile();
     await moduleRef.init();

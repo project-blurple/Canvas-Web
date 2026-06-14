@@ -64,6 +64,60 @@ export class PixelReconciliationService {
   }
 
   /**
+   * Un-erases (`erasedAt = NULL`) every history row matching the given
+   * users × canvases, then rebuilds the affected pixels from the now-live
+   * history. Invoked when a user is removed from the blocklist with
+   * `shouldRestoreHistoryForCanvasId`.
+   *
+   * This lives alongside the other history-write + reconcile operations rather
+   * than in the history module, so the blocklist can depend on it without
+   * creating a history ⇄ blocklist module cycle (the history module erases via
+   * the blocklist to block authors).
+   */
+  async restoreErasedHistory(
+    userIds: Iterable<bigint>,
+    canvasIds: Iterable<number>,
+  ): Promise<void> {
+    const userIdsArray = Array.isArray(userIds) ? userIds : Array.from(userIds);
+    const canvasIdsArray =
+      Array.isArray(canvasIds) ? canvasIds : Array.from(canvasIds);
+
+    if (userIdsArray.length === 0 || canvasIdsArray.length === 0) {
+      return;
+    }
+
+    const restoredEntries = await this.prisma.$transaction((tx) =>
+      tx.$kysely
+        .updateTable("history")
+        .set({ erasedAt: null })
+        .where("userId", "in", userIdsArray)
+        .where("canvasId", "in", canvasIdsArray)
+        .where("erasedAt", "is not", null)
+        .returning(["canvasId", "x", "y", "timestamp"])
+        .execute(),
+    );
+
+    if (restoredEntries.length === 0) {
+      return;
+    }
+
+    const coordinatesByCanvas = new Map<number, Point[]>();
+    for (const entry of restoredEntries) {
+      const coordinates = coordinatesByCanvas.get(entry.canvasId) ?? [];
+      coordinates.push({ x: entry.x, y: entry.y });
+      coordinatesByCanvas.set(entry.canvasId, coordinates);
+    }
+
+    await Promise.all(
+      Array.from(coordinatesByCanvas.entries(), ([canvasId, coordinates]) =>
+        this.restorePixelsAfterHistoryModification(canvasId, coordinates),
+      ),
+    );
+
+    // TODO: snapshots
+  }
+
+  /**
    * Rebuilds the current pixel state for the given coordinates after bulk
    * history operations: the latest non-erased entry per coordinate wins, an
    * empty history means the blank colour. Coordinates are processed in chunks
