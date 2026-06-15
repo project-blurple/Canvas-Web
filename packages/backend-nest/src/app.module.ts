@@ -10,6 +10,7 @@ import { ApiExceptionFilter } from "@/common/api-exception.filter";
 import { DatabaseModule } from "@/common/database/database.module";
 import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
+import { EventModule } from "@/event/event.module";
 import { HistoryModule } from "@/history/history.module";
 import { PixelModule } from "@/pixel/pixel.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
@@ -21,6 +22,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     AuthModule,
     AuditModule,
     RealtimeModule,
+    EventModule,
     CanvasModule,
     PixelModule,
     BlocklistModule,
