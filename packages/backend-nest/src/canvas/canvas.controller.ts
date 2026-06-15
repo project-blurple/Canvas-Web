@@ -1,4 +1,5 @@
 import {
+  type BoundsInput,
   CanvasExportParamModel,
   type CanvasExportScale,
   CanvasIdParamModel,
@@ -9,8 +10,7 @@ import {
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
   EditCanvasBodyModel,
-  type FrameBoundsInput,
-  OptionalFrameBoundsModel,
+  OptionalBoundsModel,
 } from "@blurple-canvas-web/types";
 import {
   Body,
@@ -52,9 +52,9 @@ class CanvasExportParamsDto extends createZodDto(CanvasExportParamModel) {}
 
 // The schema transforms an absent crop to `undefined`, which a class cannot
 // extend; the cast narrows the static type while keeping the runtime schema
-// (handlers receive `FrameBoundsInput`).
+// (handlers receive `BoundsInput`).
 class CanvasCropQueryDto extends createZodDto(
-  OptionalFrameBoundsModel as z.ZodType<NonNullable<FrameBoundsInput>>,
+  OptionalBoundsModel as z.ZodType<NonNullable<BoundsInput>>,
 ) {}
 
 class CreateCanvasBodyDto extends createZodDto(CreateCanvasBodyModel) {}
@@ -179,7 +179,7 @@ export class CanvasController {
       cachedCanvas,
       params.scale,
       // The schema transforms an absent crop to `undefined`.
-      bounds as FrameBoundsInput,
+      bounds as BoundsInput,
     );
   }
 
@@ -322,7 +322,7 @@ export class CanvasController {
     canvasId: number,
     cachedCanvas: CachedCanvas,
     scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-    bounds?: FrameBoundsInput,
+    bounds?: BoundsInput,
   ): Promise<void> {
     if (cachedCanvas.isLocked) {
       const canvasPath = cachedCanvas.canvasPaths[scale];
