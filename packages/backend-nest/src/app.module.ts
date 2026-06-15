@@ -17,6 +17,7 @@ import { NoticeModule } from "@/notice/notice.module";
 import { PaletteModule } from "@/palette/palette.module";
 import { PixelModule } from "@/pixel/pixel.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
+import { StatisticsModule } from "@/statistics/statistics.module";
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     BlocklistModule,
     PaletteModule,
     HistoryModule,
+    StatisticsModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },
