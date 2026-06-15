@@ -34,6 +34,7 @@ import { DISCORD_STRATEGY_NAME } from "@/discord/discord.constants";
 import { DiscordGuildService } from "@/discord/discord-guild.service";
 import { DiscordProfileService } from "@/discord/discord-profile.service";
 import { DiscordTokenService } from "@/discord/discord-token.service";
+import { GuildRefreshRateLimit } from "@/rate-limit/rate-limit.decorators";
 
 class GuildIdParamsDto extends createZodDto(
   z.object({ guildId: DiscordSnowflakeSchema }),
@@ -163,9 +164,9 @@ export class DiscordController {
     return { guilds: guildFlags };
   }
 
-  // TODO: ratelimiting
   @Post("guilds/refresh")
   @RequiresLogin()
+  @GuildRefreshRateLimit()
   @ApiOperation({
     summary: "Refresh the cached guild permission flags from Discord",
   })

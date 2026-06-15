@@ -37,7 +37,10 @@ import { createZodDto, ZodResponse } from "nestjs-zod";
 import { z } from "zod";
 
 import { Audit } from "@/audit/audit.decorator";
-import { CurrentUser, CurrentUserDto } from "@/auth/current-user.decorator";
+import {
+  CurrentUser,
+  CurrentUserDto,
+} from "@/auth/decorator/current-user.decorator";
 import {
   RequiresCanvasAdmin,
   RequiresLogin,

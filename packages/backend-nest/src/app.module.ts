@@ -16,6 +16,7 @@ import { HistoryModule } from "@/history/history.module";
 import { NoticeModule } from "@/notice/notice.module";
 import { PaletteModule } from "@/palette/palette.module";
 import { PixelModule } from "@/pixel/pixel.module";
+import { RateLimitModule } from "@/rate-limit/rate-limit.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
 import { StatisticsModule } from "@/statistics/statistics.module";
 
@@ -23,6 +24,7 @@ import { StatisticsModule } from "@/statistics/statistics.module";
   imports: [
     AppConfigModule,
     DatabaseModule,
+    RateLimitModule,
     AuthModule,
     AuditModule,
     RealtimeModule,

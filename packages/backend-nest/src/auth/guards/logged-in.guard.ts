@@ -6,19 +6,14 @@ import {
 import { type Request } from "express";
 
 import { UnauthorizedError } from "@/common/errors/unauthorized.error";
+import { isLoggedIn } from "../util/is-logged-in.util";
 
 @Injectable()
 export class LoggedInGuard implements CanActivate {
   canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
 
-    if (
-      !request.user ||
-      !(
-        request.session.discordAccessToken ||
-        request.session.discordRefreshToken
-      )
-    ) {
+    if (!isLoggedIn(request)) {
       throw new UnauthorizedError("User is not authenticated");
     }
 

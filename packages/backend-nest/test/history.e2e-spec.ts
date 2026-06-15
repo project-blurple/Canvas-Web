@@ -122,15 +122,30 @@ describe("History routes (e2e)", () => {
   }
 
   describe("GET /api/v1/canvas/:canvasId/pixel/history", () => {
-    it("returns the public single-cell history", async () => {
+    it("clamps unauthenticated callers to a single most-recent entry", async () => {
       const response = await request(app.getHttpServer())
-        .get("/api/v1/canvas/1/pixel/history?x=0&y=0")
+        .get("/api/v1/canvas/1/pixel/history?x=0&y=0&page=1&size=20")
+        .expect(200);
+
+      // The full history is reported, but only one entry is returned.
+      expect(response.body.total).toBe(4);
+      expect(response.body.size).toBe(1);
+      expect(response.body.entries).toHaveLength(1);
+      expect(response.body.users).toBeUndefined();
+      expect(typeof response.body.executionDurationMs).toBe("number");
+    });
+
+    it("honours the requested pagination when logged in", async () => {
+      const agent = request.agent(app.getHttpServer());
+      await signIn(agent);
+
+      const response = await agent
+        .get("/api/v1/canvas/1/pixel/history?x=0&y=0&page=1&size=20")
         .expect(200);
 
       expect(response.body.total).toBe(4);
+      expect(response.body.size).toBe(20);
       expect(response.body.entries).toHaveLength(4);
-      expect(response.body.users).toBeUndefined();
-      expect(typeof response.body.executionDurationMs).toBe("number");
     });
   });
 

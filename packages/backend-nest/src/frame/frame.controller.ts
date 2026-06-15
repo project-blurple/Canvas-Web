@@ -32,11 +32,15 @@ import {
 import type { Request, Response } from "express";
 import { createZodDto } from "nestjs-zod";
 
-import { CurrentUser, CurrentUserDto } from "@/auth/current-user.decorator";
+import {
+  CurrentUser,
+  CurrentUserDto,
+} from "@/auth/decorator/current-user.decorator";
 import { RequiresLogin } from "@/auth/require-auth.decorator";
 import { ExportService } from "@/canvas/export.service";
 import { type FramesConfig, framesConfig } from "@/config/frames.config";
 import { DiscordTokenService } from "@/discord/discord-token.service";
+import { FrameMutationRateLimit } from "@/rate-limit/rate-limit.decorators";
 import { FrameService } from "./frame.service";
 
 class ExportFrameParamsDto extends createZodDto(ExportFrameParamModel) {}
@@ -63,7 +67,6 @@ export class FrameController {
     private readonly discordTokenService: DiscordTokenService,
     @Inject(framesConfig.KEY) private readonly frames: FramesConfig,
   ) {}
-  // TODO: rate limit
 
   @Get(":frameId@:scale.png")
   @ApiOperation({ summary: "PNG of a frame's region at scale (1/2/4×)" })
@@ -156,6 +159,7 @@ export class FrameController {
 
   @Put(":frameId/edit")
   @RequiresLogin()
+  @FrameMutationRateLimit()
   @ApiOperation({ summary: "Edit a frame (owner or guild manager)" })
   async editFrame(
     @Param() params: FrameIdParamsDto,
@@ -181,6 +185,7 @@ export class FrameController {
 
   @Delete(":frameId/delete")
   @RequiresLogin()
+  @FrameMutationRateLimit()
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: "Delete a frame (owner or guild manager)" })
   @ApiNoContentResponse({ description: "Frame deleted" })
@@ -198,6 +203,7 @@ export class FrameController {
 
   @Post()
   @RequiresLogin()
+  @FrameMutationRateLimit()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Create a frame" })
   async createFrame(
