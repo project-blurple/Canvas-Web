@@ -21,6 +21,7 @@ import {
 import { ApiNoContentResponse, ApiOperation } from "@nestjs/swagger";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
+import { Audit } from "@/audit/audit.decorator";
 import {
   RequiresCanvasAdmin,
   RequiresCanvasModerator,
@@ -129,6 +130,7 @@ export class HistoryController {
   async deletePixelHistory(
     @Param() params: CanvasIdParamsDto,
     @Body() body: PixelHistoryDeleteBodyDto,
+    @Audit() audit: Audit,
   ): Promise<void> {
     if (!(await this.canvasService.isCanvasInCurrentEvent(params.canvasId))) {
       throw new ForbiddenError(
@@ -146,7 +148,11 @@ export class HistoryController {
       shouldBlockAuthors,
     );
 
-    // todo: audit log
+    audit.record({
+      action: "pixel_history.delete",
+      resourceId: params.canvasId,
+      metadata: { filters: body, shouldBlockAuthors, forced: false },
+    });
   }
 
   @Delete("force")
@@ -159,6 +165,7 @@ export class HistoryController {
   async forceDeletePixelHistory(
     @Param() params: CanvasIdParamsDto,
     @Body() body: PixelHistoryDeleteBodyDto,
+    @Audit() audit: Audit,
   ): Promise<void> {
     const { payload, shouldBlockAuthors } = this.buildDeletePayload(
       params.canvasId,
@@ -170,7 +177,11 @@ export class HistoryController {
       shouldBlockAuthors,
     );
 
-    // todo: audit log
+    audit.record({
+      action: "pixel_history.delete",
+      resourceId: params.canvasId,
+      metadata: { filters: body, shouldBlockAuthors, forced: true },
+    });
   }
 
   /** Maps the complex body filters onto the service's filter shape. */

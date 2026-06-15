@@ -36,6 +36,13 @@ export interface EditCanvasParams {
   cooldownDuration?: number;
 }
 
+export interface PasteArea {
+  topLeftX: number;
+  topLeftY: number;
+  bottomRightX: number;
+  bottomRightY: number;
+}
+
 @Injectable()
 export class CanvasService {
   private readonly logger = new Logger(CanvasService.name);
@@ -240,6 +247,33 @@ export class CanvasService {
    * against the canvas bounds and the event palette, then writes the history
    * entries and reconciles the pixels.
    */
+  /**
+   * Bounding box of a paste, or null for an empty paste. Computed in a single
+   * pass: spreading `data` into Math.min/Math.max overflows the call stack for
+   * large pastes.
+   */
+  static computePasteArea(
+    data: readonly [number, number, number][],
+  ): PasteArea | null {
+    if (data.length === 0) {
+      return null;
+    }
+
+    let topLeftX = Infinity;
+    let topLeftY = Infinity;
+    let bottomRightX = -Infinity;
+    let bottomRightY = -Infinity;
+
+    for (const [x, y] of data) {
+      if (x < topLeftX) topLeftX = x;
+      if (y < topLeftY) topLeftY = y;
+      if (x > bottomRightX) bottomRightX = x;
+      if (y > bottomRightY) bottomRightY = y;
+    }
+
+    return { topLeftX, topLeftY, bottomRightX, bottomRightY };
+  }
+
   async pasteCanvasData(
     canvasId: number,
     authorId: bigint,
@@ -281,28 +315,14 @@ export class CanvasService {
       }),
     );
 
-    const lowestX = entries.reduce(
-      (min, entry) => Math.min(min, entry.x),
-      entries[0].x,
-    );
-    const lowestY = entries.reduce(
-      (min, entry) => Math.min(min, entry.y),
-      entries[0].y,
-    );
-    const highestX = entries.reduce(
-      (max, entry) => Math.max(max, entry.x),
-      entries[0].x,
-    );
-    const highestY = entries.reduce(
-      (max, entry) => Math.max(max, entry.y),
-      entries[0].y,
-    );
+    const area = CanvasService.computePasteArea(data);
 
     if (
-      lowestX < 0 ||
-      lowestY < 0 ||
-      highestX >= canvas.width ||
-      highestY >= canvas.height
+      area &&
+      (area.topLeftX < 0 ||
+        area.topLeftY < 0 ||
+        area.bottomRightX >= canvas.width ||
+        area.bottomRightY >= canvas.height)
     ) {
       throw new Error(
         `Data contains coordinates that are out of bounds for canvas with ID ${canvasId}`,
