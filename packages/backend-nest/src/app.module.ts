@@ -11,6 +11,7 @@ import { DatabaseModule } from "@/common/database/database.module";
 import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
 import { EventModule } from "@/event/event.module";
+import { FrameModule } from "@/frame/frame.module";
 import { HistoryModule } from "@/history/history.module";
 import { NoticeModule } from "@/notice/notice.module";
 import { PaletteModule } from "@/palette/palette.module";
@@ -26,6 +27,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     RealtimeModule,
     EventModule,
     CanvasModule,
+    FrameModule,
     PixelModule,
     NoticeModule,
     BlocklistModule,

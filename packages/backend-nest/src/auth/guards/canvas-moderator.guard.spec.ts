@@ -1,4 +1,3 @@
-import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import type { ExecutionContext } from "@nestjs/common";
 import { Test, type TestingModule } from "@nestjs/testing";
 import type { Request } from "express";
@@ -8,12 +7,7 @@ import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { UnauthorizedError } from "@/common/errors/unauthorized.error";
 import { DiscordGuildService } from "@/discord/discord-guild.service";
 import { DiscordTokenService } from "@/discord/discord-token.service";
-
-const mockUser: DiscordUserProfile = {
-  id: "123456789",
-  username: "user",
-  profilePictureUrl: "https://example.com/avatar.png",
-};
+import { mockDiscordUser as mockUser } from "@/test/fixtures/users";
 
 const mockGuildService = {
   isCanvasAdmin: vi.fn(),
