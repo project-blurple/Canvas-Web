@@ -12,6 +12,9 @@ export const STAGED_AUDIT_ENTRY = Symbol("stagedAuditEntry");
 export interface AuditEntryInput {
   action: AuditAction;
   resourceId?: string | number | bigint | null;
+  /**
+   * Type is set to unknown to allow for any type of metadata to be passed.
+   */
   metadata?: unknown;
 }
 
