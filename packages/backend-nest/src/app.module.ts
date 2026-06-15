@@ -12,6 +12,7 @@ import { ZodValidationPipe } from "@/common/zod-validation.pipe";
 import { AppConfigModule } from "@/config/config.module";
 import { EventModule } from "@/event/event.module";
 import { HistoryModule } from "@/history/history.module";
+import { PaletteModule } from "@/palette/palette.module";
 import { PixelModule } from "@/pixel/pixel.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
 
@@ -26,6 +27,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     CanvasModule,
     PixelModule,
     BlocklistModule,
+    PaletteModule,
     HistoryModule,
   ],
   providers: [
