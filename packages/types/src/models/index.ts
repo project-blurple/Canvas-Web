@@ -1,5 +1,6 @@
 export * from "./auditLog.models.js";
 export * from "./blocklist.models.js";
+export * from "./bounds.models.js";
 export * from "./canvas.models.js";
 export * from "./color.models.js";
 export * from "./event.models.js";

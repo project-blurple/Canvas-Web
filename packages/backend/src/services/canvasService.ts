@@ -4,7 +4,7 @@ import type {
   CanvasExportScale,
   CanvasInfo,
   CanvasSummary,
-  OptionalFrameBoundsModel,
+  OptionalBoundsModel,
   PixelColor,
   PlacePixelArray,
   Point,
@@ -117,7 +117,7 @@ export function getCanvasFilename(
   canvasId: number,
   isLocked = false,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-  bounds?: z.infer<typeof OptionalFrameBoundsModel>,
+  bounds?: z.infer<typeof OptionalBoundsModel>,
 ): string {
   const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
   const boundsSuffix =

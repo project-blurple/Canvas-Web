@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import {
+  type BoundsInput,
   CANVAS_EXPORT_SCALES,
   type CanvasExportScale,
   type CanvasInfo,
   DEFAULT_CANVAS_EXPORT_SCALE,
-  type FrameBoundsInput,
   type PixelColor,
   type PlacePixelArray,
   type Point,
@@ -76,7 +76,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
     canvasId: number,
     isLocked = false,
     scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-    bounds?: FrameBoundsInput,
+    bounds?: BoundsInput,
   ): string {
     const scaleSuffix = scale === 1 ? "" : `@${scale}x`;
     const boundsSuffix =
