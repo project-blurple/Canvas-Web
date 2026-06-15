@@ -28,6 +28,8 @@ import {
 } from "@/auth/require-auth.decorator";
 import { CanvasService } from "@/canvas/canvas.service";
 import { ForbiddenError } from "@/common/errors/forbidden.error";
+import { HistoryQueryRateLimit } from "@/rate-limit/rate-limit.decorators";
+import { AuthStatus } from "../auth/decorator/auth-status.decorator";
 import type { GetPixelHistoryParams } from "./history.service";
 import { HistoryService } from "./history.service";
 
@@ -59,11 +61,13 @@ export class HistoryController {
   ) {}
 
   @Get()
+  @HistoryQueryRateLimit()
   @ApiOperation({ summary: "Paginated history for a single cell" })
   @ZodResponse({ type: PixelHistoryWrapperResponseDto })
   async getPixelHistory(
     @Param() params: CanvasIdParamsDto,
     @Query() query: PixelHistoryParamsDto,
+    @AuthStatus() loggedIn: boolean,
   ) {
     const startedAt = performance.now();
 
@@ -71,8 +75,8 @@ export class HistoryController {
       {
         canvasId: params.canvasId,
         points: { x: query.x, y: query.y },
-        page: query.page,
-        size: query.size,
+        page: loggedIn ? query.page : 1,
+        size: loggedIn ? query.size : 1,
       },
       false,
     );

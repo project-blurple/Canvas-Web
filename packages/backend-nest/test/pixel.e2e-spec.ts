@@ -5,6 +5,10 @@ import path from "node:path";
 import { SocketEvents } from "@blurple-canvas-web/types";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
+import {
+  ThrottlerStorage,
+  type ThrottlerStorageService,
+} from "@nestjs/throttler";
 import sharp from "sharp";
 import { io, type Socket } from "socket.io-client";
 import request from "supertest";
@@ -88,6 +92,7 @@ describe("Pixel routes (e2e)", () => {
   let baseUrl: string;
   let cacheService: CanvasCacheService;
   let canvasesPath: string;
+  let throttlerStorage: ThrottlerStorageService;
   const clients: Socket[] = [];
 
   // Mutated per-test to exercise the feature flags; reset in beforeEach.
@@ -128,6 +133,7 @@ describe("Pixel routes (e2e)", () => {
     baseUrl = `http://127.0.0.1:${port}`;
 
     cacheService = app.get(CanvasCacheService);
+    throttlerStorage = app.get<ThrottlerStorageService>(ThrottlerStorage);
   });
 
   afterAll(async () => {
@@ -154,6 +160,10 @@ describe("Pixel routes (e2e)", () => {
     }
     mockDiscordServer.resetHandlers();
     resetMockDiscord();
+    // Rate-limit state is in-process and shared across tests; reset it so the
+    // per-user placement budget does not leak between cases.
+    throttlerStorage.onApplicationShutdown();
+    throttlerStorage.storage.clear();
     // The render cache outlives the per-test database transaction.
     await cacheService.clearCachedCanvas(1);
   });

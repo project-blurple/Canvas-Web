@@ -19,12 +19,16 @@ import { ApiNoContentResponse, ApiOperation } from "@nestjs/swagger";
 import type { Request } from "express";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
-import { CurrentUser, CurrentUserDto } from "@/auth/current-user.decorator";
+import {
+  CurrentUser,
+  CurrentUserDto,
+} from "@/auth/decorator/current-user.decorator";
 import {
   RequiresBotApiKey,
   RequiresLogin,
 } from "@/auth/require-auth.decorator";
 import { CanvasCacheService } from "@/canvas/canvas-cache.service";
+import { TurnstileService } from "@/captcha/turnstile.service";
 import { ForbiddenError } from "@/common/errors/forbidden.error";
 import {
   type PlacementConfig,
@@ -32,6 +36,7 @@ import {
 } from "@/config/placement.config";
 import { DiscordGuildService } from "@/discord/discord-guild.service";
 import { DiscordTokenService } from "@/discord/discord-token.service";
+import { PixelPlacementRateLimit } from "@/rate-limit/rate-limit.decorators";
 import { BroadcastService } from "@/realtime/broadcast.service";
 import { PixelService } from "./pixel.service";
 
@@ -51,6 +56,7 @@ export class PixelController {
     private readonly broadcastService: BroadcastService,
     private readonly discordGuildService: DiscordGuildService,
     private readonly discordTokenService: DiscordTokenService,
+    private readonly turnstileService: TurnstileService,
     @Inject(placementConfig.KEY)
     private readonly placementCfg: PlacementConfig,
   ) {}
@@ -80,6 +86,7 @@ export class PixelController {
 
   @Post()
   @RequiresLogin()
+  @PixelPlacementRateLimit()
   @ApiOperation({ summary: "Place a pixel on the canvas" })
   @ZodResponse({ status: HttpStatus.CREATED, type: PlacePixelResponseDto })
   async placePixel(
@@ -94,7 +101,7 @@ export class PixelController {
 
     const { x, y, colorId } = body;
 
-    // TODO: turnstile: https://github.com/project-blurple/Canvas-Web/issues/763
+    await this.turnstileService.verify(body.turnstileToken ?? "");
 
     const coordinates: Point = { x, y };
     const guildFlags = await this.discordTokenService.withDiscordAccessToken(
