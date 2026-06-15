@@ -7,6 +7,7 @@ import {
   ApiUnauthorizedResponse,
 } from "@nestjs/swagger";
 
+import { setActorRole } from "@/audit/audit.decorator";
 import { BotApiKeyGuard } from "@/auth/guards/bot-api-key.guard";
 import { CanvasAdminGuard } from "@/auth/guards/canvas-admin.guard";
 import { CanvasModeratorGuard } from "@/auth/guards/canvas-moderator.guard";
@@ -43,6 +44,7 @@ export function RequiresLogin() {
 /** Routes restricted to canvas admins. */
 export function RequiresCanvasAdmin() {
   return applyDecorators(
+    setActorRole("admin"),
     UseGuards(CanvasAdminGuard),
     ApiCookieAuth(SESSION_SECURITY),
     ApiExtension(GUARDS_EXTENSION, [CanvasAdminGuard.name]),
@@ -60,6 +62,7 @@ export function RequiresCanvasAdmin() {
 /** Routes restricted to canvas moderators. */
 export function RequiresCanvasModerator() {
   return applyDecorators(
+    setActorRole("moderator"),
     UseGuards(CanvasModeratorGuard),
     ApiCookieAuth(SESSION_SECURITY),
     ApiExtension(GUARDS_EXTENSION, [CanvasModeratorGuard.name]),

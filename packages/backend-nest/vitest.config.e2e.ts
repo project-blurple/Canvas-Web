@@ -7,6 +7,7 @@ export default defineConfig({
   test: {
     globals: true,
     include: ["test/**/*.e2e-spec.ts"],
+    fileParallelism: false,
     // setup-env.ts must run first: it provides the env vars that AppModule
     // needs at import time. database.ts wraps every test in a rolled-back
     // transaction, same as the unit suite.

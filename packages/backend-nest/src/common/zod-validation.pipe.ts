@@ -1,8 +1,12 @@
+import type { ArgumentMetadata, PipeTransform } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { createZodValidationPipe } from "nestjs-zod";
+import { isZodDto } from "nestjs-zod/dto";
 import { ZodError } from "zod";
+
 import { BadRequestError } from "./errors/bad-request.error";
 
-export const ZodValidationPipe: ReturnType<typeof createZodValidationPipe> =
+const BaseZodValidationPipe: ReturnType<typeof createZodValidationPipe> =
   createZodValidationPipe({
     createValidationException: (error) =>
       new BadRequestError(
@@ -11,3 +15,16 @@ export const ZodValidationPipe: ReturnType<typeof createZodValidationPipe> =
       ),
     strictSchemaDeclaration: true,
   });
+
+@Injectable()
+export class ZodValidationPipe
+  extends BaseZodValidationPipe
+  implements PipeTransform
+{
+  override transform(value: unknown, metadata: ArgumentMetadata): unknown {
+    if (metadata.type === "custom" && !isZodDto(metadata.metatype)) {
+      return value;
+    }
+    return super.transform(value, metadata);
+  }
+}

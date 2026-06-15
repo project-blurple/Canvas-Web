@@ -263,6 +263,18 @@ describe("CanvasService", () => {
         ],
       });
     });
+
+    it("treats an empty paste as a no-op instead of crashing", async () => {
+      await expect(service.pasteCanvasData(1, 1n, [])).resolves.toBeUndefined();
+
+      expect(
+        pixelReconciliationService.createBulkPlaceEntries,
+      ).toHaveBeenCalledWith({
+        canvasId: 1,
+        userId: 1n,
+        entries: [],
+      });
+    });
   });
 
   describe("getUserCanvasCooldown", () => {
@@ -304,6 +316,46 @@ describe("CanvasService", () => {
       });
 
       expect(await service.getUserCanvasCooldown(1, 1n)).toBeNull();
+    });
+  });
+});
+
+describe("CanvasService.computePasteArea", () => {
+  it("returns the bounding box of the pasted pixels", () => {
+    expect(
+      CanvasService.computePasteArea([
+        [3, 7, 1],
+        [1, 9, 2],
+        [5, 2, 3],
+      ]),
+    ).toEqual({ topLeftX: 1, topLeftY: 2, bottomRightX: 5, bottomRightY: 9 });
+  });
+
+  it("returns null for an empty paste", () => {
+    expect(CanvasService.computePasteArea([])).toBeNull();
+  });
+
+  it("handles a single pixel", () => {
+    expect(CanvasService.computePasteArea([[4, 8, 1]])).toEqual({
+      topLeftX: 4,
+      topLeftY: 8,
+      bottomRightX: 4,
+      bottomRightY: 8,
+    });
+  });
+
+  it("does not overflow the call stack for very large pastes", () => {
+    const data = Array.from(
+      { length: 500_000 },
+      (_, i) => [i % 1000, Math.floor(i / 1000), 1] as [number, number, number],
+    );
+
+    expect(() => CanvasService.computePasteArea(data)).not.toThrow();
+    expect(CanvasService.computePasteArea(data)).toEqual({
+      topLeftX: 0,
+      topLeftY: 0,
+      bottomRightX: 999,
+      bottomRightY: 499,
     });
   });
 });
