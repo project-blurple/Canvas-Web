@@ -1,4 +1,5 @@
 import z from "zod";
+import { NoticeTypeSchema } from "../notice";
 
 export const NoticeIdParamModel = z.object({
   noticeId: z.coerce.number().int().positive(),
@@ -6,9 +7,9 @@ export const NoticeIdParamModel = z.object({
 
 export const NoticeBodyModel = z
   .object({
-    type: z.string(),
-    header: z.string().nullable().optional(),
-    content: z.string().nullable().optional(),
+    type: NoticeTypeSchema,
+    header: z.string().trim().nullable().optional(),
+    content: z.string().trim().nullable().optional(),
     priority: z.number().int().nonnegative().optional(),
     startAt: z.coerce.date().nullable().optional(),
     endAt: z.coerce.date().nullable().optional(),
