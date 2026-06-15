@@ -36,6 +36,7 @@ import type { Response } from "express";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 import { z } from "zod";
 
+import { Audit } from "@/audit/audit.decorator";
 import { CurrentUser, CurrentUserDto } from "@/auth/current-user.decorator";
 import {
   RequiresCanvasAdmin,
@@ -203,13 +204,14 @@ export class CanvasController {
     summary: "Create a canvas (locked, pixels initialised to blank)",
   })
   @ZodResponse({ status: HttpStatus.CREATED, type: CanvasRecordResponseDto })
-  async createCanvas(
-    @Body() body: CreateCanvasBodyDto,
-    @CurrentUser() user: CurrentUserDto,
-  ) {
+  async createCanvas(@Body() body: CreateCanvasBodyDto, @Audit() audit: Audit) {
     const canvas = await this.canvasService.createCanvas(body);
 
-    // TODO: Audit log
+    audit.record({
+      action: "canvas.create",
+      resourceId: canvas.id,
+      metadata: body,
+    });
 
     return this.toCanvasRecordResponse(canvas);
   }
@@ -221,14 +223,18 @@ export class CanvasController {
   async editCanvas(
     @Param() params: CanvasIdParamsDto,
     @Body() body: EditCanvasBodyDto,
-    @CurrentUser() user: CurrentUserDto,
+    @Audit() audit: Audit,
   ) {
     const canvas = await this.canvasService.editCanvas({
       canvasId: params.canvasId,
       ...body,
     });
 
-    // TODO: Audit log
+    audit.record({
+      action: "canvas.update",
+      resourceId: canvas.id,
+      metadata: body,
+    });
 
     return this.toCanvasRecordResponse(canvas);
   }
@@ -242,7 +248,7 @@ export class CanvasController {
   async pasteCanvasData(
     @Param() params: CanvasIdParamsDto,
     @Body() body: CanvasPasteBodyDto,
-    @CurrentUser() user: CurrentUserDto,
+    @Audit() audit: Audit,
   ) {
     const { authorId, data } = body;
 
@@ -252,7 +258,15 @@ export class CanvasController {
       data,
     );
 
-    // TODO: Audit log
+    audit.record({
+      action: "canvas.paste",
+      resourceId: params.canvasId,
+      metadata: {
+        authorId: authorId.toString(),
+        pixelCount: data.length,
+        area: CanvasService.computePasteArea(data),
+      },
+    });
 
     return {
       message: "Canvas data pasted",
@@ -269,11 +283,14 @@ export class CanvasController {
   @ApiNoContentResponse({ description: "Cache evicted" })
   async clearCachedCanvas(
     @Param() params: CanvasIdParamsDto,
-    @CurrentUser() user: CurrentUserDto,
+    @Audit() audit: Audit,
   ): Promise<void> {
     await this.canvasCacheService.clearCachedCanvas(params.canvasId);
 
-    // TODO: Audit log
+    audit.record({
+      action: "canvas.clearCache",
+      resourceId: params.canvasId,
+    });
   }
 
   private toCanvasRecordResponse(canvas: {

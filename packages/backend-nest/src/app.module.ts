@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ZodSerializerInterceptor } from "nestjs-zod";
 
+import { AuditModule } from "@/audit/audit.module";
 import { AuthModule } from "@/auth/auth.module";
 import { BlocklistModule } from "@/blocklist/blocklist.module";
 import { CanvasModule } from "@/canvas/canvas.module";
@@ -18,6 +19,7 @@ import { RealtimeModule } from "@/realtime/realtime.module";
     AppConfigModule,
     DatabaseModule,
     AuthModule,
+    AuditModule,
     RealtimeModule,
     CanvasModule,
     PixelModule,
