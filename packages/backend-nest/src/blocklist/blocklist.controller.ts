@@ -15,6 +15,7 @@ import {
 import { ApiNoContentResponse, ApiOperation } from "@nestjs/swagger";
 import { createZodDto, ZodResponse } from "nestjs-zod";
 
+import { Audit } from "@/audit/audit.decorator";
 import { RequiresCanvasModerator } from "@/auth/require-auth.decorator";
 import { BlocklistService } from "./blocklist.service";
 
@@ -40,10 +41,16 @@ export class BlocklistController {
   @RequiresCanvasModerator()
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: "Add one or more users to the blocklist" })
-  async addToBlocklist(@Body() body: BlocklistBodyDto) {
+  async addToBlocklist(@Body() body: BlocklistBodyDto, @Audit() audit: Audit) {
     const addedUsers = await this.blocklistService.addUsersToBlocklist(body);
 
-    // todo: audit log
+    audit.record({
+      action: "blocklist.add",
+      metadata: {
+        userIds: body.map((id) => id.toString()),
+        addedCount: addedUsers.length,
+      },
+    });
 
     return addedUsers;
   }
@@ -58,6 +65,7 @@ export class BlocklistController {
   @ApiNoContentResponse({ description: "Users removed from the blocklist" })
   async removeFromBlocklist(
     @Body() body: BlocklistDeleteBodyDto,
+    @Audit() audit: Audit,
   ): Promise<void> {
     const { userIds, shouldRestoreHistoryForCanvasId } = body;
 
@@ -66,6 +74,12 @@ export class BlocklistController {
       shouldRestoreHistoryForCanvasId ?? [],
     );
 
-    // todo: audit log
+    audit.record({
+      action: "blocklist.remove",
+      metadata: {
+        userIds: userIds.map((id) => id.toString()),
+        shouldRestoreHistoryForCanvasId,
+      },
+    });
   }
 }
