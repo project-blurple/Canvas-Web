@@ -99,6 +99,46 @@ describe("Blocklist routes (e2e)", () => {
     ).resolves.toBeNull();
   });
 
+  it("records audit entries with the role and validated metadata", async () => {
+    const agent = request.agent(app.getHttpServer());
+    await signIn(agent);
+
+    await agent.put("/api/v1/blocklist").send({ userId: "1" }).expect(201);
+
+    // The role comes from the guard, the resource id defaults to null (no
+    // param / id), and the metadata is built from the validated body — the
+    // model transforms `userId: "1"` into a bigint array, mapped back to a
+    // string id for the audit entry.
+    await vi.waitFor(async () => {
+      const entry = await prisma.auditLog.findFirst({
+        where: { action: "blocklist.add" },
+        orderBy: { id: "desc" },
+      });
+      expect(entry).toMatchObject({
+        actorRole: "moderator",
+        resourceType: "blocklist",
+        resourceId: null,
+        metadata: { userIds: ["1"], addedCount: 1 },
+      });
+    });
+
+    await agent
+      .delete("/api/v1/blocklist")
+      .send({ userId: "1", shouldRestoreHistoryForCanvasId: [1] })
+      .expect(204);
+
+    await vi.waitFor(async () => {
+      const entry = await prisma.auditLog.findFirst({
+        where: { action: "blocklist.remove" },
+        orderBy: { id: "desc" },
+      });
+      expect(entry).toMatchObject({
+        actorRole: "moderator",
+        metadata: { userIds: ["1"], shouldRestoreHistoryForCanvasId: [1] },
+      });
+    });
+  });
+
   it("revives erased history and rebuilds pixels when unblocking with restore", async () => {
     const agent = request.agent(app.getHttpServer());
     await signIn(agent);

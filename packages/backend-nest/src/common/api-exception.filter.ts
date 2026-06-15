@@ -3,8 +3,14 @@ import {
   Catch,
   type ExceptionFilter,
   HttpException,
+  HttpStatus,
   Logger,
 } from "@nestjs/common";
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientRustPanicError,
+} from "@prisma/client/runtime/client";
 import type { Response } from "express";
 import { ZodSerializationException } from "nestjs-zod";
 import { ApiError } from "./errors/api.error";
@@ -39,11 +45,19 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    // TODO: Database unavailable detection
-    // if (isDatabaseUnavailableError(exception)) {
-    //   response.status(503).json({ message: "Database is unavailable" });
-    //   return;
-    // }
+    if (ApiExceptionFilter.isDatabaseUnavailableError(exception)) {
+      response.status(503).json({ message: "Database is unavailable" });
+      return;
+    }
+
+    const mappedPrismaError =
+      ApiExceptionFilter.mapKnownPrismaRequestError(exception);
+    if (mappedPrismaError) {
+      response
+        .status(mappedPrismaError.status)
+        .json({ message: mappedPrismaError.message });
+      return;
+    }
 
     // Framework-internal exceptions (unknown-route 404s, body-parser 400s,
     // ...) are mapped onto the same envelope.
@@ -56,5 +70,42 @@ export class ApiExceptionFilter implements ExceptionFilter {
 
     this.logger.error(exception);
     response.status(500).json({ message: "An unexpected error occurred" });
+  }
+
+  private static mapKnownPrismaRequestError(
+    error: unknown,
+  ): { status: number; message: string } | null {
+    if (!(error instanceof PrismaClientKnownRequestError)) {
+      return null;
+    }
+
+    switch (error.code) {
+      case "P2025": // An operation failed because it depends on a missing record
+        return { status: HttpStatus.NOT_FOUND, message: "Resource not found" };
+      case "P2002": // Unique constraint violation
+        return {
+          status: HttpStatus.CONFLICT,
+          message: "A resource with these details already exists",
+        };
+      default:
+        return null;
+    }
+  }
+
+  private static isDatabaseUnavailableError(error: unknown): boolean {
+    if (
+      error instanceof PrismaClientInitializationError ||
+      error instanceof PrismaClientRustPanicError
+    ) {
+      return true;
+    }
+
+    if (error instanceof Error) {
+      return /can't reach database server|database server is not reachable|ECONNREFUSED/i.test(
+        error.message,
+      );
+    }
+
+    return false;
   }
 }
