@@ -21,6 +21,7 @@ import {
   useSelectedBoundsContext,
   useSelectedColorContext,
   useSelectedFrameContext,
+  useTimelineContext,
 } from "@/contexts";
 import {
   useCanvasImage,
@@ -36,6 +37,7 @@ import type { ActionPanel } from "../action-panel";
 import { Button } from "../button";
 import CanvasIcon from "../CanvasIcon";
 import Notices from "../notices/Notices";
+import TimelineSlider from "../timeline/TimelineSlider";
 import { getAutoPanOffset } from "./autoPan";
 import CanvasViewControls from "./CanvasViewControls";
 import { PixelGrid } from "./PixelGrid";
@@ -208,6 +210,11 @@ const CanvasImageWrapper = styled("div", {
   img:not(:first-child) {
     inset: 0;
     position: absolute;
+  }
+
+  video {
+    image-rendering: pixelated;
+    pointer-events: none;
   }
 `;
 
@@ -489,9 +496,24 @@ export default function CanvasView({
   const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
+  const {
+    handleLoadVideo,
+    handleTimelineTimeUpdate,
+    isPlaying,
+    playbackDirection,
+    playbackSpeed,
+    setIsPlaying,
+    setCurrentTimelineFrame,
+    isLaunchingTimeline,
+    isLoadingTimeline,
+    sourceVideo,
+    timelineIsActive,
+    timelineFps,
+    videoRef,
+  } = useTimelineContext();
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLaunching, setIsLaunching] = useState(true);
+  const [isLoadingImage, setIsLoadingImage] = useState(true);
+  const [isLaunchingImage, setIsLaunchingImage] = useState(true);
   const zoomRef = useRef(0);
   // Always have access to the most up to date zoom value
   zoomRef.current = zoom;
@@ -519,6 +541,84 @@ export default function CanvasView({
    * @see https://bugs.webkit.org/show_bug.cgi?id=27684
    */
   const isWebKit = useIsWebKit();
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: playback is intentionally driven by mutable video state.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !timelineIsActive || !sourceVideo) return;
+
+    if (!isPlaying) {
+      video.pause();
+      return;
+    }
+
+    video.pause();
+
+    let cancelled = false;
+    let timeoutId: number | null = null;
+
+    const waitForSeeked = () =>
+      new Promise<void>((resolve) => {
+        const handleSeeked = () => {
+          video.removeEventListener("seeked", handleSeeked);
+          resolve();
+        };
+
+        video.addEventListener("seeked", handleSeeked);
+      });
+
+    const stepPlayback = async () => {
+      if (cancelled) return;
+
+      const directionMultiplier = playbackDirection === "forward" ? 1 : -1;
+      const nextTimeDelta = playbackSpeed / timelineFps;
+      const rawNextTime =
+        video.currentTime + nextTimeDelta * directionMultiplier;
+      const maxTime = Number.isFinite(video.duration) ? video.duration : null;
+      const nextTime =
+        maxTime !== null ? clamp(rawNextTime, 0, maxTime) : rawNextTime;
+
+      if (nextTime === video.currentTime) {
+        setIsPlaying(false);
+        return;
+      }
+
+      setCurrentTimelineFrame(Math.floor(nextTime * timelineFps));
+      video.currentTime = nextTime;
+
+      await waitForSeeked();
+
+      if (cancelled) return;
+
+      if ((maxTime !== null && nextTime >= maxTime) || nextTime <= 0) {
+        setIsPlaying(false);
+        return;
+      }
+
+      timeoutId = window.setTimeout(
+        stepPlayback,
+        1000 / (timelineFps * playbackSpeed),
+      );
+    };
+
+    timeoutId = window.setTimeout(stepPlayback, 0);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId !== null) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [
+    isPlaying,
+    playbackDirection,
+    playbackSpeed,
+    setCurrentTimelineFrame,
+    setIsPlaying,
+    sourceVideo,
+    timelineIsActive,
+    timelineFps,
+  ]);
 
   const canvasSearchParams = useCanvasSearchParams();
   const initialCanvasSearchParamsRef = useRef(canvasSearchParams);
@@ -624,8 +724,8 @@ export default function CanvasView({
       }
 
       stopPan();
-      setIsLoading(false);
-      setIsLaunching(false);
+      setIsLoadingImage(false);
+      setIsLaunchingImage(false);
       clearOverlay();
     },
     [canvas.id, initialFrameFromSearchParams],
@@ -634,7 +734,7 @@ export default function CanvasView({
   useEffect(() => {
     // Stops placing pixels from reloading the canvas
     if (currentCanvasIDRef.current === canvas.id) return;
-    setIsLoading(true);
+    setIsLoadingImage(true);
     if (sourceImage) {
       handleLoadImage(sourceImage);
     }
@@ -1280,6 +1380,10 @@ export default function CanvasView({
     ],
   );
 
+  const isCanvasLoading = timelineIsActive ? isLoadingTimeline : isLoadingImage;
+  const isCanvasLaunching =
+    timelineIsActive ? isLaunchingTimeline : isLaunchingImage;
+
   return (
     <CanvasWrapper
       id={CANVAS_WRAPPER_CLASS_NAME}
@@ -1292,7 +1396,9 @@ export default function CanvasView({
 
       <CanvasViewControls {...canvasViewControls} />
 
-      {showInvite ?
+      {timelineIsActive ?
+        <TimelineSlider />
+      : showInvite ?
         config.discordServerInvite &&
         !isFullscreen && (
           <a href={config.discordServerInvite} target="_blank" rel="noreferrer">
@@ -1365,22 +1471,40 @@ export default function CanvasView({
         )}
 
         <CanvasImageWrapper
-          aria-busy={isLaunching || isLoading}
+          aria-busy={isLaunchingImage || isLoadingImage}
           ref={canvasImageWrapperRef}
-          isLoading={isLoading}
-          isLaunching={isLaunching}
+          isLoading={isCanvasLoading}
+          isLaunching={isCanvasLaunching}
           id="canvas-image-wrapper"
         >
-          {/* biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art */}
-          <img
-            alt="Active Blurple Canvas"
-            onLoad={(event) => handleLoadImage(event.currentTarget)}
-            ref={imageRef}
-            src={sourceImage?.src}
-            crossOrigin="anonymous"
-            // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
-            style={{ minWidth: canvas.width, minHeight: canvas.height }}
-          />
+          {
+            timelineIsActive && sourceVideo ?
+              // biome-ignore lint/a11y/useMediaCaption: No audio or captions
+              <video
+                // autoPlay
+                ref={videoRef}
+                src={sourceVideo.src}
+                crossOrigin="anonymous"
+                onTimeUpdate={handleTimelineTimeUpdate}
+                onLoadedData={(_event) => handleLoadVideo()}
+                onEnded={() => setIsPlaying(false)}
+                style={{
+                  minWidth: canvas.width,
+                  minHeight: canvas.height,
+                }}
+              />
+              // biome-ignore lint/performance/noImgElement: We don’t want Next resizing pixel art
+            : <img
+                alt="Active Blurple Canvas"
+                onLoad={(event) => handleLoadImage(event.currentTarget)}
+                ref={imageRef}
+                src={sourceImage?.src}
+                crossOrigin="anonymous"
+                // Minimum width and height need to be forced to prevent incorrect clampScale and reticle placements
+                style={{ minWidth: canvas.width, minHeight: canvas.height }}
+              />
+
+          }
         </CanvasImageWrapper>
 
         <PixelGrid zoom={zoom} hidden={!isGridVisible} />
@@ -1402,7 +1526,7 @@ export default function CanvasView({
           {actionPanel}
         </FullscreenPanelOverlay>
       )}
-      {isLoading && (
+      {isCanvasLoading && (
         <CanvasIcon
           loading
           size={128}

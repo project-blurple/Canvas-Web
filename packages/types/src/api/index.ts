@@ -11,4 +11,5 @@ export * as PaletteRequest from "./PaletteRequest.js";
 export * as PasteRequest from "./PasteRequest.js";
 export * as PlacePixelRequest from "./PlacePixelRequest.js";
 export * as PlacePixelSocket from "./PlacePixelSocketPayload.js";
+export * as SnapshotRequest from "./SnapshotRequest.js";
 export * as UserStatsRequest from "./UserStatsRequest.js";

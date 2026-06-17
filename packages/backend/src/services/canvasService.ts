@@ -27,6 +27,7 @@ import {
 import { getCurrentEvent } from "./eventService";
 import { getEventPalette } from "./paletteService";
 import { type BulkPlaceEntry, createBulkPlaceEntries } from "./pixelService";
+import { isSnapshotAvailableForCanvas } from "./snapshot";
 
 /**
  * A locked canvas cannot be edited by users. It is therefore, safe to store it as an image on the
@@ -739,5 +740,6 @@ function canvasToCanvasInfo(canvas: canvas): CanvasInfo {
     webPlacingEnabled: config.webPlacingEnabled,
     allColorsGlobal: canvas.all_colors_global,
     cooldownDuration: canvas.cooldown_length,
+    timelineEnabled: isSnapshotAvailableForCanvas(canvas.id),
   };
 }

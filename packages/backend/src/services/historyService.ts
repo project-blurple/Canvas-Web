@@ -527,11 +527,11 @@ export async function restorePixelHistoryEntries(
       async ([canvasId, coordinates]) => {
         await restorePixelsAfterHistoryModification(canvasId, coordinates);
 
-        await setSnapshotDirtyTimestamp(
-          canvasId,
-          // biome-ignore lint/style/noNonNullAssertion: is generated above, will always exist
-          earliestEntryTimestampsByCanvas.get(canvasId)!,
-        );
+        const earliestEntryTimestamp =
+          earliestEntryTimestampsByCanvas.get(canvasId);
+        if (earliestEntryTimestamp) {
+          await setSnapshotDirtyTimestamp(canvasId, earliestEntryTimestamp);
+        }
       },
     ),
   );

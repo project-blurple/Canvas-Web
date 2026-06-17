@@ -6,6 +6,7 @@ import {
 } from "@/snapshot/paths";
 import { calculateScale, clamp, normalizeBounds } from "@/utils";
 import { getCanvasInfo } from "../canvasService";
+import { isSnapshotAvailableForCanvas } from "../snapshot";
 import { getSnapshots } from "../snapshot/snapshotService";
 import {
   buildTimelapseCacheKey,
@@ -45,6 +46,10 @@ export async function generateTimelapse({
   backgroundColor = notQuiteBlackRgba,
   raw = "default",
 }: GenerateTimelapseParams): Promise<string> {
+  if (!isSnapshotAvailableForCanvas(canvasId)) {
+    throw new Error(`Snapshots are not available for canvas ${canvasId}`);
+  }
+
   if (raw === "raw") {
     endHoldDurationMs = null;
     scale = 1;

@@ -11,7 +11,12 @@ import { cookies } from "next/headers";
 import config from "@/config/clientConfig";
 import serverConfig from "@/config/serverConfig";
 import "../styles/core.css";
-import { AuthProvider, CanvasProvider, QueryClientProvider } from "@/contexts";
+import {
+  AuthProvider,
+  CanvasProvider,
+  QueryClientProvider,
+  TimelineProvider,
+} from "@/contexts";
 import { isDatabaseUnavailableError } from "@/util/axios";
 import "../styles/core.css";
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from "lucide-react";
@@ -84,6 +89,7 @@ const defaultCanvasInfo = {
   webPlacingEnabled: false,
   allColorsGlobal: false,
   cooldownDuration: 0,
+  timelineEnabled: false,
 } satisfies CanvasInfo;
 
 const toasterIcons = {
@@ -119,20 +125,22 @@ async function LayoutProviders({ children }: { children: React.ReactNode }) {
       <QueryClientProvider>
         <AuthProvider profile={profile}>
           <CanvasProvider mainCanvasInfo={canvasInfo}>
-            <AppProviders>
-              {children}
-              <Toaster
-                icons={toasterIcons}
-                position="bottom-left" // bottom right overlaps with the action panel
-                theme="dark"
-                toastOptions={{
-                  style: {
-                    backgroundColor: "var(--discord-legacy-not-quite-black)",
-                    boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
-                  },
-                }}
-              />
-            </AppProviders>
+            <TimelineProvider>
+              <AppProviders>
+                {children}
+                <Toaster
+                  icons={toasterIcons}
+                  position="bottom-left" // bottom right overlaps with the action panel
+                  theme="dark"
+                  toastOptions={{
+                    style: {
+                      backgroundColor: "var(--discord-legacy-not-quite-black)",
+                      boxShadow: "0 0 10px rgba(0 0 0 / 25%)",
+                    },
+                  }}
+                />
+              </AppProviders>
+            </TimelineProvider>
           </CanvasProvider>
         </AuthProvider>
       </QueryClientProvider>

@@ -57,11 +57,13 @@ async function persistSnapshot({
       canvas_id: canvasId,
       snapshot_at: snapshotAt,
       history_count: historyCount,
+      file_size_bytes: image.byteLength,
       image_path: filePath,
       last_included_history_at: lastIncludedHistoryAt,
     },
     update: {
       history_count: historyCount,
+      file_size_bytes: image.byteLength,
       image_path: filePath,
       last_included_history_at: lastIncludedHistoryAt,
     },

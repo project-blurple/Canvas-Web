@@ -1,4 +1,8 @@
-export { BasicButton, DestructiveButton } from "./BasicButtons";
+export {
+  BasicButton,
+  BasicHighlightButton,
+  DestructiveButton,
+} from "./BasicButtons";
 export { Button } from "./Button";
 export { default as ButtonSupplement } from "./ButtonSupplement";
 export { DynamicAnchorButton, default as DynamicButton } from "./DynamicButton";

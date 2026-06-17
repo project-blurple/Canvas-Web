@@ -1,0 +1,238 @@
+import { styled } from "@mui/material";
+import {
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  FastForward,
+  type LucideIcon,
+  Pause,
+  Play,
+  Rewind,
+  StepBack,
+  StepForward,
+} from "lucide-react";
+import { useCanvasContext, useTimelineContext } from "@/contexts";
+import { useSnapshots } from "@/hooks/queries/useSnapshots";
+import ActionPanelPrimitives from "../action-panel/primitives";
+import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
+import { BasicButton } from "../button";
+
+const ControlsContent = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+const Button = styled(BasicButton)`
+  width: 100%;
+`;
+
+const NarrowButton = styled(BasicButton)`
+  min-width: 0;
+`;
+
+const ButtonRow = styled("div")`
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+
+  & > * {
+    flex: 1;
+  }
+`;
+
+const TIMELINE_PLAYBACK_SPEEDS = [1 / 8, 1 / 4, 1 / 2, 1, 2, 4, 8, 16] as const;
+
+type TimelinePlaybackDirection = "forward" | "reverse";
+type TimelinePlaybackSpeed = (typeof TIMELINE_PLAYBACK_SPEEDS)[number];
+
+interface ControlsButtonProps extends React.ComponentPropsWithRef<
+  typeof NarrowButton
+> {
+  icon: LucideIcon;
+}
+
+function ControlsButton({ icon, ...props }: ControlsButtonProps) {
+  const IconComponent = icon;
+  return (
+    <NarrowButton {...props}>
+      <IconComponent />
+    </NarrowButton>
+  );
+}
+
+export default function TimelineControls() {
+  const { canvas } = useCanvasContext();
+  const { data: snapshots } = useSnapshots(canvas.id);
+  const {
+    currentTimelineFrame,
+    handleTimelineSeek,
+    isPlaying,
+    playbackDirection,
+    playbackSpeed,
+    setIsPlaying,
+    setPlaybackDirection,
+    setPlaybackSpeed,
+    timelineIsAvailable,
+    timelineIsActive,
+    setTimelineIsActive,
+    totalTimelineFrames,
+  } = useTimelineContext();
+
+  const currentSnapshot = snapshots?.[currentTimelineFrame] ?? null;
+
+  const clampFrame = (frame: number) => {
+    if (totalTimelineFrames <= 0) return 0;
+    return Math.min(Math.max(frame, 0), totalTimelineFrames - 1);
+  };
+
+  const seekByFrameOffset = (offset: number) => {
+    handleTimelineSeek(clampFrame(currentTimelineFrame + offset));
+  };
+
+  const seekByDuration = (direction: -1 | 1, durationMs: number) => {
+    if (!currentSnapshot || !snapshots) return;
+
+    const targetSnapshotAt =
+      new Date(currentSnapshot.snapshotAt).getTime() + direction * durationMs;
+
+    let selectedIndex = currentTimelineFrame;
+
+    if (direction < 0) {
+      for (let index = currentTimelineFrame - 1; index >= 0; index -= 1) {
+        const candidateTime = new Date(snapshots[index].snapshotAt).getTime();
+        selectedIndex = index;
+
+        if (candidateTime <= targetSnapshotAt) {
+          break;
+        }
+      }
+    } else {
+      for (
+        let index = currentTimelineFrame + 1;
+        index < snapshots.length;
+        index += 1
+      ) {
+        const candidateTime = new Date(snapshots[index].snapshotAt).getTime();
+        selectedIndex = index;
+
+        if (candidateTime >= targetSnapshotAt) {
+          break;
+        }
+      }
+    }
+
+    handleTimelineSeek(clampFrame(selectedIndex));
+  };
+
+  const handlePlay = () => {
+    const lastFrame = clampFrame(totalTimelineFrames - 1);
+
+    if (playbackDirection === "forward" && currentTimelineFrame >= lastFrame) {
+      handleTimelineSeek(0);
+    } else if (
+      playbackDirection === "reverse" &&
+      currentTimelineFrame <= 0 &&
+      totalTimelineFrames > 0
+    ) {
+      handleTimelineSeek(lastFrame);
+    }
+
+    setIsPlaying(true);
+  };
+
+  const getSpeedIndex = (speed: TimelinePlaybackSpeed) =>
+    TIMELINE_PLAYBACK_SPEEDS.indexOf(speed);
+
+  const setPlaybackForChevron = (
+    direction: TimelinePlaybackDirection,
+    isFastForward: boolean,
+  ) => {
+    const isSameDirection = playbackDirection === direction;
+    const currentSpeedIndex = getSpeedIndex(playbackSpeed);
+    const nextSpeedIndex =
+      isSameDirection ? currentSpeedIndex + (isFastForward ? 1 : -1)
+      : isFastForward ? 4
+      : 3;
+
+    const clampedSpeedIndex = Math.min(
+      Math.max(nextSpeedIndex, 0),
+      TIMELINE_PLAYBACK_SPEEDS.length - 1,
+    );
+
+    setPlaybackDirection(direction);
+    setPlaybackSpeed(TIMELINE_PLAYBACK_SPEEDS[clampedSpeedIndex]);
+    setIsPlaying(true);
+  };
+
+  if (!timelineIsAvailable) return null;
+
+  return (
+    <ActionPanelTabBody>
+      {!timelineIsActive ?
+        <Button onClick={() => setTimelineIsActive(true)}>View timeline</Button>
+      : <div>
+          <ActionPanelPrimitives.SectionHeading>
+            Timeline controls
+          </ActionPanelPrimitives.SectionHeading>
+          <ControlsContent>
+            <ButtonRow>
+              <ControlsButton
+                icon={ChevronFirst}
+                onClick={() => seekByDuration(-1, 24 * 60 * 60 * 1000)}
+              />
+              <ControlsButton
+                icon={ChevronsLeft}
+                onClick={() => seekByDuration(-1, 1 * 60 * 60 * 1000)}
+              />
+              <ControlsButton
+                icon={ChevronLeft}
+                onClick={() => seekByFrameOffset(-1)}
+              />
+              <ControlsButton
+                icon={ChevronRight}
+                onClick={() => seekByFrameOffset(1)}
+              />
+              <ControlsButton
+                icon={ChevronsRight}
+                onClick={() => seekByDuration(1, 1 * 60 * 60 * 1000)}
+              />
+              <ControlsButton
+                icon={ChevronLast}
+                onClick={() => seekByDuration(1, 24 * 60 * 60 * 1000)}
+              />
+            </ButtonRow>
+            <ButtonRow>
+              <ControlsButton
+                icon={Rewind}
+                onClick={() => setPlaybackForChevron("reverse", true)}
+              />
+              <ControlsButton
+                icon={StepBack}
+                onClick={() => setPlaybackForChevron("reverse", false)}
+              />
+              <ControlsButton
+                icon={isPlaying ? Pause : Play}
+                onClick={isPlaying ? () => setIsPlaying(false) : handlePlay}
+              />
+              <ControlsButton
+                icon={StepForward}
+                onClick={() => setPlaybackForChevron("forward", false)}
+              />
+              <ControlsButton
+                icon={FastForward}
+                onClick={() => setPlaybackForChevron("forward", true)}
+              />
+            </ButtonRow>
+            <Button onClick={() => setTimelineIsActive(false)}>
+              Exit timeline
+            </Button>
+          </ControlsContent>
+        </div>
+      }
+    </ActionPanelTabBody>
+  );
+}

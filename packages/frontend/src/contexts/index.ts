@@ -18,3 +18,4 @@ export {
   SelectedFrameProvider,
   useSelectedFrameContext,
 } from "./SelectedFrameContext";
+export { TimelineProvider, useTimelineContext } from "./TimelineContext";

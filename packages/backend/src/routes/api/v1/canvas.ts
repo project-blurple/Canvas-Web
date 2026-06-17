@@ -43,10 +43,12 @@ import { getUserCanvasCooldown } from "@/services/pixelService";
 import { generateTimelapse } from "@/services/timelapse/timelapseService";
 import { addSpanAttributes } from "@/utils/otel";
 import { pixelRouter } from "./pixel";
+import { snapshotRouter } from "./snapshot";
 
 export const canvasRouter = typedRouter(Router());
 
 canvasRouter.use("/:canvasId/pixel", pixelRouter);
+canvasRouter.use("/:canvasId/snapshots", snapshotRouter);
 
 canvasRouter.get("/", async (req, res) => {
   const canvases = await getCanvases();
