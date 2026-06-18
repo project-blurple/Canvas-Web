@@ -6,10 +6,18 @@ import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { calculateScale, hexStringToPixelColor } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
-import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
+import {
+  ActionPanelTabBody,
+  TabPanel,
+} from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { BasicButton, DynamicButton } from "../button";
 import FrameListCard from "./SelectedFrameListCard";
+
+const FrameDetailsPanelBodyShell = styled(TabPanel)`
+  display: grid;
+  grid-template-rows: 1fr auto;
+`;
 
 const ControlButtonRow = styled("div")`
   background: transparent;
@@ -59,7 +67,7 @@ function DownloadButton({ frame }: { frame: Frame }) {
   return (
     <a href={downloadLink} target="_blank" rel="noopener noreferrer">
       <DynamicButton color={color} style={{ inlineSize: "100%" }}>
-        Download image
+        Image
       </DynamicButton>
     </a>
   );
@@ -77,9 +85,11 @@ export default function FrameDetailsPanel({
     return null;
   }
   return (
-    <div>
+    <FrameDetailsPanelBodyShell>
       <ActionPanelTabBody>
         <FrameListCard frame={frame} />
+      </ActionPanelTabBody>
+      <ActionPanelTabBody>
         <ControlButtonRow>
           <BasicButton onClick={() => setFrame(null)}>
             <ArrowLeftFromLine />
@@ -91,6 +101,8 @@ export default function FrameDetailsPanel({
             <SquarePen />
           </BasicButton>
         </ControlButtonRow>
+      </ActionPanelTabBody>
+      <ActionPanelTabBody>
         <div>
           <ActionPanelPrimitives.SectionHeading>
             Downloads
@@ -100,6 +112,6 @@ export default function FrameDetailsPanel({
           {/* Export stats */}
         </div>
       </ActionPanelTabBody>
-    </div>
+    </FrameDetailsPanelBodyShell>
   );
 }

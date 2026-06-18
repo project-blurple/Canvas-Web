@@ -57,6 +57,7 @@ const ButtonWrapper = styled("div")`
 const StyledButton = styled(Button)`
   background-color: var(--discord-blurple);
   color: var(--discord-white);
+  padding: default;
 `;
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
