@@ -42,6 +42,19 @@ import { BasicButton, Button, DestructiveButton } from "../button";
 import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
+const StyledForm = styled("form")`
+  background: transparent;
+  display: block flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  border-radius: inherit;
+
+  > * {
+    border-radius: inherit;
+  }
+`;
+
 const EditContainer = styled("div")`
   display: flex;
   flex-direction: column;
@@ -115,7 +128,17 @@ const ButtonRow = styled("div")`
   flex-direction: row-reverse;
   gap: 0.5em;
   inline-size: 100%;
+  background: transparent;
+  padding: 0;
+
+  > * {
+    flex: 1;
+  }
 }
+`;
+
+const BackButton = styled(BasicButton)`
+  padding: default;
 `;
 
 const StyledDialog = styled(Dialog)`
@@ -587,7 +610,7 @@ export default function FrameEditPanel({
 
   return (
     <>
-      <form onSubmit={handleFormSubmit}>
+      <StyledForm onSubmit={handleFormSubmit}>
         <FullWidthScrollView>
           <ActionPanelTabBody>
             <EditContainer>
@@ -728,7 +751,7 @@ export default function FrameEditPanel({
               </BasicButton>
             }
           </ButtonRow>
-          <BasicButton
+          <BackButton
             onClick={handleBackAction}
             type="button"
             disabled={
@@ -738,9 +761,9 @@ export default function FrameEditPanel({
             }
           >
             Back
-          </BasicButton>
+          </BackButton>
         </ActionPanelTabBody>
-      </form>
+      </StyledForm>
       <StyledDialog
         open={isBackConfirmOpen}
         onRequestClose={() => setIsBackConfirmOpen(false)}
