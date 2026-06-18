@@ -964,36 +964,6 @@ export default function CanvasView({
     [canvas],
   );
 
-  useEffect(() => {
-    if (!frame || frame.canvasId !== canvas.id) return;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const frameView = getViewForFrame({
-      frame: frame,
-      canvas,
-      container,
-      initialZoom,
-    });
-
-    setIsZooming(false);
-    setZoom(frameView.targetZoom);
-    setOffset(clampOffset(frameView.offset, frameView.targetZoom));
-    setCoords({
-      x: Math.floor(frameView.targetPoint.x),
-      y: Math.floor(frameView.targetPoint.y),
-    });
-  }, [
-    canvas,
-    containerRef,
-    initialZoom,
-    frame,
-    setCoords,
-    clampOffset,
-    setZoom,
-    setOffset,
-  ]);
-
   const updateOffset = useCallback(
     (diff: Point): void => {
       // The more we're zoomed in, the less we've actually moved on the canvas
@@ -1023,6 +993,51 @@ export default function CanvasView({
       updateOffset(multiplyPoint(offsetDelta, zoomRef.current));
     },
     [updateOffset],
+  );
+
+  useEffect(
+    function panToSelectedFrame() {
+      if (!frame || frame.canvasId !== canvas.id) return;
+      const container = containerRef.current;
+      if (!container) return;
+
+      const frameView = getViewForFrame({
+        frame: frame,
+        canvas,
+        container,
+        initialZoom,
+      });
+
+      // Enable CSS transition animation
+      setIsZooming(true);
+      setZoom(frameView.targetZoom);
+
+      // Calculate the offset delta and animate with glidePan
+      const clampedOffset = clampOffset(frameView.offset, frameView.targetZoom);
+      const offsetDelta = diffPoints(clampedOffset, offsetRef.current);
+
+      if (offsetDelta.x !== 0 || offsetDelta.y !== 0) {
+        glidePan(offsetDelta);
+      } else {
+        setOffset(clampedOffset);
+      }
+
+      setCoords({
+        x: Math.floor(frameView.targetPoint.x),
+        y: Math.floor(frameView.targetPoint.y),
+      });
+    },
+    [
+      canvas,
+      containerRef,
+      initialZoom,
+      frame,
+      setCoords,
+      clampOffset,
+      setZoom,
+      setOffset,
+      glidePan,
+    ],
   );
 
   /**
