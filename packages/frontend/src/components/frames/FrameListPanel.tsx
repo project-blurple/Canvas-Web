@@ -1,26 +1,13 @@
-import {
-  type DiscordUserProfile,
-  type Frame,
-  FrameOwnerType,
-} from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { toast } from "sonner";
-import config from "@/config/clientConfig";
-import {
-  useAuthContext,
-  useCanvasContext,
-  useSelectedFrameContext,
-} from "@/contexts";
-import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
+import { useAuthContext } from "@/contexts";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { Button, DynamicButton } from "../button";
+import { Button } from "../button";
 import FrameList from "./FrameList";
-import FrameListCard from "./SelectedFrameListCard";
 
 const FrameListPanelBodyShell = styled("div")`
   display: grid;
@@ -43,41 +30,11 @@ const FrameListPanelBodyShell = styled("div")`
   }
 `;
 
-const ButtonWrapper = styled("div")`
-  background: transparent;
-  display: flex;
-  gap: 0.5rem;
-  padding: 0;
-
-  > * {
-    flex: 1;
-  }
-`;
-
 const StyledButton = styled(Button)`
   background-color: var(--discord-blurple);
   color: var(--discord-white);
   padding: default;
 `;
-
-function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
-  switch (frame.owner.type) {
-    case FrameOwnerType.System:
-      return false;
-    case FrameOwnerType.User:
-      return frame.owner.user.id === user.id;
-    case FrameOwnerType.Guild: {
-      const guildId = frame.owner.guild.guild_id;
-      const userGuildData = user.guilds?.[guildId];
-      return (
-        userGuildData !== undefined &&
-        (userGuildData.administrator || userGuildData.manageGuild)
-      );
-    }
-    default:
-      return false;
-  }
-}
 
 export default function FrameListPanel({
   enabled = true,
@@ -102,89 +59,6 @@ function FrameListPanelBody({
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
   const { user } = useAuthContext();
-  const { canvas } = useCanvasContext();
-  const { frame: selectedFrame } = useSelectedFrameContext();
-
-  const frameUrl =
-    selectedFrame ?
-      createPixelUrl({ canvasId: canvas.id, frameId: selectedFrame.id })
-    : "";
-
-  const userHasPermsToEditSelectedFrame =
-    selectedFrame && user && userCanEditFrame(user, selectedFrame);
-
-  if (selectedFrame) {
-    const downloadLink = (() => {
-      const scale = calculateScale(
-        (selectedFrame.x1 - selectedFrame.x0 + 1) *
-          (selectedFrame.y1 - selectedFrame.y0 + 1),
-      );
-
-      if (selectedFrame.owner.type === FrameOwnerType.System) {
-        const baseUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/frame/${encodeURIComponent(selectedFrame.id)}@${scale}.png`;
-
-        const isWholeCanvas =
-          selectedFrame.x0 <= 0 &&
-          selectedFrame.y0 <= 0 &&
-          selectedFrame.x1 >= canvas.width - 1 &&
-          selectedFrame.y1 >= canvas.height - 1;
-
-        if (isWholeCanvas) {
-          return baseUrl;
-        }
-
-        return `${baseUrl}?${new URLSearchParams({
-          x0: selectedFrame.x0.toString(),
-          y0: selectedFrame.y0.toString(),
-          x1: selectedFrame.x1.toString(),
-          y1: selectedFrame.y1.toString(),
-        })}`;
-      }
-
-      return `${config.apiUrl}/api/v1/frame/${selectedFrame.id}@${scale}.png`;
-    })();
-
-    const color = hexStringToPixelColor(selectedFrame.id);
-
-    return (
-      <FrameListPanelBodyShell>
-        <ActionPanelTabBody>
-          <FrameListCard frame={selectedFrame} />
-          {userHasPermsToEditSelectedFrame && (
-            <StyledButton
-              onClick={() => {
-                setActivePanel(FramePanelMode.Edit);
-              }}
-            >
-              Edit frame
-            </StyledButton>
-          )}
-          <ButtonWrapper>
-            {selectedFrame.owner.type !== FrameOwnerType.System && (
-              <DynamicButton
-                color={hexStringToPixelColor(selectedFrame.id)}
-                onAction={async () => {
-                  void (await navigator.clipboard.writeText(frameUrl));
-                  toast.success("Copied frame link");
-                }}
-              >
-                Copy frame link
-              </DynamicButton>
-            )}
-            <a href={downloadLink} target="_blank" rel="noopener noreferrer">
-              <DynamicButton
-                color={color}
-                disabled={!frameUrl}
-                style={{ inlineSize: "100%" }}
-              >
-                Download
-              </DynamicButton>
-            </a>
-          </ButtonWrapper>
-        </ActionPanelTabBody>
-      </FrameListPanelBodyShell>
-    );
-  }
 
   if (user) {
     return (

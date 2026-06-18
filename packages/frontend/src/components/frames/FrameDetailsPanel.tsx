@@ -19,7 +19,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { BasicButton, DynamicButton } from "../button";
-import FrameListCard from "./SelectedFrameListCard";
+import FrameDetailsHeaderCard from "./FrameDetailsHeaderCard";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
   display: grid;
@@ -149,7 +149,7 @@ export default function FrameDetailsPanel({
   return (
     <FrameDetailsPanelBodyShell>
       <ActionPanelTabBody>
-        <FrameListCard frame={frame} />
+        <FrameDetailsHeaderCard frame={frame} />
       </ActionPanelTabBody>
       <ActionPanelTabBody>
         <ControlButtonRow>
