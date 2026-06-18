@@ -356,7 +356,7 @@ export default function FrameEditPanel({
   ]);
 
   const closeEditor = () => {
-    setActivePanel(FramePanelMode.Info);
+    setActivePanel(FramePanelMode.List);
     resetSelectedBounds();
   };
 
@@ -575,7 +575,7 @@ export default function FrameEditPanel({
     if (!user) {
       // Shouldn't be able to get to this tab without being logged in,
       // but this prevents that at the least
-      setActivePanel(FramePanelMode.Info);
+      setActivePanel(FramePanelMode.List);
       resetSelectedBounds();
     }
   }, [user, setActivePanel, resetSelectedBounds]);

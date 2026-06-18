@@ -21,7 +21,7 @@ const OwnerInfo = styled("p")`
   gap: 0.25rem;
 `;
 
-export default function FrameInfoCard({ frame }: { frame?: Frame }) {
+export default function FrameListCard({ frame }: { frame?: Frame }) {
   if (!frame) return <Wrapper>No frame selected</Wrapper>;
 
   const ownerInfo = (() => {

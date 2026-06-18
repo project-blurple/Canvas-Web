@@ -20,9 +20,9 @@ import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { Button, DynamicButton } from "../button";
 import FrameList from "./FrameList";
-import FrameInfoCard from "./SelectedFrameInfoCard";
+import FrameListCard from "./SelectedFrameListCard";
 
-const FrameInfoPanelBodyShell = styled("div")`
+const FrameListPanelBodyShell = styled("div")`
   display: grid;
   grid-template-rows: 1fr;
   opacity: 1;
@@ -78,7 +78,7 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   }
 }
 
-export default function FrameInfoPanel({
+export default function FrameListPanel({
   enabled = true,
   setActivePanel,
 }: {
@@ -90,12 +90,12 @@ export default function FrameInfoPanel({
       <FullWidthScrollView>
         <FrameList enabled={enabled} />
       </FullWidthScrollView>
-      <FrameInfoPanelBody setActivePanel={setActivePanel} />
+      <FrameListPanelBody setActivePanel={setActivePanel} />
     </>
   );
 }
 
-function FrameInfoPanelBody({
+function FrameListPanelBody({
   setActivePanel,
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
@@ -146,9 +146,9 @@ function FrameInfoPanelBody({
     const color = hexStringToPixelColor(selectedFrame.id);
 
     return (
-      <FrameInfoPanelBodyShell>
+      <FrameListPanelBodyShell>
         <ActionPanelTabBody>
-          <FrameInfoCard frame={selectedFrame} />
+          <FrameListCard frame={selectedFrame} />
           {userHasPermsToEditSelectedFrame && (
             <StyledButton
               onClick={() => {
@@ -181,13 +181,13 @@ function FrameInfoPanelBody({
             </a>
           </ButtonWrapper>
         </ActionPanelTabBody>
-      </FrameInfoPanelBodyShell>
+      </FrameListPanelBodyShell>
     );
   }
 
   if (user) {
     return (
-      <FrameInfoPanelBodyShell>
+      <FrameListPanelBodyShell>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
           <StyledButton
@@ -198,7 +198,7 @@ function FrameInfoPanelBody({
             New frame
           </StyledButton>
         </ActionPanelTabBody>
-      </FrameInfoPanelBodyShell>
+      </FrameListPanelBodyShell>
     );
   }
 
