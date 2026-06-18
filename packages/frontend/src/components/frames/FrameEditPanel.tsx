@@ -356,7 +356,7 @@ export default function FrameEditPanel({
   ]);
 
   const closeEditor = () => {
-    setActivePanel(FramePanelMode.List);
+    setActivePanel(FramePanelMode.Details);
     resetSelectedBounds();
   };
 

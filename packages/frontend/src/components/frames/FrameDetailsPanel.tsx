@@ -87,7 +87,7 @@ export default function FrameDetailsPanel({
           <BasicButton>
             <Crosshair />
           </BasicButton>
-          <BasicButton>
+          <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
             <SquarePen />
           </BasicButton>
         </ControlButtonRow>
