@@ -1,4 +1,5 @@
 import {
+  type Frame,
   FrameOwnerType,
   type FrameRequest,
   type GuildOwnedFrame,
@@ -6,6 +7,7 @@ import {
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
+import { useCallback } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -16,6 +18,7 @@ import { useCanvasImage } from "@/hooks/useCanvasImage";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
+import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 
 const FramesWrapper = styled("div")`
   display: flex;
@@ -57,9 +60,13 @@ function selectSortedGuildFrameEntries(
 
 interface FrameListProps {
   enabled?: boolean;
+  setActivePanel: (panel: FramePanelMode) => void;
 }
 
-export default function FrameList({ enabled = true }: FrameListProps) {
+export default function FrameList({
+  enabled = true,
+  setActivePanel,
+}: FrameListProps) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { setFrame: setSelectedFrame } = useSelectedFrameContext();
@@ -101,6 +108,14 @@ export default function FrameList({ enabled = true }: FrameListProps) {
     },
   } as const satisfies SystemOwnedFrame;
 
+  const selectFrame = useCallback(
+    (frame: Frame) => {
+      setSelectedFrame(frame);
+      setActivePanel(FramePanelMode.Details);
+    },
+    [setSelectedFrame, setActivePanel],
+  );
+
   return (
     <ActionPanelTabBody>
       <FramesWrapper>
@@ -112,7 +127,7 @@ export default function FrameList({ enabled = true }: FrameListProps) {
             <FramePreviewList
               items={userFrames}
               sourceImage={sourceImage}
-              onSelectFrame={setSelectedFrame}
+              onSelectFrame={selectFrame}
             />
           : <p>You have no frames</p>
         : <p>
@@ -127,7 +142,7 @@ export default function FrameList({ enabled = true }: FrameListProps) {
         <FramePreviewList
           items={[inbuiltFullCanvasFrame]}
           sourceImage={sourceImage}
-          onSelectFrame={setSelectedFrame}
+          onSelectFrame={selectFrame}
         />
       </FramesWrapper>
       {sortedGuildFrameMap.map(([ownerId, frames]) => {
@@ -144,7 +159,7 @@ export default function FrameList({ enabled = true }: FrameListProps) {
             <FramePreviewList
               items={frames.toSorted((a, b) => a.name.localeCompare(b.name))}
               sourceImage={sourceImage}
-              onSelectFrame={setSelectedFrame}
+              onSelectFrame={selectFrame}
             />
           </FramesWrapper>
         );

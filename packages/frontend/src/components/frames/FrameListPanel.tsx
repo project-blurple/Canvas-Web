@@ -88,7 +88,7 @@ export default function FrameListPanel({
   return (
     <>
       <FullWidthScrollView>
-        <FrameList enabled={enabled} />
+        <FrameList enabled={enabled} setActivePanel={setActivePanel} />
       </FullWidthScrollView>
       <FrameListPanelBody setActivePanel={setActivePanel} />
     </>
