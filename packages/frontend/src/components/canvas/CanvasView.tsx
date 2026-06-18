@@ -485,6 +485,7 @@ export default function CanvasView({
     setOffset,
     setZoom,
     zoom,
+    focusOnFrameRef,
   } = useCanvasViewContext();
   const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
@@ -995,24 +996,22 @@ export default function CanvasView({
     [updateOffset],
   );
 
-  useEffect(
-    function panToSelectedFrame() {
-      if (!frame || frame.canvasId !== canvas.id) return;
+  const animateToFrame = useCallback(
+    (targetFrame: Frame) => {
+      if (targetFrame.canvasId !== canvas.id) return;
       const container = containerRef.current;
       if (!container) return;
 
       const frameView = getViewForFrame({
-        frame: frame,
+        frame: targetFrame,
         canvas,
         container,
         initialZoom,
       });
 
-      // Enable CSS transition animation
       setIsZooming(true);
       setZoom(frameView.targetZoom);
 
-      // Calculate the offset delta and animate with glidePan
       const clampedOffset = clampOffset(frameView.offset, frameView.targetZoom);
       const offsetDelta = diffPoints(clampedOffset, offsetRef.current);
 
@@ -1031,13 +1030,24 @@ export default function CanvasView({
       canvas,
       containerRef,
       initialZoom,
-      frame,
-      setCoords,
       clampOffset,
       setZoom,
       setOffset,
       glidePan,
+      setCoords,
     ],
+  );
+
+  useEffect(() => {
+    focusOnFrameRef.current = animateToFrame;
+  }, [animateToFrame, focusOnFrameRef]);
+
+  useEffect(
+    function panToSelectedFrame() {
+      if (!frame) return;
+      animateToFrame(frame);
+    },
+    [frame, animateToFrame],
   );
 
   /**

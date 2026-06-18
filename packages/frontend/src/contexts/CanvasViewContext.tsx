@@ -1,6 +1,6 @@
 "use client";
 
-import type { PixelColor, Point } from "@blurple-canvas-web/types";
+import type { Frame, PixelColor, Point } from "@blurple-canvas-web/types";
 import {
   createContext,
   type Dispatch,
@@ -27,6 +27,8 @@ interface CanvasViewContextType {
   setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
   setOffset: Dispatch<SetStateAction<Point>>;
   setZoom: Dispatch<SetStateAction<number>>;
+  focusOnFrame: (frame: Frame) => void;
+  focusOnFrameRef: RefObject<((frame: Frame) => void) | null>;
 }
 
 const CanvasViewContext = createContext<CanvasViewContextType>({
@@ -42,6 +44,8 @@ const CanvasViewContext = createContext<CanvasViewContextType>({
   setIsReticleVisible: () => {},
   setOffset: () => {},
   setZoom: () => {},
+  focusOnFrame: () => {},
+  focusOnFrameRef: { current: null },
 });
 
 interface CanvasViewProviderProps {
@@ -59,6 +63,11 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
+  const focusOnFrameRef = useRef<((frame: Frame) => void) | null>(null);
+
+  const focusOnFrame = (frame: Frame) => {
+    focusOnFrameRef.current?.(frame);
+  };
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -83,6 +92,8 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
         setSelectedPixelColor,
         setZoom,
         zoom,
+        focusOnFrame,
+        focusOnFrameRef,
       }}
     >
       {children}

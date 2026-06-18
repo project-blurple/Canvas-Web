@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
+import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
@@ -137,6 +138,7 @@ export default function FrameDetailsPanel({
   const { user } = useAuthContext();
   const { frame, setFrame } = useSelectedFrameContext();
   const { canvas } = useCanvasContext();
+  const { focusOnFrame } = useCanvasViewContext();
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
@@ -156,7 +158,7 @@ export default function FrameDetailsPanel({
           <BasicButton onClick={() => setFrame(null)}>
             <ArrowLeftFromLine />
           </BasicButton>
-          <BasicButton>
+          <BasicButton onClick={() => focusOnFrame(frame)}>
             <Crosshair />
           </BasicButton>
           <FrameLinkButton frame={frame} canvas={canvas} />
