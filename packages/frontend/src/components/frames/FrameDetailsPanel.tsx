@@ -1,10 +1,15 @@
-import { type Frame, FrameOwnerType } from "@blurple-canvas-web/types";
+import {
+  type CanvasInfo,
+  type Frame,
+  FrameOwnerType,
+} from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { ArrowLeftFromLine, Crosshair, SquarePen } from "lucide-react";
+import { ArrowLeftFromLine, Crosshair, Link, SquarePen } from "lucide-react";
+import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
-import { calculateScale, hexStringToPixelColor } from "@/util";
+import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -30,9 +35,13 @@ const ControlButtonRow = styled("div")`
   }
 `;
 
-function DownloadButton({ frame }: { frame: Frame }) {
-  const { canvas } = useCanvasContext();
-
+function DownloadButton({
+  frame,
+  canvas,
+}: {
+  frame: Frame;
+  canvas: CanvasInfo;
+}) {
   const downloadLink = (() => {
     const scale = calculateScale(
       (frame.x1 - frame.x0 + 1) * (frame.y1 - frame.y0 + 1),
@@ -62,14 +71,40 @@ function DownloadButton({ frame }: { frame: Frame }) {
     return `${config.apiUrl}/api/v1/frame/${frame.id}@${scale}.png`;
   })();
 
-  const color = hexStringToPixelColor(frame.id);
-
   return (
     <a href={downloadLink} target="_blank" rel="noopener noreferrer">
-      <DynamicButton color={color} style={{ inlineSize: "100%" }}>
+      <DynamicButton
+        color={hexStringToPixelColor(frame.id)}
+        style={{ inlineSize: "100%" }}
+      >
         Image
       </DynamicButton>
     </a>
+  );
+}
+
+function FrameLinkButton({
+  frame,
+  canvas,
+}: {
+  frame: Frame;
+  canvas: CanvasInfo;
+}) {
+  if (frame.owner.type === FrameOwnerType.System) {
+    return null;
+  }
+
+  const frameUrl = createPixelUrl({ canvasId: canvas.id, frameId: frame.id });
+
+  return (
+    <BasicButton
+      onClick={async () => {
+        void (await navigator.clipboard.writeText(frameUrl));
+        toast.success("Copied frame link");
+      }}
+    >
+      <Link />
+    </BasicButton>
   );
 }
 
@@ -79,11 +114,13 @@ export default function FrameDetailsPanel({
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
   const { frame, setFrame } = useSelectedFrameContext();
+  const { canvas } = useCanvasContext();
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
     return null;
   }
+
   return (
     <FrameDetailsPanelBodyShell>
       <ActionPanelTabBody>
@@ -97,6 +134,7 @@ export default function FrameDetailsPanel({
           <BasicButton>
             <Crosshair />
           </BasicButton>
+          <FrameLinkButton frame={frame} canvas={canvas} />
           <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
             <SquarePen />
           </BasicButton>
@@ -107,7 +145,7 @@ export default function FrameDetailsPanel({
           <ActionPanelPrimitives.SectionHeading>
             Downloads
           </ActionPanelPrimitives.SectionHeading>
-          <DownloadButton frame={frame} />
+          <DownloadButton frame={frame} canvas={canvas} />
           {/* Download timelapse */}
           {/* Export stats */}
         </div>
