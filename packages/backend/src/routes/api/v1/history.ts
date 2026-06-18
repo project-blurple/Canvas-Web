@@ -10,9 +10,11 @@ import { Router } from "express";
 import type { z } from "zod";
 import {
   assertLoggedIn,
+  isLoggedIn,
   requireCanvasAdmin,
   requireCanvasModerator,
 } from "@/middleware/canvasAuth";
+import { historyQueryLimiter } from "@/middleware/ratelimit";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { audit } from "@/services/auditLogService";
@@ -27,6 +29,7 @@ export const historyRouter = typedRouter(Router({ mergeParams: true }));
 
 historyRouter.get(
   "/",
+  historyQueryLimiter,
   validate({ params: CanvasIdParamModel, query: PixelHistoryParamModel }),
   async (req, res) => {
     addSpanAttributes(req, {
@@ -37,13 +40,15 @@ historyRouter.get(
       "query.size": req.query.size,
     });
 
+    const loggedIn = isLoggedIn(req);
+
     const startedAt = performance.now();
     const pixelHistory = await getPixelHistorySummary(
       {
         canvasId: req.params.canvasId,
         points: { x: req.query.x, y: req.query.y },
-        page: req.query.page,
-        size: req.query.size,
+        page: loggedIn ? req.query.page : 1,
+        size: loggedIn ? req.query.size : 1,
       },
       false,
     );

@@ -1,5 +1,6 @@
 import z from "zod";
-import { DiscordSnowflakeSchema } from "./snowflake";
+import { CanvasPlaceState } from "../canvasInfo.js";
+import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const CanvasIdParamModel = z.object({
   canvasId: z.coerce.number().int().positive(),
@@ -19,7 +20,7 @@ export const CreateCanvasBodyModel = z.object({
 export const EditCanvasBodyModel = z.object({
   name: z.string().min(1).optional(),
   cooldownDuration: z.number().int().nonnegative().optional(),
-  isLocked: z.boolean().optional(),
+  placeState: z.enum(CanvasPlaceState).optional(),
   allColorsGlobal: z.boolean().optional(),
 });
 
@@ -42,4 +43,8 @@ export const CanvasExportScaleSchema = z.preprocess(
 export const CanvasExportParamModel = z.object({
   canvasId: CanvasIdParamModel.shape.canvasId,
   scale: CanvasExportScaleSchema,
+});
+
+export const CanvasTimelapseParamModel = z.object({
+  raw: z.stringbool().optional(),
 });

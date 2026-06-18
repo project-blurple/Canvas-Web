@@ -48,6 +48,7 @@ export function usePixelHistory(
           size: params.size ?? 20,
         },
         signal,
+        withCredentials: true,
       },
     );
 

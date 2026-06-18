@@ -31,6 +31,10 @@ vi.mock("@/services/frameService", () => ({
   getFramesByUserId: vi.fn(),
 }));
 
+vi.mock("@/services/canvasService", () => ({
+  getCanvasInfo: vi.fn(),
+}));
+
 vi.mock("@/services/discordGuildService", () => ({
   isCanvasModerator: vi.fn(),
   isCanvasAdmin: vi.fn(),
@@ -38,6 +42,10 @@ vi.mock("@/services/discordGuildService", () => ({
 
 vi.mock("@/services/exportService", () => ({
   exportFrameAsStream: vi.fn(),
+}));
+
+vi.mock("@/services/timelapse/timelapseService", () => ({
+  generateTimelapse: vi.fn(),
 }));
 
 const TEST_USER_SNOWFLAKE = "123456789012345678";
@@ -129,8 +137,8 @@ const sendMutationRequest = (
 
 const FRAME_MUTATION_LIMIT = 10;
 
-const getRateLimitHeaders = (ipSuffix: string) => ({
-  "Test-User-Id": "1",
+const getRateLimitHeaders = (userId: string = "1", ipSuffix: string = "1") => ({
+  "Test-User-Id": userId,
   "X-Forwarded-For": `203.0.113.${ipSuffix}`,
 });
 
@@ -252,7 +260,7 @@ describe("Frame mutation route tests", () => {
         x1: 10,
         y1: 10,
       },
-    }).set(getRateLimitHeaders("30"));
+    }).set(getRateLimitHeaders("1", "30"));
     expect(response.status).toBe(400);
     expect(response.body).toStrictEqual({
       errors: [
@@ -297,17 +305,17 @@ describe("Frame mutation route tests", () => {
             break;
         }
 
-        const ipSuffix =
-          serviceName === "create" ? "11"
-          : serviceName === "edit" ? "12"
-          : "13";
+        const userId =
+          serviceName === "create" ? "10"
+          : serviceName === "edit" ? "11"
+          : "12";
 
         for (let index = 0; index < FRAME_MUTATION_LIMIT; index++) {
           const response = await sendMutationRequest(path, {
             app,
             method,
             body,
-          }).set(getRateLimitHeaders(ipSuffix));
+          }).set(getRateLimitHeaders(userId));
           expect(response.status).toBe(successStatus);
         }
 
@@ -315,7 +323,7 @@ describe("Frame mutation route tests", () => {
           app,
           method,
           body,
-        }).set(getRateLimitHeaders(ipSuffix));
+        }).set(getRateLimitHeaders(userId));
 
         expect(blockedResponse.status).toBe(429);
         expect(blockedResponse.text).toContain("You have been rate limited");
@@ -341,7 +349,7 @@ describe("Frame mutation route tests", () => {
           app,
           method: "post",
           body: requestBody,
-        }).set(getRateLimitHeaders("21"));
+        }).set(getRateLimitHeaders("20"));
         expect(response.status).toBe(201);
       }
 
@@ -349,7 +357,7 @@ describe("Frame mutation route tests", () => {
         app,
         method: "post",
         body: requestBody,
-      }).set(getRateLimitHeaders("21"));
+      }).set(getRateLimitHeaders("20"));
       expect(blockedResponse.status).toBe(429);
 
       vi.advanceTimersByTime(60_001);
@@ -358,7 +366,7 @@ describe("Frame mutation route tests", () => {
         app,
         method: "post",
         body: requestBody,
-      }).set(getRateLimitHeaders("21"));
+      }).set(getRateLimitHeaders("20"));
 
       expect(allowedResponse.status).toBe(201);
       expect(createFrame).toHaveBeenCalledTimes(FRAME_MUTATION_LIMIT + 1);

@@ -1,5 +1,5 @@
 import z from "zod";
-import { PixelColorSchema } from "../palette";
+import { PixelColorSchema } from "../palette.js";
 
 export const PayloadSchema = z.object({
   x: z.number(),

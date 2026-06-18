@@ -1,5 +1,5 @@
 import z from "zod";
-import { AUDIT_ACTIONS, AUDIT_RESOURCE_TYPES } from "../auditLog";
+import { AUDIT_ACTIONS, AUDIT_RESOURCE_TYPES } from "../auditLog.js";
 
 const knownActions = new Set<string>(AUDIT_ACTIONS);
 const knownResourcePrefixes = new Set(AUDIT_RESOURCE_TYPES.map((r) => `${r}.`));
