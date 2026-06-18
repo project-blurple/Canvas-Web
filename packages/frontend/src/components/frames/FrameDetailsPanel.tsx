@@ -19,7 +19,7 @@ import {
   TabPanel,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { BasicButton, DynamicButton } from "../button";
+import { BasicButton, ButtonSupplement, DynamicButton } from "../button";
 import FrameDetailsHeaderCard from "./FrameDetailsHeaderCard";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
@@ -100,6 +100,7 @@ function DownloadButton({
         style={{ inlineSize: "100%" }}
       >
         Image
+        <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
       </DynamicButton>
     </a>
   );
