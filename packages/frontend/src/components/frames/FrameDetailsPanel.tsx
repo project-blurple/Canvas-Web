@@ -1,5 +1,6 @@
 import {
   type CanvasInfo,
+  type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
@@ -7,6 +8,7 @@ import { styled } from "@mui/material";
 import { ArrowLeftFromLine, Crosshair, Link, SquarePen } from "lucide-react";
 import { toast } from "sonner";
 import config from "@/config/clientConfig";
+import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
 import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
@@ -34,6 +36,25 @@ const ControlButtonRow = styled("div")`
     flex: 1;
   }
 `;
+
+function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
+  switch (frame.owner.type) {
+    case FrameOwnerType.System:
+      return false;
+    case FrameOwnerType.User:
+      return frame.owner.user.id === user.id;
+    case FrameOwnerType.Guild: {
+      const guildId = frame.owner.guild.guild_id;
+      const userGuildData = user.guilds?.[guildId];
+      return (
+        userGuildData !== undefined &&
+        (userGuildData.administrator || userGuildData.manageGuild)
+      );
+    }
+    default:
+      return false;
+  }
+}
 
 function DownloadButton({
   frame,
@@ -113,6 +134,7 @@ export default function FrameDetailsPanel({
 }: {
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
+  const { user } = useAuthContext();
   const { frame, setFrame } = useSelectedFrameContext();
   const { canvas } = useCanvasContext();
 
@@ -120,6 +142,9 @@ export default function FrameDetailsPanel({
     setActivePanel(FramePanelMode.List);
     return null;
   }
+
+  const userHasPermsToEditSelectedFrame =
+    frame && user && userCanEditFrame(user, frame);
 
   return (
     <FrameDetailsPanelBodyShell>
@@ -135,9 +160,11 @@ export default function FrameDetailsPanel({
             <Crosshair />
           </BasicButton>
           <FrameLinkButton frame={frame} canvas={canvas} />
-          <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
-            <SquarePen />
-          </BasicButton>
+          {userHasPermsToEditSelectedFrame && (
+            <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
+              <SquarePen />
+            </BasicButton>
+          )}
         </ControlButtonRow>
       </ActionPanelTabBody>
       <ActionPanelTabBody>
