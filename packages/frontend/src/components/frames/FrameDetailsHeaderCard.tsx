@@ -1,6 +1,7 @@
 import { type Frame, FrameOwnerType } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { Paintbrush, User, Users } from "lucide-react";
+import { User, Users } from "lucide-react";
+import CanvasIcon from "../CanvasIcon";
 
 const Wrapper = styled("div")`
   align-items: baseline;
@@ -38,7 +39,7 @@ export default function FrameDetailsHeaderCard({ frame }: { frame?: Frame }) {
         };
       default:
         return {
-          icon: <Paintbrush aria-hidden />, // TODO: replace with Canvas icon?
+          icon: <CanvasIcon aria-hidden />,
           label: "Blurple Canvas",
         };
     }
