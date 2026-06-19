@@ -7,6 +7,7 @@ import {
 import { styled } from "@mui/material";
 import {
   Crosshair,
+  Hash,
   Link,
   Frame as LucideFrame,
   SquarePen,
@@ -44,7 +45,6 @@ const Heading = styled("h3")`
 `;
 
 const DetailsTable = styled("table")`
-  font-size: 1.125rem;
   max-inline-size: 100%;
   width: 100%;
 
@@ -59,8 +59,20 @@ const TableCellIcon = styled("td")`
 `;
 
 const TableCellContent = styled("td")`
-  display: flex;
-  gap: 0.125rem;
+  font-size: 1.125rem;
+  height: 100%;
+  padding: 0;
+
+  > div {
+    align-items: center;
+    display: flex;
+    gap: 0.125rem;
+    height: 100%;
+  }
+
+  code {
+    font-size: 1rem;
+  }
 `;
 
 const ControlButtonRow = styled("div")`
@@ -204,7 +216,17 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 <LucideFrame />
               </TableCellIcon>
               <TableCellContent>
-                {frameSize[0]} <X size={16} /> {frameSize[1]}
+                <div>
+                  {frameSize[0]} <X size={16} /> {frameSize[1]}
+                </div>
+              </TableCellContent>
+            </tr>
+            <tr>
+              <TableCellIcon>
+                <Hash />
+              </TableCellIcon>
+              <TableCellContent>
+                <code>{frame.id}</code>
               </TableCellContent>
             </tr>
           </tbody>
