@@ -21,7 +21,7 @@ import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
-import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
+import { calculateScale, createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -29,7 +29,7 @@ import {
   TabPanel,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { BasicButton, ButtonSupplement, DynamicButton } from "../button";
+import { BasicButton, ButtonSupplement } from "../button";
 import { BasicHighlightButton } from "../button/BasicButtons";
 import CanvasIcon from "../CanvasIcon";
 

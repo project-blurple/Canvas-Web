@@ -1,5 +1,4 @@
 import {
-  type Frame,
   FrameOwnerType,
   type FrameRequest,
   type GuildOwnedFrame,
@@ -7,7 +6,6 @@ import {
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
-import { useCallback } from "react";
 import {
   useAuthContext,
   useCanvasContext,
@@ -18,7 +16,6 @@ import { useCanvasImage } from "@/hooks/useCanvasImage";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
-import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 
 const FramesWrapper = styled("div")`
   display: flex;
