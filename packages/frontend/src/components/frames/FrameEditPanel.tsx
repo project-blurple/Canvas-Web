@@ -459,8 +459,8 @@ export default function FrameEditPanel({
         owner,
         x0: frameBounds?.left ?? 0,
         y0: frameBounds?.top ?? 0,
-        x1: frameBounds ? frameBounds.right : canvas.width,
-        y1: frameBounds ? frameBounds.bottom : canvas.height,
+        x1: frameBounds ? frameBounds.right : canvas.width - 1,
+        y1: frameBounds ? frameBounds.bottom : canvas.height - 1,
       };
 
       await axios.post(requestUrl, body, {

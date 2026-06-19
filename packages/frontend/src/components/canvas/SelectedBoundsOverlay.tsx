@@ -132,7 +132,7 @@ function resizeBoundsFromHandle({
     left = clamp(
       Math.round(startBounds.left + deltaX),
       0,
-      startBounds.right - minWidth,
+      startBounds.right - minWidth + 1,
     );
   }
 
@@ -143,8 +143,8 @@ function resizeBoundsFromHandle({
   ) {
     right = clamp(
       Math.round(startBounds.right + deltaX),
-      startBounds.left + minWidth,
-      canvasWidth,
+      startBounds.left + minWidth - 1,
+      canvasWidth - 1,
     );
   }
 
@@ -152,7 +152,7 @@ function resizeBoundsFromHandle({
     top = clamp(
       Math.round(startBounds.top + deltaY),
       0,
-      startBounds.bottom - minHeight,
+      startBounds.bottom - minHeight + 1,
     );
   }
 
@@ -163,8 +163,8 @@ function resizeBoundsFromHandle({
   ) {
     bottom = clamp(
       Math.round(startBounds.bottom + deltaY),
-      startBounds.top + minHeight,
-      canvasHeight,
+      startBounds.top + minHeight - 1,
+      canvasHeight - 1,
     );
   }
 
@@ -173,8 +173,8 @@ function resizeBoundsFromHandle({
     top,
     right,
     bottom,
-    width: right - left,
-    height: bottom - top,
+    width: right - left + 1,
+    height: bottom - top + 1,
   };
 }
 
@@ -260,11 +260,11 @@ function renderEdgeHitTargets({
         top: edge.top - edgeThickness / 2,
         width:
           edge.key === "top" || edge.key === "bottom" ?
-            edge.width + edgeThickness
+            edge.width - 1 + edgeThickness
           : edgeThickness,
         height:
           edge.key === "left" || edge.key === "right" ?
-            edge.height + edgeThickness
+            edge.height - 1 + edgeThickness
           : edgeThickness,
       }}
     />
@@ -427,8 +427,8 @@ export default function SelectedBoundsOverlay({
 
     const left = clamp(selectedBounds.left, 0, canvasWidth);
     const top = clamp(selectedBounds.top, 0, canvasHeight);
-    const right = clamp(selectedBounds.right, left, canvasWidth);
-    const bottom = clamp(selectedBounds.bottom, top, canvasHeight);
+    const right = clamp(selectedBounds.right + 1, left, canvasWidth);
+    const bottom = clamp(selectedBounds.bottom + 1, top, canvasHeight);
 
     return `M0 0H${canvasWidth}V${canvasHeight}H0Z M${left} ${top}H${right}V${bottom}H${left}Z`;
   }, [canvasWidth, canvasHeight, selectedBounds]);
@@ -436,8 +436,8 @@ export default function SelectedBoundsOverlay({
   const selectedBoundsCorners = useMemo(() => {
     if (!selectedBounds) return [];
 
-    const right = Math.max(selectedBounds.left, selectedBounds.right - 1);
-    const bottom = Math.max(selectedBounds.top, selectedBounds.bottom - 1);
+    const right = Math.max(selectedBounds.left, selectedBounds.right);
+    const bottom = Math.max(selectedBounds.top, selectedBounds.bottom);
     const corners: Array<{
       key: CornerKey;
       point: Point;
@@ -515,8 +515,8 @@ export default function SelectedBoundsOverlay({
   const selectedBoundsEdgeReticles = useMemo(() => {
     if (!selectedBounds) return [];
 
-    const right = Math.max(selectedBounds.left, selectedBounds.right - 1);
-    const bottom = Math.max(selectedBounds.top, selectedBounds.bottom - 1);
+    const right = Math.max(selectedBounds.left, selectedBounds.right);
+    const bottom = Math.max(selectedBounds.top, selectedBounds.bottom);
     const centerX = selectedBounds.left + (selectedBounds.width - 1) / 2;
     const centerY = selectedBounds.top + (selectedBounds.height - 1) / 2;
 

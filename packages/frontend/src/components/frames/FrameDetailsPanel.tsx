@@ -183,7 +183,7 @@ function FrameLinkButton({
 }
 
 function DetailsCard({ frame }: { frame: Frame }) {
-  const frameSize = [frame.x1 - frame.x0, frame.y1 - frame.y0];
+  const frameSize = [frame.x1 - frame.x0 + 1, frame.y1 - frame.y0 + 1];
 
   const ownerInfo = (() => {
     switch (frame.owner.type) {

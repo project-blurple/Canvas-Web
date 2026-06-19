@@ -94,8 +94,8 @@ export async function generateTimelapse({
       y1: clamp(normalizedBounds.y1, 0, canvas.height - 1),
     };
 
-    const cropWidth = clampedBounds.x1 - clampedBounds.x0;
-    const cropHeight = clampedBounds.y1 - clampedBounds.y0;
+    const cropWidth = clampedBounds.x1 - clampedBounds.x0 + 1;
+    const cropHeight = clampedBounds.y1 - clampedBounds.y0 + 1;
 
     if (cropWidth <= 0 || cropHeight <= 0) {
       throw new Error("Bounds are invalid after normalization and clamping");

@@ -119,8 +119,8 @@ export async function exportCanvasBoundsAsStream({
   y1: number;
   scale?: CanvasExportScale;
 }): Promise<NodeJS.ReadableStream> {
-  const width = x1 - x0;
-  const height = y1 - y0;
+  const width = x1 - x0 + 1;
+  const height = y1 - y0 + 1;
 
   if (width <= 0 || height <= 0) {
     throw new BadRequestError("Invalid crop dimensions");

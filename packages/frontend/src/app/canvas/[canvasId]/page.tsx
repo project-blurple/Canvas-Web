@@ -77,7 +77,9 @@ export async function generateMetadata({
   });
 
   if (frame) {
-    const scale = calculateScale((frame.x1 - frame.x0) * (frame.y1 - frame.y0));
+    const scale = calculateScale(
+      (frame.x1 - frame.x0 + 1) * (frame.y1 - frame.y0 + 1),
+    );
     const imageUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}@${scale}.png?${imageSearchParams.toString()}`;
 
     return toMetadata({

@@ -15,6 +15,10 @@ export interface BoundsDimensions {
   height: number;
 }
 
+/**
+ * Viewport bounds with inclusive coordinates (right/bottom are actual pixel positions, not exclusive).
+ * Matches the database Frame model and user-facing coordinate display.
+ */
 export interface ViewBounds extends BoundsDimensions {
   left: number;
   top: number;
@@ -84,8 +88,8 @@ export function normalizeFrameBounds({ x0, x1, y0, y1 }: Frame): ViewBounds {
     right,
     top,
     bottom,
-    width: right - left,
-    height: bottom - top,
+    width: right - left + 1,
+    height: bottom - top + 1,
   };
 }
 

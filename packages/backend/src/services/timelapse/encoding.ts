@@ -22,9 +22,10 @@ export function getTimelapseVideoDimensions({
   cropBounds: Bounds | undefined;
   scale: CanvasExportScale;
 }): { width: number; height: number } {
-  const sourceWidth = cropBounds ? cropBounds.x1 - cropBounds.x0 : canvasWidth;
+  const sourceWidth =
+    cropBounds ? cropBounds.x1 - cropBounds.x0 + 1 : canvasWidth;
   const sourceHeight =
-    cropBounds ? cropBounds.y1 - cropBounds.y0 : canvasHeight;
+    cropBounds ? cropBounds.y1 - cropBounds.y0 + 1 : canvasHeight;
 
   return {
     width: Math.trunc((sourceWidth * scale) / 2) * 2,
