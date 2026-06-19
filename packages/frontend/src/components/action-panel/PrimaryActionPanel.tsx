@@ -4,7 +4,6 @@ import { useId } from "react";
 import {
   useActionPanelContext,
   useCanvasContext,
-  useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
 import ActionPanelPrimitives from "./primitives";
