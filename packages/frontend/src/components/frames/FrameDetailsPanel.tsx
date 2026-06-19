@@ -251,8 +251,7 @@ export default function FrameDetailsPanel({
     return null;
   }
 
-  const userHasPermsToEditSelectedFrame =
-    frame && user && userCanEditFrame(user, frame);
+  const userHasPermsToEditSelectedFrame = user && userCanEditFrame(user, frame);
 
   return (
     <FrameDetailsPanelBodyShell>
