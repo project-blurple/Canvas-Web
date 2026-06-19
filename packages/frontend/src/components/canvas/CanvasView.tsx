@@ -1044,7 +1044,6 @@ export default function CanvasView({
 
   useEffect(
     function panToSelectedFrame() {
-      console.log("Selected frame changed", frame);
       if (!frame) return;
       animateToFrame(frame);
     },

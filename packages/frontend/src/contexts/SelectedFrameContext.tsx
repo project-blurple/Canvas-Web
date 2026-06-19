@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import { useCanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { createUrlWithFrameUpdate } from "@/util/searchParams";
+import { useActionPanelContext } from "./ActionPanelContext";
 
 interface UseSelectedFrameReturn {
   frame: Frame | null;
@@ -25,6 +26,7 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
   const router = useRouter();
   const searchParams = useSearchParams();
   const canvasParams = useCanvasSearchParams();
+  const { setCurrentTab } = useActionPanelContext();
 
   // Track optimistic frame for instant UI updates
   const [optimisticFrame, setOptimisticFrame] = useState<Frame | null>(null);
@@ -48,8 +50,14 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
     }
   }, [urlFrame, canvasParams.frameId]);
 
+  // Switch to frame tab when loading a frame from URL (e.g., on page load with frame param)
+  useEffect(() => {
+    if (urlFrame && optimisticFrameIdRef.current === null) {
+      setCurrentTab("frame");
+    }
+  }, [urlFrame, setCurrentTab]);
+
   const frame = optimisticFrame ?? urlFrame;
-  console.log(frame);
 
   const setFrame = useCallback(
     (newFrame: Frame | null) => {
@@ -57,12 +65,17 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
       setOptimisticFrame(newFrame);
       optimisticFrameIdRef.current = newFrame?.id ?? null;
 
+      // Switch to frame tab when a frame is selected
+      if (newFrame) {
+        setCurrentTab("frame");
+      }
+
       // Update URL asynchronously (non-blocking)
       const frameId = newFrame?.id ?? null;
       const newUrl = createUrlWithFrameUpdate(searchParams, frameId);
       router.replace(newUrl);
     },
-    [searchParams, router],
+    [searchParams, router, setCurrentTab],
   );
 
   return {
