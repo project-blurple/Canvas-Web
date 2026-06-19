@@ -170,22 +170,6 @@ export default function FrameDetailsPanel({
         </ActionPanelTabBody>
       </FullWidthScrollView>
       <ActionPanelTabBody>
-        <ControlButtonRow>
-          <BasicButton onClick={() => setFrame(null)}>
-            <ArrowLeftFromLine />
-          </BasicButton>
-          <BasicButton onClick={() => focusOnFrame(frame)}>
-            <Crosshair />
-          </BasicButton>
-          <FrameLinkButton frame={frame} canvas={canvas} />
-          {userHasPermsToEditSelectedFrame && (
-            <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
-              <SquarePen />
-            </BasicButton>
-          )}
-        </ControlButtonRow>
-      </ActionPanelTabBody>
-      <ActionPanelTabBody>
         <div>
           <ActionPanelPrimitives.SectionHeading>
             Downloads
@@ -195,6 +179,20 @@ export default function FrameDetailsPanel({
           {/* Export stats */}
         </div>
       </ActionPanelTabBody>
+      <ActionPanelTabBody>
+        <ControlButtonRow>
+          <FrameLinkButton frame={frame} canvas={canvas} />
+          <BasicButton onClick={() => focusOnFrame(frame)}>
+            <Crosshair />
+          </BasicButton>
+          {userHasPermsToEditSelectedFrame && (
+            <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
+              <SquarePen />
+            </BasicButton>
+          )}
+        </ControlButtonRow>
+      </ActionPanelTabBody>
+      <BasicButton onClick={() => setFrame(null)}>Back</BasicButton>
     </FrameDetailsPanelBodyShell>
   );
 }
