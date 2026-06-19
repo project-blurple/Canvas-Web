@@ -14,7 +14,7 @@ import {
   NotFoundError,
   UnprocessableError,
 } from "@/errors";
-import { PrismaErrorCode } from "@/utils";
+import { boundsWithDimensions, PrismaErrorCode } from "@/utils";
 import { getGuildPermissionsForUser } from "./discordGuildService";
 
 type FrameFindManyArgs = Parameters<(typeof prisma.frame)["findMany"]>[0];
@@ -121,14 +121,23 @@ async function loadOwnerLookup(frames: FrameDbRecord[]): Promise<OwnerLookup> {
 }
 
 function frameFromDb(frame: FrameDbRecord, owners: OwnerLookup): Frame {
-  const baseFrame = {
-    id: frame.id,
-    canvasId: frame.canvas_id,
-    name: frame.name,
+  const bounds = boundsWithDimensions({
     x0: frame.x_0,
     y0: frame.y_0,
     x1: frame.x_1,
     y1: frame.y_1,
+  });
+
+  const baseFrame = {
+    id: frame.id,
+    canvasId: frame.canvas_id,
+    name: frame.name,
+    x0: bounds.x0,
+    y0: bounds.y0,
+    x1: bounds.x1,
+    y1: bounds.y1,
+    width: bounds.width,
+    height: bounds.height,
   };
 
   if (frame.owner_guild_id !== null) {
@@ -311,7 +320,7 @@ async function assertCoordsAreWithinCanvas(
     throw new NotFoundError("Canvas not found");
   }
 
-  if (x0 < 0 || y0 < 0 || x1 > canvas.width || y1 > canvas.height) {
+  if (x0 < 0 || y0 < 0 || x1 >= canvas.width || y1 >= canvas.height) {
     throw new BadRequestError(
       "Frame coordinates must be within the bounds of the canvas",
     );
