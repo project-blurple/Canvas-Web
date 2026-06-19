@@ -16,6 +16,7 @@ import { calculateScale, createPixelUrl, hexStringToPixelColor } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
+  FullWidthScrollView,
   TabPanel,
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
@@ -24,7 +25,6 @@ import FrameDetailsHeaderCard from "./FrameDetailsHeaderCard";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
   display: grid;
-  grid-template-rows: 1fr auto;
 `;
 
 const ControlButtonRow = styled("div")`
@@ -149,11 +149,26 @@ export default function FrameDetailsPanel({
   const userHasPermsToEditSelectedFrame =
     frame && user && userCanEditFrame(user, frame);
 
+  const frameSize = (frame.x1 - frame.x0) * (frame.y1 - frame.y0);
+
+  const positionString = `(${frame.x0 + canvas.startCoordinates[0]}, ${frame.y0 + canvas.startCoordinates[1]}) to (${frame.x1 + canvas.startCoordinates[0] - 1}, ${frame.y1 + canvas.startCoordinates[1] - 1})`;
+
   return (
     <FrameDetailsPanelBodyShell>
       <ActionPanelTabBody>
         <FrameDetailsHeaderCard frame={frame} />
       </ActionPanelTabBody>
+      <FullWidthScrollView>
+        <ActionPanelTabBody>
+          <div>
+            <ActionPanelPrimitives.SectionHeading>
+              Details
+            </ActionPanelPrimitives.SectionHeading>
+            <p>Position: {positionString}</p>
+            <p>Size: {frameSize} pixels</p>
+          </div>
+        </ActionPanelTabBody>
+      </FullWidthScrollView>
       <ActionPanelTabBody>
         <ControlButtonRow>
           <BasicButton onClick={() => setFrame(null)}>
