@@ -4,7 +4,12 @@ import {
   getTimelapseCanvasDirectory,
   getTimelapseVideoPath,
 } from "@/snapshot/paths";
-import { calculateScale, clamp, normalizeBounds } from "@/utils";
+import {
+  calculateScale,
+  clamp,
+  normalizeBounds,
+  withDimensions,
+} from "@/utils";
 import { getCanvasInfo } from "../canvasService";
 import { getSnapshots } from "../snapshot/snapshotService";
 import {
@@ -87,17 +92,14 @@ export async function generateTimelapse({
   if (bounds) {
     const normalizedBounds = normalizeBounds(bounds);
 
-    const clampedBounds: Bounds = {
+    const clampedBounds = withDimensions({
       x0: clamp(normalizedBounds.x0, 0, canvas.width - 1),
       y0: clamp(normalizedBounds.y0, 0, canvas.height - 1),
       x1: clamp(normalizedBounds.x1, 0, canvas.width - 1),
       y1: clamp(normalizedBounds.y1, 0, canvas.height - 1),
-    };
+    });
 
-    const cropWidth = clampedBounds.x1 - clampedBounds.x0 + 1;
-    const cropHeight = clampedBounds.y1 - clampedBounds.y0 + 1;
-
-    if (cropWidth <= 0 || cropHeight <= 0) {
+    if (clampedBounds.width <= 0 || clampedBounds.height <= 0) {
       throw new Error("Bounds are invalid after normalization and clamping");
     }
 
@@ -196,7 +198,10 @@ export async function getOrCreateTimelapseFromCache(
     const videoDimensions = getTimelapseVideoDimensions({
       canvasWidth: cacheParams.canvasWidth,
       canvasHeight: cacheParams.canvasHeight,
-      cropBounds: cacheParams.cropBounds,
+      cropBounds:
+        cacheParams.cropBounds ?
+          withDimensions(cacheParams.cropBounds)
+        : undefined,
       scale: cacheParams.scale,
     });
 

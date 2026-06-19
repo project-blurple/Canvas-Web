@@ -65,8 +65,6 @@ export default function BoundsSelect({
       }
     : null;
 
-  console.log(selectedBounds);
-
   return (
     <CoordinateRangeWrapper disabled={disabled} {...props}>
       <CoordinateInputWrapper>

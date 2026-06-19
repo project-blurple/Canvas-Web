@@ -99,6 +99,8 @@ export default function FrameList({ enabled = true }: FrameListProps) {
       type: FrameOwnerType.System,
       name: "Blurple Canvas",
     },
+    width: canvas.width,
+    height: canvas.height,
   } as const satisfies SystemOwnedFrame;
 
   return (
