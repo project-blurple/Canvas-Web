@@ -29,6 +29,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { BasicButton, ButtonSupplement, DynamicButton } from "../button";
+import { BasicHighlightButton } from "../button/BasicButtons";
 import CanvasIcon from "../CanvasIcon";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
@@ -130,10 +131,10 @@ function DownloadButton({
 
   return (
     <a href={downloadLink} target="_blank" rel="noopener noreferrer">
-      <BasicButton style={{ inlineSize: "100%" }}>
+      <BasicHighlightButton style={{ inlineSize: "100%" }}>
         Image
         <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
-      </BasicButton>
+      </BasicHighlightButton>
     </a>
   );
 }
