@@ -137,10 +137,6 @@ const ButtonRow = styled("div")`
 }
 `;
 
-const BackButton = styled(BasicButton)`
-  padding: default;
-`;
-
 const StyledDialog = styled(Dialog)`
   gap: 0.5rem;
 
@@ -751,7 +747,7 @@ export default function FrameEditPanel({
               </BasicButton>
             }
           </ButtonRow>
-          <BackButton
+          <BasicButton
             onClick={handleBackAction}
             type="button"
             disabled={
@@ -761,7 +757,7 @@ export default function FrameEditPanel({
             }
           >
             Back
-          </BackButton>
+          </BasicButton>
         </ActionPanelTabBody>
       </StyledForm>
       <StyledDialog

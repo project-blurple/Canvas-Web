@@ -6,7 +6,7 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import BotCommandCard from "../action-panel/tabs/BotCommandCard";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
-import { Button } from "../button";
+import { BasicHighlightButton } from "../button/BasicButtons";
 import FrameList from "./FrameList";
 
 const FrameListPanelBodyShell = styled("div")`
@@ -28,12 +28,6 @@ const FrameListPanelBodyShell = styled("div")`
   > * {
     min-height: 0;
   }
-`;
-
-const StyledButton = styled(Button)`
-  background-color: var(--discord-blurple);
-  color: var(--discord-white);
-  padding: default;
 `;
 
 export default function FrameListPanel({
@@ -71,13 +65,13 @@ function FrameListPanelBody({
       <FrameListPanelBodyShell>
         <ActionPanelTabBody>
           <BotCommandCard command="/frame create" />
-          <StyledButton
+          <BasicHighlightButton
             onClick={() => {
               setActivePanel(FramePanelMode.Create);
             }}
           >
             New frame
-          </StyledButton>
+          </BasicHighlightButton>
         </ActionPanelTabBody>
       </FrameListPanelBodyShell>
     );

@@ -176,10 +176,16 @@ export function createUrlWithParamUpdate(
 
   // Update or remove the target parameter
   const canonical = SEARCH_PARAM_KEYS[paramKey].canonical;
+
+  // Delete all variants (canonical + aliases) to ensure clean removal
+  const variants = getSearchParamVariants(paramKey);
+  for (const variant of variants) {
+    url.searchParams.delete(variant);
+  }
+
+  // Set the canonical if a value is provided
   if (paramValue) {
     url.searchParams.set(canonical, paramValue);
-  } else {
-    url.searchParams.delete(canonical);
   }
 
   return url.toString();

@@ -12,7 +12,7 @@ const FramesTabBlock = styled(TabPanel)`
 `;
 
 export const FramePanelMode = {
-  List: "info",
+  List: "list",
   Details: "details",
   Create: "create",
   Edit: "edit",

@@ -142,7 +142,12 @@ function DownloadButton({
   })();
 
   return (
-    <a href={downloadLink} target="_blank" rel="noopener noreferrer">
+    <a
+      href={downloadLink}
+      rel="noopener noreferrer"
+      style={{ display: "contents" }}
+      target="_blank"
+    >
       <BasicHighlightButton style={{ inlineSize: "100%" }}>
         Image
         <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
@@ -166,6 +171,7 @@ function FrameLinkButton({
 
   return (
     <BasicButton
+      aria-label="Copy frame link"
       onClick={async () => {
         void (await navigator.clipboard.writeText(frameUrl));
         toast.success("Copied frame link");
@@ -274,11 +280,17 @@ export default function FrameDetailsPanel({
       <ActionPanelTabBody>
         <ControlButtonRow>
           <FrameLinkButton frame={frame} canvas={canvas} />
-          <BasicButton onClick={() => focusOnFrame(frame)}>
+          <BasicButton
+            aria-label="Focus on frame"
+            onClick={() => focusOnFrame(frame)}
+          >
             <Crosshair />
           </BasicButton>
           {userHasPermsToEditSelectedFrame && (
-            <BasicButton onClick={() => setActivePanel(FramePanelMode.Edit)}>
+            <BasicButton
+              aria-label="Edit frame"
+              onClick={() => setActivePanel(FramePanelMode.Edit)}
+            >
               <SquarePen />
             </BasicButton>
           )}
