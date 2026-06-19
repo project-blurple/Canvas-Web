@@ -478,7 +478,6 @@ export default function CanvasView({
   const {
     containerRef,
     coords,
-    isReticleVisible,
     offset,
     setSelectedPixelColor,
     setCoords,
@@ -487,7 +486,7 @@ export default function CanvasView({
     zoom,
     focusOnFrameRef,
   } = useCanvasViewContext();
-  const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
+  const { currentTab, isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
 
@@ -1339,7 +1338,10 @@ export default function CanvasView({
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: showReticle && isReticleVisible ? undefined : "none",
+            display:
+              showReticle && currentTab !== "frame" && coords !== null ?
+                undefined
+              : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),
