@@ -130,13 +130,10 @@ function DownloadButton({
 
   return (
     <a href={downloadLink} target="_blank" rel="noopener noreferrer">
-      <DynamicButton
-        color={hexStringToPixelColor(frame.id)}
-        style={{ inlineSize: "100%" }}
-      >
+      <BasicButton style={{ inlineSize: "100%" }}>
         Image
         <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
-      </DynamicButton>
+      </BasicButton>
     </a>
   );
 }
