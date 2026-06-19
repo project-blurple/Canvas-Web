@@ -5,7 +5,15 @@ import {
   FrameOwnerType,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
-import { ArrowLeftFromLine, Crosshair, Link, SquarePen } from "lucide-react";
+import {
+  Crosshair,
+  Link,
+  Frame as LucideFrame,
+  SquarePen,
+  User,
+  Users,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
@@ -21,10 +29,37 @@ import {
 } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { BasicButton, ButtonSupplement, DynamicButton } from "../button";
-import FrameDetailsHeaderCard from "./FrameDetailsHeaderCard";
+import CanvasIcon from "../CanvasIcon";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
   display: grid;
+`;
+
+const Heading = styled("h3")`
+  color: var(--discord-white);
+  font-size: 1.375rem;
+  font-weight: 900;
+  line-height: 1.1;
+`;
+
+const DetailsTable = styled("table")`
+  font-size: 1.125rem;
+  max-inline-size: 100%;
+  width: 100%;
+
+  tr:not(:last-child) > td {
+    padding-bottom: 0.75rem;
+  }
+`;
+
+const TableCellIcon = styled("td")`
+  width: 2.5rem;
+  white-space: nowrap;
+`;
+
+const TableCellContent = styled("td")`
+  display: flex;
+  gap: 0.125rem;
 `;
 
 const ControlButtonRow = styled("div")`
@@ -131,6 +166,56 @@ function FrameLinkButton({
   );
 }
 
+function DetailsCard({ frame }: { frame: Frame }) {
+  const frameSize = [frame.x1 - frame.x0, frame.y1 - frame.y0];
+
+  const ownerInfo = (() => {
+    switch (frame.owner.type) {
+      case FrameOwnerType.Guild:
+        return {
+          icon: <Users aria-hidden />,
+          label: frame.owner.guild.name ?? "Unknown guild",
+        };
+      case FrameOwnerType.User:
+        return {
+          icon: <User aria-hidden />,
+          label: frame.owner.user.username ?? "Unknown user",
+        };
+      default:
+        return {
+          icon: <CanvasIcon aria-hidden />,
+          label: "Blurple Canvas",
+        };
+    }
+  })();
+
+  return (
+    <ActionPanelTabBody>
+      <div>
+        <ActionPanelPrimitives.SectionHeading>
+          Details
+        </ActionPanelPrimitives.SectionHeading>
+        <DetailsTable>
+          <tbody>
+            <tr>
+              <TableCellIcon>{ownerInfo.icon}</TableCellIcon>
+              <TableCellContent>{ownerInfo.label}</TableCellContent>
+            </tr>
+            <tr>
+              <TableCellIcon>
+                <LucideFrame />
+              </TableCellIcon>
+              <TableCellContent>
+                {frameSize[0]} <X size={16} /> {frameSize[1]}
+              </TableCellContent>
+            </tr>
+          </tbody>
+        </DetailsTable>
+      </div>
+    </ActionPanelTabBody>
+  );
+}
+
 export default function FrameDetailsPanel({
   setActivePanel,
 }: {
@@ -149,25 +234,13 @@ export default function FrameDetailsPanel({
   const userHasPermsToEditSelectedFrame =
     frame && user && userCanEditFrame(user, frame);
 
-  const frameSize = (frame.x1 - frame.x0) * (frame.y1 - frame.y0);
-
-  const positionString = `(${frame.x0 + canvas.startCoordinates[0]}, ${frame.y0 + canvas.startCoordinates[1]}) to (${frame.x1 + canvas.startCoordinates[0] - 1}, ${frame.y1 + canvas.startCoordinates[1] - 1})`;
-
   return (
     <FrameDetailsPanelBodyShell>
       <ActionPanelTabBody>
-        <FrameDetailsHeaderCard frame={frame} />
+        <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <ActionPanelTabBody>
-          <div>
-            <ActionPanelPrimitives.SectionHeading>
-              Details
-            </ActionPanelPrimitives.SectionHeading>
-            <p>Position: {positionString}</p>
-            <p>Size: {frameSize} pixels</p>
-          </div>
-        </ActionPanelTabBody>
+        <DetailsCard frame={frame} />
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
