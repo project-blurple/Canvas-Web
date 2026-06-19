@@ -1,5 +1,5 @@
 import { styled } from "@mui/material";
-import { useAuthContext } from "@/contexts";
+import { useAuthContext, useSelectedFrameContext } from "@/contexts";
 import {
   ActionPanelTabBody,
   FullWidthScrollView,
@@ -43,10 +43,16 @@ export default function FrameListPanel({
   enabled?: boolean;
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
+  const { frame } = useSelectedFrameContext();
+
+  if (frame) {
+    setActivePanel(FramePanelMode.Details);
+  }
+
   return (
     <>
       <FullWidthScrollView>
-        <FrameList enabled={enabled} setActivePanel={setActivePanel} />
+        <FrameList enabled={enabled} />
       </FullWidthScrollView>
       <FrameListPanelBody setActivePanel={setActivePanel} />
     </>

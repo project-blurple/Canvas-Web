@@ -60,13 +60,9 @@ function selectSortedGuildFrameEntries(
 
 interface FrameListProps {
   enabled?: boolean;
-  setActivePanel: (panel: FramePanelMode) => void;
 }
 
-export default function FrameList({
-  enabled = true,
-  setActivePanel,
-}: FrameListProps) {
+export default function FrameList({ enabled = true }: FrameListProps) {
   const { user } = useAuthContext();
   const { canvas } = useCanvasContext();
   const { setFrame: setSelectedFrame } = useSelectedFrameContext();
@@ -108,14 +104,6 @@ export default function FrameList({
     },
   } as const satisfies SystemOwnedFrame;
 
-  const selectFrame = useCallback(
-    (frame: Frame) => {
-      setSelectedFrame(frame);
-      setActivePanel(FramePanelMode.Details);
-    },
-    [setSelectedFrame, setActivePanel],
-  );
-
   return (
     <ActionPanelTabBody>
       <FramesWrapper>
@@ -127,7 +115,7 @@ export default function FrameList({
             <FramePreviewList
               items={userFrames}
               sourceImage={sourceImage}
-              onSelectFrame={selectFrame}
+              onSelectFrame={setSelectedFrame}
             />
           : <p>You have no frames</p>
         : <p>
@@ -142,7 +130,7 @@ export default function FrameList({
         <FramePreviewList
           items={[inbuiltFullCanvasFrame]}
           sourceImage={sourceImage}
-          onSelectFrame={selectFrame}
+          onSelectFrame={setSelectedFrame}
         />
       </FramesWrapper>
       {sortedGuildFrameMap.map(([ownerId, frames]) => {
@@ -159,7 +147,7 @@ export default function FrameList({
             <FramePreviewList
               items={frames.toSorted((a, b) => a.name.localeCompare(b.name))}
               sourceImage={sourceImage}
-              onSelectFrame={selectFrame}
+              onSelectFrame={setSelectedFrame}
             />
           </FramesWrapper>
         );
