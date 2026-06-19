@@ -24,7 +24,7 @@ export interface BoundsWithDimensions extends Bounds {
   height: number;
 }
 
-export function withDimensions(bounds: Bounds): BoundsWithDimensions {
+export function boundsWithDimensions(bounds: Bounds): BoundsWithDimensions {
   return {
     ...bounds,
     width: bounds.x1 - bounds.x0 + 1,
