@@ -19,16 +19,14 @@ interface CanvasViewContextType {
   containerRef: RefObject<HTMLDivElement | null>;
   coords: Point | null;
   selectedPixelColor: PixelColor | null;
-  isReticleVisible: boolean;
   offset: Point;
   zoom: number;
   setCoords: Dispatch<SetStateAction<Point | null>>;
   setSelectedPixelColor: Dispatch<SetStateAction<PixelColor | null>>;
-  setIsReticleVisible: Dispatch<SetStateAction<boolean>>;
   setOffset: Dispatch<SetStateAction<Point>>;
   setZoom: Dispatch<SetStateAction<number>>;
   focusOnFrame: (frame: Frame) => void;
-  focusOnFrameRef: RefObject<((frame: Frame) => void) | null>;
+  setFocusOnFrame: (fn: (frame: Frame) => void) => void;
 }
 
 const CanvasViewContext = createContext<CanvasViewContextType>({
@@ -36,16 +34,14 @@ const CanvasViewContext = createContext<CanvasViewContextType>({
   containerRef: { current: null },
   coords: null,
   selectedPixelColor: null,
-  isReticleVisible: false,
   offset: ORIGIN,
   zoom: 1,
   setCoords: () => {},
   setSelectedPixelColor: () => {},
-  setIsReticleVisible: () => {},
   setOffset: () => {},
   setZoom: () => {},
   focusOnFrame: () => {},
-  focusOnFrameRef: { current: null },
+  setFocusOnFrame: () => {},
 });
 
 interface CanvasViewProviderProps {
@@ -58,16 +54,12 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
     useState<CanvasViewContextType["coords"]>(null);
   const [selectedPixelColor, setSelectedPixelColor] =
     useState<CanvasViewContextType["selectedPixelColor"]>(null);
-  const [isReticleVisible, setIsReticleVisible] =
-    useState<CanvasViewContextType["isReticleVisible"]>(true);
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
-  const focusOnFrameRef = useRef<((frame: Frame) => void) | null>(null);
-
-  const focusOnFrame = (frame: Frame) => {
-    focusOnFrameRef.current?.(frame);
-  };
+  const [focusOnFrame, setFocusOnFrame] = useState<(frame: Frame) => void>(
+    () => () => {},
+  );
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -83,17 +75,15 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
         adjustedCoords,
         containerRef,
         coords: selectedCoords,
-        isReticleVisible: isReticleVisible && selectedCoords !== null,
         offset,
         selectedPixelColor,
         setCoords: setSelectedCoords,
-        setIsReticleVisible,
         setOffset,
         setSelectedPixelColor,
         setZoom,
         zoom,
         focusOnFrame,
-        focusOnFrameRef,
+        setFocusOnFrame,
       }}
     >
       {children}

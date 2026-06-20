@@ -20,7 +20,7 @@ import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
-import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
+import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
 import { calculateScale, createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
@@ -48,30 +48,25 @@ const DetailsTable = styled("table")`
   max-inline-size: 100%;
   width: 100%;
 
-  tr:not(:last-child) > td {
-    padding-bottom: 0.75rem;
+  tr:not(:last-child) > td,
+  tr:not(:last-child) > th {
+    padding-block-end: 0.75rem;
   }
 `;
 
-const TableCellIcon = styled("td")`
-  width: 2.5rem;
+const TableCellIcon = styled("th")`
+  inline-size: 2.5rem;
   white-space: nowrap;
+  opacity: 0.6;
 `;
 
 const TableCellContent = styled("td")`
+  block-size: 100%;
   font-size: 1.125rem;
-  height: 100%;
   padding: 0;
 
-  > div {
-    align-items: center;
-    display: flex;
-    gap: 0.125rem;
-    height: 100%;
-  }
-
   code {
-    font-size: 1rem;
+    font-size: 0.85em;
   }
 `;
 
@@ -88,8 +83,6 @@ const ControlButtonRow = styled("div")`
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
-    case FrameOwnerType.System:
-      return false;
     case FrameOwnerType.User:
       return frame.owner.user.id === user.id;
     case FrameOwnerType.Guild: {
@@ -100,6 +93,8 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
         (userGuildData.administrator || userGuildData.manageGuild)
       );
     }
+    case FrameOwnerType.System:
+      return false;
     default:
       return false;
   }
@@ -210,27 +205,34 @@ function DetailsCard({ frame }: { frame: Frame }) {
         <DetailsTable>
           <tbody>
             <tr>
-              <TableCellIcon>{ownerInfo.icon}</TableCellIcon>
+              <TableCellIcon aria-label="Frame owner">
+                {ownerInfo.icon}
+              </TableCellIcon>
               <TableCellContent>{ownerInfo.label}</TableCellContent>
             </tr>
             <tr>
-              <TableCellIcon>
+              <TableCellIcon aria-label="Frame dimensions">
                 <LucideFrame />
               </TableCellIcon>
               <TableCellContent>
-                <div>
-                  {frame.width} <X size={16} /> {frame.height}
-                </div>
+                {frame.width}{" "}
+                <X
+                  size={16}
+                  style={{ display: "inline", verticalAlign: "middle" }}
+                />{" "}
+                {frame.height}
               </TableCellContent>
             </tr>
-            <tr>
-              <TableCellIcon>
-                <Hash />
-              </TableCellIcon>
-              <TableCellContent>
-                <code>{frame.id}</code>
-              </TableCellContent>
-            </tr>
+            {frame.owner.type !== FrameOwnerType.System && (
+              <tr>
+                <TableCellIcon aria-label="Frame ID">
+                  <Hash />
+                </TableCellIcon>
+                <TableCellContent>
+                  <code>{frame.id}</code>
+                </TableCellContent>
+              </tr>
+            )}
           </tbody>
         </DetailsTable>
       </div>
@@ -244,7 +246,7 @@ export default function FrameDetailsPanel({
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
   const { user } = useAuthContext();
-  const { frame, setFrame } = useSelectedFrameContext();
+  const { frame, setFrame } = useSelectedFrame();
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
 

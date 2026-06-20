@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  CanvasInfo,
   DiscordGuildRecord,
   DiscordUserProfile,
   Frame,
@@ -9,6 +10,7 @@ import type {
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
+import { reconstructSystemFrame } from "@/util/frame";
 import { fetchFrameById } from "./serverFetch";
 
 interface UseUserFramesParams {
@@ -18,6 +20,7 @@ interface UseUserFramesParams {
 
 interface UseFrameByIdParams {
   frameId?: Frame["id"];
+  canvas?: CanvasInfo;
 }
 
 interface UseGuildFramesParams {
@@ -25,10 +28,20 @@ interface UseGuildFramesParams {
   guildIds?: DiscordGuildRecord["guild_id"][];
 }
 
-export function useFrameById({ frameId }: UseFrameByIdParams) {
+export function useFrameById({ frameId, canvas }: UseFrameByIdParams) {
+  // System frames are client-side only and don't exist in the database
+  // Skip the API call for system frames to avoid 404 errors
   return useQuery<FrameRequest.FrameByIdResBody | null>({
     queryKey: ["frame", "id", frameId],
-    queryFn: () => fetchFrameById(frameId),
+    queryFn: () => {
+      if (canvas) {
+        const systemFrame = reconstructSystemFrame(frameId, canvas);
+        if (systemFrame) {
+          return systemFrame;
+        }
+      }
+      return fetchFrameById(frameId);
+    },
     enabled: Boolean(frameId),
     refetchOnMount: false,
     refetchOnWindowFocus: false,

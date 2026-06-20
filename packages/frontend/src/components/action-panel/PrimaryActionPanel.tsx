@@ -4,7 +4,6 @@ import { useId } from "react";
 import {
   useActionPanelContext,
   useCanvasContext,
-  useCanvasViewContext,
   useSelectedColorContext,
 } from "@/contexts";
 import ActionPanelPrimitives from "./primitives";
@@ -25,7 +24,6 @@ export default function PrimaryActionPanel() {
 
   const { color, setColor } = useSelectedColorContext();
   const { canvas } = useCanvasContext();
-  const { setIsReticleVisible } = useCanvasViewContext();
 
   const onSwitchTab = (newTab: TabKey) => {
     if (areTabsLocked) return;
@@ -39,9 +37,6 @@ export default function PrimaryActionPanel() {
     } else {
       setColor(tempColor);
     }
-
-    // hiding reticle if we are on frames tab
-    setIsReticleVisible(newTab !== "frame");
   };
 
   const placeTabId = useId();

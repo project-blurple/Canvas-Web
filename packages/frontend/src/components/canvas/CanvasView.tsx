@@ -48,7 +48,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
-import { useCanvasMomentum } from "./useCanvasMomentum";
+import { prefersReducedMotion, useCanvasMomentum } from "./useCanvasMomentum";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -478,16 +478,15 @@ export default function CanvasView({
   const {
     containerRef,
     coords,
-    isReticleVisible,
     offset,
     setSelectedPixelColor,
     setCoords,
     setOffset,
     setZoom,
     zoom,
-    focusOnFrameRef,
+    setFocusOnFrame,
   } = useCanvasViewContext();
-  const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
+  const { currentTab, isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
 
@@ -528,6 +527,7 @@ export default function CanvasView({
     isLoading: isInitialFrameFromSearchParamsLoading,
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
+    canvas,
   });
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
@@ -1009,7 +1009,9 @@ export default function CanvasView({
         initialZoom,
       });
 
-      setIsZooming(true);
+      if (!prefersReducedMotion()) {
+        setIsZooming(true);
+      }
       setZoom(frameView.targetZoom);
 
       const clampedOffset = clampOffset(frameView.offset, frameView.targetZoom);
@@ -1039,8 +1041,8 @@ export default function CanvasView({
   );
 
   useEffect(() => {
-    focusOnFrameRef.current = animateToFrame;
-  }, [animateToFrame, focusOnFrameRef]);
+    setFocusOnFrame(() => animateToFrame);
+  }, [animateToFrame, setFocusOnFrame]);
 
   useEffect(
     function panToSelectedFrame() {
@@ -1339,7 +1341,10 @@ export default function CanvasView({
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: showReticle && isReticleVisible ? undefined : "none",
+            display:
+              showReticle && currentTab !== "frame" && coords !== null ?
+                undefined
+              : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),
