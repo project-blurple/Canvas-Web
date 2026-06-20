@@ -129,11 +129,16 @@ function resizeBoundsFromHandle({
   let bottom = startBounds.bottom;
 
   if (handle === "top-left" || handle === "bottom-left" || handle === "left") {
-    left = clamp(
-      Math.round(startBounds.left + deltaX),
-      0,
-      startBounds.right - minWidth,
-    );
+    const newValue = Math.round(startBounds.left + deltaX);
+    if (
+      newValue >= startBounds.right &&
+      startBounds.right + minWidth <= canvasWidth
+    ) {
+      left = startBounds.right;
+      right = clamp(newValue, left + minWidth, canvasWidth);
+    } else {
+      left = clamp(newValue, 0, startBounds.right - minWidth);
+    }
   }
 
   if (
@@ -141,19 +146,26 @@ function resizeBoundsFromHandle({
     handle === "bottom-right" ||
     handle === "right"
   ) {
-    right = clamp(
-      Math.round(startBounds.right + deltaX),
-      startBounds.left + minWidth,
-      canvasWidth,
-    );
+    const newValue = Math.round(startBounds.right + deltaX);
+    if (newValue <= startBounds.left && startBounds.left - minWidth >= 0) {
+      right = startBounds.left;
+      left = clamp(newValue, 0, right - minWidth);
+    } else {
+      right = clamp(newValue, startBounds.left + minWidth, canvasWidth);
+    }
   }
 
   if (handle === "top-left" || handle === "top-right" || handle === "top") {
-    top = clamp(
-      Math.round(startBounds.top + deltaY),
-      0,
-      startBounds.bottom - minHeight,
-    );
+    const newValue = Math.round(startBounds.top + deltaY);
+    if (
+      newValue >= startBounds.bottom &&
+      startBounds.bottom + minHeight <= canvasHeight
+    ) {
+      top = startBounds.bottom;
+      bottom = clamp(newValue, top + minHeight, canvasHeight);
+    } else {
+      top = clamp(newValue, 0, startBounds.bottom - minHeight);
+    }
   }
 
   if (
@@ -161,11 +173,13 @@ function resizeBoundsFromHandle({
     handle === "bottom-right" ||
     handle === "bottom"
   ) {
-    bottom = clamp(
-      Math.round(startBounds.bottom + deltaY),
-      startBounds.top + minHeight,
-      canvasHeight,
-    );
+    const newValue = Math.round(startBounds.bottom + deltaY);
+    if (newValue <= startBounds.top && startBounds.top - minHeight >= 0) {
+      bottom = startBounds.top;
+      top = clamp(newValue, 0, bottom - minHeight);
+    } else {
+      bottom = clamp(newValue, startBounds.top + minHeight, canvasHeight);
+    }
   }
 
   return {
