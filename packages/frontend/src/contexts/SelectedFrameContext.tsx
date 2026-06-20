@@ -30,7 +30,6 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
 
   // Track optimistic frame for instant UI updates
   const [optimisticFrame, setOptimisticFrame] = useState<Frame | null>(null);
-  const optimisticFrameIdRef = useRef<string | null>(null);
 
   // Fetch frame data based on frameId from URL (for page loads/refreshes)
   const { data: urlFrame = null, isLoading } = useFrameById({
@@ -39,23 +38,21 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
 
   // Clear optimistic frame once URL-fetched frame arrives and matches
   useEffect(() => {
-    if (urlFrame && urlFrame.id === optimisticFrameIdRef.current) {
+    if (urlFrame && urlFrame.id === optimisticFrame?.id) {
       // URL caught up with our optimistic selection, clear it
       setOptimisticFrame(null);
-      optimisticFrameIdRef.current = null;
-    } else if (!canvasParams.frameId && optimisticFrameIdRef.current !== null) {
+    } else if (!canvasParams.frameId && optimisticFrame !== null) {
       // Frame was deselected (no frameId in URL), clear optimistic state
       setOptimisticFrame(null);
-      optimisticFrameIdRef.current = null;
     }
-  }, [urlFrame, canvasParams.frameId]);
+  }, [urlFrame, canvasParams.frameId, optimisticFrame]);
 
   // Switch to frame tab when loading a frame from URL (e.g., on page load with frame param)
   useEffect(() => {
-    if (urlFrame && optimisticFrameIdRef.current === null) {
+    if (urlFrame && optimisticFrame === null) {
       setCurrentTab("frame");
     }
-  }, [urlFrame, setCurrentTab]);
+  }, [urlFrame, optimisticFrame, setCurrentTab]);
 
   const frame = optimisticFrame ?? urlFrame;
 
@@ -63,7 +60,6 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
     (newFrame: Frame | null) => {
       // Store optimistic frame for instant display
       setOptimisticFrame(newFrame);
-      optimisticFrameIdRef.current = newFrame?.id ?? null;
 
       // Switch to frame tab when a frame is selected
       if (newFrame) {
