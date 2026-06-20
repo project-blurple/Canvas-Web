@@ -133,8 +133,8 @@ export async function exportCanvasBoundsAsStream({
       );
     }
 
-    const cropX = bounds.x0 * scale;
-    const cropY = bounds.y0 * scale;
+    const cropX = x0 * scale;
+    const cropY = y0 * scale;
     const cropWidth = width * scale;
     const cropHeight = height * scale;
 
