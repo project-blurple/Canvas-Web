@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import { useCanvasSearchParams } from "@/hooks/useCanvasSearchParams";
+import { isSystemFrameId } from "@/util/frame";
 import { createUrlWithFrameUpdate } from "@/util/searchParams";
 import { useActionPanelContext } from "./ActionPanelContext";
-import { isSystemFrameId } from "@/util/frame";
 import { useCanvasContext } from "./CanvasContext";
 
 interface UseSelectedFrameReturn {
