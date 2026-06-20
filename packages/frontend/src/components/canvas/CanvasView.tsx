@@ -48,7 +48,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
-import { useCanvasMomentum } from "./useCanvasMomentum";
+import { prefersReducedMotion, useCanvasMomentum } from "./useCanvasMomentum";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -478,15 +478,15 @@ export default function CanvasView({
   const {
     containerRef,
     coords,
-    isReticleVisible,
     offset,
     setSelectedPixelColor,
     setCoords,
     setOffset,
     setZoom,
     zoom,
+    setFocusOnFrame,
   } = useCanvasViewContext();
-  const { isFullscreenPanelVisible, setFullscreenPanelVisible } =
+  const { currentTab, isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
   const sourceImage = useCanvasImage(canvas.id);
 
@@ -527,6 +527,7 @@ export default function CanvasView({
     isLoading: isInitialFrameFromSearchParamsLoading,
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
+    canvas,
   });
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
@@ -903,8 +904,6 @@ export default function CanvasView({
         );
       });
       setZoom(clampedZoom);
-
-      setFrame(null);
     },
     [initialZoom],
   );
@@ -966,36 +965,6 @@ export default function CanvasView({
     [canvas],
   );
 
-  useEffect(() => {
-    if (!frame || frame.canvasId !== canvas.id) return;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const frameView = getViewForFrame({
-      frame: frame,
-      canvas,
-      container,
-      initialZoom,
-    });
-
-    setIsZooming(false);
-    setZoom(frameView.targetZoom);
-    setOffset(clampOffset(frameView.offset, frameView.targetZoom));
-    setCoords({
-      x: Math.floor(frameView.targetPoint.x),
-      y: Math.floor(frameView.targetPoint.y),
-    });
-  }, [
-    canvas,
-    containerRef,
-    initialZoom,
-    frame,
-    setCoords,
-    clampOffset,
-    setZoom,
-    setOffset,
-  ]);
-
   const updateOffset = useCallback(
     (diff: Point): void => {
       // The more we're zoomed in, the less we've actually moved on the canvas
@@ -1023,10 +992,64 @@ export default function CanvasView({
       // Remember the movement so the canvas can keep gliding once released.
       lastPanVelocityRef.current = offsetDelta;
       updateOffset(multiplyPoint(offsetDelta, zoomRef.current));
-
-      setFrame(null);
     },
-    [updateOffset, setFrame],
+    [updateOffset],
+  );
+
+  const animateToFrame = useCallback(
+    (targetFrame: Frame) => {
+      if (targetFrame.canvasId !== canvas.id) return;
+      const container = containerRef.current;
+      if (!container) return;
+
+      const frameView = getViewForFrame({
+        frame: targetFrame,
+        canvas,
+        container,
+        initialZoom,
+      });
+
+      if (!prefersReducedMotion()) {
+        setIsZooming(true);
+      }
+      setZoom(frameView.targetZoom);
+
+      const clampedOffset = clampOffset(frameView.offset, frameView.targetZoom);
+      const offsetDelta = diffPoints(clampedOffset, offsetRef.current);
+
+      if (offsetDelta.x !== 0 || offsetDelta.y !== 0) {
+        glidePan(offsetDelta);
+      } else {
+        setOffset(clampedOffset);
+      }
+
+      setCoords({
+        x: Math.floor(frameView.targetPoint.x),
+        y: Math.floor(frameView.targetPoint.y),
+      });
+    },
+    [
+      canvas,
+      containerRef,
+      initialZoom,
+      clampOffset,
+      setZoom,
+      setOffset,
+      glidePan,
+      setCoords,
+    ],
+  );
+
+  useEffect(() => {
+    setFocusOnFrame(() => animateToFrame);
+  }, [animateToFrame, setFocusOnFrame]);
+
+  useEffect(
+    function panToSelectedFrame() {
+      if (!frame) return;
+      animateToFrame(frame);
+    },
+    [frame, animateToFrame],
   );
 
   /**
@@ -1318,7 +1341,10 @@ export default function CanvasView({
         <ReticleContainer
           style={{
             scale: RETICLE_SCALE,
-            display: showReticle && isReticleVisible ? undefined : "none",
+            display:
+              showReticle && currentTab !== "frame" && coords !== null ?
+                undefined
+              : "none",
             ...(coords && {
               transform: `translate(${reticleOffset.x}px, ${reticleOffset.y}px)`,
             }),

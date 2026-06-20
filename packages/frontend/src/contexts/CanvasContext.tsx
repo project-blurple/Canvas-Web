@@ -14,7 +14,6 @@ import { ActionPanelProvider } from "./ActionPanelContext";
 import { CanvasViewProvider } from "./CanvasViewContext";
 import { SelectedBoundsProvider } from "./SelectedBoundsContext";
 import { SelectedColorProvider } from "./SelectedColorContext";
-import { SelectedFrameProvider } from "./SelectedFrameContext";
 
 function useSubscribeToCanvasUpdates() {
   const queryClient = useQueryClient();
@@ -96,15 +95,13 @@ export const CanvasProvider = ({
   return (
     <CanvasContext.Provider value={{ canvas: activeCanvas }}>
       <SelectedColorProvider key={activeCanvas.id}>
-        <SelectedFrameProvider key={activeCanvas.id}>
-          <ActionPanelProvider>
-            <CanvasViewProvider key={activeCanvas.id}>
-              <SelectedBoundsProvider key={activeCanvas.id}>
-                {children}
-              </SelectedBoundsProvider>
-            </CanvasViewProvider>
-          </ActionPanelProvider>
-        </SelectedFrameProvider>
+        <ActionPanelProvider>
+          <CanvasViewProvider key={activeCanvas.id}>
+            <SelectedBoundsProvider key={activeCanvas.id}>
+              {children}
+            </SelectedBoundsProvider>
+          </CanvasViewProvider>
+        </ActionPanelProvider>
       </SelectedColorProvider>
     </CanvasContext.Provider>
   );

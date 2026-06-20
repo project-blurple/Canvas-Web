@@ -152,3 +152,51 @@ export function extractAllSearchParamsFromRecord(
 
   return values;
 }
+
+/**
+ * Create a URL with a search parameter updated/removed while preserving all other params.
+ * Used for live URL sync when any search parameter changes.
+ */
+export function createUrlWithParamUpdate(
+  currentSearchParams: URLSearchParams | null,
+  paramKey: ParamKey,
+  paramValue: string | null,
+): string {
+  const url = new URL(location.origin);
+
+  // Preserve pathname from current location
+  url.pathname = window.location.pathname;
+
+  // Copy all current params
+  if (currentSearchParams) {
+    for (const [key, value] of currentSearchParams) {
+      url.searchParams.set(key, value);
+    }
+  }
+
+  // Update or remove the target parameter
+  const canonical = SEARCH_PARAM_KEYS[paramKey].canonical;
+
+  // Delete all variants (canonical + aliases) to ensure clean removal
+  const variants = getSearchParamVariants(paramKey);
+  for (const variant of variants) {
+    url.searchParams.delete(variant);
+  }
+
+  // Set the canonical if a value is provided
+  if (paramValue) {
+    url.searchParams.set(canonical, paramValue);
+  }
+
+  return url.toString();
+}
+
+/**
+ * Convenience wrapper for frame updates.
+ */
+export function createUrlWithFrameUpdate(
+  currentSearchParams: URLSearchParams | null,
+  frameId: string | null,
+): string {
+  return createUrlWithParamUpdate(currentSearchParams, "frameId", frameId);
+}

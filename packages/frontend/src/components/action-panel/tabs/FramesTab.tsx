@@ -1,8 +1,9 @@
 import type { ValueOf } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import { type ReactNode, useEffect, useState } from "react";
+import FrameDetailsPanel from "@/components/frames/FrameDetailsPanel";
 import FrameEditPanel from "@/components/frames/FrameEditPanel";
-import FrameInfoPanel from "@/components/frames/FrameInfoPanel";
+import FrameListPanel from "@/components/frames/FrameListPanel";
 import { TabPanel } from "./ActionPanelTabBody";
 
 const FramesTabBlock = styled(TabPanel)`
@@ -11,7 +12,8 @@ const FramesTabBlock = styled(TabPanel)`
 `;
 
 export const FramePanelMode = {
-  Info: "info",
+  List: "list",
+  Details: "details",
   Create: "create",
   Edit: "edit",
 } as const;
@@ -31,16 +33,22 @@ export default function FramesTab({
   ...props
 }: FramesTabProps) {
   const [activePanel, setActivePanel] = useState<FramePanelMode>(
-    FramePanelMode.Info,
+    FramePanelMode.List,
   );
 
   useEffect(() => {
-    setTabsLocked(activePanel !== FramePanelMode.Info);
+    setTabsLocked(
+      activePanel !== FramePanelMode.List &&
+        activePanel !== FramePanelMode.Details,
+    );
   }, [activePanel, setTabsLocked]);
 
   const panelByMode = {
-    [FramePanelMode.Info]: (
-      <FrameInfoPanel setActivePanel={setActivePanel} enabled={active} />
+    [FramePanelMode.List]: (
+      <FrameListPanel setActivePanel={setActivePanel} enabled={active} />
+    ),
+    [FramePanelMode.Details]: (
+      <FrameDetailsPanel setActivePanel={setActivePanel} />
     ),
     [FramePanelMode.Edit]: (
       <FrameEditPanel setActivePanel={setActivePanel} mode="edit" />

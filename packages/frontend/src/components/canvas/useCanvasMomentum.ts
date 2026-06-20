@@ -22,7 +22,7 @@ const PAN_DECAY = 0.75;
  */
 const PAN_STOP_THRESHOLD = 0.1;
 
-const prefersReducedMotion = () =>
+export const prefersReducedMotion = () =>
   globalThis.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 interface UseCanvasMomentumParams {

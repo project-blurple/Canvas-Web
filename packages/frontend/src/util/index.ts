@@ -104,6 +104,12 @@ export function hexStringToPixelColor(hex: string | null): PixelColor | null {
   return [r, g, b, 255];
 }
 
+export function calculateScale(pixelCount: number): number {
+  if (pixelCount <= 90_000) return 4; // 300x300
+  if (pixelCount <= 360_000) return 2; // 600x600
+  return 1;
+}
+
 export function isUnauthorizedError(error: unknown) {
   return (error as { response?: { status?: number } }).response?.status === 401;
 }

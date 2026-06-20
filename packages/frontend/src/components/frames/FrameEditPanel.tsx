@@ -42,6 +42,14 @@ import { BasicButton, Button, DestructiveButton } from "../button";
 import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
+const StyledForm = styled("form")`
+  display: contents;
+
+  > * {
+    border-radius: inherit;
+  }
+`;
+
 const EditContainer = styled("div")`
   display: flex;
   flex-direction: column;
@@ -115,6 +123,12 @@ const ButtonRow = styled("div")`
   flex-direction: row-reverse;
   gap: 0.5em;
   inline-size: 100%;
+  background: transparent;
+  padding: 0;
+
+  > * {
+    flex: 1;
+  }
 }
 `;
 
@@ -356,7 +370,7 @@ export default function FrameEditPanel({
   ]);
 
   const closeEditor = () => {
-    setActivePanel(FramePanelMode.Info);
+    setActivePanel(FramePanelMode.Details);
     resetSelectedBounds();
   };
 
@@ -575,7 +589,7 @@ export default function FrameEditPanel({
     if (!user) {
       // Shouldn't be able to get to this tab without being logged in,
       // but this prevents that at the least
-      setActivePanel(FramePanelMode.Info);
+      setActivePanel(FramePanelMode.List);
       resetSelectedBounds();
     }
   }, [user, setActivePanel, resetSelectedBounds]);
@@ -587,7 +601,7 @@ export default function FrameEditPanel({
 
   return (
     <>
-      <form onSubmit={handleFormSubmit}>
+      <StyledForm onSubmit={handleFormSubmit}>
         <FullWidthScrollView>
           <ActionPanelTabBody>
             <EditContainer>
@@ -740,7 +754,7 @@ export default function FrameEditPanel({
             Back
           </BasicButton>
         </ActionPanelTabBody>
-      </form>
+      </StyledForm>
       <StyledDialog
         open={isBackConfirmOpen}
         onRequestClose={() => setIsBackConfirmOpen(false)}
