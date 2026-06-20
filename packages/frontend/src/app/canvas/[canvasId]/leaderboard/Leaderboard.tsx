@@ -4,7 +4,7 @@ import { styled } from "@mui/material";
 import { useId, useState } from "react";
 import Pagination from "@/components/Pagination";
 import { useCanvasContext } from "@/contexts";
-import { useLeaderboard } from "@/hooks/queries/useLeaderboard";
+import { useCanvasLeaderboard } from "@/hooks/queries/useLeaderboard";
 import LeaderboardRow, { LeaderboardRowSkeleton } from "./LeaderboardRow";
 
 const Wrapper = styled("div")`
@@ -43,7 +43,7 @@ export default function Leaderboard() {
   const {
     data: { total, page: currentPage, size = 10, entries } = {},
     isFetching: isLeaderboardFetching,
-  } = useLeaderboard(canvas.id, page);
+  } = useCanvasLeaderboard(canvas.id, { page });
   const isLeaderboardEmpty = entries?.length === 0;
 
   const [prevCanvasId, setPrevCanvasId] = useState(canvas.id);
