@@ -1,5 +1,6 @@
 import z from "zod";
 import { CanvasPlaceState } from "../canvasInfo.js";
+import { ColorIdParamModel } from "./color.models.js";
 import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const CanvasIdParamModel = z.object({
@@ -47,4 +48,9 @@ export const CanvasExportParamModel = z.object({
 
 export const CanvasTimelapseParamModel = z.object({
   raw: z.stringbool().optional(),
+});
+
+export const CanvasColorStatsParamModel = z.object({
+  canvasId: CanvasIdParamModel.shape.canvasId,
+  colorId: ColorIdParamModel.shape.colorId,
 });

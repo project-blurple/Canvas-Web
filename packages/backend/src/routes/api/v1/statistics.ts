@@ -1,4 +1,5 @@
 import {
+  CanvasColorStatsParamModel,
   CanvasIdParamModel,
   EventIdParamModel,
   LeaderboardQueryModel,
@@ -8,9 +9,10 @@ import { Router } from "express";
 import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import {
+  getCanvasColorLeaderboard,
+  getCanvasLeaderboard,
   getCanvasStatisticsSummary,
   getEventStatisticsSummary,
-  getLeaderboard,
   getUserStats,
 } from "@/services/statisticsService";
 import { addSpanAttributes } from "@/utils/otel";
@@ -41,8 +43,34 @@ statisticsRouter.get(
       "query.size": req.query.size ?? false,
     });
 
-    const leaderboard = await getLeaderboard(
+    const leaderboard = await getCanvasLeaderboard(
       req.params.canvasId,
+      req.query.page,
+      req.query.size,
+    );
+    res.status(200).json(leaderboard);
+
+    addSpanAttributes(req, { "response.size": leaderboard.size });
+  },
+);
+
+statisticsRouter.get(
+  "/leaderboard/canvas/color/:canvasId/:colorId",
+  validate({
+    params: CanvasColorStatsParamModel,
+    query: LeaderboardQueryModel,
+  }),
+  async (req, res) => {
+    addSpanAttributes(req, {
+      "canvas.id": req.params.canvasId,
+      "color.id": req.params.colorId,
+      "query.page": req.query.page ?? false,
+      "query.size": req.query.size ?? false,
+    });
+
+    const leaderboard = await getCanvasColorLeaderboard(
+      req.params.canvasId,
+      req.params.colorId,
       req.query.page,
       req.query.size,
     );
