@@ -32,7 +32,7 @@ statisticsRouter.get(
 );
 
 statisticsRouter.get(
-  "/leaderboard/:canvasId",
+  "/leaderboard/canvas/all/:canvasId",
   validate({ params: CanvasIdParamModel, query: LeaderboardQueryModel }),
   async (req, res) => {
     addSpanAttributes(req, {
