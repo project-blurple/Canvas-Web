@@ -114,8 +114,22 @@ const PreviewContainer = styled("div")`
   gap: 0.5rem;
 `;
 
+const PreviewSquareContainer = styled("div")`
+  align-items: center;
+  aspect-ratio: 1 / 1;
+  background-color: var(--discord-legacy-not-quite-black);
+  border-radius: 8px;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  overflow: hidden;
+  width: 100%;
+`;
+
 const EditPreviewCanvas = styled(PreviewCanvas)`
-  height: unset;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 `;
 
 const ButtonRow = styled("div")`
@@ -689,15 +703,17 @@ export default function FrameEditPanel({
                 Preview
               </ActionPanelPrimitives.SectionHeading>
               {frameBounds ?
-                <EditPreviewCanvas
-                  ref={previewCanvasRef}
-                  width={Math.max(1, Math.round(frameBounds.width))}
-                  height={Math.max(1, Math.round(frameBounds.height))}
-                  style={{
-                    aspectRatio: `${Math.max(1, frameBounds.width)} / ${Math.max(1, frameBounds.height)}`,
-                  }}
-                  aria-label="Selected frame preview"
-                />
+                <PreviewSquareContainer>
+                  <EditPreviewCanvas
+                    ref={previewCanvasRef}
+                    width={Math.max(1, Math.round(frameBounds.width))}
+                    height={Math.max(1, Math.round(frameBounds.height))}
+                    style={{
+                      aspectRatio: `${Math.max(1, frameBounds.width)} / ${Math.max(1, frameBounds.height)}`,
+                    }}
+                    aria-label="Selected frame preview"
+                  />
+                </PreviewSquareContainer>
               : <p>Select a frame to preview it.</p>}
             </PreviewContainer>
           </ActionPanelTabBody>
