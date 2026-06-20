@@ -60,8 +60,8 @@ function getCurrentViewBounds({
     return {
       left: 0,
       top: 0,
-      right: canvas.width,
-      bottom: canvas.height,
+      right: canvas.width - 1,
+      bottom: canvas.height - 1,
       width: canvas.width,
       height: canvas.height,
     };
@@ -77,16 +77,16 @@ function getCurrentViewBounds({
 
   const clampedLeft = Math.max(0, Math.floor(left));
   const clampedTop = Math.max(0, Math.floor(top));
-  const clampedRight = Math.min(canvas.width, Math.ceil(right));
-  const clampedBottom = Math.min(canvas.height, Math.ceil(bottom));
+  const clampedRight = Math.min(canvas.width - 1, Math.ceil(right));
+  const clampedBottom = Math.min(canvas.height - 1, Math.ceil(bottom));
 
   return {
     left: clampedLeft,
     top: clampedTop,
     right: clampedRight,
     bottom: clampedBottom,
-    width: clampedRight - clampedLeft,
-    height: clampedBottom - clampedTop,
+    width: clampedRight - clampedLeft + 1,
+    height: clampedBottom - clampedTop + 1,
   };
 }
 

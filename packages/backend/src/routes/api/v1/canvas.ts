@@ -336,7 +336,7 @@ async function sendCachedCanvas(
     bounds ?
       await exportCanvasBoundsAsStream({
         canvasId,
-        ...bounds,
+        bounds,
         scale,
       })
     : unlockedCanvasToPngStream(cachedCanvas, scale);

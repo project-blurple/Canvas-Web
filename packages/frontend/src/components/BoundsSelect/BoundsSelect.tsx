@@ -60,8 +60,8 @@ export default function BoundsSelect({
       {
         left: selectedBounds.left + startX,
         top: selectedBounds.top + startY,
-        right: selectedBounds.right + startX - 1,
-        bottom: selectedBounds.bottom + startY - 1,
+        right: selectedBounds.right + startX,
+        bottom: selectedBounds.bottom + startY,
       }
     : null;
 
@@ -77,8 +77,8 @@ export default function BoundsSelect({
           }
           max={
             selectedBounds?.right != null ?
-              selectedBounds.right + startX - minWidth
-            : canvas.width + startX - minWidth
+              selectedBounds.right + startX - minWidth + 1
+            : canvas.width + startX - minWidth + 1
           }
           min={startX}
           name="x1"
@@ -104,8 +104,8 @@ export default function BoundsSelect({
           }
           max={
             selectedBounds?.bottom != null ?
-              selectedBounds.bottom + startY - minHeight
-            : canvas.height + startY - minHeight
+              selectedBounds.bottom + startY - minHeight + 1
+            : canvas.height + startY - minHeight + 1
           }
           min={startY}
           name="y1"
@@ -146,7 +146,7 @@ export default function BoundsSelect({
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
-                right: value - startX + 1,
+                right: value - startX,
               }),
             );
           }}
@@ -173,7 +173,7 @@ export default function BoundsSelect({
             setSelectedBounds(
               withDerivedDimensions({
                 ...selectedBounds,
-                bottom: value - startY + 1,
+                bottom: value - startY,
               }),
             );
           }}

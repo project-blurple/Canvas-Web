@@ -19,6 +19,19 @@ export interface Bounds {
   y1: number;
 }
 
+export interface BoundsWithDimensions extends Bounds {
+  width: number;
+  height: number;
+}
+
+export function boundsWithDimensions(bounds: Bounds): BoundsWithDimensions {
+  return {
+    ...bounds,
+    width: bounds.x1 - bounds.x0 + 1,
+    height: bounds.y1 - bounds.y0 + 1,
+  };
+}
+
 export function normalizeBounds({ x0, y0, x1, y1 }: Bounds): Bounds {
   return {
     x0: Math.min(x0, x1),

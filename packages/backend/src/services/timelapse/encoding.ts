@@ -2,7 +2,7 @@ import { readFile, unlink } from "node:fs/promises";
 import { join } from "node:path";
 import type { PaletteColor } from "@blurple-canvas-web/types";
 import ffmpegStatic from "ffmpeg-static";
-import type { Bounds } from "@/utils";
+import { type Bounds, boundsWithDimensions } from "@/utils";
 import {
   getAppTempDir,
   runFfmpegProcess,
@@ -22,13 +22,14 @@ export function getTimelapseVideoDimensions({
   cropBounds: Bounds | undefined;
   scale: CanvasExportScale;
 }): { width: number; height: number } {
-  const sourceWidth = cropBounds ? cropBounds.x1 - cropBounds.x0 : canvasWidth;
-  const sourceHeight =
-    cropBounds ? cropBounds.y1 - cropBounds.y0 : canvasHeight;
+  const { width, height } =
+    cropBounds ?
+      boundsWithDimensions(cropBounds)
+    : { width: canvasWidth, height: canvasHeight };
 
   return {
-    width: Math.trunc((sourceWidth * scale) / 2) * 2,
-    height: Math.trunc((sourceHeight * scale) / 2) * 2,
+    width: Math.trunc((width * scale) / 2) * 2,
+    height: Math.trunc((height * scale) / 2) * 2,
   };
 }
 

@@ -31,12 +31,14 @@ export const SystemFrames: Record<
     name: canvas.name,
     x0: 0,
     y0: 0,
-    x1: canvas.width,
-    y1: canvas.height,
+    x1: canvas.width - 1,
+    y1: canvas.height - 1,
     owner: {
       type: FrameOwnerType.System,
       name: SYSTEM_OWNER_NAME,
     },
+    width: canvas.width,
+    height: canvas.height,
   }),
 } as const;
 

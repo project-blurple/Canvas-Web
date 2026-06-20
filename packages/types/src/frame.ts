@@ -12,7 +12,7 @@ export enum FrameOwnerType {
   System = "system",
 }
 
-export const BaseFrameSchema = z.object({
+const BaseFrameSchemaCore = z.object({
   id: z.string(),
   canvasId: z.number().int().positive(),
   name: z.string(),
@@ -22,32 +22,49 @@ export const BaseFrameSchema = z.object({
   y1: z.number().int().positive(),
 });
 
+type BaseFrameCore = z.infer<typeof BaseFrameSchemaCore>;
+
+const addDimensions = <T extends z.ZodType<BaseFrameCore>>(schema: T) =>
+  schema.transform((frame) => ({
+    ...frame,
+    width: frame.x1 - frame.x0 + 1,
+    height: frame.y1 - frame.y0 + 1,
+  }));
+
+export const BaseFrameSchema = addDimensions(BaseFrameSchemaCore);
+
 export type BaseFrame = z.infer<typeof BaseFrameSchema>;
 
-export const UserOwnedFrameSchema = BaseFrameSchema.extend({
-  owner: z.object({
-    type: z.literal(FrameOwnerType.User),
-    user: DiscordUserProfileSchema,
+export const UserOwnedFrameSchema = addDimensions(
+  BaseFrameSchemaCore.extend({
+    owner: z.object({
+      type: z.literal(FrameOwnerType.User),
+      user: DiscordUserProfileSchema,
+    }),
   }),
-});
+);
 
 export type UserOwnedFrame = z.infer<typeof UserOwnedFrameSchema>;
 
-export const GuildOwnedFrameSchema = BaseFrameSchema.extend({
-  owner: z.object({
-    type: z.literal(FrameOwnerType.Guild),
-    guild: DiscordGuildRecordSchema,
+export const GuildOwnedFrameSchema = addDimensions(
+  BaseFrameSchemaCore.extend({
+    owner: z.object({
+      type: z.literal(FrameOwnerType.Guild),
+      guild: DiscordGuildRecordSchema,
+    }),
   }),
-});
+);
 
 export type GuildOwnedFrame = z.infer<typeof GuildOwnedFrameSchema>;
 
-export const SystemOwnedFrameSchema = BaseFrameSchema.extend({
-  owner: z.object({
-    type: z.literal(FrameOwnerType.System),
-    name: z.literal("Blurple Canvas"),
+export const SystemOwnedFrameSchema = addDimensions(
+  BaseFrameSchemaCore.extend({
+    owner: z.object({
+      type: z.literal(FrameOwnerType.System),
+      name: z.literal("Blurple Canvas"),
+    }),
   }),
-});
+);
 
 export type SystemOwnedFrame = z.infer<typeof SystemOwnedFrameSchema>;
 

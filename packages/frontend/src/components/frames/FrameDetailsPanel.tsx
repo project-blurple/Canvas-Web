@@ -108,9 +108,7 @@ function DownloadButton({
   canvas: CanvasInfo;
 }) {
   const downloadLink = (() => {
-    const scale = calculateScale(
-      (frame.x1 - frame.x0 + 1) * (frame.y1 - frame.y0 + 1),
-    );
+    const scale = calculateScale(frame.width * frame.height);
 
     if (frame.owner.type === FrameOwnerType.System) {
       const baseUrl = `${config.apiUrl}/api/v1/canvas/${encodeURIComponent(canvas.id)}/frame/${encodeURIComponent(frame.id)}@${scale}.png`;
@@ -178,8 +176,6 @@ function FrameLinkButton({
 }
 
 function DetailsCard({ frame }: { frame: Frame }) {
-  const frameSize = [frame.x1 - frame.x0, frame.y1 - frame.y0];
-
   const ownerInfo = (() => {
     switch (frame.owner.type) {
       case FrameOwnerType.Guild:
@@ -221,12 +217,12 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 <VisuallyHidden>Frame dimensions</VisuallyHidden>
               </TableHeader>
               <TableCell>
-                {frameSize[0]}{" "}
+                {frame.width}{" "}
                 <X
                   size={16}
                   style={{ display: "inline", verticalAlign: "middle" }}
                 />{" "}
-                {frameSize[1]}
+                {frame.height}
               </TableCell>
             </tr>
             {frame.owner.type !== FrameOwnerType.System && (

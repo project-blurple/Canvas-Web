@@ -19,6 +19,7 @@ import {
   getCanvasPng,
   getLockedCanvasPath,
 } from "@/services/canvasService";
+import { type Bounds, boundsWithDimensions } from "@/utils";
 import { getFrameById } from "./frameService";
 
 export function pixelsToRgbaBuffer(
@@ -99,28 +100,23 @@ export async function exportFrameAsStream({
 }): Promise<NodeJS.ReadableStream> {
   const frame = await getFrameById(frameId);
   return exportCanvasBoundsAsStream({
-    ...frame,
+    canvasId: frame.canvasId,
+    bounds: frame,
     scale,
   });
 }
 
 export async function exportCanvasBoundsAsStream({
   canvasId,
-  x0,
-  y0,
-  x1,
-  y1,
+  bounds,
   scale = DEFAULT_CANVAS_EXPORT_SCALE,
 }: {
   canvasId: CanvasInfo["id"];
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
+  bounds: Bounds;
   scale?: CanvasExportScale;
 }): Promise<NodeJS.ReadableStream> {
-  const width = x1 - x0;
-  const height = y1 - y0;
+  const { width, height } = boundsWithDimensions(bounds);
+  const { x0, y0 } = bounds;
 
   if (width <= 0 || height <= 0) {
     throw new BadRequestError("Invalid crop dimensions");
