@@ -20,7 +20,7 @@ import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
-import { useSelectedFrameContext } from "@/contexts/SelectedFrameContext";
+import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
 import { calculateScale, createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
@@ -248,7 +248,7 @@ export default function FrameDetailsPanel({
   setActivePanel: (panel: FramePanelMode) => void;
 }) {
   const { user } = useAuthContext();
-  const { frame, setFrame } = useSelectedFrameContext();
+  const { frame, setFrame } = useSelectedFrame();
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
 

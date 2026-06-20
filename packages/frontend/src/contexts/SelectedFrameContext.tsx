@@ -14,15 +14,7 @@ interface UseSelectedFrameReturn {
   isLoading: boolean;
 }
 
-/**
- * Hook for managing selected frame via URL search params.
- * Frame selection is stored entirely in the URL (f parameter), not in state.
- * This mirrors the pattern used for canvas ID and viewport params.
- *
- * Optimized to show frame data immediately when selected (from preloaded data in FrameList)
- * while the URL updates asynchronously in the background, eliminating perceived latency.
- */
-export function useSelectedFrameContext(): UseSelectedFrameReturn {
+export function useSelectedFrame(): UseSelectedFrameReturn {
   const router = useRouter();
   const searchParams = useSearchParams();
   const canvasParams = useCanvasSearchParams();
@@ -37,22 +29,28 @@ export function useSelectedFrameContext(): UseSelectedFrameReturn {
   });
 
   // Clear optimistic frame once URL-fetched frame arrives and matches
-  useEffect(() => {
-    if (urlFrame && urlFrame.id === optimisticFrame?.id) {
-      // URL caught up with our optimistic selection, clear it
-      setOptimisticFrame(null);
-    } else if (!canvasParams.frameId && optimisticFrame !== null) {
-      // Frame was deselected (no frameId in URL), clear optimistic state
-      setOptimisticFrame(null);
-    }
-  }, [urlFrame, canvasParams.frameId, optimisticFrame]);
+  useEffect(
+    function clearOptimisticFrameOnceFetched() {
+      if (urlFrame && urlFrame.id === optimisticFrame?.id) {
+        // URL caught up with our optimistic selection, clear it
+        setOptimisticFrame(null);
+      } else if (!canvasParams.frameId && optimisticFrame !== null) {
+        // Frame was deselected (no frameId in URL), clear optimistic state
+        setOptimisticFrame(null);
+      }
+    },
+    [urlFrame, canvasParams.frameId, optimisticFrame],
+  );
 
   // Switch to frame tab when loading a frame from URL (e.g., on page load with frame param)
-  useEffect(() => {
-    if (urlFrame && optimisticFrame === null) {
-      setCurrentTab("frame");
-    }
-  }, [urlFrame, optimisticFrame, setCurrentTab]);
+  useEffect(
+    function switchToFrameTab() {
+      if (urlFrame && optimisticFrame === null) {
+        setCurrentTab("frame");
+      }
+    },
+    [urlFrame, optimisticFrame, setCurrentTab],
+  );
 
   const frame = optimisticFrame ?? urlFrame;
 
