@@ -2,7 +2,7 @@
 
 import type { Frame } from "@blurple-canvas-web/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFrameById } from "@/hooks/queries/useFrame";
 import { useCanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { createUrlWithFrameUpdate } from "@/util/searchParams";
@@ -67,7 +67,7 @@ export function useSelectedFrame(): UseSelectedFrameReturn {
       // Update URL asynchronously (non-blocking)
       const frameId = newFrame?.id ?? null;
       const newUrl = createUrlWithFrameUpdate(searchParams, frameId);
-      router.replace(newUrl);
+      router.push(newUrl);
     },
     [searchParams, router, setCurrentTab],
   );
