@@ -1,7 +1,4 @@
-import {
-  type FrameRequest,
-  type GuildOwnedFrame,
-} from "@blurple-canvas-web/types";
+import type { FrameRequest, GuildOwnedFrame } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
 import {
@@ -110,8 +107,8 @@ export default function FrameList({ enabled = true }: FrameListProps) {
           Blurple Canvas
         </ActionPanelPrimitives.SectionHeading>
         <FramePreviewList
-          items={Object.values(SystemFrames).map((constructor) =>
-            constructor(canvas),
+          items={Object.values(SystemFrames).map((frameConstructor) =>
+            frameConstructor(canvas),
           )}
           sourceImage={sourceImage}
           onSelectFrame={setSelectedFrame}

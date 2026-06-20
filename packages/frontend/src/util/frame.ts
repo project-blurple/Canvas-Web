@@ -63,9 +63,9 @@ export function reconstructSystemFrame(
   if (!frameId || !isSystemFrameId(frameId)) return null;
 
   // Match against known system frame types
-  for (const [frameType, constructor] of Object.entries(SystemFrames)) {
+  for (const [frameType, frameConstructor] of Object.entries(SystemFrames)) {
     if (frameId === getSystemFrameId(frameType as SystemFrameType)) {
-      return constructor(canvas);
+      return frameConstructor(canvas);
     }
   }
 
