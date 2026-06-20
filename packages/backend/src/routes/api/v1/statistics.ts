@@ -37,7 +37,7 @@ statisticsRouter.get(
 );
 
 statisticsRouter.get(
-  "/leaderboard/canvas/all/:canvasId",
+  "/leaderboard/canvas/:canvasId",
   validate({ params: CanvasIdParamModel, query: LeaderboardQueryModel }),
   async (req, res) => {
     addSpanAttributes(req, {
@@ -58,7 +58,7 @@ statisticsRouter.get(
 );
 
 statisticsRouter.get(
-  "/leaderboard/canvas/color/:canvasId/:colorId",
+  "/leaderboard/canvas/:canvasId/color/:colorId",
   validate({
     params: CanvasColorStatsParamModel,
     query: LeaderboardQueryModel,
@@ -84,7 +84,7 @@ statisticsRouter.get(
 );
 
 statisticsRouter.get(
-  "/leaderboard/frame/all/:frameId",
+  "/leaderboard/frame/:frameId",
   validate({ params: FrameIdParamModel, query: LeaderboardQueryModel }),
   async (req, res) => {
     addSpanAttributes(req, {
@@ -105,7 +105,7 @@ statisticsRouter.get(
 );
 
 statisticsRouter.get(
-  "/leaderboard/frame/color/:frameId/:colorId",
+  "/leaderboard/frame/:frameId/color/:colorId",
   validate({
     params: CanvasColorStatsParamModel.extend({
       frameId: FrameIdParamModel.shape.frameId,

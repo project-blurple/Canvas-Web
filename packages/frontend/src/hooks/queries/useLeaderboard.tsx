@@ -12,7 +12,7 @@ export function useLeaderboard(
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const response = await axios.get<LeaderboardRequest.ResBody>(
-      `${config.apiUrl}/api/v1/statistics/leaderboard/canvas/all/${encodeURIComponent(canvasId)}`,
+      `${config.apiUrl}/api/v1/statistics/leaderboard/canvas/${encodeURIComponent(canvasId)}`,
       { params: { page, size } },
     );
     return response.data;
