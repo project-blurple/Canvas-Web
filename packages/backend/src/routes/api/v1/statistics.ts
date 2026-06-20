@@ -2,6 +2,7 @@ import {
   CanvasColorStatsParamModel,
   CanvasIdParamModel,
   EventIdParamModel,
+  FrameIdParamModel,
   LeaderboardQueryModel,
   UserCanvasParamModel,
 } from "@blurple-canvas-web/types";
@@ -13,6 +14,8 @@ import {
   getCanvasLeaderboard,
   getCanvasStatisticsSummary,
   getEventStatisticsSummary,
+  getFrameColorLeaderboard,
+  getFrameLeaderboard,
   getUserStats,
 } from "@/services/statisticsService";
 import { addSpanAttributes } from "@/utils/otel";
@@ -70,6 +73,55 @@ statisticsRouter.get(
 
     const leaderboard = await getCanvasColorLeaderboard(
       req.params.canvasId,
+      req.params.colorId,
+      req.query.page,
+      req.query.size,
+    );
+    res.status(200).json(leaderboard);
+
+    addSpanAttributes(req, { "response.size": leaderboard.size });
+  },
+);
+
+statisticsRouter.get(
+  "/leaderboard/frame/all/:frameId",
+  validate({ params: FrameIdParamModel, query: LeaderboardQueryModel }),
+  async (req, res) => {
+    addSpanAttributes(req, {
+      "frame.id": req.params.frameId,
+      "query.page": req.query.page ?? false,
+      "query.size": req.query.size ?? false,
+    });
+
+    const leaderboard = await getFrameLeaderboard(
+      req.params.frameId,
+      req.query.page,
+      req.query.size,
+    );
+    res.status(200).json(leaderboard);
+
+    addSpanAttributes(req, { "response.size": leaderboard.size });
+  },
+);
+
+statisticsRouter.get(
+  "/leaderboard/frame/color/:frameId/:colorId",
+  validate({
+    params: CanvasColorStatsParamModel.extend({
+      frameId: FrameIdParamModel.shape.frameId,
+    }),
+    query: LeaderboardQueryModel,
+  }),
+  async (req, res) => {
+    addSpanAttributes(req, {
+      "frame.id": req.params.frameId,
+      "color.id": req.params.colorId,
+      "query.page": req.query.page ?? false,
+      "query.size": req.query.size ?? false,
+    });
+
+    const leaderboard = await getFrameColorLeaderboard(
+      req.params.frameId,
       req.params.colorId,
       req.query.page,
       req.query.size,

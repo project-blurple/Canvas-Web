@@ -3,6 +3,7 @@ import type {
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
+  Frame,
   LeaderboardEntrySchema,
   Paginated,
   PaletteColorSummary,
@@ -142,6 +143,109 @@ export async function getCanvasColorLeaderboard(
   const total = await prisma.color_leaderboard.count({
     where: {
       canvas_id: canvasId,
+      color_id: colorId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
+}
+
+export async function getFrameLeaderboard(
+  frameId: Frame["id"],
+  page = 1,
+  size = 10,
+): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
+  const leaderboard = await prisma.leaderboard_frame.findMany({
+    skip: Math.max((page - 1) * take, 0),
+    take,
+    orderBy: {
+      rank: "asc",
+    },
+    where: {
+      frame_id: frameId,
+    },
+    select: {
+      rank: true,
+      user_id: true,
+      discord_user_profile: {
+        select: {
+          username: true,
+          profile_picture_url: true,
+        },
+      },
+      total_pixels: true,
+    },
+  });
+
+  const total = await prisma.leaderboard_frame.count({
+    where: {
+      frame_id: frameId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
+}
+
+export async function getFrameColorLeaderboard(
+  frameId: Frame["id"],
+  colorId: PaletteColorSummary["id"],
+  page = 1,
+  size = 10,
+): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
+  const leaderboard = await prisma.color_leaderboard_frame.findMany({
+    skip: Math.max((page - 1) * take, 0),
+    take,
+    orderBy: {
+      rank: "asc",
+    },
+    where: {
+      frame_id: frameId,
+      color_id: colorId,
+    },
+    select: {
+      rank: true,
+      user_id: true,
+      discord_user_profile: {
+        select: {
+          username: true,
+          profile_picture_url: true,
+        },
+      },
+      total_pixels: true,
+    },
+  });
+
+  const total = await prisma.color_leaderboard_frame.count({
+    where: {
+      frame_id: frameId,
       color_id: colorId,
     },
   });
