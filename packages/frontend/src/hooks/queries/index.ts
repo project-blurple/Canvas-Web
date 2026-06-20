@@ -5,7 +5,7 @@ export { useCanvasList } from "./useCanvasList";
 export { useCanvasStats } from "./useCanvasStats";
 export { useEventInfo } from "./useEventInfo";
 export { useEventStats } from "./useEventStats";
-export { useCanvasLeaderboard as useLeaderboard } from "./useLeaderboard";
+export { useCanvasLeaderboard } from "./useLeaderboard";
 export { usePalette } from "./usePalette";
 export { useComplexPixelHistory, usePixelHistory } from "./usePixelHistory";
 export { useRefreshGuildMemberships, useUserData } from "./useUserData";
