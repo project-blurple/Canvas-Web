@@ -49,18 +49,18 @@ const DetailsTable = styled("table")`
   width: 100%;
 
   tr:not(:last-child) > td {
-    padding-bottom: 0.75rem;
+    padding-block-end: 0.75rem;
   }
 `;
 
 const TableCellIcon = styled("td")`
-  width: 2.5rem;
+  inline-size: 2.5rem;
   white-space: nowrap;
 `;
 
 const TableCellContent = styled("td")`
+  block-size: 100%;
   font-size: 1.125rem;
-  height: 100%;
   padding: 0;
 
   > div {
@@ -71,7 +71,7 @@ const TableCellContent = styled("td")`
   }
 
   code {
-    font-size: 1rem;
+    font-size: 0.85em;
   }
 `;
 
@@ -88,8 +88,6 @@ const ControlButtonRow = styled("div")`
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
-    case FrameOwnerType.System:
-      return false;
     case FrameOwnerType.User:
       return frame.owner.user.id === user.id;
     case FrameOwnerType.Guild: {
@@ -100,6 +98,8 @@ function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
         (userGuildData.administrator || userGuildData.manageGuild)
       );
     }
+    case FrameOwnerType.System:
+      return false;
     default:
       return false;
   }

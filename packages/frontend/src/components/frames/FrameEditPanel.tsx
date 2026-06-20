@@ -43,7 +43,7 @@ import Dialog from "../Dialog";
 import { drawSourceRectToCanvas, PreviewCanvas } from "./FramePreview";
 
 const StyledForm = styled("form")`
-  background: transparent;
+  background-color transparent;
   display: block flex;
   flex-direction: column;
   gap: 0.5rem;
