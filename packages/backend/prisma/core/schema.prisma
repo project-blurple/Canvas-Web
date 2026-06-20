@@ -50,6 +50,7 @@ model canvas {
   history_snapshot_windows history_snapshot_windows[]
   colorLeaderboardFrames   color_leaderboard_frame[]
   colorLeaderboards        color_leaderboard[]
+  leaderboardFrames        leaderboard_frame[]
 }
 
 model color {
@@ -90,6 +91,7 @@ model discord_user_profile {
   user                   user                      @relation(fields: [user_id], references: [id])
   colorLeaderboardFrames color_leaderboard_frame[]
   colorLeaderboards      color_leaderboard[]
+  leaderboardFrames      leaderboard_frame[]
 }
 
 model discord_guild_record {
@@ -121,6 +123,7 @@ model frame {
   y_1                    Int
   style_id               Int?
   colorLeaderboardFrames color_leaderboard_frame[]
+  leaderboardFrames      leaderboard_frame[]
 }
 
 model guild {
@@ -206,6 +209,7 @@ model user {
   audit_logs             audit_log[]
   colorLeaderboardFrames color_leaderboard_frame[]
   colorLeaderboards      color_leaderboard[]
+  leaderboardFrames      leaderboard_frame[]
 }
 
 model session {
@@ -301,6 +305,20 @@ view leaderboard_guild {
   rank                 Int
 
   @@unique([user_id, canvas_id, guild_id])
+}
+
+view leaderboard_frame {
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  frame_id             String
+  frame                frame                 @relation(fields: [frame_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
+  total_pixels         Int
+  rank                 Int
+
+  @@unique([user_id, canvas_id, frame_id])
 }
 
 view color_leaderboard {

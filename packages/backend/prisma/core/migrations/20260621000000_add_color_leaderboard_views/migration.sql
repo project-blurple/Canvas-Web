@@ -2,6 +2,8 @@ DROP VIEW IF EXISTS color_leaderboard;
 
 DROP VIEW IF EXISTS color_leaderboard_frame;
 
+DROP VIEW IF EXISTS leaderboard_frame;
+
 CREATE VIEW color_leaderboard AS
 SELECT
   history.user_id,
@@ -64,3 +66,23 @@ GROUP BY
   history.canvas_id,
   frame.id,
   history.color_id;
+
+CREATE VIEW leaderboard_frame AS
+SELECT
+  color_leaderboard_frame.user_id,
+  color_leaderboard_frame.canvas_id,
+  color_leaderboard_frame.frame_id,
+  (sum(color_leaderboard_frame.total_pixels))::integer AS total_pixels,
+  rank() OVER (
+    PARTITION BY
+      color_leaderboard_frame.canvas_id,
+      color_leaderboard_frame.frame_id
+    ORDER BY
+      (sum(color_leaderboard_frame.total_pixels)) DESC
+  ) AS rank
+FROM
+  color_leaderboard_frame
+GROUP BY
+  color_leaderboard_frame.user_id,
+  color_leaderboard_frame.canvas_id,
+  color_leaderboard_frame.frame_id;
