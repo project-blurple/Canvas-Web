@@ -32,6 +32,7 @@ import { FramePanelMode } from "../action-panel/tabs/FramesTab";
 import { BasicButton, ButtonSupplement } from "../button";
 import { BasicHighlightButton } from "../button/BasicButtons";
 import CanvasIcon from "../CanvasIcon";
+import VisuallyHidden from "../VisuallyHidden";
 
 const FrameDetailsPanelBodyShell = styled(TabPanel)`
   display: grid;
@@ -48,19 +49,18 @@ const DetailsTable = styled("table")`
   max-inline-size: 100%;
   width: 100%;
 
-  tr:not(:last-child) > td,
-  tr:not(:last-child) > th {
+  tr:not(:last-child) > :is(td, th) {
     padding-block-end: 0.75rem;
   }
 `;
 
-const TableCellIcon = styled("th")`
+const TableHeader = styled("th")`
   inline-size: 2.5rem;
   white-space: nowrap;
   opacity: 0.6;
 `;
 
-const TableCellContent = styled("td")`
+const TableCell = styled("td")`
   block-size: 100%;
   font-size: 1.125rem;
   padding: 0;
@@ -209,32 +209,35 @@ function DetailsCard({ frame }: { frame: Frame }) {
         <DetailsTable>
           <tbody>
             <tr>
-              <TableCellIcon aria-label="Frame owner">
+              <TableHeader>
                 {ownerInfo.icon}
-              </TableCellIcon>
-              <TableCellContent>{ownerInfo.label}</TableCellContent>
+                <VisuallyHidden>Frame owner</VisuallyHidden>
+              </TableHeader>
+              <TableCell>{ownerInfo.label}</TableCell>
             </tr>
             <tr>
-              <TableCellIcon aria-label="Frame dimensions">
+              <TableHeader>
                 <LucideFrame />
-              </TableCellIcon>
-              <TableCellContent>
+                <VisuallyHidden>Frame dimensions</VisuallyHidden>
+              </TableHeader>
+              <TableCell>
                 {frameSize[0]}{" "}
                 <X
                   size={16}
                   style={{ display: "inline", verticalAlign: "middle" }}
                 />{" "}
                 {frameSize[1]}
-              </TableCellContent>
+              </TableCell>
             </tr>
             {frame.owner.type !== FrameOwnerType.System && (
               <tr>
-                <TableCellIcon aria-label="Frame ID">
+                <TableHeader>
                   <Hash />
-                </TableCellIcon>
-                <TableCellContent>
+                  <VisuallyHidden>Frame ID</VisuallyHidden>
+                </TableHeader>
+                <TableCell>
                   <code>{frame.id}</code>
-                </TableCellContent>
+                </TableCell>
               </tr>
             )}
           </tbody>
