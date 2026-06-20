@@ -26,7 +26,7 @@ interface CanvasViewContextType {
   setOffset: Dispatch<SetStateAction<Point>>;
   setZoom: Dispatch<SetStateAction<number>>;
   focusOnFrame: (frame: Frame) => void;
-  focusOnFrameRef: RefObject<((frame: Frame) => void) | null>;
+  setFocusOnFrame: (fn: (frame: Frame) => void) => void;
 }
 
 const CanvasViewContext = createContext<CanvasViewContextType>({
@@ -41,7 +41,7 @@ const CanvasViewContext = createContext<CanvasViewContextType>({
   setOffset: () => {},
   setZoom: () => {},
   focusOnFrame: () => {},
-  focusOnFrameRef: { current: null },
+  setFocusOnFrame: () => {},
 });
 
 interface CanvasViewProviderProps {
@@ -57,11 +57,9 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [offset, setOffset] = useState(ORIGIN);
-  const focusOnFrameRef = useRef<((frame: Frame) => void) | null>(null);
-
-  const focusOnFrame = (frame: Frame) => {
-    focusOnFrameRef.current?.(frame);
-  };
+  const [focusOnFrame, setFocusOnFrame] = useState<(frame: Frame) => void>(
+    () => () => {},
+  );
 
   const adjustedCoords = useMemo(() => {
     if (selectedCoords) {
@@ -85,7 +83,7 @@ export const CanvasViewProvider = ({ children }: CanvasViewProviderProps) => {
         setZoom,
         zoom,
         focusOnFrame,
-        focusOnFrameRef,
+        setFocusOnFrame,
       }}
     >
       {children}

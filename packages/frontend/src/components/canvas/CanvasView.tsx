@@ -484,7 +484,7 @@ export default function CanvasView({
     setOffset,
     setZoom,
     zoom,
-    focusOnFrameRef,
+    setFocusOnFrame,
   } = useCanvasViewContext();
   const { currentTab, isFullscreenPanelVisible, setFullscreenPanelVisible } =
     useActionPanelContext();
@@ -1038,8 +1038,8 @@ export default function CanvasView({
   );
 
   useEffect(() => {
-    focusOnFrameRef.current = animateToFrame;
-  }, [animateToFrame, focusOnFrameRef]);
+    setFocusOnFrame(() => animateToFrame);
+  }, [animateToFrame, setFocusOnFrame]);
 
   useEffect(
     function panToSelectedFrame() {
