@@ -41,3 +41,30 @@ export function useCanvasLeaderboard(
     staleTime: 30_000, // 30 seconds
   });
 }
+
+export function useFrameLeaderboard(
+  frameId: number,
+  { page = 1, size = 10, colorId }: UseLeaderboardParams,
+) {
+  const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
+    const baseUrl = `${config.apiUrl}/api/v1/statistics/leaderboard/frame/${encodeURIComponent(
+      frameId,
+    )}`;
+    const url =
+      colorId ? `${baseUrl}/color/${encodeURIComponent(colorId)}` : baseUrl;
+
+    const response = await axios.get<LeaderboardRequest.ResBody>(url, {
+      params: { page, size },
+    });
+    return response.data;
+  };
+
+  return useQuery<LeaderboardRequest.ResBody>({
+    queryKey: ["leaderboard", "frame", frameId, { page, size, colorId }],
+    queryFn: getLeaderboard,
+    placeholderData: keepPreviousData,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000, // 30 seconds
+  });
+}
