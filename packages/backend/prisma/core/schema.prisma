@@ -48,21 +48,25 @@ model canvas {
   notices                  notice[]
   canvas_stats             canvas_stats?
   history_snapshot_windows history_snapshot_windows[]
+  colorLeaderboardFrames   color_leaderboard_frame[]
+  colorLeaderboards        color_leaderboard[]
 }
 
 model color {
-  id             Int             @id @default(autoincrement())
-  code           String
-  emoji_name     String?
-  emoji_id       BigInt?
-  global         Boolean         @default(true)
-  name           String
-  rgba           Int[]
-  pixels         pixel[]
-  history        history[]
-  user_stats     user_stats[]
-  guild_stats    guild_stats[]
-  participations participation[]
+  id                     Int                       @id @default(autoincrement())
+  code                   String
+  emoji_name             String?
+  emoji_id               BigInt?
+  global                 Boolean                   @default(true)
+  name                   String
+  rgba                   Int[]
+  pixels                 pixel[]
+  history                history[]
+  user_stats             user_stats[]
+  guild_stats            guild_stats[]
+  participations         participation[]
+  colorLeaderboardFrames color_leaderboard_frame[]
+  colorLeaderboards      color_leaderboard[]
 }
 
 model cooldown {
@@ -77,13 +81,15 @@ model cooldown {
 }
 
 model discord_user_profile {
-  user_id             BigInt              @id
-  username            String
-  profile_picture_url String
-  history             history[]
-  leaderboard_guild   leaderboard_guild[]
-  leaderboard         leaderboard[]
-  user                user                @relation(fields: [user_id], references: [id])
+  user_id                BigInt                    @id
+  username               String
+  profile_picture_url    String
+  history                history[]
+  leaderboard_guild      leaderboard_guild[]
+  leaderboard            leaderboard[]
+  user                   user                      @relation(fields: [user_id], references: [id])
+  colorLeaderboardFrames color_leaderboard_frame[]
+  colorLeaderboards      color_leaderboard[]
 }
 
 model discord_guild_record {
@@ -102,18 +108,19 @@ model event {
 }
 
 model frame {
-  id             String  @id
-  canvas_id      Int
-  canvas         canvas  @relation(fields: [canvas_id], references: [id])
+  id                     String                    @id
+  canvas_id              Int
+  canvas                 canvas                    @relation(fields: [canvas_id], references: [id])
   // There is a database check that requires one of them to be set
-  owner_user_id  BigInt?
-  owner_guild_id BigInt?
-  name           String
-  x_0            Int
-  x_1            Int
-  y_0            Int
-  y_1            Int
-  style_id       Int?
+  owner_user_id          BigInt?
+  owner_guild_id         BigInt?
+  name                   String
+  x_0                    Int
+  x_1                    Int
+  y_0                    Int
+  y_1                    Int
+  style_id               Int?
+  colorLeaderboardFrames color_leaderboard_frame[]
 }
 
 model guild {
@@ -185,18 +192,20 @@ model pixel {
 }
 
 model user {
-  id                   BigInt                @id
-  current_canvas_id    Int?
-  skip_confirm         Boolean               @default(false)
-  cooldown_remind      Boolean               @default(false)
-  blacklist            blacklist?
-  cooldowns            cooldown[]
-  history              history[]
-  user_stats           user_stats[]
-  leaderboard          leaderboard[]
-  leaderboard_guild    leaderboard_guild[]
-  discord_user_profile discord_user_profile?
-  audit_logs           audit_log[]
+  id                     BigInt                    @id
+  current_canvas_id      Int?
+  skip_confirm           Boolean                   @default(false)
+  cooldown_remind        Boolean                   @default(false)
+  blacklist              blacklist?
+  cooldowns              cooldown[]
+  history                history[]
+  user_stats             user_stats[]
+  leaderboard            leaderboard[]
+  leaderboard_guild      leaderboard_guild[]
+  discord_user_profile   discord_user_profile?
+  audit_logs             audit_log[]
+  colorLeaderboardFrames color_leaderboard_frame[]
+  colorLeaderboards      color_leaderboard[]
 }
 
 model session {
@@ -292,6 +301,36 @@ view leaderboard_guild {
   rank                 Int
 
   @@unique([user_id, canvas_id, guild_id])
+}
+
+view color_leaderboard {
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  color_id             Int
+  color                color                 @relation(fields: [color_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
+  total_pixels         Int
+  rank                 Int
+
+  @@unique([user_id, canvas_id, color_id])
+}
+
+view color_leaderboard_frame {
+  user_id              BigInt
+  user                 user                  @relation(fields: [user_id], references: [id])
+  canvas_id            Int
+  canvas               canvas                @relation(fields: [canvas_id], references: [id])
+  frame_id             String
+  frame                frame                 @relation(fields: [frame_id], references: [id])
+  color_id             Int
+  color                color                 @relation(fields: [color_id], references: [id])
+  discord_user_profile discord_user_profile? @relation(fields: [user_id], references: [user_id])
+  total_pixels         Int
+  rank                 Int
+
+  @@unique([user_id, canvas_id, frame_id, color_id])
 }
 
 view color_place_frequency {
