@@ -65,13 +65,6 @@ const TableCellContent = styled("td")`
   font-size: 1.125rem;
   padding: 0;
 
-  > div {
-    align-items: center;
-    display: flex;
-    gap: 0.125rem;
-    height: 100%;
-  }
-
   code {
     font-size: 0.85em;
   }
@@ -226,9 +219,12 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 <LucideFrame />
               </TableCellIcon>
               <TableCellContent>
-                <div>
-                  {frameSize[0]} <X size={16} /> {frameSize[1]}
-                </div>
+                {frameSize[0]}{" "}
+                <X
+                  size={16}
+                  style={{ display: "inline", verticalAlign: "middle" }}
+                />{" "}
+                {frameSize[1]}
               </TableCellContent>
             </tr>
             <tr>
