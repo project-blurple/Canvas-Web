@@ -2,6 +2,7 @@ import {
   CanvasColorStatsParamModel,
   CanvasIdParamModel,
   EventIdParamModel,
+  FrameColorStatsParamModel,
   FrameIdParamModel,
   LeaderboardQueryModel,
   UserCanvasParamModel,
@@ -107,9 +108,7 @@ statisticsRouter.get(
 statisticsRouter.get(
   "/leaderboard/frame/:frameId/color/:colorId",
   validate({
-    params: CanvasColorStatsParamModel.extend({
-      frameId: FrameIdParamModel.shape.frameId,
-    }),
+    params: FrameColorStatsParamModel,
     query: LeaderboardQueryModel,
   }),
   async (req, res) => {

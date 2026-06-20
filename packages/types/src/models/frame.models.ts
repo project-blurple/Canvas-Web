@@ -4,6 +4,7 @@ import {
   CanvasExportScaleSchema,
   CanvasIdParamModel,
 } from "./canvas.models.js";
+import { ColorIdParamModel } from "./index.js";
 import { DiscordSnowflakeSchema } from "./snowflake.js";
 
 export const FrameIdParamModel = z.object({
@@ -109,4 +110,9 @@ export const FrameGuildIdsQueryModel = z.object({
 export const ExportFrameParamModel = z.object({
   frameId: FrameIdParamModel.shape.frameId,
   scale: CanvasExportScaleSchema,
+});
+
+export const FrameColorStatsParamModel = z.object({
+  frameId: FrameIdParamModel.shape.frameId,
+  colorId: ColorIdParamModel.shape.colorId,
 });
