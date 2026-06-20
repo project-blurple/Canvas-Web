@@ -10,7 +10,7 @@ import type {
 import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
-import { isSystemFrameId, reconstructSystemFrame } from "@/util/frame";
+import { reconstructSystemFrame } from "@/util/frame";
 import { fetchFrameById } from "./serverFetch";
 
 interface UseUserFramesParams {
