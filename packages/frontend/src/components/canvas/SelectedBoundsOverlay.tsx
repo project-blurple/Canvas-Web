@@ -129,11 +129,16 @@ function resizeBoundsFromHandle({
   let bottom = startBounds.bottom;
 
   if (handle === "top-left" || handle === "bottom-left" || handle === "left") {
-    left = clamp(
-      Math.round(startBounds.left + deltaX),
-      0,
-      startBounds.right - minWidth + 1,
-    );
+    const newValue = Math.round(startBounds.left + deltaX);
+    if (
+      newValue > startBounds.right + 1 &&
+      startBounds.right + minWidth < canvasWidth
+    ) {
+      left = startBounds.right + 1;
+      right = clamp(newValue, left + minWidth - 1, canvasWidth - 1);
+    } else {
+      left = clamp(newValue, 0, startBounds.right - minWidth + 1);
+    }
   }
 
   if (
@@ -141,19 +146,26 @@ function resizeBoundsFromHandle({
     handle === "bottom-right" ||
     handle === "right"
   ) {
-    right = clamp(
-      Math.round(startBounds.right + deltaX),
-      startBounds.left + minWidth - 1,
-      canvasWidth - 1,
-    );
+    const newValue = Math.round(startBounds.right + deltaX);
+    if (newValue < startBounds.left - 1 && startBounds.left - minWidth >= 0) {
+      right = startBounds.left - 1;
+      left = clamp(newValue, 0, right - minWidth + 1);
+    } else {
+      right = clamp(newValue, startBounds.left + minWidth - 1, canvasWidth - 1);
+    }
   }
 
   if (handle === "top-left" || handle === "top-right" || handle === "top") {
-    top = clamp(
-      Math.round(startBounds.top + deltaY),
-      0,
-      startBounds.bottom - minHeight + 1,
-    );
+    const newValue = Math.round(startBounds.top + deltaY);
+    if (
+      newValue > startBounds.bottom + 1 &&
+      startBounds.bottom + minHeight < canvasHeight
+    ) {
+      top = startBounds.bottom + 1;
+      bottom = clamp(newValue, top + minHeight - 1, canvasHeight - 1);
+    } else {
+      top = clamp(newValue, 0, startBounds.bottom - minHeight + 1);
+    }
   }
 
   if (
@@ -161,11 +173,17 @@ function resizeBoundsFromHandle({
     handle === "bottom-right" ||
     handle === "bottom"
   ) {
-    bottom = clamp(
-      Math.round(startBounds.bottom + deltaY),
-      startBounds.top + minHeight - 1,
-      canvasHeight - 1,
-    );
+    const newValue = Math.round(startBounds.bottom + deltaY);
+    if (newValue < startBounds.top - 1 && startBounds.top - minHeight >= 0) {
+      bottom = startBounds.top - 1;
+      top = clamp(newValue, 0, bottom - minHeight + 1);
+    } else {
+      bottom = clamp(
+        newValue,
+        startBounds.top + minHeight - 1,
+        canvasHeight - 1,
+      );
+    }
   }
 
   return {
@@ -484,7 +502,7 @@ export default function SelectedBoundsOverlay({
       },
       {
         key: "right",
-        left: selectedBounds.right,
+        left: selectedBounds.right + 1,
         top: selectedBounds.top,
         width: 0,
         height: selectedBounds.height,
@@ -492,7 +510,7 @@ export default function SelectedBoundsOverlay({
       {
         key: "bottom",
         left: selectedBounds.left,
-        top: selectedBounds.bottom,
+        top: selectedBounds.bottom + 1,
         width: selectedBounds.width,
         height: 0,
       },
