@@ -48,7 +48,7 @@ import {
   multiplyPoint,
   ORIGIN,
 } from "./point";
-import { useCanvasMomentum } from "./useCanvasMomentum";
+import { prefersReducedMotion, useCanvasMomentum } from "./useCanvasMomentum";
 
 const CanvasWrapper = styled("div")`
   position: relative;
@@ -1008,7 +1008,9 @@ export default function CanvasView({
         initialZoom,
       });
 
-      setIsZooming(true);
+      if (!prefersReducedMotion()) {
+        setIsZooming(true);
+      }
       setZoom(frameView.targetZoom);
 
       const clampedOffset = clampOffset(frameView.offset, frameView.targetZoom);
