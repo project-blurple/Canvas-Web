@@ -1,8 +1,6 @@
 import {
-  FrameOwnerType,
   type FrameRequest,
   type GuildOwnedFrame,
-  type SystemOwnedFrame,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import Link from "next/link";
@@ -13,6 +11,7 @@ import {
 } from "@/contexts";
 import { useGuildFrames, useUserFrames } from "@/hooks/queries/useFrame";
 import { useCanvasImage } from "@/hooks/useCanvasImage";
+import { SystemFrames } from "@/util/frame";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import { ActionPanelTabBody } from "../action-panel/tabs/ActionPanelTabBody";
 import { FramePreviewList } from "../action-panel/tabs/FramePreviewList";
@@ -87,20 +86,6 @@ export default function FrameList({ enabled = true }: FrameListProps) {
     },
   );
 
-  const inbuiltFullCanvasFrame = {
-    id: `system-${canvas.id.toString()}`,
-    canvasId: canvas.id,
-    name: canvas.name,
-    x0: 0,
-    y0: 0,
-    x1: canvas.width,
-    y1: canvas.height,
-    owner: {
-      type: FrameOwnerType.System,
-      name: "Blurple Canvas",
-    },
-  } as const satisfies SystemOwnedFrame;
-
   return (
     <ActionPanelTabBody>
       <FramesWrapper>
@@ -125,7 +110,9 @@ export default function FrameList({ enabled = true }: FrameListProps) {
           Blurple Canvas
         </ActionPanelPrimitives.SectionHeading>
         <FramePreviewList
-          items={[inbuiltFullCanvasFrame]}
+          items={Object.values(SystemFrames).map((constructor) =>
+            constructor(canvas),
+          )}
           sourceImage={sourceImage}
           onSelectFrame={setSelectedFrame}
         />

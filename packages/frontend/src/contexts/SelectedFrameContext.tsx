@@ -7,6 +7,8 @@ import { useFrameById } from "@/hooks/queries/useFrame";
 import { useCanvasSearchParams } from "@/hooks/useCanvasSearchParams";
 import { createUrlWithFrameUpdate } from "@/util/searchParams";
 import { useActionPanelContext } from "./ActionPanelContext";
+import { isSystemFrameId } from "@/util/frame";
+import { useCanvasContext } from "./CanvasContext";
 
 interface UseSelectedFrameReturn {
   frame: Frame | null;
@@ -19,6 +21,7 @@ export function useSelectedFrame(): UseSelectedFrameReturn {
   const searchParams = useSearchParams();
   const canvasParams = useCanvasSearchParams();
   const { setCurrentTab } = useActionPanelContext();
+  const { canvas } = useCanvasContext();
 
   // Track optimistic frame for instant UI updates
   const [optimisticFrame, setOptimisticFrame] = useState<Frame | null>(null);
@@ -26,6 +29,7 @@ export function useSelectedFrame(): UseSelectedFrameReturn {
   // Fetch frame data based on frameId from URL (for page loads/refreshes)
   const { data: urlFrame = null, isLoading } = useFrameById({
     frameId: canvasParams.frameId ?? undefined,
+    canvas,
   });
 
   // Clear optimistic frame once URL-fetched frame arrives and matches
@@ -45,11 +49,14 @@ export function useSelectedFrame(): UseSelectedFrameReturn {
   // Switch to frame tab when loading a frame from URL (e.g., on page load with frame param)
   useEffect(
     function switchToFrameTab() {
-      if (urlFrame && optimisticFrame === null) {
+      if (
+        urlFrame ||
+        (isSystemFrameId(canvasParams.frameId) && optimisticFrame === null)
+      ) {
         setCurrentTab("frame");
       }
     },
-    [urlFrame, optimisticFrame, setCurrentTab],
+    [urlFrame, optimisticFrame, setCurrentTab, canvasParams.frameId],
   );
 
   const frame = optimisticFrame ?? urlFrame;

@@ -227,14 +227,16 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 {frameSize[1]}
               </TableCellContent>
             </tr>
-            <tr>
-              <TableCellIcon aria-label="Frame ID">
-                <Hash />
-              </TableCellIcon>
-              <TableCellContent>
-                <code>{frame.id}</code>
-              </TableCellContent>
-            </tr>
+            {frame.owner.type !== FrameOwnerType.System && (
+              <tr>
+                <TableCellIcon aria-label="Frame ID">
+                  <Hash />
+                </TableCellIcon>
+                <TableCellContent>
+                  <code>{frame.id}</code>
+                </TableCellContent>
+              </tr>
+            )}
           </tbody>
         </DetailsTable>
       </div>

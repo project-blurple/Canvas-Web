@@ -527,6 +527,7 @@ export default function CanvasView({
     isLoading: isInitialFrameFromSearchParamsLoading,
   } = useFrameById({
     frameId: initialCanvasSearchParamsRef.current.frameId ?? undefined,
+    canvas,
   });
   const hasAppliedInitialViewRef = useRef(false);
   const hasAppliedInitialFrameRef = useRef(false);
