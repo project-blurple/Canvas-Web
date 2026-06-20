@@ -48,14 +48,16 @@ const DetailsTable = styled("table")`
   max-inline-size: 100%;
   width: 100%;
 
-  tr:not(:last-child) > td {
+  tr:not(:last-child) > td,
+  tr:not(:last-child) > th {
     padding-block-end: 0.75rem;
   }
 `;
 
-const TableCellIcon = styled("td")`
+const TableCellIcon = styled("th")`
   inline-size: 2.5rem;
   white-space: nowrap;
+  opacity: 0.6;
 `;
 
 const TableCellContent = styled("td")`
@@ -214,11 +216,13 @@ function DetailsCard({ frame }: { frame: Frame }) {
         <DetailsTable>
           <tbody>
             <tr>
-              <TableCellIcon>{ownerInfo.icon}</TableCellIcon>
+              <TableCellIcon aria-label="Frame owner">
+                {ownerInfo.icon}
+              </TableCellIcon>
               <TableCellContent>{ownerInfo.label}</TableCellContent>
             </tr>
             <tr>
-              <TableCellIcon>
+              <TableCellIcon aria-label="Frame dimensions">
                 <LucideFrame />
               </TableCellIcon>
               <TableCellContent>
@@ -228,7 +232,7 @@ function DetailsCard({ frame }: { frame: Frame }) {
               </TableCellContent>
             </tr>
             <tr>
-              <TableCellIcon>
+              <TableCellIcon aria-label="Frame ID">
                 <Hash />
               </TableCellIcon>
               <TableCellContent>
