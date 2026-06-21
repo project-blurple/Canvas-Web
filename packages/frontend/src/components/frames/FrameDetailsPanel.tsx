@@ -20,6 +20,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
@@ -342,15 +343,21 @@ function DetailsCard({
 function Leaderboard({
   frame,
   stats,
+  palette,
 }: {
   frame: Frame;
   stats: StatisticsSummaryBase;
+  palette: PaletteColorSummary[];
 }) {
+  const [selectedColor, setSelectedColor] =
+    useState<PaletteColorSummary | null>(null);
+
   const canvasLeaderboard = useCanvasLeaderboard(
     frame.canvasId,
     {
       size: 10,
       page: 1,
+      colorId: selectedColor?.id,
     },
     {
       enabled: isSystemFrameId(frame.id),
@@ -362,6 +369,7 @@ function Leaderboard({
     {
       size: 10,
       page: 1,
+      colorId: selectedColor?.id,
     },
     {
       enabled: !isSystemFrameId(frame.id),
@@ -375,12 +383,33 @@ function Leaderboard({
     return null;
   }
 
+  const usedColors = stats.colorDistribution
+    .map((colorStat) => palette.find((color) => color.id === colorStat.colorId))
+    .filter((color): color is PaletteColorSummary => color !== undefined);
+
   return (
     <ActionPanelTabBody>
       <div>
         <ActionPanelPrimitives.SectionHeading>
           Leaderboard
         </ActionPanelPrimitives.SectionHeading>
+        <select
+          value={selectedColor?.id ?? ""}
+          onChange={(e) => {
+            const color =
+              palette.find(
+                (c) => c.id === Number.parseInt(e.target.value, 10),
+              ) ?? null;
+            setSelectedColor(color);
+          }}
+        >
+          <option value="">All colors</option>
+          {usedColors.map((color) => (
+            <option key={color.id} value={color.id}>
+              {color.name}
+            </option>
+          ))}
+        </select>
         <div>
           {leaderboard.isFetching ?
             <p>Loading leaderboard...</p>
@@ -446,7 +475,7 @@ export default function FrameDetailsPanel({
       </ActionPanelTabBody>
       <FullWidthScrollView>
         <DetailsCard frame={frame} stats={stats} palette={palette} />
-        {stats && <Leaderboard frame={frame} stats={stats} />}
+        {stats && <Leaderboard frame={frame} stats={stats} palette={palette} />}
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
