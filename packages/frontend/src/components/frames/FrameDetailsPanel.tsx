@@ -132,6 +132,22 @@ const LeaderboardPixelCount = styled("div")`
   font-size: 0.875rem;
 `;
 
+const LeaderboardSelect = styled("select")`
+  background: var(--discord-legacy-not-quite-black);
+  border-radius: 4px;
+  border: 1px solid oklch(from var(--discord-white) l c h / 20%);
+  color: var(--discord-white);
+  font-size: 0.875rem;
+  margin-block-end: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+
+  &:focus {
+    outline: none;
+    border-color: var(--discord-blurple);
+  }
+`;
+
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
     case FrameOwnerType.User:
@@ -393,7 +409,7 @@ function Leaderboard({
         <ActionPanelPrimitives.SectionHeading>
           Leaderboard
         </ActionPanelPrimitives.SectionHeading>
-        <select
+        <LeaderboardSelect
           value={selectedColor?.id ?? ""}
           onChange={(e) => {
             const color =
@@ -409,7 +425,7 @@ function Leaderboard({
               {color.name}
             </option>
           ))}
-        </select>
+        </LeaderboardSelect>
         <div>
           {leaderboard.isFetching ?
             <p>Loading leaderboard...</p>
