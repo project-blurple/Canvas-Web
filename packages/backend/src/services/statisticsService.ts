@@ -4,6 +4,7 @@ import type {
   CanvasStatisticsSummary,
   EventStatisticsSummary,
   Frame,
+  FrameStatisticsSummary,
   LeaderboardEntrySchema,
   Paginated,
   PaletteColorSummary,
@@ -302,5 +303,24 @@ export async function getEventStatisticsSummary(
     eventId,
     totalUsersInvolved: stats.total_users ?? 0,
     totalPixelsPlaced: stats.total_pixels ?? 0,
+  };
+}
+
+export async function getFrameStatisticsSummary(
+  frameId: Frame["id"],
+): Promise<FrameStatisticsSummary> {
+  const stats = await prisma.frame_stats.findUnique({
+    where: { frame_id: frameId },
+  });
+
+  if (!stats) {
+    throw new NotFoundError(`Frame statistics not found for frame ${frameId}`);
+  }
+
+  return {
+    frameId,
+    totalUsersInvolved: stats.total_users ?? 0,
+    totalPixelsPlaced: stats.total_pixels ?? 0,
+    lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
   };
 }

@@ -17,6 +17,7 @@ import {
   getEventStatisticsSummary,
   getFrameColorLeaderboard,
   getFrameLeaderboard,
+  getFrameStatisticsSummary,
   getUserStats,
 } from "@/services/statisticsService";
 import { addSpanAttributes } from "@/utils/otel";
@@ -149,6 +150,17 @@ statisticsRouter.get(
     addSpanAttributes(req, { "event.id": req.params.eventId });
 
     const summary = await getEventStatisticsSummary(req.params.eventId);
+    res.status(200).json(summary);
+  },
+);
+
+statisticsRouter.get(
+  "/summary/frame/:frameId",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
+    const summary = await getFrameStatisticsSummary(req.params.frameId);
     res.status(200).json(summary);
   },
 );

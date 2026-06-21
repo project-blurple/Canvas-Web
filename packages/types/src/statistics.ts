@@ -43,3 +43,14 @@ export const EventStatisticsSummarySchema = z.object({
 export type EventStatisticsSummary = z.infer<
   typeof EventStatisticsSummarySchema
 >;
+
+export const FrameStatisticsSummarySchema = z.object({
+  frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
+  totalUsersInvolved: z.number().int().nonnegative(),
+  totalPixelsPlaced: z.number().int().nonnegative(),
+  lastPlacedAt: z.iso.datetime().nullable(),
+});
+
+export type FrameStatisticsSummary = z.infer<
+  typeof FrameStatisticsSummarySchema
+>;
