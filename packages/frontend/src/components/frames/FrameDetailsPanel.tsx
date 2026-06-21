@@ -3,8 +3,8 @@ import {
   type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
-  type FrameStatisticsSummary,
   type PaletteColorSummary,
+  type StatisticsSummaryBase,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import {
@@ -26,9 +26,11 @@ import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
+import { useCanvasStats } from "@/hooks/queries/useCanvasStats";
 import { useFrameStats } from "@/hooks/queries/useFrameStats";
 import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
+import { isSystemFrameId } from "@/util/frame";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -190,7 +192,7 @@ function DetailsCard({
   palette,
 }: {
   frame: Frame;
-  stats?: FrameStatisticsSummary | null;
+  stats?: StatisticsSummaryBase | null;
   palette: PaletteColorSummary[];
 }) {
   const ownerInfo = (() => {
@@ -303,13 +305,20 @@ export default function FrameDetailsPanel({
   const { frame, setFrame } = useSelectedFrame();
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
-  const { data: frameStats } = useFrameStats(frame?.id);
   const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
+  const { data: frameStats } = useFrameStats(frame?.id, {
+    enabled: !isSystemFrameId(frame?.id),
+  });
+  const { data: canvasStats } = useCanvasStats(canvas.id, {
+    enabled: isSystemFrameId(frame?.id),
+  });
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
     return null;
   }
+
+  const stats = isSystemFrameId(frame.id) ? canvasStats : frameStats;
 
   const userHasPermsToEditSelectedFrame = user && userCanEditFrame(user, frame);
 
@@ -319,7 +328,7 @@ export default function FrameDetailsPanel({
         <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <DetailsCard frame={frame} stats={frameStats} palette={palette} />
+        <DetailsCard frame={frame} stats={stats} palette={palette} />
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>

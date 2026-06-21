@@ -30,35 +30,45 @@ const ColorDistributionList = z.array(
   }),
 );
 
-export const CanvasStatisticsSummarySchema = z.object({
-  canvasId: z.number().int().positive(),
+const StatisticsSummaryBaseSchema = z.object({
   totalUsersInvolved: z.number().int().nonnegative(),
   totalPixelsPlaced: z.number().int().nonnegative(),
   lastPlacedAt: z.iso.datetime().nullable(),
   colorDistribution: ColorDistributionList,
 });
+
+export type StatisticsSummaryBase = z.infer<typeof StatisticsSummaryBaseSchema>;
+
+export const CanvasStatisticsSummarySchema = z
+  .object({
+    canvasId: z.number().int().positive(),
+  })
+  .extend(StatisticsSummaryBaseSchema.shape);
 
 export type CanvasStatisticsSummary = z.infer<
   typeof CanvasStatisticsSummarySchema
 >;
 
-export const EventStatisticsSummarySchema = z.object({
-  eventId: z.number().int(),
-  totalUsersInvolved: z.number().int().nonnegative(),
-  totalPixelsPlaced: z.number().int().nonnegative(),
-});
+export const EventStatisticsSummarySchema = z
+  .object({
+    eventId: z.number().int(),
+  })
+  .extend(
+    StatisticsSummaryBaseSchema.pick({
+      totalUsersInvolved: true,
+      totalPixelsPlaced: true,
+    }).shape,
+  );
 
 export type EventStatisticsSummary = z.infer<
   typeof EventStatisticsSummarySchema
 >;
 
-export const FrameStatisticsSummarySchema = z.object({
-  frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
-  totalUsersInvolved: z.number().int().nonnegative(),
-  totalPixelsPlaced: z.number().int().nonnegative(),
-  lastPlacedAt: z.iso.datetime().nullable(),
-  colorDistribution: ColorDistributionList,
-});
+export const FrameStatisticsSummarySchema = z
+  .object({
+    frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
+  })
+  .extend(StatisticsSummaryBaseSchema.shape);
 
 export type FrameStatisticsSummary = z.infer<
   typeof FrameStatisticsSummarySchema
