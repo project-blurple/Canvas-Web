@@ -241,12 +241,12 @@ function DetailsCard({
                 <VisuallyHidden>Frame dimensions</VisuallyHidden>
               </TableHeader>
               <TableCell>
-                {frame.width}{" "}
+                {frame.width.toLocaleString()}{" "}
                 <X
                   size={16}
                   style={{ display: "inline", verticalAlign: "middle" }}
                 />{" "}
-                {frame.height}
+                {frame.height.toLocaleString()}
               </TableCell>
             </tr>
             {stats && (
