@@ -2,6 +2,7 @@
 
 import type {
   CanvasInfo,
+  Frame,
   LeaderboardRequest,
   PaletteColorSummary,
 } from "@blurple-canvas-web/types";
@@ -43,7 +44,7 @@ export function useCanvasLeaderboard(
 }
 
 export function useFrameLeaderboard(
-  frameId: number,
+  frameId: Frame["id"],
   { page = 1, size = 10, colorId }: UseLeaderboardParams,
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
