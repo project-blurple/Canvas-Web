@@ -256,14 +256,18 @@ function DetailsCard({
                     <ChartNoAxesColumn />
                     <VisuallyHidden>Total pixels placed</VisuallyHidden>
                   </TableHeader>
-                  <TableCell>{stats.totalPixelsPlaced} pixels placed</TableCell>
+                  <TableCell>
+                    {stats.totalPixelsPlaced.toLocaleString()} pixels placed
+                  </TableCell>
                 </tr>
                 <tr>
                   <TableHeader>
                     <Users />
                     <VisuallyHidden>Total users involved</VisuallyHidden>
                   </TableHeader>
-                  <TableCell>{stats.totalUsersInvolved} users</TableCell>
+                  <TableCell>
+                    {stats.totalUsersInvolved.toLocaleString()} users
+                  </TableCell>
                 </tr>
                 {mostPlacedColorInfo && (
                   <tr>
