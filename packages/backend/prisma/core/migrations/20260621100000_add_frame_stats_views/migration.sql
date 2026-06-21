@@ -28,7 +28,7 @@ CREATE VIEW canvas_colors AS
 SELECT
   history.canvas_id,
   history.color_id,
-  count(*) AS count
+  COUNT(*)::integer AS count
 FROM
   history
 WHERE
@@ -50,7 +50,7 @@ SELECT
   frame.id AS frame_id,
   history.canvas_id,
   history.color_id,
-  count(*) AS count
+  COUNT(*)::integer AS count
 FROM
   history
 INNER JOIN frame ON

@@ -3,13 +3,13 @@ SELECT
   history.user_id,
   history.canvas_id,
   history.color_id,
-  count(*) AS total_pixels,
+  COUNT(*)::integer AS total_pixels,
   rank() OVER (
     PARTITION BY
       history.canvas_id,
       history.color_id
     ORDER BY
-      (count(*)) DESC
+      (COUNT(*)::integer) DESC
   ) AS rank
 FROM
   history
@@ -31,14 +31,14 @@ SELECT
   history.canvas_id,
   frame.id as frame_id,
   history.color_id,
-  count(*) AS total_pixels,
+  COUNT(*)::integer AS total_pixels,
   rank() OVER (
     PARTITION BY
       history.canvas_id,
       frame.id,
       history.color_id
     ORDER BY
-      (count(*)) DESC
+      (COUNT(*)::integer) DESC
   ) AS rank
 FROM
   history
@@ -66,13 +66,13 @@ SELECT
   history.user_id,
   history.canvas_id,
   frame.id AS frame_id,
-  count(*)::integer AS total_pixels,
+  COUNT(*)::integer AS total_pixels,
   rank() OVER (
     PARTITION BY
       history.canvas_id,
       frame.id
     ORDER BY
-      count(*) DESC
+      COUNT(*)::integer DESC
   ) AS rank
 FROM
   history

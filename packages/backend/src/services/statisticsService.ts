@@ -291,6 +291,12 @@ export async function getCanvasStatisticsSummary(
     where: { canvas_id: canvasId },
   });
 
+  if (!stats) {
+    throw new NotFoundError(
+      `Canvas statistics not found for canvas ${canvasId}`,
+    );
+  }
+
   const colorDistribution = await prisma.canvas_colors.findMany({
     where: { canvas_id: canvasId },
     select: {
@@ -301,12 +307,6 @@ export async function getCanvasStatisticsSummary(
       count: "desc",
     },
   });
-
-  if (!stats || !colorDistribution) {
-    throw new NotFoundError(
-      `Canvas statistics not found for canvas ${canvasId}`,
-    );
-  }
 
   return {
     canvasId,
@@ -345,6 +345,10 @@ export async function getFrameStatisticsSummary(
     where: { frame_id: frameId },
   });
 
+  if (!stats) {
+    throw new NotFoundError(`Frame statistics not found for frame ${frameId}`);
+  }
+
   const colorDistribution = await prisma.frame_colors.findMany({
     where: { frame_id: frameId },
     select: {
@@ -355,10 +359,6 @@ export async function getFrameStatisticsSummary(
       count: "desc",
     },
   });
-
-  if (!stats) {
-    throw new NotFoundError(`Frame statistics not found for frame ${frameId}`);
-  }
 
   return {
     frameId,
