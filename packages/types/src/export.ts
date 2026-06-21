@@ -1,19 +1,23 @@
 import z from "zod";
 import { FrameSchema } from "./frame";
 import { PaletteColorSummarySchema } from "./palette";
-import { ColorDistributionList } from "./statistics";
+import {
+  ColorDistributionList,
+  FrameStatisticsSummarySchema,
+  LeaderboardEntrySchema,
+} from "./statistics";
 
-const LeaderboardEntrySlimSchema = z.object({
-  rank: z.number().int().positive(),
-  userId: z.string(),
-  totalPixels: z.number().int().nonnegative(),
+const LeaderboardEntrySlimSchema = LeaderboardEntrySchema.pick({
+  rank: true,
+  userId: true,
+  totalPixels: true,
 });
 
 export const FrameExportPackage = z.object({
   frame: FrameSchema,
-  statistics: z.object({
-    totalUsersInvolved: z.number().int().nonnegative(),
-    totalPixelsPlaced: z.number().int().nonnegative(),
+  statistics: FrameStatisticsSummarySchema.pick({
+    totalUsersInvolved: true,
+    totalPixelsPlaced: true,
   }),
   export: z.object({
     imageUrls: z.record(z.number().int().positive(), z.url()),
