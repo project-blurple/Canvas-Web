@@ -3,9 +3,12 @@ import {
   type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
+  type FrameStatisticsSummary,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import {
+  ChartNoAxesColumn,
+  CircleStar,
   Crosshair,
   Hash,
   Link,
@@ -21,6 +24,7 @@ import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
+import { useFrameStats } from "@/hooks/queries/useFrameStats";
 import { calculateScale, createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
@@ -177,12 +181,18 @@ function FrameLinkButton({
   );
 }
 
-function DetailsCard({ frame }: { frame: Frame }) {
+function DetailsCard({
+  frame,
+  stats,
+}: {
+  frame: Frame;
+  stats?: FrameStatisticsSummary | null;
+}) {
   const ownerInfo = (() => {
     switch (frame.owner.type) {
       case FrameOwnerType.Guild:
         return {
-          icon: <Users aria-hidden />,
+          icon: <CircleStar aria-hidden />,
           label: frame.owner.guild.name ?? "Unknown guild",
         };
       case FrameOwnerType.User:
@@ -227,6 +237,24 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 {frame.height}
               </TableCell>
             </tr>
+            {stats && (
+              <>
+                <tr>
+                  <TableHeader>
+                    <ChartNoAxesColumn />
+                    <VisuallyHidden>Total pixels placed</VisuallyHidden>
+                  </TableHeader>
+                  <TableCell>{stats.totalPixelsPlaced} pixels placed</TableCell>
+                </tr>
+                <tr>
+                  <TableHeader>
+                    <Users />
+                    <VisuallyHidden>Total users involved</VisuallyHidden>
+                  </TableHeader>
+                  <TableCell>{stats.totalUsersInvolved} users</TableCell>
+                </tr>
+              </>
+            )}
             {frame.owner.type !== FrameOwnerType.System && (
               <tr>
                 <TableHeader>
@@ -254,6 +282,7 @@ export default function FrameDetailsPanel({
   const { frame, setFrame } = useSelectedFrame();
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
+  const { data: frameStats } = useFrameStats(frame?.id);
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
@@ -268,7 +297,7 @@ export default function FrameDetailsPanel({
         <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <DetailsCard frame={frame} />
+        <DetailsCard frame={frame} stats={frameStats} />
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
