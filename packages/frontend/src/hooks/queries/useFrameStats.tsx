@@ -1,0 +1,32 @@
+"use client";
+
+import type { Frame, FrameStatisticsSummary } from "@blurple-canvas-web/types";
+import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import config from "@/config/clientConfig";
+
+export function useFrameStats(
+  frameId?: Frame["id"],
+  useQueryOptions?: Omit<
+    UseQueryOptions<FrameStatisticsSummary | null>,
+    "queryKey" | "queryFn"
+  >,
+) {
+  const getFrameStats = async () => {
+    if (!frameId) return null;
+
+    const response = await axios.get<FrameStatisticsSummary>(
+      `${config.apiUrl}/api/v1/statistics/summary/frame/${encodeURIComponent(frameId)}`,
+    );
+    return response.data;
+  };
+
+  return useQuery<FrameStatisticsSummary | null>({
+    queryKey: ["statistics/summary/frame", frameId],
+    queryFn: getFrameStats,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    enabled: Boolean(frameId),
+    ...useQueryOptions,
+  });
+}

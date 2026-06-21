@@ -23,11 +23,19 @@ export const LeaderboardEntrySchema = z.object({
 
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
 
+const ColorDistributionList = z.array(
+  z.object({
+    colorId: z.number().int().positive(),
+    count: z.number().int().nonnegative(),
+  }),
+);
+
 export const CanvasStatisticsSummarySchema = z.object({
   canvasId: z.number().int().positive(),
   totalUsersInvolved: z.number().int().nonnegative(),
   totalPixelsPlaced: z.number().int().nonnegative(),
   lastPlacedAt: z.iso.datetime().nullable(),
+  colorDistribution: ColorDistributionList,
 });
 
 export type CanvasStatisticsSummary = z.infer<
@@ -42,4 +50,16 @@ export const EventStatisticsSummarySchema = z.object({
 
 export type EventStatisticsSummary = z.infer<
   typeof EventStatisticsSummarySchema
+>;
+
+export const FrameStatisticsSummarySchema = z.object({
+  frameId: z.string().regex(/^[0-9a-fA-F]{6}$/),
+  totalUsersInvolved: z.number().int().nonnegative(),
+  totalPixelsPlaced: z.number().int().nonnegative(),
+  lastPlacedAt: z.iso.datetime().nullable(),
+  colorDistribution: ColorDistributionList,
+});
+
+export type FrameStatisticsSummary = z.infer<
+  typeof FrameStatisticsSummarySchema
 >;

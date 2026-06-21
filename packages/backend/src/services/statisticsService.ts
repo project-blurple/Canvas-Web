@@ -3,8 +3,11 @@ import type {
   CanvasInfo,
   CanvasStatisticsSummary,
   EventStatisticsSummary,
+  Frame,
+  FrameStatisticsSummary,
   LeaderboardEntrySchema,
   Paginated,
+  PaletteColorSummary,
   UserStats,
 } from "@blurple-canvas-web/types";
 import { prisma } from "@/client";
@@ -54,15 +57,22 @@ export async function getUserStats(
   };
 }
 
+interface PaginatedParams {
+  page?: number;
+  size?: number;
+}
+
 /**
  * Retrieves the top `size` (max 40), from the rank `(page - 1) * size`
  * users on the leaderboard for a canvas.
  */
-export async function getLeaderboard(
-  canvasId: CanvasInfo["id"],
+export async function getCanvasLeaderboard({
+  canvasId,
   page = 1,
   size = 10,
-): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+}: {
+  canvasId: CanvasInfo["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
@@ -108,6 +118,172 @@ export async function getLeaderboard(
   };
 }
 
+export async function getCanvasColorLeaderboard({
+  canvasId,
+  colorId,
+  page = 1,
+  size = 10,
+}: {
+  canvasId: CanvasInfo["id"];
+  colorId?: PaletteColorSummary["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
+  const leaderboard = await prisma.color_leaderboard.findMany({
+    skip: Math.max((page - 1) * take, 0),
+    take,
+    orderBy: {
+      color_id: "asc",
+      rank: "asc",
+    },
+    where: {
+      canvas_id: canvasId,
+      color_id: colorId,
+    },
+    select: {
+      rank: true,
+      user_id: true,
+      discord_user_profile: {
+        select: {
+          username: true,
+          profile_picture_url: true,
+        },
+      },
+      total_pixels: true,
+    },
+  });
+
+  const total = await prisma.color_leaderboard.count({
+    where: {
+      canvas_id: canvasId,
+      color_id: colorId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
+}
+
+export async function getFrameLeaderboard({
+  frameId,
+  page = 1,
+  size = 10,
+}: {
+  frameId: Frame["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
+  const leaderboard = await prisma.leaderboard_frame.findMany({
+    skip: Math.max((page - 1) * take, 0),
+    take,
+    orderBy: {
+      rank: "asc",
+    },
+    where: {
+      frame_id: frameId,
+    },
+    select: {
+      rank: true,
+      user_id: true,
+      discord_user_profile: {
+        select: {
+          username: true,
+          profile_picture_url: true,
+        },
+      },
+      total_pixels: true,
+    },
+  });
+
+  const total = await prisma.leaderboard_frame.count({
+    where: {
+      frame_id: frameId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
+}
+
+export async function getFrameColorLeaderboard({
+  frameId,
+  colorId,
+  page = 1,
+  size = 10,
+}: {
+  frameId: Frame["id"];
+  colorId?: PaletteColorSummary["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+  const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
+  const leaderboard = await prisma.color_leaderboard_frame.findMany({
+    skip: Math.max((page - 1) * take, 0),
+    take,
+    orderBy: {
+      color_id: "asc",
+      rank: "asc",
+    },
+    where: {
+      frame_id: frameId,
+      color_id: colorId,
+    },
+    select: {
+      rank: true,
+      user_id: true,
+      discord_user_profile: {
+        select: {
+          username: true,
+          profile_picture_url: true,
+        },
+      },
+      total_pixels: true,
+    },
+  });
+
+  const total = await prisma.color_leaderboard_frame.count({
+    where: {
+      frame_id: frameId,
+      color_id: colorId,
+    },
+  });
+
+  return {
+    total,
+    page: Math.max(page, 1),
+    size: take,
+    entries: leaderboard.map((row) => ({
+      rank: row.rank,
+      userId: row.user_id.toString(),
+      totalPixels: row.total_pixels,
+      username: row.discord_user_profile?.username,
+      profilePictureUrl:
+        row.discord_user_profile?.profile_picture_url ??
+        createDefaultAvatarUrl(row.user_id),
+    })),
+  };
+}
+
 export async function getCanvasStatisticsSummary(
   canvasId: CanvasInfo["id"],
 ): Promise<CanvasStatisticsSummary> {
@@ -121,11 +297,26 @@ export async function getCanvasStatisticsSummary(
     );
   }
 
+  const colorDistribution = await prisma.canvas_colors.findMany({
+    where: { canvas_id: canvasId },
+    select: {
+      color_id: true,
+      count: true,
+    },
+    orderBy: {
+      count: "desc",
+    },
+  });
+
   return {
     canvasId,
     totalUsersInvolved: stats.total_users ?? 0,
     totalPixelsPlaced: stats.total_pixels ?? 0,
     lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
+    colorDistribution: colorDistribution.map((entry) => ({
+      colorId: entry.color_id,
+      count: entry.count,
+    })),
   };
 }
 
@@ -144,5 +335,39 @@ export async function getEventStatisticsSummary(
     eventId,
     totalUsersInvolved: stats.total_users ?? 0,
     totalPixelsPlaced: stats.total_pixels ?? 0,
+  };
+}
+
+export async function getFrameStatisticsSummary(
+  frameId: Frame["id"],
+): Promise<FrameStatisticsSummary> {
+  const stats = await prisma.frame_stats.findUnique({
+    where: { frame_id: frameId },
+  });
+
+  if (!stats) {
+    throw new NotFoundError(`Frame statistics not found for frame ${frameId}`);
+  }
+
+  const colorDistribution = await prisma.frame_colors.findMany({
+    where: { frame_id: frameId },
+    select: {
+      color_id: true,
+      count: true,
+    },
+    orderBy: {
+      count: "desc",
+    },
+  });
+
+  return {
+    frameId,
+    totalUsersInvolved: stats.total_users ?? 0,
+    totalPixelsPlaced: stats.total_pixels ?? 0,
+    lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
+    colorDistribution: colorDistribution.map((entry) => ({
+      colorId: entry.color_id,
+      count: entry.count,
+    })),
   };
 }
