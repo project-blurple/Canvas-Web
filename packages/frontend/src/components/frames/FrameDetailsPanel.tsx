@@ -4,6 +4,7 @@ import {
   type Frame,
   FrameOwnerType,
   type FrameStatisticsSummary,
+  type PaletteColorSummary,
 } from "@blurple-canvas-web/types";
 import { styled } from "@mui/material";
 import {
@@ -13,6 +14,7 @@ import {
   Hash,
   Link,
   Frame as LucideFrame,
+  Palette,
   SquarePen,
   User,
   Users,
@@ -25,6 +27,7 @@ import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
 import { useFrameStats } from "@/hooks/queries/useFrameStats";
+import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
@@ -184,9 +187,11 @@ function FrameLinkButton({
 function DetailsCard({
   frame,
   stats,
+  palette,
 }: {
   frame: Frame;
   stats?: FrameStatisticsSummary | null;
+  palette: PaletteColorSummary[];
 }) {
   const ownerInfo = (() => {
     switch (frame.owner.type) {
@@ -207,6 +212,11 @@ function DetailsCard({
         };
     }
   })();
+
+  const mostPlacedColor = stats?.colorDistribution[0];
+  const mostPlacedColorInfo = palette.find(
+    (color) => color.id === mostPlacedColor?.colorId,
+  );
 
   return (
     <ActionPanelTabBody>
@@ -253,6 +263,17 @@ function DetailsCard({
                   </TableHeader>
                   <TableCell>{stats.totalUsersInvolved} users</TableCell>
                 </tr>
+                {mostPlacedColorInfo && (
+                  <tr>
+                    <TableHeader>
+                      <Palette />
+                      <VisuallyHidden>Most placed color</VisuallyHidden>
+                    </TableHeader>
+                    <TableCell>
+                      Most placed: {mostPlacedColorInfo.name}
+                    </TableCell>
+                  </tr>
+                )}
               </>
             )}
             {frame.owner.type !== FrameOwnerType.System && (
@@ -283,6 +304,7 @@ export default function FrameDetailsPanel({
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
   const { data: frameStats } = useFrameStats(frame?.id);
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
@@ -297,7 +319,7 @@ export default function FrameDetailsPanel({
         <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <DetailsCard frame={frame} stats={frameStats} />
+        <DetailsCard frame={frame} stats={frameStats} palette={palette} />
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
