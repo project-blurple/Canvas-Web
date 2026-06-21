@@ -21,7 +21,9 @@ import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
+import { useFrameExport } from "@/hooks/queries/useFrameStats";
 import { calculateScale, createPixelUrl } from "@/util";
+import { downloadAsJson } from "@/util/downloadAsJson";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -156,10 +158,26 @@ function DownloadButton({
 }
 
 function ExportButton({ frame }: { frame: Frame }) {
-  const exportUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}/export`;
+  const { mutate: exportFrame, isPending } = useFrameExport({
+    onSuccess: (data) => {
+      const filename = `frame-${frame.id}-export-${data.lastUpdated}.json`;
+      downloadAsJson(data, filename);
+      toast.success("Frame data exported successfully");
+    },
+    onError: (error) => {
+      console.error("Export failed:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to export frame data",
+      );
+    },
+  });
 
   return (
-    <BasicHighlightButton style={{ inlineSize: "100%" }}>
+    <BasicHighlightButton
+      disabled={isPending}
+      onClick={() => exportFrame(frame.id)}
+      style={{ inlineSize: "100%" }}
+    >
       Data
       <ButtonSupplement>{`(JSON)`}</ButtonSupplement>
     </BasicHighlightButton>
