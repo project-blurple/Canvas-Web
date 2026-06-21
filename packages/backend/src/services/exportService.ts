@@ -25,6 +25,16 @@ import { type Bounds, boundsWithDimensions } from "@/utils";
 import { getFrameById } from "./frameService";
 import { getFrameStatisticsSummary } from "./statisticsService";
 
+interface FrameExportCacheEntry {
+  data: FrameExportPackage;
+  expiresAt: number;
+}
+
+const FRAME_EXPORT_CACHE = new Map<string, FrameExportCacheEntry>();
+const FRAME_EXPORT_LOADS = new Map<string, Promise<FrameExportPackage>>();
+
+const CACHE_TTL_MS = 10 * 60 * 1000;
+
 export function pixelsToRgbaBuffer(
   pixels: PixelColor[],
   width: number,
@@ -191,7 +201,7 @@ export async function exportCanvasBoundsAsStream({
   return output;
 }
 
-export async function createFrameExportPackage(
+async function createFrameExportPackage(
   frameId: Frame["id"],
 ): Promise<FrameExportPackage> {
   const frame = await getFrameById(frameId);
@@ -267,4 +277,39 @@ export async function createFrameExportPackage(
       ),
     },
   };
+}
+
+export async function createCachedFrameExportPackage(
+  frameId: Frame["id"],
+): Promise<{ package: FrameExportPackage; ttl: number }> {
+  const now = Date.now();
+
+  const cached = FRAME_EXPORT_CACHE.get(frameId);
+  if (cached && cached.expiresAt > now) {
+    return { package: cached.data, ttl: cached.expiresAt - now };
+  }
+
+  const pendingLoad = FRAME_EXPORT_LOADS.get(frameId);
+  if (pendingLoad) {
+    return { package: await pendingLoad, ttl: CACHE_TTL_MS };
+  }
+
+  const loadPromise = createFrameExportPackage(frameId);
+  FRAME_EXPORT_LOADS.set(frameId, loadPromise);
+
+  try {
+    const data = await loadPromise;
+
+    FRAME_EXPORT_CACHE.set(frameId, {
+      data,
+      expiresAt: now + CACHE_TTL_MS,
+    });
+
+    return {
+      package: data,
+      ttl: CACHE_TTL_MS,
+    };
+  } finally {
+    FRAME_EXPORT_LOADS.delete(frameId);
+  }
 }

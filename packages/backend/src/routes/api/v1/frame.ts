@@ -22,7 +22,7 @@ import { validate } from "@/middleware/validate";
 import { getCanvasInfo } from "@/services/canvasService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
 import {
-  createFrameExportPackage,
+  createCachedFrameExportPackage,
   exportFrameAsStream,
 } from "@/services/exportService";
 import {
@@ -325,8 +325,12 @@ frameRouter.get(
   async (req, res) => {
     addSpanAttributes(req, { "frame.id": req.params.frameId });
 
-    const exportPackage = await createFrameExportPackage(req.params.frameId);
+    const { package: exportPackage, ttl } =
+      await createCachedFrameExportPackage(req.params.frameId);
 
-    res.status(200).json(exportPackage);
+    res
+      .status(200)
+      .setHeader("Cache-Control", `max-age=${Math.round(ttl / 1000)}, public`)
+      .json(exportPackage);
   },
 );
