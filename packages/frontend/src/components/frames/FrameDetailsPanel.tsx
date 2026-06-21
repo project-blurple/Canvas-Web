@@ -70,6 +70,12 @@ const TableCell = styled("td")`
   }
 `;
 
+const DownloadButtonColumn = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
 const ControlButtonRow = styled("div")`
   background: transparent;
   display: flex;
@@ -146,6 +152,17 @@ function DownloadButton({
         <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
       </BasicHighlightButton>
     </a>
+  );
+}
+
+function ExportButton({ frame }: { frame: Frame }) {
+  const exportUrl = `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frame.id)}/export`;
+
+  return (
+    <BasicHighlightButton style={{ inlineSize: "100%" }}>
+      Data
+      <ButtonSupplement>{`(JSON)`}</ButtonSupplement>
+    </BasicHighlightButton>
   );
 }
 
@@ -273,9 +290,11 @@ export default function FrameDetailsPanel({
           <ActionPanelPrimitives.SectionHeading>
             Downloads
           </ActionPanelPrimitives.SectionHeading>
-          <DownloadButton frame={frame} canvas={canvas} />
-          {/* Download timelapse */}
-          {/* Export stats */}
+          <DownloadButtonColumn>
+            <DownloadButton frame={frame} canvas={canvas} />
+            {/* Download timelapse */}
+            <ExportButton frame={frame} />
+          </DownloadButtonColumn>
         </div>
       </ActionPanelTabBody>
       <ActionPanelTabBody>
