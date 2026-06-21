@@ -274,7 +274,18 @@ export async function getCanvasStatisticsSummary(
     where: { canvas_id: canvasId },
   });
 
-  if (!stats) {
+  const colorDistribution = await prisma.canvas_colors.findMany({
+    where: { canvas_id: canvasId },
+    select: {
+      color_id: true,
+      count: true,
+    },
+    orderBy: {
+      count: "desc",
+    },
+  });
+
+  if (!stats || !colorDistribution) {
     throw new NotFoundError(
       `Canvas statistics not found for canvas ${canvasId}`,
     );
@@ -285,6 +296,10 @@ export async function getCanvasStatisticsSummary(
     totalUsersInvolved: stats.total_users ?? 0,
     totalPixelsPlaced: stats.total_pixels ?? 0,
     lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
+    colorDistribution: colorDistribution.map((entry) => ({
+      colorId: entry.color_id,
+      count: entry.count,
+    })),
   };
 }
 
@@ -313,6 +328,17 @@ export async function getFrameStatisticsSummary(
     where: { frame_id: frameId },
   });
 
+  const colorDistribution = await prisma.frame_colors.findMany({
+    where: { frame_id: frameId },
+    select: {
+      color_id: true,
+      count: true,
+    },
+    orderBy: {
+      count: "desc",
+    },
+  });
+
   if (!stats) {
     throw new NotFoundError(`Frame statistics not found for frame ${frameId}`);
   }
@@ -322,5 +348,9 @@ export async function getFrameStatisticsSummary(
     totalUsersInvolved: stats.total_users ?? 0,
     totalPixelsPlaced: stats.total_pixels ?? 0,
     lastPlacedAt: stats.last_placed_at.toISOString() ?? null,
+    colorDistribution: colorDistribution.map((entry) => ({
+      colorId: entry.color_id,
+      count: entry.count,
+    })),
   };
 }
