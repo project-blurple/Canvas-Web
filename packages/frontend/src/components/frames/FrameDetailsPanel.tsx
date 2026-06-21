@@ -35,6 +35,7 @@ import {
 import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
 import { isSystemFrameId } from "@/util/frame";
+import Avatar from "../Avatar";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -94,6 +95,40 @@ const ControlButtonRow = styled("div")`
   > * {
     flex: 1;
   }
+`;
+
+const LeaderboardList = styled("ol")`
+  display: grid;
+  font-size: 1rem;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+`;
+
+const LeaderboardRow = styled("li")`
+  align-items: center;
+  column-gap: 0.75rem;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  padding: 0.5rem;
+`;
+
+const LeaderboardRank = styled("div")`
+  color: oklch(from currentColor l c h / 45%);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const LeaderboardUsername = styled("div")`
+  font-weight: 600;
+  word-break: break-all;
+`;
+
+const LeaderboardPixelCount = styled("div")`
+  color: oklch(from var(--discord-white) l c h / 55%);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.875rem;
 `;
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
@@ -350,21 +385,27 @@ function Leaderboard({
           {leaderboard.isFetching ?
             <p>Loading leaderboard...</p>
           : leaderboard.data?.entries.length ?
-            <ol>
+            <LeaderboardList>
               {leaderboard.data.entries.map((entry) => (
-                <li key={entry.userId}>
-                  {entry.username ?
-                    <>
-                      {entry.username} - {entry.totalPixels.toLocaleString()}{" "}
-                      pixels
-                    </>
-                  : <>
-                      Unknown user - {entry.totalPixels.toLocaleString()} pixels
-                    </>
-                  }
-                </li>
+                <LeaderboardRow key={entry.userId}>
+                  <LeaderboardRank>{entry.rank}</LeaderboardRank>
+                  <div>
+                    <LeaderboardUsername>
+                      {entry.username ?? entry.userId}
+                    </LeaderboardUsername>
+                    <LeaderboardPixelCount>
+                      {entry.totalPixels.toLocaleString()}{" "}
+                      {entry.totalPixels === 1 ? "pixel" : "pixels"}
+                    </LeaderboardPixelCount>
+                  </div>
+                  <Avatar
+                    profilePictureUrl={entry.profilePictureUrl}
+                    size={40}
+                    username={entry.username ?? entry.userId}
+                  />
+                </LeaderboardRow>
               ))}
-            </ol>
+            </LeaderboardList>
           : <p>No leaderboard data available.</p>}
         </div>
       </div>
