@@ -19,6 +19,7 @@ interface UseLeaderboardParams {
 export function useCanvasLeaderboard(
   canvasId: CanvasInfo["id"],
   { page = 1, size = 10, colorId }: UseLeaderboardParams,
+  { enabled = true } = {},
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const baseUrl = `${config.apiUrl}/api/v1/statistics/leaderboard/canvas/${encodeURIComponent(
@@ -40,12 +41,14 @@ export function useCanvasLeaderboard(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds
+    enabled: Boolean(canvasId) && enabled,
   });
 }
 
 export function useFrameLeaderboard(
   frameId: Frame["id"],
   { page = 1, size = 10, colorId }: UseLeaderboardParams,
+  { enabled = true } = {},
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const baseUrl = `${config.apiUrl}/api/v1/statistics/leaderboard/frame/${encodeURIComponent(
@@ -67,5 +70,6 @@ export function useFrameLeaderboard(
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds
+    enabled: Boolean(frameId) && enabled,
   });
 }

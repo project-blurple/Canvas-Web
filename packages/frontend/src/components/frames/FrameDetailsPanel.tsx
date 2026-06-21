@@ -28,6 +28,10 @@ import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
 import { useCanvasStats } from "@/hooks/queries/useCanvasStats";
 import { useFrameStats } from "@/hooks/queries/useFrameStats";
+import {
+  useCanvasLeaderboard,
+  useFrameLeaderboard,
+} from "@/hooks/queries/useLeaderboard";
 import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
 import { isSystemFrameId } from "@/util/frame";
@@ -300,6 +304,74 @@ function DetailsCard({
   );
 }
 
+function Leaderboard({
+  frame,
+  stats,
+}: {
+  frame: Frame;
+  stats: StatisticsSummaryBase;
+}) {
+  const canvasLeaderboard = useCanvasLeaderboard(
+    frame.canvasId,
+    {
+      size: 10,
+      page: 1,
+    },
+    {
+      enabled: isSystemFrameId(frame.id),
+    },
+  );
+
+  const frameLeaderboard = useFrameLeaderboard(
+    frame.id,
+    {
+      size: 10,
+      page: 1,
+    },
+    {
+      enabled: !isSystemFrameId(frame.id),
+    },
+  );
+
+  const leaderboard =
+    isSystemFrameId(frame.id) ? canvasLeaderboard : frameLeaderboard;
+
+  if (stats.totalPixelsPlaced === 0) {
+    return null;
+  }
+
+  return (
+    <ActionPanelTabBody>
+      <div>
+        <ActionPanelPrimitives.SectionHeading>
+          Leaderboard
+        </ActionPanelPrimitives.SectionHeading>
+        <div>
+          {leaderboard.isFetching ?
+            <p>Loading leaderboard...</p>
+          : leaderboard.data?.entries.length ?
+            <ol>
+              {leaderboard.data.entries.map((entry) => (
+                <li key={entry.userId}>
+                  {entry.username ?
+                    <>
+                      {entry.username} - {entry.totalPixels.toLocaleString()}{" "}
+                      pixels
+                    </>
+                  : <>
+                      Unknown user - {entry.totalPixels.toLocaleString()} pixels
+                    </>
+                  }
+                </li>
+              ))}
+            </ol>
+          : <p>No leaderboard data available.</p>}
+        </div>
+      </div>
+    </ActionPanelTabBody>
+  );
+}
+
 export default function FrameDetailsPanel({
   setActivePanel,
 }: {
@@ -333,6 +405,7 @@ export default function FrameDetailsPanel({
       </ActionPanelTabBody>
       <FullWidthScrollView>
         <DetailsCard frame={frame} stats={stats} palette={palette} />
+        {stats && <Leaderboard frame={frame} stats={stats} />}
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
