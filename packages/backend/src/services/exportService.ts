@@ -8,10 +8,12 @@ import {
   CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
   type Frame,
+  type FrameExportPackage,
   type PixelColor,
 } from "@blurple-canvas-web/types";
+import { groupBy } from "es-toolkit";
 import sharp from "sharp";
-import type { canvas as PrismaCanvas } from "@/client";
+import { type canvas as PrismaCanvas, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError } from "@/errors";
 import {
@@ -21,6 +23,7 @@ import {
 } from "@/services/canvasService";
 import { type Bounds, boundsWithDimensions } from "@/utils";
 import { getFrameById } from "./frameService";
+import { getFrameStatisticsSummary } from "./statisticsService";
 
 export function pixelsToRgbaBuffer(
   pixels: PixelColor[],
@@ -186,4 +189,81 @@ export async function exportCanvasBoundsAsStream({
   });
 
   return output;
+}
+
+export async function createFrameExportPackage(
+  frameId: Frame["id"],
+): Promise<FrameExportPackage> {
+  const frame = await getFrameById(frameId);
+
+  const statistics = await getFrameStatisticsSummary(frameId);
+
+  const leaderboard = await prisma.leaderboard_frame.findMany({
+    where: { frame_id: frameId },
+    orderBy: { rank: "asc" },
+    select: {
+      rank: true,
+      user_id: true,
+      total_pixels: true,
+    },
+  });
+
+  const colorLeaderboards = await prisma.color_leaderboard_frame.findMany({
+    where: { frame_id: frameId },
+    orderBy: { rank: "asc" },
+    select: {
+      rank: true,
+      user_id: true,
+      color_id: true,
+      total_pixels: true,
+    },
+  });
+
+  const colorLeaderboardsPartitioned = groupBy(
+    colorLeaderboards,
+    (entry) => entry.color_id,
+  );
+
+  const imageExportUrls = CANVAS_EXPORT_SCALES.reduce<
+    Record<CanvasExportScale, string>
+  >(
+    (acc, scale) => {
+      acc[scale] = `/api/v1/frames/${frameId}@${scale}.png`;
+      return acc;
+    },
+    {} as Record<CanvasExportScale, string>,
+  );
+  const timelapseExportUrl = `/api/v1/frames/${frameId}.mp4`;
+
+  return {
+    frame,
+    statistics: {
+      totalPixelsPlaced: statistics.totalPixelsPlaced,
+      totalUsersInvolved: statistics.totalUsersInvolved,
+    },
+    export: {
+      imageUrls: imageExportUrls,
+      timelapseUrl: timelapseExportUrl,
+    },
+    colorDistribution: statistics.colorDistribution,
+    leaderboard: {
+      all: leaderboard.map((entry) => ({
+        rank: entry.rank,
+        userId: entry.user_id,
+        totalPixels: entry.total_pixels,
+      })),
+      colors: Object.fromEntries(
+        Object.entries(colorLeaderboardsPartitioned).map(
+          ([colorId, entries]) => [
+            colorId,
+            entries.map((entry) => ({
+              rank: entry.rank,
+              userId: entry.user_id,
+              totalPixels: entry.total_pixels,
+            })),
+          ],
+        ),
+      ),
+    },
+  };
 }

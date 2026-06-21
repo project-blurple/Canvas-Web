@@ -81,6 +81,9 @@ importers:
       discord-strategy:
         specifier: ^2.5.0
         version: 2.5.0
+      es-toolkit:
+        specifier: ^1.47.0
+        version: 1.47.0
       express:
         specifier: ^5.2.1
         version: 5.2.1

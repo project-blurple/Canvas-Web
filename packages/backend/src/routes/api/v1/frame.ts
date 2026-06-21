@@ -21,7 +21,10 @@ import { typedRouter } from "@/middleware/typedRouter";
 import { validate } from "@/middleware/validate";
 import { getCanvasInfo } from "@/services/canvasService";
 import { withDiscordAccessToken } from "@/services/discordTokenService";
-import { exportFrameAsStream } from "@/services/exportService";
+import {
+  createFrameExportPackage,
+  exportFrameAsStream,
+} from "@/services/exportService";
 import {
   assertMaxOwnerFramesNotExceeded,
   createFrame,
@@ -313,5 +316,17 @@ frameRouter.post(
     res.status(201).json(frame);
 
     addSpanAttributes(req, { "frame.id": frame.id });
+  },
+);
+
+frameRouter.get(
+  "/:frameId/export",
+  validate({ params: FrameIdParamModel }),
+  async (req, res) => {
+    addSpanAttributes(req, { "frame.id": req.params.frameId });
+
+    const exportPackage = await createFrameExportPackage(req.params.frameId);
+
+    res.status(200).json(exportPackage);
   },
 );
