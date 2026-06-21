@@ -51,6 +51,7 @@ model canvas {
   colorLeaderboardFrames   color_leaderboard_frame[]
   colorLeaderboards        color_leaderboard[]
   leaderboardFrames        leaderboard_frame[]
+  frameStats               frame_stats[]
 }
 
 model color {
@@ -124,6 +125,7 @@ model frame {
   style_id               Int?
   colorLeaderboardFrames color_leaderboard_frame[]
   leaderboardFrames      leaderboard_frame[]
+  frameStats             frame_stats?
 }
 
 model guild {
@@ -403,6 +405,22 @@ view event_stats {
 
   @@unique([event_id])
 }
+
+view frame_stats {
+  frame_id       String
+  frame          frame    @relation(fields: [frame_id], references: [id])
+  canvas_id      Int
+  canvas         canvas   @relation(fields: [canvas_id], references: [id])
+  total_users    Int
+  total_pixels   Int
+  last_placed_at DateTime @db.Timestamptz(6)
+
+  @@unique([frame_id])
+}
+
+// todo
+// view canvas_colors {canvas_id Int, color_id Int, count Int}
+// view frame_colors {frame_id String, color_id Int, count Int}
 
 view history_snapshot_windows {
   canvas_id     Int
