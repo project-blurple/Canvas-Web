@@ -52,6 +52,8 @@ model canvas {
   colorLeaderboards        color_leaderboard[]
   leaderboardFrames        leaderboard_frame[]
   frameStats               frame_stats[]
+  canvasColors             canvas_colors[]
+  frameColors              frame_colors[]
 }
 
 model color {
@@ -69,6 +71,8 @@ model color {
   participations         participation[]
   colorLeaderboardFrames color_leaderboard_frame[]
   colorLeaderboards      color_leaderboard[]
+  canvasColors           canvas_colors[]
+  frameColors            frame_colors[]
 }
 
 model cooldown {
@@ -126,6 +130,7 @@ model frame {
   colorLeaderboardFrames color_leaderboard_frame[]
   leaderboardFrames      leaderboard_frame[]
   frameStats             frame_stats?
+  frameColors            frame_colors[]
 }
 
 model guild {
@@ -418,9 +423,27 @@ view frame_stats {
   @@unique([frame_id])
 }
 
-// todo
-// view canvas_colors {canvas_id Int, color_id Int, count Int}
-// view frame_colors {frame_id String, color_id Int, count Int}
+view canvas_colors {
+  canvas_id Int
+  canvas    canvas @relation(fields: [canvas_id], references: [id])
+  color_id  Int
+  color     color  @relation(fields: [color_id], references: [id])
+  count     Int
+
+  @@unique([canvas_id, color_id])
+}
+
+view frame_colors {
+  frame_id  String
+  frame     frame  @relation(fields: [frame_id], references: [id])
+  canvas_id Int
+  canvas    canvas @relation(fields: [canvas_id], references: [id])
+  color_id  Int
+  color     color  @relation(fields: [color_id], references: [id])
+  count     Int
+
+  @@unique([frame_id, color_id])
+}
 
 view history_snapshot_windows {
   canvas_id     Int
