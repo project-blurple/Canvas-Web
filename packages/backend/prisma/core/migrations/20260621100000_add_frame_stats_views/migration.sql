@@ -28,7 +28,7 @@ CREATE VIEW canvas_colors AS
 SELECT
   history.canvas_id,
   history.color_id,
-  count(*) AS total_pixels
+  count(*) AS count
 FROM
   history
 WHERE
@@ -43,14 +43,14 @@ GROUP BY
   history.color_id
 ORDER BY
   history.canvas_id,
-  total_pixels DESC
+  count DESC;
 
 CREATE VIEW frame_colors AS
 SELECT
   frame.id AS frame_id,
   history.canvas_id,
   history.color_id,
-  count(*) AS total_pixels
+  count(*) AS count
 FROM
   history
 INNER JOIN frame ON
@@ -73,4 +73,4 @@ GROUP BY
 ORDER BY
   history.canvas_id,
   frame.id,
-  total_pixels DESC;
+  count DESC;
