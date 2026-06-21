@@ -48,11 +48,11 @@ statisticsRouter.get(
       "query.size": req.query.size ?? false,
     });
 
-    const leaderboard = await getCanvasLeaderboard(
-      req.params.canvasId,
-      req.query.page,
-      req.query.size,
-    );
+    const leaderboard = await getCanvasLeaderboard({
+      canvasId: req.params.canvasId,
+      page: req.query.page,
+      size: req.query.size,
+    });
     res.status(200).json(leaderboard);
 
     addSpanAttributes(req, { "response.size": leaderboard.size });
@@ -73,12 +73,12 @@ statisticsRouter.get(
       "query.size": req.query.size ?? false,
     });
 
-    const leaderboard = await getCanvasColorLeaderboard(
-      req.params.canvasId,
-      req.params.colorId,
-      req.query.page,
-      req.query.size,
-    );
+    const leaderboard = await getCanvasColorLeaderboard({
+      canvasId: req.params.canvasId,
+      colorId: req.params.colorId,
+      page: req.query.page,
+      size: req.query.size,
+    });
     res.status(200).json(leaderboard);
 
     addSpanAttributes(req, { "response.size": leaderboard.size });
@@ -95,11 +95,11 @@ statisticsRouter.get(
       "query.size": req.query.size ?? false,
     });
 
-    const leaderboard = await getFrameLeaderboard(
-      req.params.frameId,
-      req.query.page,
-      req.query.size,
-    );
+    const leaderboard = await getFrameLeaderboard({
+      frameId: req.params.frameId,
+      page: req.query.page,
+      size: req.query.size,
+    });
     res.status(200).json(leaderboard);
 
     addSpanAttributes(req, { "response.size": leaderboard.size });
@@ -120,12 +120,12 @@ statisticsRouter.get(
       "query.size": req.query.size ?? false,
     });
 
-    const leaderboard = await getFrameColorLeaderboard(
-      req.params.frameId,
-      req.params.colorId,
-      req.query.page,
-      req.query.size,
-    );
+    const leaderboard = await getFrameColorLeaderboard({
+      frameId: req.params.frameId,
+      colorId: req.params.colorId,
+      page: req.query.page,
+      size: req.query.size,
+    });
     res.status(200).json(leaderboard);
 
     addSpanAttributes(req, { "response.size": leaderboard.size });

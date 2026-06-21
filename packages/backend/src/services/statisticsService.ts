@@ -57,15 +57,22 @@ export async function getUserStats(
   };
 }
 
+interface PaginatedParams {
+  page?: number;
+  size?: number;
+}
+
 /**
  * Retrieves the top `size` (max 40), from the rank `(page - 1) * size`
  * users on the leaderboard for a canvas.
  */
-export async function getCanvasLeaderboard(
-  canvasId: CanvasInfo["id"],
+export async function getCanvasLeaderboard({
+  canvasId,
   page = 1,
   size = 10,
-): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+}: {
+  canvasId: CanvasInfo["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
@@ -111,17 +118,21 @@ export async function getCanvasLeaderboard(
   };
 }
 
-export async function getCanvasColorLeaderboard(
-  canvasId: CanvasInfo["id"],
-  colorId: PaletteColorSummary["id"],
+export async function getCanvasColorLeaderboard({
+  canvasId,
+  colorId,
   page = 1,
   size = 10,
-): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+}: {
+  canvasId: CanvasInfo["id"];
+  colorId?: PaletteColorSummary["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.color_leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
     take,
     orderBy: {
+      color_id: "asc",
       rank: "asc",
     },
     where: {
@@ -164,11 +175,13 @@ export async function getCanvasColorLeaderboard(
   };
 }
 
-export async function getFrameLeaderboard(
-  frameId: Frame["id"],
+export async function getFrameLeaderboard({
+  frameId,
   page = 1,
   size = 10,
-): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+}: {
+  frameId: Frame["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.leaderboard_frame.findMany({
     skip: Math.max((page - 1) * take, 0),
@@ -214,17 +227,21 @@ export async function getFrameLeaderboard(
   };
 }
 
-export async function getFrameColorLeaderboard(
-  frameId: Frame["id"],
-  colorId: PaletteColorSummary["id"],
+export async function getFrameColorLeaderboard({
+  frameId,
+  colorId,
   page = 1,
   size = 10,
-): Promise<Paginated<typeof LeaderboardEntrySchema>> {
+}: {
+  frameId: Frame["id"];
+  colorId?: PaletteColorSummary["id"];
+} & PaginatedParams): Promise<Paginated<typeof LeaderboardEntrySchema>> {
   const take = Math.min(Math.max(size, 1), 40); // Arbitrary maximum
   const leaderboard = await prisma.color_leaderboard_frame.findMany({
     skip: Math.max((page - 1) * take, 0),
     take,
     orderBy: {
+      color_id: "asc",
       rank: "asc",
     },
     where: {
