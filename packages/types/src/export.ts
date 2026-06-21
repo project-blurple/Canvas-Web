@@ -23,6 +23,7 @@ export const FrameExportPackage = z.object({
     imageUrls: z.record(z.number().int().positive(), z.url()),
     timelapseUrl: z.url().optional(),
   }),
+  lastUpdated: z.iso.datetime(),
   colorDistribution: ColorDistributionList,
   leaderboard: {
     all: LeaderboardEntrySlimSchema.array(),

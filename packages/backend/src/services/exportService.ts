@@ -245,6 +245,7 @@ export async function createFrameExportPackage(
       imageUrls: imageExportUrls,
       timelapseUrl: timelapseExportUrl,
     },
+    lastUpdated: new Date().toISOString(),
     colorDistribution: statistics.colorDistribution,
     leaderboard: {
       all: leaderboard.map((entry) => ({
