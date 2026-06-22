@@ -6,7 +6,11 @@ import type {
   LeaderboardRequest,
   PaletteColorSummary,
 } from "@blurple-canvas-web/types";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useQuery,
+  UseQueryOptions,
+} from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
 
@@ -19,7 +23,10 @@ interface UseLeaderboardParams {
 export function useCanvasLeaderboard(
   canvasId: CanvasInfo["id"],
   { page = 1, size = 10, colorId }: UseLeaderboardParams,
-  { enabled = true } = {},
+  options?: Omit<
+    UseQueryOptions<LeaderboardRequest.ResBody>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const baseUrl = `${config.apiUrl}/api/v1/statistics/leaderboard/canvas/${encodeURIComponent(
@@ -35,20 +42,24 @@ export function useCanvasLeaderboard(
   };
 
   return useQuery<LeaderboardRequest.ResBody>({
+    ...options,
     queryKey: ["leaderboard", canvasId, { page, size, colorId }],
     queryFn: getLeaderboard,
     placeholderData: keepPreviousData,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds
-    enabled: Boolean(canvasId) && enabled,
+    enabled: Boolean(canvasId) && (options?.enabled ?? true),
   });
 }
 
 export function useFrameLeaderboard(
   frameId: Frame["id"],
   { page = 1, size = 10, colorId }: UseLeaderboardParams,
-  { enabled = true } = {},
+  options?: Omit<
+    UseQueryOptions<LeaderboardRequest.ResBody>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   const getLeaderboard = async (): Promise<LeaderboardRequest.ResBody> => {
     const baseUrl = `${config.apiUrl}/api/v1/statistics/leaderboard/frame/${encodeURIComponent(
@@ -64,12 +75,13 @@ export function useFrameLeaderboard(
   };
 
   return useQuery<LeaderboardRequest.ResBody>({
+    ...options,
     queryKey: ["leaderboard", "frame", frameId, { page, size, colorId }],
     queryFn: getLeaderboard,
     placeholderData: keepPreviousData,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     staleTime: 30_000, // 30 seconds
-    enabled: Boolean(frameId) && enabled,
+    enabled: Boolean(frameId) && (options?.enabled ?? true),
   });
 }
