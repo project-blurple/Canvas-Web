@@ -35,8 +35,8 @@ async function createUserFrame(id: string, ownerUserId = 1n, canvasId = 1) {
       name: `Frame ${id}`,
       x0: 0,
       y0: 0,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
     },
   });
 }
@@ -84,6 +84,8 @@ describe("FrameService", () => {
       expect(frame).toMatchObject({
         id: "abc123",
         canvasId: 1,
+        width: 2,
+        height: 2,
         owner: {
           type: FrameOwnerType.User,
           user: { id: "1", username: "test_user_1" },
@@ -119,8 +121,8 @@ describe("FrameService", () => {
           name: "Guild frame",
           x0: 0,
           y0: 0,
-          x1: 2,
-          y1: 2,
+          x1: 1,
+          y1: 1,
         },
       });
 
@@ -143,8 +145,8 @@ describe("FrameService", () => {
         { type: FrameOwnerType.User, id: "1" },
         0,
         0,
-        2,
-        2,
+        1,
+        1,
       );
 
       expect(frame.id).toMatch(/^[0-9a-f]{6}$/);
@@ -161,8 +163,8 @@ describe("FrameService", () => {
           { type: FrameOwnerType.User, id: "9" },
           0,
           0,
-          2,
-          2,
+          1,
+          1,
         ),
       ).rejects.toBeInstanceOf(ForbiddenError);
     });
@@ -182,8 +184,8 @@ describe("FrameService", () => {
           { type: FrameOwnerType.Guild, id: "1" },
           0,
           0,
-          2,
-          2,
+          1,
+          1,
         ),
       ).rejects.toBeInstanceOf(ForbiddenError);
     });

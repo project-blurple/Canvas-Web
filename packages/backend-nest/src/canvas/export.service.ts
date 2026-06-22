@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { PassThrough } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
+  boundsWithDimensions,
   type CanvasExportScale,
   type CanvasInfo,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -74,8 +75,8 @@ export class ExportService {
     y1: number;
     scale?: CanvasExportScale;
   }): Promise<NodeJS.ReadableStream> {
-    const width = x1 - x0;
-    const height = y1 - y0;
+    // Bounds are inclusive, so a 1px crop has x0 === x1.
+    const { width, height } = boundsWithDimensions({ x0, y0, x1, y1 });
 
     if (width <= 0 || height <= 0) {
       throw new BadRequestError("Invalid crop dimensions");

@@ -1,10 +1,6 @@
 import z from "zod";
 import { FrameOwnerType } from "../frame.js";
-import {
-  BoundsModel,
-  boundsRefiner,
-  normalizeBounds,
-} from "./bounds.models.js";
+import { BoundsModel, normalizeBounds } from "./bounds.models.js";
 import {
   CanvasExportScaleSchema,
   CanvasIdParamModel,
@@ -21,7 +17,6 @@ export const FrameDataParamModel = z
     name: z.string().min(1).max(100),
     ...BoundsModel.shape,
   })
-  .superRefine(boundsRefiner)
   .transform(normalizeBounds);
 
 export type FrameDataInput = z.infer<typeof FrameDataParamModel>;
@@ -50,7 +45,6 @@ export const CreateFrameBodyModel = z
     ...CanvasIdParamModel.shape,
     owner: FrameOwnerParamModel,
   })
-  .superRefine(boundsRefiner)
   .transform(normalizeBounds);
 
 export type CreateFrameBodyModel = z.infer<typeof CreateFrameBodyModel>;
