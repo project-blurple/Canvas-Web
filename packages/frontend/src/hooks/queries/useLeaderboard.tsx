@@ -8,8 +8,8 @@ import type {
 } from "@blurple-canvas-web/types";
 import {
   keepPreviousData,
+  type UseQueryOptions,
   useQuery,
-  UseQueryOptions,
 } from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
