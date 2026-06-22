@@ -23,7 +23,7 @@ export const LeaderboardEntrySchema = z.object({
 
 export type LeaderboardEntry = z.infer<typeof LeaderboardEntrySchema>;
 
-const ColorDistributionList = z.array(
+export const ColorDistributionList = z.array(
   z.object({
     colorId: z.number().int().positive(),
     count: z.number().int().nonnegative(),
