@@ -1,4 +1,5 @@
 import {
+  boundsWithDimensions,
   type DiscordUserProfile,
   type Frame,
   type FrameOwnerInput,
@@ -125,10 +126,12 @@ export class FrameService {
       id: frame.id,
       canvasId: frame.canvasId,
       name: frame.name,
-      x0: frame.x0,
-      y0: frame.y0,
-      x1: frame.x1,
-      y1: frame.y1,
+      ...boundsWithDimensions({
+        x0: frame.x0,
+        y0: frame.y0,
+        x1: frame.x1,
+        y1: frame.y1,
+      }),
     };
 
     if (frame.ownerGuildId !== null) {
@@ -315,7 +318,8 @@ export class FrameService {
       throw new NotFoundError("Canvas not found");
     }
 
-    if (x0 < 0 || y0 < 0 || x1 > canvas.width || y1 > canvas.height) {
+    // Bounds are inclusive, so the maximum valid coordinate is size - 1.
+    if (x0 < 0 || y0 < 0 || x1 >= canvas.width || y1 >= canvas.height) {
       throw new BadRequestError(
         "Frame coordinates must be within the bounds of the canvas",
       );

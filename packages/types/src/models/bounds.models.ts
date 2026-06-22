@@ -7,27 +7,6 @@ export const BoundsModel = z.object({
   y1: z.coerce.number().int().positive(),
 });
 
-export const boundsRefiner = (
-  { x0, y0, x1, y1 }: z.infer<typeof BoundsModel>,
-  ctx: z.core.$RefinementCtx,
-) => {
-  if (x0 === x1) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["x1"],
-      message: "x0 must not be equal to x1",
-    });
-  }
-
-  if (y0 === y1) {
-    ctx.addIssue({
-      code: "custom",
-      path: ["y1"],
-      message: "y0 must not be equal to y1",
-    });
-  }
-};
-
 export const OptionalBoundsModel = BoundsModel.partial()
   .superRefine((data, ctx) => {
     const vals = [data.x0, data.y0, data.x1, data.y1];
@@ -38,10 +17,6 @@ export const OptionalBoundsModel = BoundsModel.partial()
         message:
           "All bounds fields (x0, y0, x1, y1) must be provided or all omitted",
       });
-      return;
-    }
-    if (definedCount === 4) {
-      boundsRefiner(data as z.infer<typeof BoundsModel>, ctx);
     }
   })
   .transform((data) =>
@@ -49,6 +24,18 @@ export const OptionalBoundsModel = BoundsModel.partial()
   );
 
 export type BoundsInput = z.infer<typeof OptionalBoundsModel>;
+
+/**
+ * Bounds are inclusive, so a region from `x0` to `x1` spans `x1 - x0 + 1`
+ * pixels. Augments bounds with their pixel `width`/`height`.
+ */
+export const boundsWithDimensions = <T extends z.infer<typeof BoundsModel>>(
+  bounds: T,
+) => ({
+  ...bounds,
+  width: bounds.x1 - bounds.x0 + 1,
+  height: bounds.y1 - bounds.y0 + 1,
+});
 
 /** Orders bounds so (x0, y0) is the top-left and (x1, y1) the bottom-right. */
 export const normalizeBounds = <T extends z.infer<typeof BoundsModel>>(

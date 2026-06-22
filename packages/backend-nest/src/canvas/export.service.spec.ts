@@ -94,8 +94,8 @@ describe("ExportService", () => {
       canvasId: 1,
       x0: 0,
       y0: 0,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
     });
 
     const decoded = await decodePng(await streamToBuffer(stream));
@@ -112,8 +112,8 @@ describe("ExportService", () => {
       canvasId: 1,
       x0: 1,
       y0: 0,
-      x1: 2,
-      y1: 1,
+      x1: 1,
+      y1: 0,
     });
 
     const decoded = await decodePng(await streamToBuffer(stream));
@@ -130,8 +130,8 @@ describe("ExportService", () => {
       canvasId: 1,
       x0: 0,
       y0: 1,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
       scale: 2,
     });
 
@@ -162,8 +162,8 @@ describe("ExportService", () => {
       canvasId: 9,
       x0: 0,
       y0: 1,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
       scale: 2,
     });
 
@@ -186,12 +186,13 @@ describe("ExportService", () => {
   });
 
   it("rejects empty crop dimensions", async () => {
+    // Inverted bounds (x1 < x0 / y1 < y0) yield a non-positive inclusive size.
     await expect(
       service.exportCanvasBoundsAsStream({
         canvasId: 1,
         x0: 1,
         y0: 0,
-        x1: 1,
+        x1: 0,
         y1: 1,
       }),
     ).rejects.toThrow(BadRequestError);
