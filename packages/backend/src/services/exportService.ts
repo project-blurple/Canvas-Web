@@ -239,7 +239,7 @@ async function createFrameExportPackage(
     (entries) => entries.map((entry) => entry.color_id),
   );
 
-  const palette = (await prisma.color.findMany({
+  const presentPalette = (await prisma.color.findMany({
     where: { id: { in: colorIds } },
     select: {
       id: true,
@@ -291,7 +291,7 @@ async function createFrameExportPackage(
         ),
       ),
     },
-    palette,
+    palette: presentPalette,
   };
 }
 
