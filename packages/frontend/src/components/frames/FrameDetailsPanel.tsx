@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import Pagination from "@/components/Pagination";
 import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
@@ -401,30 +402,24 @@ function Leaderboard({
 }) {
   const [selectedColor, setSelectedColor] =
     useState<PaletteColorSummary | null>(null);
+  const [page, setPage] = useState(1);
+  const leaderboardParams = {
+    size: 10,
+    page,
+    colorId: selectedColor?.id,
+  };
 
   const canvasLeaderboard = useCanvasLeaderboard(
     frame.canvasId,
-    {
-      size: 10,
-      page: 1,
-      colorId: selectedColor?.id,
-    },
+    leaderboardParams,
     {
       enabled: isSystemFrameId(frame.id),
     },
   );
 
-  const frameLeaderboard = useFrameLeaderboard(
-    frame.id,
-    {
-      size: 10,
-      page: 1,
-      colorId: selectedColor?.id,
-    },
-    {
-      enabled: !isSystemFrameId(frame.id),
-    },
-  );
+  const frameLeaderboard = useFrameLeaderboard(frame.id, leaderboardParams, {
+    enabled: !isSystemFrameId(frame.id),
+  });
 
   const leaderboard =
     isSystemFrameId(frame.id) ? canvasLeaderboard : frameLeaderboard;
@@ -451,6 +446,7 @@ function Leaderboard({
                 (c) => c.id === Number.parseInt(e.target.value, 10),
               ) ?? null;
             setSelectedColor(color);
+            setPage(1);
           }}
         >
           <option value="">All colors</option>
@@ -486,6 +482,22 @@ function Leaderboard({
               ))}
             </LeaderboardList>
           : <p>No leaderboard data available.</p>}
+          {leaderboard.data && leaderboard.data.entries.length > 0 && (
+            <Pagination
+              count={
+                leaderboard.data.total ?
+                  Math.ceil(
+                    leaderboard.data.total / (leaderboard.data.size ?? 10),
+                  )
+                : leaderboard.data.page
+              }
+              onChange={(_, value) => setPage(value)}
+              page={page}
+              size="small"
+              siblingCount={1}
+              boundaryCount={0}
+            />
+          )}
         </div>
       </div>
     </ActionPanelTabBody>
