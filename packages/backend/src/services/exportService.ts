@@ -9,6 +9,7 @@ import {
   DEFAULT_CANVAS_EXPORT_SCALE,
   type Frame,
   type FrameExportPackage,
+  type PaletteColorSummary,
   type PixelColor,
 } from "@blurple-canvas-web/types";
 import { groupBy } from "es-toolkit";
@@ -234,6 +235,20 @@ async function createFrameExportPackage(
     (entry) => entry.color_id,
   );
 
+  const colorIds = Object.values(colorLeaderboardsPartitioned).flatMap(
+    (entries) => entries.map((entry) => entry.color_id),
+  );
+
+  const palette = (await prisma.color.findMany({
+    where: { id: { in: colorIds } },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      rgba: true,
+    },
+  })) as PaletteColorSummary[];
+
   const imageExportUrls = CANVAS_EXPORT_SCALES.reduce<
     Record<CanvasExportScale, string>
   >(
@@ -276,6 +291,7 @@ async function createFrameExportPackage(
         ),
       ),
     },
+    palette,
   };
 }
 

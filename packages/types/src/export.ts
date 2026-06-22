@@ -32,6 +32,14 @@ export const FrameExportPackage = z.object({
       LeaderboardEntrySlimSchema.array(),
     ),
   },
+  palette: z.array(
+    PaletteColorSummarySchema.pick({
+      id: true,
+      name: true,
+      code: true,
+      rgba: true,
+    }),
+  ),
 });
 
 export type FrameExportPackage = z.infer<typeof FrameExportPackage>;
