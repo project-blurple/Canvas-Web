@@ -6,7 +6,7 @@ import {
   type PaletteColorSummary,
   type StatisticsSummaryBase,
 } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { Skeleton, styled } from "@mui/material";
 import {
   ChartNoAxesColumn,
   CircleStar,
@@ -38,7 +38,7 @@ import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
 import { downloadAsJson } from "@/util/downloadAsJson";
 import { isSystemFrameId } from "@/util/frame";
-import Avatar from "../Avatar";
+import Avatar, { AvatarSkeleton } from "../Avatar";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -155,6 +155,21 @@ const LeaderboardSelect = styled("select")`
     border-color: var(--discord-blurple);
   }
 `;
+
+function LeaderboardRowSkeleton() {
+  return (
+    <LeaderboardRow aria-busy>
+      <LeaderboardRank>
+        <Skeleton width="2ch" />
+      </LeaderboardRank>
+      <div>
+        <Skeleton width="min(16ch, 100%)" />
+        <Skeleton width="min(8ch, 100%)" />
+      </div>
+      <AvatarSkeleton size={40} sx={{ alignSelf: "center" }} />
+    </LeaderboardRow>
+  );
+}
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
@@ -458,7 +473,11 @@ function Leaderboard({
         </LeaderboardSelect>
         <div>
           {leaderboard.isFetching ?
-            <p>Loading leaderboard...</p>
+            <LeaderboardList>
+              {Array.from({ length: 10 }, (_, index) => (
+                <LeaderboardRowSkeleton key={index} />
+              ))}
+            </LeaderboardList>
           : leaderboard.data?.entries.length ?
             <LeaderboardList>
               {leaderboard.data.entries.map((entry) => (
