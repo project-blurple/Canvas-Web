@@ -158,7 +158,7 @@ function DownloadButton({
 }
 
 function ExportButton({ frame }: { frame: Frame }) {
-  const { mutate: exportFrame, isPending } = useFrameExport({
+  const { mutate: exportFrame, isPending } = useFrameExport(frame.id, {
     onSuccess: (data) => {
       const filename = `frame-${frame.id}-export-${data.lastUpdated}.json`;
       downloadAsJson(data, filename);
@@ -175,7 +175,7 @@ function ExportButton({ frame }: { frame: Frame }) {
   return (
     <BasicHighlightButton
       disabled={isPending}
-      onClick={() => exportFrame(frame.id)}
+      onClick={() => exportFrame()}
       style={{ inlineSize: "100%" }}
     >
       Data

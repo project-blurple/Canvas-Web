@@ -41,13 +41,15 @@ export function useFrameStats(
 }
 
 export function useFrameExport(
+  frameId: Frame["id"],
   useMutationOptions?: Omit<
-    UseMutationOptions<FrameExportPackage, Error, Frame["id"]>,
+    UseMutationOptions<FrameExportPackage, Error, void>,
     "mutationFn"
   >,
 ) {
   return useMutation({
-    mutationFn: async (frameId: Frame["id"]) => {
+    mutationKey: ["frameExport", frameId],
+    mutationFn: async () => {
       const response = await axios.get<FrameExportPackage>(
         `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/export`,
       );
