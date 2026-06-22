@@ -1,7 +1,16 @@
 "use client";
 
-import type { Frame, FrameStatisticsSummary } from "@blurple-canvas-web/types";
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import type {
+  Frame,
+  FrameExportPackage,
+  FrameStatisticsSummary,
+} from "@blurple-canvas-web/types";
+import {
+  type UseMutationOptions,
+  type UseQueryOptions,
+  useMutation,
+  useQuery,
+} from "@tanstack/react-query";
 import axios from "axios";
 import config from "@/config/clientConfig";
 
@@ -28,5 +37,24 @@ export function useFrameStats(
     refetchOnWindowFocus: false,
     enabled: Boolean(frameId),
     ...useQueryOptions,
+  });
+}
+
+export function useFrameExport(
+  frameId: Frame["id"],
+  useMutationOptions?: Omit<
+    UseMutationOptions<FrameExportPackage, Error, void>,
+    "mutationFn"
+  >,
+) {
+  return useMutation({
+    mutationKey: ["frameExport", frameId],
+    mutationFn: async () => {
+      const response = await axios.get<FrameExportPackage>(
+        `${config.apiUrl}/api/v1/frame/${encodeURIComponent(frameId)}/export`,
+      );
+      return response.data;
+    },
+    ...useMutationOptions,
   });
 }

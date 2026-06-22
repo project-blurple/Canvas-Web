@@ -28,13 +28,14 @@ import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
 import { useCanvasStats } from "@/hooks/queries/useCanvasStats";
-import { useFrameStats } from "@/hooks/queries/useFrameStats";
+import { useFrameExport, useFrameStats } from "@/hooks/queries/useFrameStats";
 import {
   useCanvasLeaderboard,
   useFrameLeaderboard,
 } from "@/hooks/queries/useLeaderboard";
 import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
+import { downloadAsJson } from "@/util/downloadAsJson";
 import { isSystemFrameId } from "@/util/frame";
 import Avatar from "../Avatar";
 import ActionPanelPrimitives from "../action-panel/primitives";
@@ -85,6 +86,12 @@ const TableCell = styled("td")`
   code {
     font-size: 0.85em;
   }
+`;
+
+const DownloadButtonColumn = styled("div")`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
 
 const ControlButtonRow = styled("div")`
@@ -213,6 +220,33 @@ function DownloadButton({
         <ButtonSupplement>{`(PNG)`}</ButtonSupplement>
       </BasicHighlightButton>
     </a>
+  );
+}
+
+function ExportButton({ frame }: { frame: Frame }) {
+  const { mutate: exportFrame, isPending } = useFrameExport(frame.id, {
+    onSuccess: (data) => {
+      const filename = `frame-${frame.id}-export-${data.lastUpdated}.json`;
+      downloadAsJson(data, filename);
+      toast.success("Frame data exported successfully");
+    },
+    onError: (error) => {
+      console.error("Export failed:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to export frame data",
+      );
+    },
+  });
+
+  return (
+    <BasicHighlightButton
+      disabled={isPending}
+      onClick={() => exportFrame()}
+      style={{ inlineSize: "100%" }}
+    >
+      Data
+      <ButtonSupplement>{`(JSON)`}</ButtonSupplement>
+    </BasicHighlightButton>
   );
 }
 
@@ -498,9 +532,11 @@ export default function FrameDetailsPanel({
           <ActionPanelPrimitives.SectionHeading>
             Downloads
           </ActionPanelPrimitives.SectionHeading>
-          <DownloadButton frame={frame} canvas={canvas} />
-          {/* Download timelapse */}
-          {/* Export stats */}
+          <DownloadButtonColumn>
+            <DownloadButton frame={frame} canvas={canvas} />
+            {/* Download timelapse */}
+            <ExportButton frame={frame} />
+          </DownloadButtonColumn>
         </div>
       </ActionPanelTabBody>
       <ActionPanelTabBody>

@@ -8,10 +8,13 @@ import {
   CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
   type Frame,
+  type FrameExportPackage,
+  type PaletteColorSummary,
   type PixelColor,
 } from "@blurple-canvas-web/types";
+import { groupBy } from "es-toolkit";
 import sharp from "sharp";
-import type { canvas as PrismaCanvas } from "@/client";
+import { type canvas as PrismaCanvas, prisma } from "@/client";
 import config from "@/config";
 import { BadRequestError } from "@/errors";
 import {
@@ -21,6 +24,17 @@ import {
 } from "@/services/canvasService";
 import { type Bounds, boundsWithDimensions } from "@/utils";
 import { getFrameById } from "./frameService";
+import { getFrameStatisticsSummary } from "./statisticsService";
+
+interface FrameExportCacheEntry {
+  data: FrameExportPackage;
+  expiresAt: number;
+}
+
+const FRAME_EXPORT_CACHE = new Map<string, FrameExportCacheEntry>();
+const FRAME_EXPORT_LOADS = new Map<string, Promise<FrameExportPackage>>();
+
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 export function pixelsToRgbaBuffer(
   pixels: PixelColor[],
@@ -186,4 +200,132 @@ export async function exportCanvasBoundsAsStream({
   });
 
   return output;
+}
+
+async function createFrameExportPackage(
+  frameId: Frame["id"],
+): Promise<FrameExportPackage> {
+  const frame = await getFrameById(frameId);
+
+  const statistics = await getFrameStatisticsSummary(frameId);
+
+  const leaderboard = await prisma.leaderboard_frame.findMany({
+    where: { frame_id: frameId },
+    orderBy: { rank: "asc" },
+    select: {
+      rank: true,
+      user_id: true,
+      total_pixels: true,
+    },
+  });
+
+  const colorLeaderboards = await prisma.color_leaderboard_frame.findMany({
+    where: { frame_id: frameId },
+    orderBy: { rank: "asc" },
+    select: {
+      rank: true,
+      user_id: true,
+      color_id: true,
+      total_pixels: true,
+    },
+  });
+
+  const colorLeaderboardsPartitioned = groupBy(
+    colorLeaderboards,
+    (entry) => entry.color_id,
+  );
+
+  const colorIds = Object.values(colorLeaderboardsPartitioned).flatMap(
+    (entries) => entries.map((entry) => entry.color_id),
+  );
+
+  const palette = (await prisma.color.findMany({
+    where: { id: { in: colorIds } },
+    select: {
+      id: true,
+      name: true,
+      code: true,
+      rgba: true,
+    },
+  })) as PaletteColorSummary[];
+
+  const imageExportUrls = CANVAS_EXPORT_SCALES.reduce<
+    Record<CanvasExportScale, string>
+  >(
+    (acc, scale) => {
+      acc[scale] = `/api/v1/frames/${frameId}@${scale}.png`;
+      return acc;
+    },
+    {} as Record<CanvasExportScale, string>,
+  );
+  const timelapseExportUrl = `/api/v1/frames/${frameId}.mp4`;
+
+  return {
+    frame,
+    statistics: {
+      totalPixelsPlaced: statistics.totalPixelsPlaced,
+      totalUsersInvolved: statistics.totalUsersInvolved,
+    },
+    export: {
+      imageUrls: imageExportUrls,
+      timelapseUrl: timelapseExportUrl,
+    },
+    lastUpdated: new Date().toISOString(),
+    colorDistribution: statistics.colorDistribution,
+    leaderboard: {
+      all: leaderboard.map((entry) => ({
+        rank: entry.rank,
+        userId: entry.user_id,
+        totalPixels: entry.total_pixels,
+      })),
+      colors: Object.fromEntries(
+        Object.entries(colorLeaderboardsPartitioned).map(
+          ([colorId, entries]) => [
+            colorId,
+            entries.map((entry) => ({
+              rank: entry.rank,
+              userId: entry.user_id,
+              totalPixels: entry.total_pixels,
+            })),
+          ],
+        ),
+      ),
+    },
+    palette,
+  };
+}
+
+export async function createCachedFrameExportPackage(
+  frameId: Frame["id"],
+): Promise<{ package: FrameExportPackage; ttl: number }> {
+  const now = Date.now();
+
+  const cached = FRAME_EXPORT_CACHE.get(frameId);
+  if (cached && cached.expiresAt > now) {
+    return { package: cached.data, ttl: cached.expiresAt - now };
+  }
+
+  const pendingLoad = FRAME_EXPORT_LOADS.get(frameId);
+  if (pendingLoad) {
+    return { package: await pendingLoad, ttl: CACHE_TTL_MS };
+  }
+
+  const loadPromise = createFrameExportPackage(frameId);
+  FRAME_EXPORT_LOADS.set(frameId, loadPromise);
+
+  try {
+    const data = await loadPromise;
+
+    FRAME_EXPORT_CACHE.set(frameId, {
+      data,
+      expiresAt: now + CACHE_TTL_MS,
+    });
+
+    return {
+      package: data,
+      ttl: CACHE_TTL_MS,
+    };
+  } finally {
+    FRAME_EXPORT_LOADS.delete(frameId);
+  }
 }
