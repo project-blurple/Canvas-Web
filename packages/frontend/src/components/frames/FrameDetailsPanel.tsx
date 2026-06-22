@@ -475,6 +475,7 @@ function Leaderboard({
           {leaderboard.isFetching ?
             <LeaderboardList>
               {Array.from({ length: 10 }, (_, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: Skeletons
                 <LeaderboardRowSkeleton key={index} />
               ))}
             </LeaderboardList>
