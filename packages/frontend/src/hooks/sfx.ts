@@ -21,14 +21,17 @@ export function usePlaySound(
   const volume = volumeOption ?? volumeFromStorage;
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
+
   const play = useCallback(() => {
     const audio = new Audio(`/audio/${stem}.ogg`);
-    audio.volume = volumeToAudioLevel(volume);
+    audio.volume = volumeToAudioLevel(volumeRef.current);
     audioRef.current = audio;
     void audio.play().catch(
       noop, // Ignore playback failures from browser autoplay rules.
     );
-  }, [stem, volume]);
+  }, [stem]);
 
   // If `enabled` option is explicitly provided, it takes precedence…
   const playOrNoop =
