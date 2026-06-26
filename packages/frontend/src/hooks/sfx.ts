@@ -38,6 +38,7 @@ export function usePlaySound(
     typeof enabled !== "undefined" ?
       enabled ? play
       : noop
+      // …otherwise defer to user preference
     : globallyEnabled ? play
     : noop;
 
