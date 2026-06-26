@@ -1,6 +1,8 @@
 import { styled } from "@mui/material";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
-import { useId } from "react";
+import { useEffect, useId, useRef } from "react";
+
+const VOLUME_PREVIEW_DEBOUNCE_MS = 300;
 
 const Wrapper = styled("div")`
   align-items: baseline;
@@ -101,12 +103,16 @@ interface VolumeSettingProps extends Omit<
   volume?: number;
   onVolumeChange?: React.ChangeEventHandler<HTMLInputElement>;
   onCheckedChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onVolumePreview?: () => void;
+  previewAudioRef?: React.RefObject<HTMLAudioElement | null>;
 }
 
 export function VolumeSetting({
   volume = 75,
   onVolumeChange,
   onCheckedChange,
+  onVolumePreview,
+  previewAudioRef,
   ...props
 }: VolumeSettingProps) {
   const volumeIcon =
@@ -114,6 +120,38 @@ export function VolumeSetting({
     : volume <= 33 ? <Volume />
     : volume <= 66 ? <Volume1 />
     : <Volume2 />;
+
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleVolumeChange: React.ChangeEventHandler<HTMLInputElement> = (
+    e,
+  ) => {
+    onVolumeChange?.(e);
+
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = setTimeout(() => {
+      // Stop any currently playing preview
+      if (previewAudioRef?.current) {
+        previewAudioRef.current.pause();
+        previewAudioRef.current.currentTime = 0;
+      }
+
+      onVolumePreview?.();
+    }, VOLUME_PREVIEW_DEBOUNCE_MS);
+  };
 
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
@@ -128,7 +166,7 @@ export function VolumeSetting({
           }
           max={100}
           min={0}
-          onChange={onVolumeChange}
+          onChange={handleVolumeChange}
           step={1}
           type="range"
           value={volume}

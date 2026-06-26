@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import useLocalStorage from "@/app/settings/useLocalStorage";
 import { clamp } from "@/util";
 
@@ -19,19 +19,26 @@ export function usePlaySound(
   const [globallyEnabled] = useLocalStorage("audio/sound-fx");
   const [volumeFromStorage] = useLocalStorage("audio/sound-fx/volume");
   const volume = volumeOption ?? volumeFromStorage;
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const play = useCallback(() => {
     const audio = new Audio(`/audio/${stem}.ogg`);
     audio.volume = volumeToAudioLevel(volume);
+    audioRef.current = audio;
     void audio.play().catch(
       noop, // Ignore playback failures from browser autoplay rules.
     );
   }, [stem, volume]);
 
   // If `enabled` option is explicitly provided, it takes precedence…
-  if (typeof enabled !== "undefined") return enabled ? play : noop;
-  // …otherwise defer to user preference
-  return globallyEnabled ? play : noop;
+  const playOrNoop =
+    typeof enabled !== "undefined" ?
+      enabled ? play
+      : noop
+    : globallyEnabled ? play
+    : noop;
+
+  return { play: playOrNoop, audioRef };
 }
 
 export function usePlayCooldownExpirySound() {

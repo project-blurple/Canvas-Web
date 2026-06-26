@@ -4,6 +4,7 @@ import { styled } from "@mui/material";
 import { BellRing } from "lucide-react";
 import CheckboxSetting, { VolumeSetting } from "./CheckboxSetting";
 import useLocalStorage from "./useLocalStorage";
+import { usePlaySound } from "@/hooks/sfx";
 
 const Wrapper = styled("div")`
   display: flex;
@@ -53,6 +54,11 @@ const Aside = styled("aside")`
 function SoundEffectsSetting() {
   const [enabled, setEnabled] = useLocalStorage("audio/sound-fx");
   const [volume, setVolume] = useLocalStorage("audio/sound-fx/volume");
+  const { play, audioRef } = usePlaySound("place_pixel", {
+    enabled: true,
+    volume,
+  });
+
   return (
     <VolumeSetting
       aria-busy={enabled === undefined}
@@ -63,6 +69,8 @@ function SoundEffectsSetting() {
       onCheckedChange={(e) => setEnabled(e.target.checked)}
       volume={volume}
       onVolumeChange={(e) => setVolume(e.target.valueAsNumber)}
+      onVolumePreview={play}
+      previewAudioRef={audioRef}
     />
   );
 }
@@ -70,6 +78,11 @@ function SoundEffectsSetting() {
 function CooldownExpiryJingleSetting() {
   const [enabled, setEnabled] = useLocalStorage("audio/cooldown-jingle");
   const [volume, setVolume] = useLocalStorage("audio/cooldown-jingle/volume");
+  const { play, audioRef } = usePlaySound("cooldown_notification", {
+    enabled: true,
+    volume,
+  });
+
   return (
     <VolumeSetting
       aria-busy={enabled === undefined}
@@ -80,6 +93,8 @@ function CooldownExpiryJingleSetting() {
       onCheckedChange={(e) => setEnabled(e.target.checked)}
       volume={volume}
       onVolumeChange={(e) => setVolume(e.target.valueAsNumber)}
+      onVolumePreview={play}
+      previewAudioRef={audioRef}
     />
   );
 }

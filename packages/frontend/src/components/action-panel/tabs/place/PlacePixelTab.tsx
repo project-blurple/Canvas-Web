@@ -134,7 +134,7 @@ export default function PlacePixelTab({
   const { cooldownEndTime, setCooldownEndTime } = useActionPanelContext();
   const { signOut } = useAuthContext();
   const { coords, setCoords } = useCanvasViewContext();
-  const playPixelPlacementSound = usePlaySound("place_pixel");
+  const { play: playPixelPlacementSound } = usePlaySound("place_pixel");
   const { selectedPixelColor: selectedPixelColorRgb } = useCanvasViewContext();
   const { setColor } = useSelectedColorContext();
   const {
@@ -324,7 +324,7 @@ interface NamedPaletteProps {
 
 function NamedPalette({ colors, isColorDisabled, name }: NamedPaletteProps) {
   const { color: selectedColor, setColor } = useSelectedColorContext();
-  const playSound = usePlaySound("pick_color");
+  const { play: playSound } = usePlaySound("pick_color");
 
   if (colors?.length === 0) return null;
   const isLoading = colors === undefined;
