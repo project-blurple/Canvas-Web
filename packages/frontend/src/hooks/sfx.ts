@@ -8,7 +8,7 @@ function noop() {}
  * Convert volume setting (0-100) to Audio.volume range (0.0-1.0).
  */
 function volumeToAudioLevel(volume: number | undefined): number {
-  return clamp(volume ?? 75, 0, 100) / 100;
+  return clamp(volume ?? 70, 0, 100) / 100;
 }
 
 export function usePlaySound(

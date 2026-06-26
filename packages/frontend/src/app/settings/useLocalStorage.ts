@@ -33,9 +33,9 @@ type LocalStorageKey = keyof LocalStorageValueTypes;
 
 const defaults = {
   "audio/cooldown-jingle": true,
-  "audio/cooldown-jingle/volume": 75,
+  "audio/cooldown-jingle/volume": 70,
   "audio/sound-fx": true,
-  "audio/sound-fx/volume": 75,
+  "audio/sound-fx/volume": 70,
   "notices/dismissed": [] as string[],
 } as const satisfies LocalStorageValueTypes;
 

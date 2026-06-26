@@ -36,15 +36,34 @@ const Description = styled("p")`
   margin-block-start: 0.5em;
 `;
 
-const VolumeSliderWrapper = styled("div")`
+const VolumeWrapper = styled("div")`
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.5rem;
   padding-block-start: 0.5rem;
 `;
 
+const VolumeSliderWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  inline-size: 80%;
+`;
+
 const VolumeSlider = styled("input")`
   inline-size: 100%;
+`;
+
+const TickLabels = styled("div")`
+  color: oklch(from var(--discord-white) l c h / 55%);
+  display: flex;
+  font-size: 0.75rem;
+  justify-content: space-between;
+  margin-block-start: 0.25rem;
+  text-align: center;
+
+  > span {
+    min-inline-size: 2.5ch;
+  }
 `;
 
 interface CheckboxSettingProps
@@ -102,7 +121,7 @@ interface VolumeSettingProps extends Omit<
 }
 
 export function VolumeSetting({
-  volume = 75,
+  volume = 70,
   onVolumeChange,
   onCheckedChange,
   onVolumePreview,
@@ -143,30 +162,38 @@ export function VolumeSetting({
 
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
-      <VolumeSliderWrapper>
+      <VolumeWrapper>
         <Volume1 />
-        <VolumeSlider
-          aria-label="Volume"
-          disabled={
-            props["aria-busy"] === true ||
-            props["aria-busy"] === "true" ||
-            !props.checked
-          }
-          list="ticks"
-          max={100}
-          min={0}
-          onChange={handleVolumeChange}
-          step={10}
-          type="range"
-          value={volume}
-        />
+        <VolumeSliderWrapper>
+          <VolumeSlider
+            aria-label="Volume"
+            disabled={
+              props["aria-busy"] === true ||
+              props["aria-busy"] === "true" ||
+              !props.checked
+            }
+            list="ticks"
+            max={100}
+            min={0}
+            onChange={handleVolumeChange}
+            step={10}
+            type="range"
+            value={volume}
+          />
+          <TickLabels>
+            <span>0</span>
+            <span>50</span>
+            <span>100</span>
+          </TickLabels>
+        </VolumeSliderWrapper>
         <Volume2 />
+
         <datalist id="ticks">
           {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
             <option key={value} value={value} />
           ))}
         </datalist>
-      </VolumeSliderWrapper>
+      </VolumeWrapper>
     </CheckboxSetting>
   );
 }
