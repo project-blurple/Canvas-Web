@@ -1,4 +1,4 @@
-import { styled } from "@mui/material";
+import { Button, styled } from "@mui/material";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
@@ -51,6 +51,13 @@ const VolumeLabel = styled("span")`
   font-variant-numeric: tabular-nums;
   min-inline-size: 5ch;
   text-align: right;
+`;
+
+const VolumeButton = styled("button")`
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
 `;
 
 interface CheckboxSettingProps
@@ -107,6 +114,36 @@ interface VolumeSettingProps extends Omit<
   previewAudioRef?: React.RefObject<HTMLAudioElement | null>;
 }
 
+function VolumeCycleButton({
+  volume,
+  onVolumeChange,
+}: {
+  volume: number;
+  onVolumeChange?: React.ChangeEventHandler<HTMLInputElement>;
+}) {
+  const handleClick = () => {
+    const newVolume =
+      volume < 33 ? 33
+      : volume < 67 ? 67
+      : volume < 100 ? 100
+      : 0;
+    const fakeEvent = {
+      target: { valueAsNumber: newVolume },
+    } as React.ChangeEvent<HTMLInputElement>;
+    onVolumeChange?.(fakeEvent);
+  };
+
+  return (
+    <VolumeButton aria-label="Cycle volume" onClick={handleClick} type="button">
+      {volume <= 33 ?
+        <Volume />
+      : volume <= 67 ?
+        <Volume1 />
+      : <Volume2 />}
+    </VolumeButton>
+  );
+}
+
 export function VolumeSetting({
   volume = 75,
   onVolumeChange,
@@ -115,12 +152,6 @@ export function VolumeSetting({
   previewAudioRef,
   ...props
 }: VolumeSettingProps) {
-  const volumeIcon =
-    props.checked === false ? <VolumeX />
-    : volume <= 33 ? <Volume />
-    : volume <= 66 ? <Volume1 />
-    : <Volume2 />;
-
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -156,7 +187,13 @@ export function VolumeSetting({
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
       <VolumeSliderWrapper>
-        {volumeIcon}
+        {props.checked === false ?
+          <VolumeX />
+        : <VolumeCycleButton
+            volume={volume}
+            onVolumeChange={handleVolumeChange}
+          />
+        }
         <VolumeSlider
           aria-label="Volume"
           disabled={
