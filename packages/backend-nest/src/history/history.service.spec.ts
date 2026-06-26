@@ -1,5 +1,5 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
-
 import { BlocklistService } from "@/blocklist/blocklist.service";
 import { CanvasCacheService } from "@/canvas/canvas-cache.service";
 import { PixelReconciliationService } from "@/canvas/pixel-reconciliation.service";
@@ -221,7 +221,7 @@ describe("HistoryService", () => {
         data: {
           id: 100,
           name: "Big Canvas",
-          locked: false,
+          placeState: CanvasPlaceState.Anyone,
           eventId: 1,
           width: SIZE,
           height: SIZE,

@@ -1,7 +1,8 @@
-import type {
-  BlurpleEvent,
-  CanvasInfo,
-  CanvasSummary,
+import {
+  type BlurpleEvent,
+  type CanvasInfo,
+  CanvasPlaceState,
+  type CanvasSummary,
 } from "@blurple-canvas-web/types";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 
@@ -31,7 +32,7 @@ export interface CreateCanvasParams {
 export interface EditCanvasParams {
   canvasId: number;
   name?: string;
-  isLocked?: boolean;
+  placeState?: CanvasPlaceState;
   allColorsGlobal?: boolean;
   cooldownDuration?: number;
 }
@@ -76,7 +77,7 @@ export class CanvasService {
         "canvas.id",
         "canvas.name",
         "canvas.eventId",
-        "canvas.locked",
+        "canvas.placeState",
         "canvas.width",
         "canvas.height",
         "canvas.cooldownLength",
@@ -89,7 +90,7 @@ export class CanvasService {
         "canvas.id",
         "canvas.name",
         "canvas.eventId",
-        "canvas.locked",
+        "canvas.placeState",
         "canvas.width",
         "canvas.height",
       ])
@@ -101,7 +102,7 @@ export class CanvasService {
       id: canvas.id,
       name: canvas.name,
       eventId: canvas.eventId,
-      isLocked: canvas.locked,
+      placeState: canvas.placeState as CanvasPlaceState,
       width: canvas.width,
       height: canvas.height,
       cooldownDuration: canvas.cooldownLength,
@@ -124,7 +125,7 @@ export class CanvasService {
         width: true,
         height: true,
         startCoordinates: true,
-        locked: true,
+        placeState: true,
         eventId: true,
         cooldownLength: true,
         allColorsGlobal: true,
@@ -205,7 +206,7 @@ export class CanvasService {
         height,
         eventId: currentEventId,
         startCoordinates,
-        locked: true,
+        placeState: CanvasPlaceState.NoOne,
         cooldownLength: cooldownDuration,
         allColorsGlobal,
       },
@@ -221,7 +222,7 @@ export class CanvasService {
   async editCanvas({
     canvasId,
     name,
-    isLocked,
+    placeState,
     allColorsGlobal,
     cooldownDuration,
   }: EditCanvasParams): Promise<CanvasModel> {
@@ -231,7 +232,7 @@ export class CanvasService {
       },
       data: {
         name,
-        locked: isLocked,
+        placeState: placeState,
         cooldownLength: cooldownDuration,
         allColorsGlobal,
       },
@@ -438,7 +439,7 @@ export class CanvasService {
       | "width"
       | "height"
       | "startCoordinates"
-      | "locked"
+      | "placeState"
       | "eventId"
       | "cooldownLength"
       | "allColorsGlobal"
@@ -453,7 +454,7 @@ export class CanvasService {
         canvas.startCoordinates[0],
         canvas.startCoordinates[1],
       ],
-      isLocked: canvas.locked,
+      placeState: canvas.placeState as CanvasPlaceState,
       eventId: canvas.eventId,
       webPlacingEnabled: this.placementCfg.webPlacingEnabled,
       allColorsGlobal: canvas.allColorsGlobal,

@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
 import sharp from "sharp";
-
 import { DatabaseModule } from "@/common/database/database.module";
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { appConfig } from "@/config/app.config";
@@ -156,7 +156,7 @@ describe("ExportService", () => {
     // Prime the cache so the locked canvas files exist on disk.
     await cacheService.getCanvasPng(9);
     const cached = await cacheService.getCanvasPng(9);
-    expect(cached.isLocked).toBe(true);
+    expect(cached.placeState).toBe(CanvasPlaceState.NoOne);
 
     const stream = await service.exportCanvasBoundsAsStream({
       canvasId: 9,

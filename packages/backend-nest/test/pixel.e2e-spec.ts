@@ -2,7 +2,7 @@ import fs from "node:fs";
 import type { AddressInfo } from "node:net";
 import os from "node:os";
 import path from "node:path";
-import { SocketEvents } from "@blurple-canvas-web/types";
+import { CanvasPlaceState, SocketEvents } from "@blurple-canvas-web/types";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
 import {
@@ -322,6 +322,58 @@ describe("Pixel routes (e2e)", () => {
         .post("/api/v1/canvas/1/pixel")
         .send({ x: -1, y: 0, colorId: 2 })
         .expect(400);
+    });
+
+    it("rejects placement on a soft-locked canvas for a user with no existing placements", async () => {
+      const agent = request.agent(app.getHttpServer());
+      await signIn(agent);
+
+      await prisma.canvas.update({
+        where: { id: 1 },
+        data: { placeState: CanvasPlaceState.NoNewUsers },
+      });
+
+      const response = await agent
+        .post("/api/v1/canvas/1/pixel")
+        .send({ x: 0, y: 0, colorId: 2 })
+        .expect(403);
+
+      expect(response.body).toStrictEqual({
+        message:
+          "This canvas is soft-locked. Only users with existing placements may place pixels.",
+      });
+      expect(await prisma.history.count({ where: { canvasId: 1 } })).toBe(0);
+    });
+
+    it("allows placement on a soft-locked canvas for a user with an existing placement", async () => {
+      const agent = request.agent(app.getHttpServer());
+      await signIn(agent);
+
+      await prisma.canvas.update({
+        where: { id: 1 },
+        data: { placeState: CanvasPlaceState.NoNewUsers },
+      });
+      await prisma.history.create({
+        data: {
+          canvasId: 1,
+          userId: BigInt(MOCK_DISCORD_USER_ID),
+          x: 1,
+          y: 0,
+          colorId: 2,
+          timestamp: new Date(),
+        },
+      });
+
+      const response = await agent
+        .post("/api/v1/canvas/1/pixel")
+        .send({ x: 0, y: 0, colorId: 2 })
+        .expect(201);
+
+      expect(response.body.cooldownEndTime).toBeGreaterThan(0);
+      const placed = await prisma.history.findFirst({
+        where: { canvasId: 1, x: 0, y: 0, colorId: 2 },
+      });
+      expect(placed?.userId).toBe(BigInt(MOCK_DISCORD_USER_ID));
     });
   });
 
