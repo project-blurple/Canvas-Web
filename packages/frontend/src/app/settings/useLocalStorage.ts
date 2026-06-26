@@ -21,7 +21,9 @@ type Satisfies<T extends BaseT, BaseT> = T;
 interface LocalStorageValueTypes extends Satisfies<
   {
     "audio/cooldown-jingle": boolean;
+    "audio/cooldown-jingle/volume": number;
     "audio/sound-fx": boolean;
+    "audio/sound-fx/volume": number;
     "notices/dismissed": string[];
   },
   { [key: string]: JsonDataType }
@@ -31,7 +33,9 @@ type LocalStorageKey = keyof LocalStorageValueTypes;
 
 const defaults = {
   "audio/cooldown-jingle": true,
+  "audio/cooldown-jingle/volume": 75,
   "audio/sound-fx": true,
+  "audio/sound-fx/volume": 75,
   "notices/dismissed": [] as string[],
 } as const satisfies LocalStorageValueTypes;
 
