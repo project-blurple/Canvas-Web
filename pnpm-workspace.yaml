@@ -2,17 +2,22 @@ minimumReleaseAge: 10080
 
 packages:
   - "packages/backend"
+  - "packages/backend-nest"
   - "packages/frontend"
   - "packages/types"
 
 injectWorkspacePackages: true
 
 allowBuilds:
+  "@nestjs/core": false
   "@prisma/engines": false
   better-sqlite3: true
+  "@scarf/scarf": false
+  "@swc/core": false
   cpu-features: false
   esbuild: false
   ffmpeg-static: true
+  msw: false
   prisma: false
   protobufjs: false
   sharp: false
