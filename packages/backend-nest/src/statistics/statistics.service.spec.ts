@@ -57,9 +57,9 @@ describe("StatisticsService", () => {
     });
   });
 
-  describe("getLeaderboard", () => {
+  describe("getCanvasLeaderboard", () => {
     it("returns a paginated leaderboard", async () => {
-      const page = await service.getLeaderboard(1);
+      const page = await service.getCanvasLeaderboard({ canvasId: 1 });
       expect(page.total).toBe(1);
       expect(page.page).toBe(1);
       expect(page.entries).toHaveLength(1);
@@ -73,14 +73,18 @@ describe("StatisticsService", () => {
     });
 
     it("clamps the page size to 40", async () => {
-      const page = await service.getLeaderboard(1, 1, 1000);
+      const page = await service.getCanvasLeaderboard({
+        canvasId: 1,
+        page: 1,
+        size: 1000,
+      });
       expect(page.size).toBe(40);
     });
 
     it("falls back to a default avatar when the user has no profile", async () => {
       await prisma.discordUserProfile.delete({ where: { userId: 1n } });
 
-      const page = await service.getLeaderboard(1);
+      const page = await service.getCanvasLeaderboard({ canvasId: 1 });
 
       expect(page.entries[0].username).toBeUndefined();
       expect(page.entries[0].profilePictureUrl).toBe(
@@ -89,6 +93,71 @@ describe("StatisticsService", () => {
       expect(discordProfileService.createDefaultAvatarUrl).toHaveBeenCalledWith(
         1n,
       );
+    });
+  });
+
+  describe("getCanvasColorLeaderboard", () => {
+    it("returns a paginated leaderboard for a single color", async () => {
+      const page = await service.getCanvasColorLeaderboard({
+        canvasId: 1,
+        colorId: 1,
+      });
+      expect(page.total).toBe(1);
+      expect(page.entries).toHaveLength(1);
+      expect(page.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 4,
+        username: "test_user_1",
+      });
+    });
+
+    it("returns every color's leaderboard when no color is given", async () => {
+      const page = await service.getCanvasColorLeaderboard({ canvasId: 1 });
+      expect(page.total).toBe(3);
+      expect(page.entries).toHaveLength(3);
+    });
+  });
+
+  describe("getFrameLeaderboard", () => {
+    it("returns a paginated leaderboard for a frame", async () => {
+      await createFrameForCanvas(1, "abc123");
+
+      const page = await service.getFrameLeaderboard({ frameId: "abc123" });
+      expect(page.total).toBe(1);
+      expect(page.entries).toHaveLength(1);
+      expect(page.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 6,
+        username: "test_user_1",
+      });
+    });
+
+    it("matches the frame ID case-insensitively", async () => {
+      await createFrameForCanvas(1, "abc123");
+
+      const page = await service.getFrameLeaderboard({ frameId: "ABC123" });
+      expect(page.total).toBe(1);
+      expect(page.entries[0]).toMatchObject({ userId: "1", totalPixels: 6 });
+    });
+  });
+
+  describe("getFrameColorLeaderboard", () => {
+    it("returns a paginated leaderboard for a frame color", async () => {
+      await createFrameForCanvas(1, "abc123");
+
+      const page = await service.getFrameColorLeaderboard({
+        frameId: "abc123",
+        colorId: 1,
+      });
+      expect(page.total).toBe(1);
+      expect(page.entries).toHaveLength(1);
+      expect(page.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 4,
+      });
     });
   });
 
@@ -101,6 +170,18 @@ describe("StatisticsService", () => {
         totalPixelsPlaced: 6,
       });
       expect(summary.lastPlacedAt).not.toBeNull();
+    });
+
+    it("includes the color distribution ordered by count", async () => {
+      const summary = await service.getCanvasStatisticsSummary(1);
+      expect(summary.colorDistribution[0]).toEqual({ colorId: 1, count: 4 });
+      expect(summary.colorDistribution).toHaveLength(3);
+      expect(summary.colorDistribution).toEqual(
+        expect.arrayContaining([
+          { colorId: 2, count: 1 },
+          { colorId: 3, count: 1 },
+        ]),
+      );
     });
 
     it("throws NotFoundError for a canvas with no statistics", async () => {
@@ -126,4 +207,49 @@ describe("StatisticsService", () => {
       ).rejects.toBeInstanceOf(NotFoundError);
     });
   });
+
+  describe("getFrameStatisticsSummary", () => {
+    it("returns aggregate frame statistics with a color distribution", async () => {
+      await createFrameForCanvas(1, "abc123");
+
+      const summary = await service.getFrameStatisticsSummary("abc123");
+      expect(summary).toMatchObject({
+        frameId: "abc123",
+        totalUsersInvolved: 1,
+        totalPixelsPlaced: 6,
+      });
+      expect(summary.lastPlacedAt).not.toBeNull();
+      expect(summary.colorDistribution[0]).toEqual({ colorId: 1, count: 4 });
+      expect(summary.colorDistribution).toHaveLength(3);
+    });
+
+    it("matches the frame ID case-insensitively and returns the stored ID", async () => {
+      await createFrameForCanvas(1, "abc123");
+
+      const summary = await service.getFrameStatisticsSummary("ABC123");
+      expect(summary.frameId).toBe("abc123");
+      expect(summary.totalPixelsPlaced).toBe(6);
+    });
+
+    it("throws NotFoundError for a frame with no statistics", async () => {
+      await expect(
+        service.getFrameStatisticsSummary("ffffff"),
+      ).rejects.toBeInstanceOf(NotFoundError);
+    });
+  });
 });
+
+async function createFrameForCanvas(canvasId: number, id: string) {
+  await prisma.frame.create({
+    data: {
+      id,
+      canvasId,
+      ownerUserId: 1n,
+      name: `Frame ${id}`,
+      x0: 0,
+      y0: 0,
+      x1: 1,
+      y1: 1,
+    },
+  });
+}
