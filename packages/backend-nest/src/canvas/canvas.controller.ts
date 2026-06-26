@@ -5,6 +5,7 @@ import {
   CanvasIdParamModel,
   CanvasInfoSchema,
   CanvasPasteBodyModel,
+  CanvasPlaceState,
   CanvasSummarySchema,
   CooldownSchema,
   CreateCanvasBodyModel,
@@ -84,7 +85,7 @@ class CanvasRecordResponseDto extends createZodDto(
   z.object({
     id: z.number().int(),
     name: z.string(),
-    locked: z.boolean(),
+    place_state: z.enum(CanvasPlaceState),
     event_id: z.number().int().nullable(),
     width: z.number().int(),
     height: z.number().int(),
@@ -299,7 +300,7 @@ export class CanvasController {
   private toCanvasRecordResponse(canvas: {
     id: number;
     name: string;
-    locked: boolean;
+    placeState: string;
     eventId: number | null;
     width: number;
     height: number;
@@ -310,7 +311,7 @@ export class CanvasController {
     return {
       id: canvas.id,
       name: canvas.name,
-      locked: canvas.locked,
+      place_state: canvas.placeState as CanvasPlaceState,
       event_id: canvas.eventId,
       width: canvas.width,
       height: canvas.height,
@@ -327,7 +328,7 @@ export class CanvasController {
     scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
     bounds?: BoundsInput,
   ): Promise<void> {
-    if (cachedCanvas.isLocked) {
+    if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
       const canvasPath = cachedCanvas.canvasPaths[scale];
 
       if (!canvasPath) {

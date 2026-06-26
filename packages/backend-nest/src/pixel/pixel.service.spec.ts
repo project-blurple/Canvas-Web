@@ -1,4 +1,4 @@
-import type { PaletteColor } from "@blurple-canvas-web/types";
+import { CanvasPlaceState, type PaletteColor } from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
 
 import { BlocklistService } from "@/blocklist/blocklist.service";
@@ -118,6 +118,76 @@ describe("PixelService", () => {
       await expect(
         service.validatePixel(9, { x: 0, y: 0 }, false),
       ).resolves.not.toThrow();
+    });
+
+    describe("soft-locked canvas (no_new_users)", () => {
+      beforeEach(async () => {
+        await seedUsers();
+        await seedColors();
+        await prisma.canvas.update({
+          where: { id: 1 },
+          data: { placeState: CanvasPlaceState.NoNewUsers },
+        });
+      });
+
+      async function placeHistory(
+        userId: bigint,
+        overrides: { erasedAt?: Date } = {},
+      ) {
+        await prisma.history.create({
+          data: {
+            canvasId: 1,
+            userId,
+            x: 0,
+            y: 0,
+            colorId: 1,
+            timestamp: new Date(),
+            erasedAt: overrides.erasedAt ?? null,
+          },
+        });
+      }
+
+      it("rejects a user with no existing placements when honorLocked is true", async () => {
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, true, 1n),
+        ).rejects.toThrow(ForbiddenError);
+      });
+
+      it("resolves a user with an existing placement when honorLocked is true", async () => {
+        await placeHistory(1n);
+
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, true, 1n),
+        ).resolves.not.toThrow();
+      });
+
+      it("treats a user whose only placement was erased as a new user", async () => {
+        await placeHistory(1n, { erasedAt: new Date() });
+
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, true, 1n),
+        ).rejects.toThrow(ForbiddenError);
+      });
+
+      it("only counts the placing user's own history", async () => {
+        await placeHistory(9n);
+
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, true, 1n),
+        ).rejects.toThrow(ForbiddenError);
+      });
+
+      it("skips the soft-lock check when no userId is supplied", async () => {
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, true),
+        ).resolves.not.toThrow();
+      });
+
+      it("ignores the soft-lock when honorLocked is false", async () => {
+        await expect(
+          service.validatePixel(1, { x: 0, y: 0 }, false, 1n),
+        ).resolves.not.toThrow();
+      });
     });
   });
 
@@ -496,7 +566,7 @@ describe("PixelService", () => {
       const canvas = await cacheService.getCanvasPng(canvasId);
 
       // Necessary for Typescript to correctly identify which of the union types are applicable.
-      if (canvas.isLocked) {
+      if (canvas.placeState !== CanvasPlaceState.Anyone) {
         throw new Error("Canvas should not be locked");
       }
 
@@ -516,7 +586,7 @@ describe("PixelService", () => {
 
       const updatedCanvas = await cacheService.getCanvasPng(canvasId);
 
-      if (updatedCanvas.isLocked) {
+      if (updatedCanvas.placeState === CanvasPlaceState.NoOne) {
         throw new Error("Canvas should not be locked");
       }
 

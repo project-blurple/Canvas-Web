@@ -5,6 +5,7 @@ import {
   boundsWithDimensions,
   type CanvasExportScale,
   type CanvasInfo,
+  CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
 } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
@@ -84,7 +85,7 @@ export class ExportService {
 
     const cached = await this.canvasCacheService.getCanvasPng(canvasId);
 
-    if (cached.isLocked) {
+    if (cached.placeState === CanvasPlaceState.NoOne) {
       const canvasPath = cached.canvasPaths[scale];
 
       if (!canvasPath) {

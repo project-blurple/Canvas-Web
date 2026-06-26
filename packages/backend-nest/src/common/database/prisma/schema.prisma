@@ -30,7 +30,7 @@ model Blacklist {
 model Canvas {
   id               Int                @id @default(autoincrement())
   name             String
-  locked           Boolean            @default(true)
+  placeState       String             @default("no_one") @map("place_state") // no_one | no_new_users | anyone
   // It's theoretically possible to have a canvas without an event. E.g. An off-season canvas
   eventId          Int?               @map("event_id")
   event            Event?             @relation(fields: [eventId], references: [id])
@@ -51,6 +51,13 @@ model Canvas {
   notices          Notice[]
   canvasStats      CanvasStats?
 
+  leaderboardFrames      LeaderboardFrame[]
+  colorLeaderboards      ColorLeaderboard[]
+  colorLeaderboardFrames ColorLeaderboardFrame[]
+  frameStats             FrameStats[]
+  canvasColors           CanvasColors[]
+  frameColors            FrameColors[]
+
   @@map("canvas")
 }
 
@@ -67,6 +74,11 @@ model Color {
   userStats      UserStats[]
   guildStats     GuildStats[]
   participations Participation[]
+
+  colorLeaderboards      ColorLeaderboard[]
+  colorLeaderboardFrames ColorLeaderboardFrame[]
+  canvasColors           CanvasColors[]
+  frameColors            FrameColors[]
 
   @@map("color")
 }
@@ -91,6 +103,10 @@ model DiscordUserProfile {
   leaderboardGuild  LeaderboardGuild[]
   leaderboard       Leaderboard[]
   user              User               @relation(fields: [userId], references: [id])
+
+  leaderboardFrames      LeaderboardFrame[]
+  colorLeaderboards      ColorLeaderboard[]
+  colorLeaderboardFrames ColorLeaderboardFrame[]
 
   @@map("discord_user_profile")
 }
@@ -127,6 +143,11 @@ model Frame {
   y0           Int     @map("y_0")
   y1           Int     @map("y_1")
   styleId      Int?    @map("style_id")
+
+  leaderboardFrames      LeaderboardFrame[]
+  colorLeaderboardFrames ColorLeaderboardFrame[]
+  frameStats             FrameStats?
+  frameColors            FrameColors[]
 
   @@map("frame")
 }
@@ -220,6 +241,10 @@ model User {
   leaderboardGuild   LeaderboardGuild[]
   discordUserProfile DiscordUserProfile?
   auditLogs          AuditLog[]
+
+  leaderboardFrames      LeaderboardFrame[]
+  colorLeaderboards      ColorLeaderboard[]
+  colorLeaderboardFrames ColorLeaderboardFrame[]
 
   @@map("user")
 }
@@ -386,4 +411,88 @@ view EventStats {
 
   @@unique([eventId])
   @@map("event_stats")
+}
+
+view LeaderboardFrame {
+  userId             BigInt              @map("user_id")
+  user               User                @relation(fields: [userId], references: [id])
+  canvasId           Int                 @map("canvas_id")
+  canvas             Canvas              @relation(fields: [canvasId], references: [id])
+  frameId            String              @map("frame_id")
+  frame              Frame               @relation(fields: [frameId], references: [id])
+  discordUserProfile DiscordUserProfile? @relation(fields: [userId], references: [userId])
+  totalPixels        Int                 @map("total_pixels")
+  rank               Int
+
+  @@unique([userId, canvasId, frameId])
+  @@map("leaderboard_frame")
+}
+
+view ColorLeaderboard {
+  userId             BigInt              @map("user_id")
+  user               User                @relation(fields: [userId], references: [id])
+  canvasId           Int                 @map("canvas_id")
+  canvas             Canvas              @relation(fields: [canvasId], references: [id])
+  colorId            Int                 @map("color_id")
+  color              Color               @relation(fields: [colorId], references: [id])
+  discordUserProfile DiscordUserProfile? @relation(fields: [userId], references: [userId])
+  totalPixels        Int                 @map("total_pixels")
+  rank               Int
+
+  @@unique([userId, canvasId, colorId])
+  @@map("color_leaderboard")
+}
+
+view ColorLeaderboardFrame {
+  userId             BigInt              @map("user_id")
+  user               User                @relation(fields: [userId], references: [id])
+  canvasId           Int                 @map("canvas_id")
+  canvas             Canvas              @relation(fields: [canvasId], references: [id])
+  frameId            String              @map("frame_id")
+  frame              Frame               @relation(fields: [frameId], references: [id])
+  colorId            Int                 @map("color_id")
+  color              Color               @relation(fields: [colorId], references: [id])
+  discordUserProfile DiscordUserProfile? @relation(fields: [userId], references: [userId])
+  totalPixels        Int                 @map("total_pixels")
+  rank               Int
+
+  @@unique([userId, canvasId, frameId, colorId])
+  @@map("color_leaderboard_frame")
+}
+
+view FrameStats {
+  frameId      String   @map("frame_id")
+  frame        Frame    @relation(fields: [frameId], references: [id])
+  canvasId     Int      @map("canvas_id")
+  canvas       Canvas   @relation(fields: [canvasId], references: [id])
+  totalUsers   Int      @map("total_users")
+  totalPixels  Int      @map("total_pixels")
+  lastPlacedAt DateTime @map("last_placed_at") @db.Timestamptz(6)
+
+  @@unique([frameId])
+  @@map("frame_stats")
+}
+
+view CanvasColors {
+  canvasId Int    @map("canvas_id")
+  canvas   Canvas @relation(fields: [canvasId], references: [id])
+  colorId  Int    @map("color_id")
+  color    Color  @relation(fields: [colorId], references: [id])
+  count    Int
+
+  @@unique([canvasId, colorId])
+  @@map("canvas_colors")
+}
+
+view FrameColors {
+  frameId  String @map("frame_id")
+  frame    Frame  @relation(fields: [frameId], references: [id])
+  canvasId Int    @map("canvas_id")
+  canvas   Canvas @relation(fields: [canvasId], references: [id])
+  colorId  Int    @map("color_id")
+  color    Color  @relation(fields: [colorId], references: [id])
+  count    Int
+
+  @@unique([frameId, colorId])
+  @@map("frame_colors")
 }

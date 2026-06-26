@@ -116,7 +116,12 @@ export class PixelController {
 
     const [color] = await Promise.all([
       this.pixelService.validateColor(colorId, params.canvasId, userGuildIds),
-      this.pixelService.validatePixel(params.canvasId, coordinates, true),
+      this.pixelService.validatePixel(
+        params.canvasId,
+        coordinates,
+        true,
+        BigInt(user.id),
+      ),
       this.pixelService.validateUser(BigInt(user.id)),
     ]);
 

@@ -1,7 +1,8 @@
-import type {
-  PaletteColor,
-  PixelColor,
-  Point,
+import {
+  CanvasPlaceState,
+  type PaletteColor,
+  type PixelColor,
+  type Point,
 } from "@blurple-canvas-web/types";
 import { Inject, Injectable } from "@nestjs/common";
 
@@ -35,12 +36,14 @@ export class PixelService {
    *
    * @param canvasId - The ID of the canvas
    * @param coordinates - The coordinates of the pixel
-   * @param honorLocked - True will return an error if the canvas is locked
+   * @param honorLocked - True will return an error if the canvas is locked or soft-locked
+   * @param userId - Required when honorLocked is true and the canvas may be soft-locked
    */
   async validatePixel(
     canvasId: number,
     coordinates: Point,
     honorLocked: boolean,
+    userId?: bigint,
   ): Promise<void> {
     const canvas = await this.prisma.canvas.findFirst({
       where: {
@@ -64,8 +67,29 @@ export class PixelService {
       );
     }
 
-    if (honorLocked && canvas.locked) {
+    if (honorLocked && canvas.placeState === CanvasPlaceState.NoOne) {
       throw new ForbiddenError(`Canvas with ID ${canvasId} is locked`);
+    }
+
+    if (
+      honorLocked &&
+      canvas.placeState === CanvasPlaceState.NoNewUsers &&
+      userId !== undefined
+    ) {
+      const existingHistory = await this.prisma.history.findFirst({
+        where: {
+          canvasId,
+          userId,
+          erasedAt: null,
+        },
+        select: { id: true },
+      });
+
+      if (!existingHistory) {
+        throw new ForbiddenError(
+          "This canvas is soft-locked. Only users with existing placements may place pixels.",
+        );
+      }
     }
   }
 

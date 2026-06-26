@@ -1,8 +1,12 @@
 import {
+  CanvasColorStatsParamModel,
   CanvasIdParamModel,
   CanvasStatisticsSummarySchema,
   EventIdParamModel,
   EventStatisticsSummarySchema,
+  FrameColorStatsParamModel,
+  FrameIdParamModel,
+  FrameStatisticsSummarySchema,
   LeaderboardEntrySchema,
   LeaderboardQueryModel,
   paginatedSchema,
@@ -17,6 +21,16 @@ import { StatisticsService } from "./statistics.service";
 class UserCanvasParamsDto extends createZodDto(UserCanvasParamModel) {}
 
 class CanvasIdParamsDto extends createZodDto(CanvasIdParamModel) {}
+
+class CanvasColorStatsParamsDto extends createZodDto(
+  CanvasColorStatsParamModel,
+) {}
+
+class FrameIdParamsDto extends createZodDto(FrameIdParamModel) {}
+
+class FrameColorStatsParamsDto extends createZodDto(
+  FrameColorStatsParamModel,
+) {}
 
 class EventIdParamsDto extends createZodDto(EventIdParamModel) {}
 
@@ -34,6 +48,10 @@ class EventStatisticsSummaryResponseDto extends createZodDto(
   EventStatisticsSummarySchema,
 ) {}
 
+class FrameStatisticsSummaryResponseDto extends createZodDto(
+  FrameStatisticsSummarySchema,
+) {}
+
 @Controller("statistics")
 export class StatisticsController {
   constructor(private readonly statisticsService: StatisticsService) {}
@@ -47,18 +65,66 @@ export class StatisticsController {
     );
   }
 
-  @Get("leaderboard/:canvasId")
-  @ApiOperation({ summary: "Paginated leaderboard for a canvas (size ≤ 40)" })
+  @Get("leaderboard/canvas/:canvasId")
+  @ApiOperation({ summary: "Paginated leaderboard for a canvas" })
   @ZodResponse({ type: LeaderboardResponseDto })
-  async getLeaderboard(
+  async getCanvasLeaderboard(
     @Param() params: CanvasIdParamsDto,
     @Query() query: LeaderboardQueryDto,
   ) {
-    return await this.statisticsService.getLeaderboard(
-      params.canvasId,
-      query.page,
-      query.size,
-    );
+    return await this.statisticsService.getCanvasLeaderboard({
+      canvasId: params.canvasId,
+      page: query.page,
+      size: query.size,
+    });
+  }
+
+  @Get("leaderboard/canvas/:canvasId/color/:colorId")
+  @ApiOperation({
+    summary: "Paginated leaderboard for a canvas color",
+  })
+  @ZodResponse({ type: LeaderboardResponseDto })
+  async getCanvasColorLeaderboard(
+    @Param() params: CanvasColorStatsParamsDto,
+    @Query() query: LeaderboardQueryDto,
+  ) {
+    return await this.statisticsService.getCanvasColorLeaderboard({
+      canvasId: params.canvasId,
+      colorId: params.colorId,
+      page: query.page,
+      size: query.size,
+    });
+  }
+
+  @Get("leaderboard/frame/:frameId")
+  @ApiOperation({ summary: "Paginated leaderboard for a frame" })
+  @ZodResponse({ type: LeaderboardResponseDto })
+  async getFrameLeaderboard(
+    @Param() params: FrameIdParamsDto,
+    @Query() query: LeaderboardQueryDto,
+  ) {
+    return await this.statisticsService.getFrameLeaderboard({
+      frameId: params.frameId,
+      page: query.page,
+      size: query.size,
+    });
+  }
+
+  @Get("leaderboard/frame/:frameId/color/:colorId")
+  @ApiOperation({
+    summary: "Paginated leaderboard for a frame color",
+  })
+  @ZodResponse({ type: LeaderboardResponseDto })
+  async getFrameColorLeaderboard(
+    @Param() params: FrameColorStatsParamsDto,
+    @Query() query: LeaderboardQueryDto,
+  ) {
+    return await this.statisticsService.getFrameColorLeaderboard({
+      frameId: params.frameId,
+      colorId: params.colorId,
+      page: query.page,
+      size: query.size,
+    });
   }
 
   @Get("summary/canvas/:canvasId")
@@ -76,6 +142,15 @@ export class StatisticsController {
   async getEventStatisticsSummary(@Param() params: EventIdParamsDto) {
     return await this.statisticsService.getEventStatisticsSummary(
       params.eventId,
+    );
+  }
+
+  @Get("summary/frame/:frameId")
+  @ApiOperation({ summary: "Aggregate statistics for a frame" })
+  @ZodResponse({ type: FrameStatisticsSummaryResponseDto })
+  async getFrameStatisticsSummary(@Param() params: FrameIdParamsDto) {
+    return await this.statisticsService.getFrameStatisticsSummary(
+      params.frameId,
     );
   }
 }

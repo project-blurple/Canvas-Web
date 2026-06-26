@@ -5,7 +5,25 @@ import request from "supertest";
 import { AppModule } from "@/app.module";
 import { configureApp } from "@/app.setup";
 import { appConfig } from "@/config/app.config";
+import { testPrisma as prisma } from "@/test/database";
 import { seedAll } from "@/test/seed";
+
+const FRAME_ID = "abc123";
+
+async function createFrameForCanvas(canvasId: number) {
+  await prisma.frame.create({
+    data: {
+      id: FRAME_ID,
+      canvasId,
+      ownerUserId: 1n,
+      name: "Stats Frame",
+      x0: 0,
+      y0: 0,
+      x1: 1,
+      y1: 1,
+    },
+  });
+}
 
 describe("Statistics routes (e2e)", () => {
   let app: NestExpressApplication;
@@ -76,10 +94,10 @@ describe("Statistics routes (e2e)", () => {
     });
   });
 
-  describe("GET /api/v1/statistics/leaderboard/:canvasId", () => {
+  describe("GET /api/v1/statistics/leaderboard/canvas/:canvasId", () => {
     it("returns a paginated leaderboard", async () => {
       const response = await request(app.getHttpServer())
-        .get("/api/v1/statistics/leaderboard/1")
+        .get("/api/v1/statistics/leaderboard/canvas/1")
         .expect(200);
 
       expect(response.body).toMatchObject({
@@ -98,7 +116,7 @@ describe("Statistics routes (e2e)", () => {
 
     it("clamps the page size to 40", async () => {
       const response = await request(app.getHttpServer())
-        .get("/api/v1/statistics/leaderboard/1?size=1000")
+        .get("/api/v1/statistics/leaderboard/canvas/1?size=1000")
         .expect(200);
 
       expect(response.body.size).toBe(40);
@@ -106,8 +124,72 @@ describe("Statistics routes (e2e)", () => {
 
     it("rejects a non-positive page size", async () => {
       await request(app.getHttpServer())
-        .get("/api/v1/statistics/leaderboard/1?size=0")
+        .get("/api/v1/statistics/leaderboard/canvas/1?size=0")
         .expect(400);
+    });
+  });
+
+  describe("GET /api/v1/statistics/leaderboard/canvas/:canvasId/color/:colorId", () => {
+    it("returns a paginated leaderboard for a color", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/statistics/leaderboard/canvas/1/color/1")
+        .expect(200);
+
+      expect(response.body.total).toBe(1);
+      expect(response.body.entries).toHaveLength(1);
+      expect(response.body.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 4,
+      });
+    });
+
+    it("rejects a non-numeric color ID", async () => {
+      await request(app.getHttpServer())
+        .get("/api/v1/statistics/leaderboard/canvas/1/color/oops")
+        .expect(400);
+    });
+  });
+
+  describe("GET /api/v1/statistics/leaderboard/frame/:frameId", () => {
+    it("returns a paginated leaderboard for a frame", async () => {
+      await createFrameForCanvas(1);
+
+      const response = await request(app.getHttpServer())
+        .get(`/api/v1/statistics/leaderboard/frame/${FRAME_ID}`)
+        .expect(200);
+
+      expect(response.body.total).toBe(1);
+      expect(response.body.entries).toHaveLength(1);
+      expect(response.body.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 6,
+      });
+    });
+
+    it("rejects a malformed frame ID", async () => {
+      await request(app.getHttpServer())
+        .get("/api/v1/statistics/leaderboard/frame/not-a-frame")
+        .expect(400);
+    });
+  });
+
+  describe("GET /api/v1/statistics/leaderboard/frame/:frameId/color/:colorId", () => {
+    it("returns a paginated leaderboard for a frame color", async () => {
+      await createFrameForCanvas(1);
+
+      const response = await request(app.getHttpServer())
+        .get(`/api/v1/statistics/leaderboard/frame/${FRAME_ID}/color/1`)
+        .expect(200);
+
+      expect(response.body.total).toBe(1);
+      expect(response.body.entries).toHaveLength(1);
+      expect(response.body.entries[0]).toMatchObject({
+        rank: 1,
+        userId: "1",
+        totalPixels: 4,
+      });
     });
   });
 
@@ -123,6 +205,10 @@ describe("Statistics routes (e2e)", () => {
         totalPixelsPlaced: 6,
       });
       expect(response.body.lastPlacedAt).not.toBeNull();
+      expect(response.body.colorDistribution[0]).toEqual({
+        colorId: 1,
+        count: 4,
+      });
     });
 
     it("returns 404 for a canvas with no statistics", async () => {
@@ -156,6 +242,37 @@ describe("Statistics routes (e2e)", () => {
 
       expect(response.body).toStrictEqual({
         message: "Event statistics not found for event 404",
+      });
+    });
+  });
+
+  describe("GET /api/v1/statistics/summary/frame/:frameId", () => {
+    it("returns aggregate frame statistics", async () => {
+      await createFrameForCanvas(1);
+
+      const response = await request(app.getHttpServer())
+        .get(`/api/v1/statistics/summary/frame/${FRAME_ID}`)
+        .expect(200);
+
+      expect(response.body).toMatchObject({
+        frameId: FRAME_ID,
+        totalUsersInvolved: 1,
+        totalPixelsPlaced: 6,
+      });
+      expect(response.body.lastPlacedAt).not.toBeNull();
+      expect(response.body.colorDistribution[0]).toEqual({
+        colorId: 1,
+        count: 4,
+      });
+    });
+
+    it("returns 404 for a frame with no statistics", async () => {
+      const response = await request(app.getHttpServer())
+        .get("/api/v1/statistics/summary/frame/ffffff")
+        .expect(404);
+
+      expect(response.body).toStrictEqual({
+        message: "Frame statistics not found for frame ffffff",
       });
     });
   });
