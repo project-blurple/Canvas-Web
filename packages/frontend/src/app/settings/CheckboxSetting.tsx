@@ -1,5 +1,5 @@
-import { Button, styled } from "@mui/material";
-import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import { styled } from "@mui/material";
+import { Volume1, Volume2 } from "lucide-react";
 import { useEffect, useId, useRef } from "react";
 
 const VOLUME_PREVIEW_DEBOUNCE_MS = 300;
@@ -45,19 +45,6 @@ const VolumeSliderWrapper = styled("div")`
 
 const VolumeSlider = styled("input")`
   inline-size: 100%;
-`;
-
-const VolumeLabel = styled("span")`
-  font-variant-numeric: tabular-nums;
-  min-inline-size: 5ch;
-  text-align: right;
-`;
-
-const VolumeButton = styled("button")`
-  background: none;
-  border: none;
-  color: inherit;
-  cursor: pointer;
 `;
 
 interface CheckboxSettingProps
@@ -114,36 +101,6 @@ interface VolumeSettingProps extends Omit<
   previewAudioRef?: React.RefObject<HTMLAudioElement | null>;
 }
 
-function VolumeCycleButton({
-  volume,
-  onVolumeChange,
-}: {
-  volume: number;
-  onVolumeChange?: React.ChangeEventHandler<HTMLInputElement>;
-}) {
-  const handleClick = () => {
-    const newVolume =
-      volume < 33 ? 33
-      : volume < 67 ? 67
-      : volume < 100 ? 100
-      : 0;
-    const fakeEvent = {
-      target: { valueAsNumber: newVolume },
-    } as React.ChangeEvent<HTMLInputElement>;
-    onVolumeChange?.(fakeEvent);
-  };
-
-  return (
-    <VolumeButton aria-label="Cycle volume" onClick={handleClick} type="button">
-      {volume <= 33 ?
-        <Volume />
-      : volume <= 67 ?
-        <Volume1 />
-      : <Volume2 />}
-    </VolumeButton>
-  );
-}
-
 export function VolumeSetting({
   volume = 75,
   onVolumeChange,
@@ -187,13 +144,7 @@ export function VolumeSetting({
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
       <VolumeSliderWrapper>
-        {props.checked === false ?
-          <VolumeX />
-        : <VolumeCycleButton
-            volume={volume}
-            onVolumeChange={handleVolumeChange}
-          />
-        }
+        <Volume1 />
         <VolumeSlider
           aria-label="Volume"
           disabled={
@@ -201,14 +152,20 @@ export function VolumeSetting({
             props["aria-busy"] === "true" ||
             !props.checked
           }
+          list="ticks"
           max={100}
           min={0}
           onChange={handleVolumeChange}
-          step={1}
+          step={10}
           type="range"
           value={volume}
         />
-        <VolumeLabel>{volume}%</VolumeLabel>
+        <Volume2 />
+        <datalist id="ticks">
+          {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
+            <option key={value} value={value} />
+          ))}
+        </datalist>
       </VolumeSliderWrapper>
     </CheckboxSetting>
   );
