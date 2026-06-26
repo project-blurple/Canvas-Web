@@ -1,3 +1,4 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import type { Prisma } from "../../common/database/generated/client";
 
 export const infoSeedData: Prisma.InfoUncheckedCreateInput = {
@@ -27,7 +28,7 @@ export const canvasSeedData = [
   {
     id: 2024,
     name: "Canvas 2024",
-    locked: true,
+    placeState: CanvasPlaceState.NoOne,
     eventId: 2024,
     width: 700,
     height: 700,
@@ -37,7 +38,7 @@ export const canvasSeedData = [
   {
     id: 2034,
     name: "Testing Canvas",
-    locked: false,
+    placeState: CanvasPlaceState.Anyone,
     eventId: 2034,
     width: 100,
     height: 100,

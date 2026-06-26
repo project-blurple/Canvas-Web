@@ -56,8 +56,8 @@ async function seedOwnedFrame(): Promise<void> {
       name: "My Frame",
       x0: 0,
       y0: 0,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
     },
   });
 }
@@ -189,11 +189,11 @@ describe("Rate limiting (e2e)", () => {
         canvasId: 1,
         x0: 0,
         y0: 0,
-        x1: 2,
-        y1: 2,
+        x1: 1,
+        y1: 1,
         owner: { type: "user", id: MOCK_DISCORD_USER_ID },
       });
-      const editBody = { name: "Renamed", x0: 0, y0: 0, x1: 2, y1: 2 };
+      const editBody = { name: "Renamed", x0: 0, y0: 0, x1: 1, y1: 1 };
 
       // Fill the whole budget by alternating two different mutation routes, so
       // the bucket is provably shared rather than per-route.
@@ -243,8 +243,8 @@ describe("Rate limiting (e2e)", () => {
           canvasId: 1,
           x0: 0,
           y0: 0,
-          x1: 2,
-          y1: 2,
+          x1: 1,
+          y1: 1,
           owner: { type: "user", id: MOCK_DISCORD_USER_ID },
         })
         .expect(201);

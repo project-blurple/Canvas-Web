@@ -1,5 +1,5 @@
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
-
 import { DatabaseModule } from "@/common/database/database.module";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { UnprocessableError } from "@/common/errors/unprocessable.error";
@@ -95,7 +95,7 @@ describe("CanvasService", () => {
         name: "Unlocked Canvas",
         width: 2,
         height: 2,
-        isLocked: false,
+        placeState: CanvasPlaceState.Anyone,
         eventId: 1,
         startCoordinates: [1, 1],
       });
@@ -158,7 +158,7 @@ describe("CanvasService", () => {
           name: canvasName,
           width: 3,
           height: 2,
-          isLocked: true,
+          placeState: CanvasPlaceState.NoOne,
           allColorsGlobal: false,
           cooldownDuration: 15,
         }),
@@ -171,7 +171,7 @@ describe("CanvasService", () => {
       await service.editCanvas({
         canvasId: 1,
         name: "Edited Canvas",
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         allColorsGlobal: true,
         cooldownDuration: 45,
       });
@@ -193,7 +193,7 @@ describe("CanvasService", () => {
         expect.objectContaining({
           id: 1,
           name: "Edited Canvas",
-          isLocked: true,
+          placeState: CanvasPlaceState.NoOne,
           allColorsGlobal: true,
           cooldownDuration: 45,
         }),
@@ -231,7 +231,7 @@ describe("CanvasService", () => {
       const canvas = await prisma.canvas.create({
         data: {
           name: "Eventless Canvas",
-          locked: false,
+          placeState: CanvasPlaceState.Anyone,
           width: 2,
           height: 2,
           eventId: null,

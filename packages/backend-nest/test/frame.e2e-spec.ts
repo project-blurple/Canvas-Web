@@ -50,8 +50,8 @@ async function seedFrames(): Promise<void> {
         name: "My Frame",
         x0: 0,
         y0: 0,
-        x1: 2,
-        y1: 2,
+        x1: 1,
+        y1: 1,
       },
       {
         id: GUILD_FRAME_ID,
@@ -60,8 +60,8 @@ async function seedFrames(): Promise<void> {
         name: "Guild Frame",
         x0: 0,
         y0: 0,
-        x1: 2,
-        y1: 2,
+        x1: 1,
+        y1: 1,
       },
       {
         id: OTHER_FRAME_ID,
@@ -70,8 +70,8 @@ async function seedFrames(): Promise<void> {
         name: "Someone Else's Frame",
         x0: 0,
         y0: 0,
-        x1: 2,
-        y1: 2,
+        x1: 1,
+        y1: 1,
       },
     ],
   });
@@ -227,8 +227,8 @@ describe("Frame routes (e2e)", () => {
       canvasId: 1,
       x0: 0,
       y0: 0,
-      x1: 2,
-      y1: 2,
+      x1: 1,
+      y1: 1,
       owner: { type: "user", id: MOCK_DISCORD_USER_ID },
     };
 
@@ -275,7 +275,7 @@ describe("Frame routes (e2e)", () => {
       const agent = request.agent(app.getHttpServer());
       await signIn(agent);
 
-      // x0 === x1 violates the bounds refinement.
+      // x1 === canvas width is out of bounds (inclusive bounds cap at size - 1).
       await agent
         .post("/api/v1/frame")
         .send({ ...newFrame, x0: 2, x1: 2 })
@@ -284,7 +284,7 @@ describe("Frame routes (e2e)", () => {
   });
 
   describe("PUT /api/v1/frame/:frameId/edit", () => {
-    const edit = { name: "Renamed Frame", x0: 0, y0: 0, x1: 2, y1: 2 };
+    const edit = { name: "Renamed Frame", x0: 0, y0: 0, x1: 1, y1: 1 };
 
     it("requires login", async () => {
       await request(app.getHttpServer())

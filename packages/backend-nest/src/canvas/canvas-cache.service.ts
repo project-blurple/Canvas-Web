@@ -4,6 +4,7 @@ import {
   CANVAS_EXPORT_SCALES,
   type CanvasExportScale,
   type CanvasInfo,
+  CanvasPlaceState,
   DEFAULT_CANVAS_EXPORT_SCALE,
   type PixelColor,
   type PlacePixelArray,
@@ -26,7 +27,7 @@ import { type AppConfig, appConfig } from "@/config/app.config";
  * as an image on the file system.
  */
 export interface LockedCanvas {
-  isLocked: true;
+  placeState: typeof CanvasPlaceState.NoOne;
   canvasPaths: Partial<Record<CanvasExportScale, string>>;
 }
 
@@ -37,7 +38,9 @@ export interface LockedCanvas {
  * image from scratch is fetching the pixels from the database).
  */
 export interface UnlockedCanvas {
-  isLocked: false;
+  placeState:
+    | typeof CanvasPlaceState.Anyone
+    | typeof CanvasPlaceState.NoNewUsers;
   width: number;
   height: number;
   pixels: PixelColor[];
@@ -152,7 +155,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
       }
 
       this.canvasCache.set(canvasId, {
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         canvasPaths,
       });
     }
@@ -183,7 +186,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
   updateManyCachedPixels(canvasId: number, pixels: PlacePixelArray): void {
     const cachedCanvas = this.canvasCache.get(canvasId);
 
-    if (!cachedCanvas || cachedCanvas.isLocked) {
+    if (!cachedCanvas || cachedCanvas.placeState === CanvasPlaceState.NoOne) {
       return;
     }
 
@@ -204,7 +207,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
   ): void {
     const cachedCanvas = this.canvasCache.get(canvasId);
 
-    if (!cachedCanvas || cachedCanvas.isLocked) {
+    if (!cachedCanvas || cachedCanvas.placeState === CanvasPlaceState.NoOne) {
       return;
     }
 
@@ -282,7 +285,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
     const cachedCanvas = this.canvasCache.get(canvasId);
 
     try {
-      if (cachedCanvas?.isLocked) {
+      if (cachedCanvas?.placeState === CanvasPlaceState.NoOne) {
         const uniquePaths = new Set(Object.values(cachedCanvas.canvasPaths));
 
         await Promise.all(
@@ -329,14 +332,14 @@ export class CanvasCacheService implements OnApplicationBootstrap {
 
     const cachedCanvas = this.canvasCache.get(canvasId);
     if (cachedCanvas) {
-      if (cachedCanvas.isLocked === canvas.locked) {
+      if (cachedCanvas.placeState === canvas.placeState) {
         this.logger.debug(`Cache hit for canvas ${canvasId}`);
 
         // If this is a locked canvas, verify the cache is complete. If any
         // expected export scale is missing, clear the cache and treat as a
         // miss so we generate all sizes atomically via
         // `saveCanvasToFileSystem` below.
-        if (cachedCanvas.isLocked) {
+        if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
           const missing = CANVAS_EXPORT_SCALES.some(
             (scale) => !cachedCanvas.canvasPaths[scale],
           );
@@ -372,13 +375,13 @@ export class CanvasCacheService implements OnApplicationBootstrap {
       canvas.height,
     );
     const unlockedCanvas: UnlockedCanvas = {
-      isLocked: false,
+      placeState: CanvasPlaceState.Anyone,
       width: canvas.width,
       height: canvas.height,
       pixels,
     };
 
-    if (canvas.locked) {
+    if (canvas.placeState === CanvasPlaceState.NoOne) {
       const canvasPaths = await this.saveCanvasToFileSystem(canvas, pixels);
       const canvasPath = canvasPaths[1];
 
@@ -389,7 +392,7 @@ export class CanvasCacheService implements OnApplicationBootstrap {
       }
 
       this.canvasCache.set(canvasId, {
-        isLocked: true,
+        placeState: canvas.placeState,
         canvasPaths,
       });
 

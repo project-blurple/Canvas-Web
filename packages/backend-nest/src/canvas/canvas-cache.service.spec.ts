@@ -1,7 +1,10 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { CANVAS_EXPORT_SCALES } from "@blurple-canvas-web/types";
+import {
+  CANVAS_EXPORT_SCALES,
+  CanvasPlaceState,
+} from "@blurple-canvas-web/types";
 import { Test, type TestingModule } from "@nestjs/testing";
 import sharp from "sharp";
 
@@ -87,7 +90,7 @@ describe("CanvasCacheService", () => {
       ]);
 
       expect(firstCanvas).toStrictEqual(secondCanvas);
-      expect(firstCanvas.isLocked).toBe(false);
+      expect(firstCanvas.placeState).toBe(CanvasPlaceState.Anyone);
       expect(getCanvasPixelsSpy).toHaveBeenCalledTimes(1);
     });
 
@@ -97,7 +100,7 @@ describe("CanvasCacheService", () => {
       const getCanvasPixelsSpy = vi.spyOn(service, "getCanvasPixels");
       const cached = await service.getCanvasPng(1);
 
-      expect(cached.isLocked).toBe(false);
+      expect(cached.placeState).toBe(CanvasPlaceState.Anyone);
       expect(getCanvasPixelsSpy).not.toHaveBeenCalled();
     });
 
@@ -106,12 +109,12 @@ describe("CanvasCacheService", () => {
 
       const canvas = await service.getCanvasPng(9);
 
-      if (!canvas.isLocked) {
+      if (canvas.placeState !== CanvasPlaceState.NoOne) {
         throw new Error("Expected locked canvas cache entries");
       }
 
       expect(canvas).toMatchObject({
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         canvasPaths: expect.objectContaining({
           1: expect.stringContaining(service.getCanvasFilename(9, true)),
           2: expect.stringContaining(service.getCanvasFilename(9, true, 2)),
@@ -177,17 +180,17 @@ describe("CanvasCacheService", () => {
     it("removes the on-disk files when a cached canvas is unlocked in the database", async () => {
       await service.getCanvasPng(9);
       const lockedCanvas = await service.getCanvasPng(9);
-      if (!lockedCanvas.isLocked) {
+      if (lockedCanvas.placeState !== CanvasPlaceState.NoOne) {
         throw new Error("Expected locked canvas cache entries");
       }
 
       await prisma.canvas.update({
         where: { id: 9 },
-        data: { locked: false },
+        data: { placeState: CanvasPlaceState.Anyone },
       });
 
       const refreshed = await service.getCanvasPng(9);
-      expect(refreshed.isLocked).toBe(false);
+      expect(refreshed.placeState).toBe(CanvasPlaceState.Anyone);
 
       for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
@@ -200,17 +203,17 @@ describe("CanvasCacheService", () => {
 
     it("materialises the files when a cached canvas is locked in the database", async () => {
       const unlockedCanvas = await service.getCanvasPng(1);
-      expect(unlockedCanvas.isLocked).toBe(false);
+      expect(unlockedCanvas.placeState).toBe(CanvasPlaceState.Anyone);
 
       await prisma.canvas.update({
         where: { id: 1 },
-        data: { locked: true },
+        data: { placeState: CanvasPlaceState.NoOne },
       });
 
       await service.getCanvasPng(1);
       const lockedCanvas = await service.getCanvasPng(1);
 
-      expect(lockedCanvas.isLocked).toBe(true);
+      expect(lockedCanvas.placeState).toBe(CanvasPlaceState.NoOne);
       for (const scale of CANVAS_EXPORT_SCALES) {
         expect(
           await fileExists(
@@ -231,7 +234,7 @@ describe("CanvasCacheService", () => {
       const canvas = await service.getCanvasPng(9);
 
       expect(canvas).toStrictEqual({
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         canvasPaths: { 1: paths[0], 2: paths[1], 4: paths[2] },
       });
       expect(getCanvasPixelsSpy).not.toHaveBeenCalled();
@@ -248,7 +251,7 @@ describe("CanvasCacheService", () => {
       expect(getCanvasPixelsSpy).toHaveBeenCalledTimes(1);
 
       const canvas = await service.getCanvasPng(9);
-      if (!canvas.isLocked) {
+      if (canvas.placeState !== CanvasPlaceState.NoOne) {
         throw new Error("Expected locked canvas cache entries");
       }
 
@@ -268,7 +271,7 @@ describe("CanvasCacheService", () => {
   describe("updateManyCachedPixels", () => {
     it("updates pixels of an unlocked cached canvas in place", async () => {
       const cached = await service.getCanvasPng(1);
-      if (cached.isLocked) {
+      if (cached.placeState !== CanvasPlaceState.Anyone) {
         throw new Error("Expected an unlocked canvas");
       }
 
@@ -288,7 +291,7 @@ describe("CanvasCacheService", () => {
     it("ignores pixel updates for locked or uncached canvases", async () => {
       await service.getCanvasPng(9);
       const locked = await service.getCanvasPng(9);
-      expect(locked.isLocked).toBe(true);
+      expect(locked.placeState).toBe(CanvasPlaceState.NoOne);
 
       expect(() => {
         service.updateCachedCanvasPixel(9, { x: 0, y: 0 }, [1, 2, 3, 4]);

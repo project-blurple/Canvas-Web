@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { CanvasPlaceState } from "@blurple-canvas-web/types";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import { Test } from "@nestjs/testing";
 import sharp from "sharp";
 import request from "supertest";
-
 import { AppModule } from "@/app.module";
 import { configureApp } from "@/app.setup";
 import { CanvasCacheService } from "@/canvas/canvas-cache.service";
@@ -110,7 +110,7 @@ describe("Canvas routes (e2e)", () => {
           id: 9,
           name: "Locked Canvas",
           eventId: 9,
-          isLocked: true,
+          placeState: CanvasPlaceState.NoOne,
           width: 2,
           height: 2,
           cooldownDuration: null,
@@ -119,7 +119,7 @@ describe("Canvas routes (e2e)", () => {
           id: 1,
           name: "Unlocked Canvas",
           eventId: 1,
-          isLocked: false,
+          placeState: CanvasPlaceState.Anyone,
           width: 2,
           height: 2,
           cooldownDuration: 30,
@@ -140,7 +140,7 @@ describe("Canvas routes (e2e)", () => {
         width: 2,
         height: 2,
         startCoordinates: [1, 1],
-        isLocked: false,
+        placeState: CanvasPlaceState.Anyone,
         eventId: 1,
         webPlacingEnabled: false,
         allColorsGlobal: false,
@@ -158,7 +158,7 @@ describe("Canvas routes (e2e)", () => {
       expect(response.body).toMatchObject({
         id: 9,
         name: "Locked Canvas",
-        isLocked: true,
+        placeState: CanvasPlaceState.NoOne,
         eventId: 9,
       });
     });
@@ -231,16 +231,17 @@ describe("Canvas routes (e2e)", () => {
     });
 
     it("crops the export when bounds are passed", async () => {
+      // Bounds are inclusive, so this selects the right-hand column (x = 1).
       const response = await request(app.getHttpServer())
-        .get("/api/v1/canvas/1@1.png?x0=1&y0=0&x1=2&y1=1")
+        .get("/api/v1/canvas/1@1.png?x0=1&y0=0&x1=1&y1=1")
         .responseType("blob")
         .expect(200);
 
       const decoded = await decodePng(response.body as Buffer);
       expect(decoded).toStrictEqual({
         width: 1,
-        height: 1,
-        pixels: [BLURPLE],
+        height: 2,
+        pixels: [BLURPLE, BLANK],
       });
     });
 
