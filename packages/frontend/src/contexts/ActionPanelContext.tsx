@@ -68,7 +68,7 @@ export const ActionPanelProvider = ({ children }: ActionPanelProviderProps) => {
     });
   };
 
-  const playCooldownExpirySound = usePlayCooldownExpirySound();
+  const { play: playCooldownExpirySound } = usePlayCooldownExpirySound();
 
   // Play jingle exactly once when cooldown expires
   useEffect(() => {
