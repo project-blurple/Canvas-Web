@@ -2,9 +2,9 @@
 
 import { styled } from "@mui/material";
 import { BellRing } from "lucide-react";
-import CheckboxSetting, { VolumeSetting } from "./CheckboxSetting";
-import useLocalStorage from "./useLocalStorage";
 import { usePlaySound } from "@/hooks/sfx";
+import { VolumeSetting } from "./CheckboxSetting";
+import useLocalStorage from "./useLocalStorage";
 
 const Wrapper = styled("div")`
   display: flex;
