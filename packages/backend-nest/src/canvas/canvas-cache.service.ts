@@ -18,7 +18,7 @@ import {
 } from "@nestjs/common";
 import sharp from "sharp";
 
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { type AppConfig, appConfig } from "@/config/app.config";
 

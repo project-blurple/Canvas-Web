@@ -1,16 +1,16 @@
 import { PrismaTestingHelper } from "@chax-at/transactional-prisma-testing";
 import { afterAll, afterEach, beforeEach, vi } from "vitest";
 
-import type { ExtendedPrismaClient } from "@/common/database/prisma.client";
+import type { ExtendedPrismaClient } from "@/common/database/core/prisma.client";
 
 let proxyClient: ExtendedPrismaClient | null = null;
 
 //`vi.importActual` bypasses the mock below so the harness
 // itself can reach the containerised database.
 const harness = vi
-  .importActual<
-    typeof import("@/common/database/prisma.client")
-  >("@/common/database/prisma.client")
+  .importActual<typeof import("@/common/database/core/prisma.client")>(
+    "@/common/database/core/prisma.client",
+  )
   .then(({ createPrismaClient }) => {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
@@ -53,9 +53,11 @@ export const testPrisma = new Proxy({} as ExtendedPrismaClient, {
   },
 });
 
-vi.mock("@/common/database/prisma.client", async (importOriginal) => {
+vi.mock("@/common/database/core/prisma.client", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("@/common/database/prisma.client")>();
+    await importOriginal<
+      typeof import("@/common/database/core/prisma.client")
+    >();
   return {
     ...actual,
     createPrismaClient: () => testPrisma,

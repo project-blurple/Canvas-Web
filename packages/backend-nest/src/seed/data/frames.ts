@@ -1,4 +1,4 @@
-import type { Prisma } from "../../common/database/generated/client";
+import type { Prisma } from "../../common/database/core/prisma.client";
 
 // These frames are real guild frames from the 2024 event
 // Does not include any user-owned frames

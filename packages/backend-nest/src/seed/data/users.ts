@@ -1,4 +1,4 @@
-import type { Prisma } from "../../common/database/generated/client";
+import type { Prisma } from "../../common/database/core/prisma.client";
 
 const generatedUserCount = 20;
 

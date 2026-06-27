@@ -1,7 +1,7 @@
 import type { PixelColor, Point } from "@blurple-canvas-web/types";
 import { Injectable, Logger } from "@nestjs/common";
-import type { History } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { History } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { BroadcastService } from "@/realtime/broadcast.service";
 import { CanvasCacheService } from "./canvas-cache.service";

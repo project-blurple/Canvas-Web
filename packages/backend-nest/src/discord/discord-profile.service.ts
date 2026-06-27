@@ -1,8 +1,8 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import type { DiscordUserProfileModel } from "@/common/database/generated/models";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { DiscordUserProfile as DiscordUserProfileModel } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 
 @Injectable()

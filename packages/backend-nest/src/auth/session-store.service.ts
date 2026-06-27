@@ -1,7 +1,7 @@
 import { Injectable, type OnApplicationShutdown } from "@nestjs/common";
 import { PrismaSessionStore } from "@quixo3/prisma-session-store";
 
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 
 /** How often the store prunes expired sessions from the database. */
 const SESSION_PRUNE_INTERVAL_MS = 2 * 60 * 1000;

@@ -2,7 +2,7 @@ import type { GuildData } from "@blurple-canvas-web/types";
 import { Inject, Injectable } from "@nestjs/common";
 import type { SessionData } from "express-session";
 
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { ApiError } from "@/common/errors/api.error";
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { NotFoundError } from "@/common/errors/not-found.error";

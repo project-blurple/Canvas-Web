@@ -9,8 +9,8 @@ import {
 } from "@blurple-canvas-web/types";
 import { Inject, Injectable } from "@nestjs/common";
 
-import { Prisma } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import { Prisma } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { NotFoundError } from "@/common/errors/not-found.error";

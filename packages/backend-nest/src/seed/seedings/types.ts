@@ -1,4 +1,4 @@
-import type { PrismaClient } from "../../common/database/generated/client";
+import type { PrismaClient } from "../../common/database/core/prisma.client";
 
 export type SeedClient = PrismaClient;
 

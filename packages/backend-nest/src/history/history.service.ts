@@ -11,8 +11,8 @@ import type { Expression, ExpressionBuilder, SqlBool } from "kysely";
 
 import { BlocklistService } from "@/blocklist/blocklist.service";
 import { PixelReconciliationService } from "@/canvas/pixel-reconciliation.service";
-import type { DB } from "@/common/database/kysely/types";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { DB } from "@/common/database/core/kysely/types";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { PixelService } from "@/pixel/pixel.service";
 
 export interface GetPixelHistoryParams {

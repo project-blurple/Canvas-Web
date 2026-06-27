@@ -6,8 +6,8 @@ import type {
 import { Injectable, Logger } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 
-import { Prisma } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import { Prisma } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { AUDIT_EVENT, type AuditEventPayload } from "./audit.events";
 
 export interface GetAuditLogParams {

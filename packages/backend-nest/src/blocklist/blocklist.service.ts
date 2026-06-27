@@ -2,7 +2,7 @@ import type { BlocklistEntry } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
 import { PixelReconciliationService } from "@/canvas/pixel-reconciliation.service";
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 
 @Injectable()
 export class BlocklistService {

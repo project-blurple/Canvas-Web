@@ -1,7 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { DatabaseModule } from "@/common/database/database.module";
-import { PrismaService } from "@/common/database/prisma.service";
 import { AppConfigModule } from "@/config/config.module";
 
 // No provider override: the test harness (src/test/database.ts) transparently

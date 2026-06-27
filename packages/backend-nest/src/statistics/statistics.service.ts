@@ -13,8 +13,8 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import { Prisma } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import { Prisma } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { DiscordProfileService } from "@/discord/discord-profile.service";
 import { PaletteService } from "@/palette/palette.service";

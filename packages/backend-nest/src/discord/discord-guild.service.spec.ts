@@ -1,7 +1,7 @@
 import { Test } from "@nestjs/testing";
 import type { SessionData } from "express-session";
 
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { TooManyRequestsError } from "@/common/errors/too-many-requests.error";
 import { UnauthorizedError } from "@/common/errors/unauthorized.error";
