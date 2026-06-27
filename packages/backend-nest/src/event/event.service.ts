@@ -1,8 +1,8 @@
 import type { BlurpleEvent } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import { Prisma } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import { Prisma } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { ConflictError } from "@/common/errors/conflict.error";
 import { NotFoundError } from "@/common/errors/not-found.error";
 

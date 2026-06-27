@@ -6,8 +6,8 @@ import {
 } from "@blurple-canvas-web/types";
 import { Inject, Injectable, Logger } from "@nestjs/common";
 
-import type { CanvasModel } from "@/common/database/generated/models";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { Canvas } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { UnprocessableError } from "@/common/errors/unprocessable.error";
 import {
@@ -196,7 +196,7 @@ export class CanvasService {
     startCoordinates = [1, 1],
     allColorsGlobal = false,
     cooldownDuration = 15,
-  }: CreateCanvasParams): Promise<CanvasModel> {
+  }: CreateCanvasParams): Promise<Canvas> {
     const currentEventId = await this.getCurrentEventId();
 
     const canvas = await this.prisma.canvas.create({
@@ -225,7 +225,7 @@ export class CanvasService {
     placeState,
     allColorsGlobal,
     cooldownDuration,
-  }: EditCanvasParams): Promise<CanvasModel> {
+  }: EditCanvasParams): Promise<Canvas> {
     const canvas = await this.prisma.canvas.update({
       where: {
         id: canvasId,
@@ -433,7 +433,7 @@ export class CanvasService {
 
   private canvasToCanvasInfo(
     canvas: Pick<
-      CanvasModel,
+      Canvas,
       | "id"
       | "name"
       | "width"

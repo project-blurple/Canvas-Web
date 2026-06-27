@@ -1,7 +1,7 @@
 import type { PixelColor, PlacePixelSocket } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import { PrismaService } from "@/common/database/prisma.service";
+import { PrismaService } from "@/common/database/core/prisma.service";
 
 @Injectable()
 export class PixelResyncService {

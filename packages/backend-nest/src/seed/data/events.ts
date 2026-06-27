@@ -1,5 +1,5 @@
 import { CanvasPlaceState } from "@blurple-canvas-web/types";
-import type { Prisma } from "../../common/database/generated/client";
+import type { Prisma } from "../../common/database/core/prisma.client";
 
 export const infoSeedData: Prisma.InfoUncheckedCreateInput = {
   title: "Canvas Dev",

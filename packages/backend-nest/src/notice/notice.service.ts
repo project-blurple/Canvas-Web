@@ -1,8 +1,8 @@
 import type { Notice, NoticeBody, NoticeType } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import type { Notice as NoticeDbModel } from "@/common/database/prisma.client";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { Notice as NoticeDbModel } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 
 @Injectable()
 export class NoticeService {

@@ -9,8 +9,8 @@
 **/backend/src/client/core/generated/*
 **/backend/src/client/snapshots/generated/*
 **/backend/src/client/core/kysely/*
-**/backend-nest/src/common/database/generated/*
-**/backend-nest/src/common/database/kysely/*
+**/backend-nest/src/common/database/core/generated/*
+**/backend-nest/src/common/database/core/kysely/*
 
 # Logs
 logs

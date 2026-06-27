@@ -6,8 +6,8 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Injectable } from "@nestjs/common";
 
-import type { GuildModel } from "@/common/database/generated/models";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { Guild } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { ConflictError } from "@/common/errors/conflict.error";
 import { EventService } from "@/event/event.service";
 
@@ -34,12 +34,12 @@ export interface EditColorParams {
 export interface AssignColorToEventParams {
   colorId: PaletteColor["id"];
   eventId: BlurpleEvent["id"];
-  guildId: GuildModel["id"];
+  guildId: Guild["id"];
 }
 
 export interface UnassignColorFromEventParams {
   eventId: BlurpleEvent["id"];
-  guildId: GuildModel["id"];
+  guildId: Guild["id"];
 }
 
 @Injectable()

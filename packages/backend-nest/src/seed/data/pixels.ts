@@ -1,6 +1,6 @@
 import { createReadStream } from "node:fs";
 import path from "node:path";
-import type { Prisma } from "../../common/database/generated/client";
+import type { Prisma } from "../../common/database/core/prisma.client";
 import { canvasSeedData } from "./events";
 
 const pixelSeedDataPath = path.join(__dirname, "pixelData2024.csv");

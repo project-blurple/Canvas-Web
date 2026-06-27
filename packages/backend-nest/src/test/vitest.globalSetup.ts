@@ -28,9 +28,12 @@ export async function setup() {
 
   // Propagates to the test workers, which are forked after global setup.
   process.env.DATABASE_URL = container.getConnectionUri();
-  await execAsync("npx prisma migrate deploy", {
-    env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
-  });
+  await execAsync(
+    "npx prisma migrate deploy --config src/common/database/core/prisma/prisma.config.ts",
+    {
+      env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
+    },
+  );
 }
 
 export async function teardown() {

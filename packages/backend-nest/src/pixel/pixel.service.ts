@@ -8,8 +8,8 @@ import { Inject, Injectable } from "@nestjs/common";
 
 import { BlocklistService } from "@/blocklist/blocklist.service";
 import { CanvasCacheService } from "@/canvas/canvas-cache.service";
-import type { ColorModel } from "@/common/database/generated/models";
-import { PrismaService } from "@/common/database/prisma.service";
+import type { Color } from "@/common/database/core/prisma.client";
+import { PrismaService } from "@/common/database/core/prisma.service";
 import { BadRequestError } from "@/common/errors/bad-request.error";
 import { ForbiddenError } from "@/common/errors/forbidden.error";
 import { NotFoundError } from "@/common/errors/not-found.error";
@@ -115,13 +115,13 @@ export class PixelService {
     colorId: number,
     canvasId: number,
     userGuildIds: ReadonlySet<string>,
-  ): Promise<ColorModel & { rgba: PixelColor }> {
+  ): Promise<Color & { rgba: PixelColor }> {
     const [color, canvas] = await Promise.all([
       this.prisma.color.findFirst({
         where: {
           id: colorId,
         },
-      }) as Promise<(ColorModel & { rgba: PixelColor }) | null>,
+      }) as Promise<(Color & { rgba: PixelColor }) | null>,
       this.prisma.canvas.findFirst({
         where: { id: canvasId },
         select: { allColorsGlobal: true, eventId: true },

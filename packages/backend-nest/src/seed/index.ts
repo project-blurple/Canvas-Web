@@ -3,7 +3,7 @@ import { performance } from "node:perf_hooks";
 import process from "node:process";
 import { parseArgs } from "node:util";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../common/database/generated/client";
+import { PrismaClient } from "../common/database/core/prisma.client";
 import { type Seeding, seedings } from "./seedings";
 
 const allSeedingNames = seedings.map((seeding) => seeding.name);
