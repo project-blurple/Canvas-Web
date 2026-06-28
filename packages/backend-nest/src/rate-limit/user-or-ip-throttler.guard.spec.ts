@@ -1,4 +1,7 @@
 import type { ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { Test, type TestingModule } from "@nestjs/testing";
+import { ThrottlerModule } from "@nestjs/throttler";
 import type { Request } from "express";
 
 import { RATE_LIMIT_BUCKET } from "./rate-limit.constants";
@@ -19,16 +22,6 @@ class TestGuard extends UserOrIpThrottlerGuard {
   }
 }
 
-function makeGuard(bucket?: string) {
-  const reflector = { getAllAndOverride: vi.fn().mockReturnValue(bucket) };
-  const guard = new TestGuard(
-    { throttlers: [] } as never,
-    {} as never,
-    reflector as never,
-  );
-  return { guard, reflector };
-}
-
 class PixelController {}
 function placePixel() {
   return null;
@@ -42,15 +35,42 @@ function makeContext(): ExecutionContext {
 }
 
 describe("UserOrIpThrottlerGuard", () => {
+  const getAllAndOverride = vi.fn();
+  let guard: TestGuard;
+  let moduleRef: TestingModule;
+
+  beforeAll(async () => {
+    moduleRef = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot({
+          throttlers: [{ name: "default", ttl: 1000, limit: 1 }],
+        }),
+      ],
+      providers: [TestGuard],
+    })
+      .overrideProvider(Reflector)
+      .useValue({ getAllAndOverride })
+      .compile();
+    guard = moduleRef.get(TestGuard);
+  });
+
+  afterAll(async () => {
+    await moduleRef.close();
+  });
+
+  beforeEach(() => {
+    getAllAndOverride.mockReset();
+  });
+
   describe("shouldSkip", () => {
     it("skips routes that did not opt in to rate limiting", async () => {
-      const { guard } = makeGuard();
+      getAllAndOverride.mockReturnValue(undefined);
 
       await expect(guard.skip(makeContext())).resolves.toBe(true);
     });
 
     it("throttles routes carrying a bucket", async () => {
-      const { guard } = makeGuard("pixel-placement");
+      getAllAndOverride.mockReturnValue("pixel-placement");
 
       await expect(guard.skip(makeContext())).resolves.toBe(false);
     });
@@ -58,8 +78,6 @@ describe("UserOrIpThrottlerGuard", () => {
 
   describe("getTracker", () => {
     it("keys by the authenticated user first", async () => {
-      const { guard } = makeGuard();
-
       await expect(
         guard.track({
           user: { id: "123456789" },
@@ -69,8 +87,6 @@ describe("UserOrIpThrottlerGuard", () => {
     });
 
     it("falls back to the first X-Forwarded-For entry when anonymous", async () => {
-      const { guard } = makeGuard();
-
       await expect(
         guard.track({
           headers: {
@@ -81,8 +97,6 @@ describe("UserOrIpThrottlerGuard", () => {
     });
 
     it("uses the first element when X-Forwarded-For is an array", async () => {
-      const { guard } = makeGuard();
-
       await expect(
         guard.track({
           headers: { "x-forwarded-for": ["198.51.100.2", "203.0.113.7"] },
@@ -91,16 +105,12 @@ describe("UserOrIpThrottlerGuard", () => {
     });
 
     it("falls back to the socket IP when there is no forwarded header", async () => {
-      const { guard } = makeGuard();
-
       await expect(
         guard.track({ headers: {}, ip: "192.0.2.55" } as unknown as Request),
       ).resolves.toBe("192.0.2.55");
     });
 
     it("gives different anonymous IPs independent trackers", async () => {
-      const { guard } = makeGuard();
-
       const first = await guard.track({
         headers: { "x-forwarded-for": "203.0.113.7" },
       } as unknown as Request);
@@ -114,11 +124,11 @@ describe("UserOrIpThrottlerGuard", () => {
 
   describe("generateKey", () => {
     it("buckets by route metadata so related routes share a budget", () => {
-      const { guard, reflector } = makeGuard("frame-mutation");
+      getAllAndOverride.mockReturnValue("frame-mutation");
 
       const key = guard.key(makeContext(), "user-1", "default");
 
-      expect(reflector.getAllAndOverride).toHaveBeenCalledWith(
+      expect(getAllAndOverride).toHaveBeenCalledWith(
         RATE_LIMIT_BUCKET,
         expect.any(Array),
       );
@@ -126,7 +136,7 @@ describe("UserOrIpThrottlerGuard", () => {
     });
 
     it("falls back to a per-handler key when no bucket is set", () => {
-      const { guard } = makeGuard();
+      getAllAndOverride.mockReturnValue(undefined);
 
       const key = guard.key(makeContext(), "user-1", "default");
 

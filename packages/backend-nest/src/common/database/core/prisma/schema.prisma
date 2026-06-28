@@ -57,6 +57,7 @@ model Canvas {
   frameStats             FrameStats[]
   canvasColors           CanvasColors[]
   frameColors            FrameColors[]
+  historySnapshotWindows HistorySnapshotWindows[]
 
   @@map("canvas")
 }
@@ -495,4 +496,15 @@ view FrameColors {
 
   @@unique([frameId, colorId])
   @@map("frame_colors")
+}
+
+view HistorySnapshotWindows {
+  canvasId     Int      @map("canvas_id")
+  canvas       Canvas   @relation(fields: [canvasId], references: [id])
+  bucketStart  DateTime @map("bucket_start") @db.Timestamptz(6)
+  bucketEnd    DateTime @map("bucket_end") @db.Timestamptz(6)
+  historyCount Int      @map("history_count")
+
+  @@unique([canvasId, bucketStart])
+  @@map("history_snapshot_windows")
 }

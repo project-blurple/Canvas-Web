@@ -3,6 +3,7 @@ import { Test, type TestingModule } from "@nestjs/testing";
 import { DatabaseModule } from "@/common/database/database.module";
 import { AppConfigModule } from "@/config/config.module";
 import { BroadcastService } from "@/realtime/broadcast.service";
+import { SnapshotService } from "@/snapshot/snapshot.service";
 import { testPrisma as prisma } from "@/test/database";
 import { seedAll } from "@/test/seed";
 import { CanvasCacheService } from "./canvas-cache.service";
@@ -12,6 +13,10 @@ const broadcastService = {
   broadcastPixel: vi.fn(),
   broadcastPixelsBulk: vi.fn(),
   broadcastCanvasInfo: vi.fn(),
+};
+
+const snapshotService = {
+  setSnapshotDirtyTimestamp: vi.fn(),
 };
 
 describe("PixelReconciliationService", () => {
@@ -25,6 +30,7 @@ describe("PixelReconciliationService", () => {
         PixelReconciliationService,
         CanvasCacheService,
         { provide: BroadcastService, useValue: broadcastService },
+        { provide: SnapshotService, useValue: snapshotService },
       ],
     }).compile();
     await moduleRef.init();
@@ -87,12 +93,21 @@ describe("PixelReconciliationService", () => {
       expect(untouched?.erasedAt).toBeInstanceOf(Date);
 
       expect(broadcastService.broadcastPixelsBulk).toHaveBeenCalledTimes(1);
+
+      expect(snapshotService.setSnapshotDirtyTimestamp).toHaveBeenCalledTimes(
+        1,
+      );
+      expect(snapshotService.setSnapshotDirtyTimestamp).toHaveBeenCalledWith(
+        1,
+        new Date("2024-01-01T00:00:00.000Z"),
+      );
     });
 
     it("does nothing when there are no erased rows to restore", async () => {
       await service.restoreErasedHistory([1n], [1]);
 
       expect(broadcastService.broadcastPixelsBulk).not.toHaveBeenCalled();
+      expect(snapshotService.setSnapshotDirtyTimestamp).not.toHaveBeenCalled();
     });
 
     it("does nothing for empty inputs", async () => {
@@ -100,6 +115,7 @@ describe("PixelReconciliationService", () => {
       await service.restoreErasedHistory([9n], []);
 
       expect(broadcastService.broadcastPixelsBulk).not.toHaveBeenCalled();
+      expect(snapshotService.setSnapshotDirtyTimestamp).not.toHaveBeenCalled();
     });
   });
 });
