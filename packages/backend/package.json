@@ -51,7 +51,7 @@
     "@blurple-canvas-web/types": "workspace:*",
     "@dotenvx/dotenvx": "^1.61.0",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.76.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
     "@opentelemetry/instrumentation": "^0.218.0",
     "@opentelemetry/resources": "^2.7.1",
