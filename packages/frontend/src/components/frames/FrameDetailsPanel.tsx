@@ -56,10 +56,9 @@ const DetailsTable = styled("table")`
 
 const TableHeader = styled("th")`
   inline-size: 2.5rem;
-  opacity: 0.6;
-  overflow: visible;
-  position: relative;
-  white-space: nowrap;
+  svg {
+    opacity: 60%;
+  }
 `;
 
 const TableCell = styled("td")`
