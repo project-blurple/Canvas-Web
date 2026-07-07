@@ -1,6 +1,7 @@
 import { styled } from "@mui/material";
+import { debounce } from "es-toolkit";
 import { Volume1, Volume2 } from "lucide-react";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useMemo } from "react";
 
 const VOLUME_PREVIEW_DEBOUNCE_MS = 300;
 
@@ -128,38 +129,33 @@ export function VolumeControlSetting({
   previewAudioRef,
   ...props
 }: VolumeControlSettingProps) {
-  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
-    undefined,
-  );
-
   const ticksLabelId = useId();
+
+  const debouncedPreview = useMemo(
+    () =>
+      debounce(() => {
+        // Stop any currently playing preview
+        if (previewAudioRef?.current) {
+          previewAudioRef.current.pause();
+          previewAudioRef.current.currentTime = 0;
+        }
+
+        onVolumePreview?.();
+      }, VOLUME_PREVIEW_DEBOUNCE_MS),
+    [previewAudioRef, onVolumePreview],
+  );
 
   useEffect(() => {
     return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
+      debouncedPreview.cancel();
     };
-  }, []);
+  }, [debouncedPreview]);
 
   const handleVolumeChange: React.ChangeEventHandler<HTMLInputElement> = (
     e,
   ) => {
     onVolumeChange?.(e);
-
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(() => {
-      // Stop any currently playing preview
-      if (previewAudioRef?.current) {
-        previewAudioRef.current.pause();
-        previewAudioRef.current.currentTime = 0;
-      }
-
-      onVolumePreview?.();
-    }, VOLUME_PREVIEW_DEBOUNCE_MS);
+    debouncedPreview();
   };
 
   return (
