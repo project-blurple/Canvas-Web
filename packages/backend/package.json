@@ -51,7 +51,7 @@
     "@blurple-canvas-web/types": "workspace:*",
     "@dotenvx/dotenvx": "^1.61.0",
     "@opentelemetry/api": "^1.9.1",
-    "@opentelemetry/auto-instrumentations-node": "^0.76.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.77.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.218.0",
     "@opentelemetry/instrumentation": "^0.218.0",
     "@opentelemetry/resources": "^2.7.1",
@@ -85,7 +85,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/express-session": "^1.19.0",
-    "@types/node": "^24.1.0",
+    "@types/node": "^25.9.1",
     "@types/passport": "^1.0.17",
     "@types/passport-oauth2": "^1.8.0",
     "@types/supertest": "^7.2.0",
@@ -98,7 +98,7 @@
     "tsc-alias": "^1.8.17",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^6.0.3",
-    "vite": "^8.0.8",
+    "vite": "^8.0.16",
     "vitest": "^4.1.5",
     "vitest-environment-prisma-postgres": "^1.0.1"
   }
