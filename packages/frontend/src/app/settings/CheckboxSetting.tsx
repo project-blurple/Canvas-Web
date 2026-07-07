@@ -36,7 +36,7 @@ const Description = styled("p")`
   margin-block-start: 0.5em;
 `;
 
-const VolumeWrapper = styled("div")`
+const VolumeControlWrapper = styled("div")`
   display: flex;
   align-items: flex-start;
   gap: 0.5rem;
@@ -109,7 +109,7 @@ export default function CheckboxSetting({
   );
 }
 
-interface VolumeSettingProps extends Omit<
+interface VolumeControlSettingProps extends Omit<
   React.ComponentPropsWithRef<typeof CheckboxSetting>,
   "onChange" | "onVolumeChange"
 > {
@@ -120,17 +120,19 @@ interface VolumeSettingProps extends Omit<
   previewAudioRef?: React.RefObject<HTMLAudioElement | null>;
 }
 
-export function VolumeSetting({
+export function VolumeControlSetting({
   volume = 70,
   onVolumeChange,
   onCheckedChange,
   onVolumePreview,
   previewAudioRef,
   ...props
-}: VolumeSettingProps) {
+}: VolumeControlSettingProps) {
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+
+  const ticksLabelId = useId();
 
   useEffect(() => {
     return () => {
@@ -162,7 +164,7 @@ export function VolumeSetting({
 
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
-      <VolumeWrapper>
+      <VolumeControlWrapper>
         <Volume1 />
         <VolumeSliderWrapper>
           <VolumeSlider
@@ -172,7 +174,7 @@ export function VolumeSetting({
               props["aria-busy"] === "true" ||
               !props.checked
             }
-            list="ticks"
+            list={ticksLabelId}
             max={100}
             min={0}
             onChange={handleVolumeChange}
@@ -188,12 +190,12 @@ export function VolumeSetting({
         </VolumeSliderWrapper>
         <Volume2 />
 
-        <datalist id="ticks">
+        <datalist id={ticksLabelId}>
           {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
             <option key={value} value={value} />
           ))}
         </datalist>
-      </VolumeWrapper>
+      </VolumeControlWrapper>
     </CheckboxSetting>
   );
 }

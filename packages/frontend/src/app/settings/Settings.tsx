@@ -3,7 +3,7 @@
 import { styled } from "@mui/material";
 import { BellRing } from "lucide-react";
 import { usePlaySound } from "@/hooks/sfx";
-import { VolumeSetting } from "./CheckboxSetting";
+import { VolumeControlSetting } from "./CheckboxSetting";
 import useLocalStorage from "./useLocalStorage";
 
 const Wrapper = styled("div")`
@@ -60,7 +60,7 @@ function SoundEffectsSetting() {
   });
 
   return (
-    <VolumeSetting
+    <VolumeControlSetting
       aria-busy={enabled === undefined}
       checked={enabled}
       description="Play sound effects as you interact with a canvas"
@@ -84,7 +84,7 @@ function CooldownExpiryJingleSetting() {
   });
 
   return (
-    <VolumeSetting
+    <VolumeControlSetting
       aria-busy={enabled === undefined}
       checked={enabled}
       description="Play a sound when you can place another pixel"
