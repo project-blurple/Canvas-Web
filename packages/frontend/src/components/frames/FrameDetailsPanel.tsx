@@ -292,10 +292,10 @@ interface DetailsCardProps extends React.ComponentPropsWithRef<
 > {
   frame: Frame;
   stats?: StatisticsSummaryBase | null;
-  palette: PaletteColorSummary[];
+  colorsById: Map<number, PaletteColorSummary>;
 }
 
-function DetailsCard({ frame, stats, palette }: DetailsCardProps) {
+function DetailsCard({ frame, stats, colorsById }: DetailsCardProps) {
   const ownerInfo = (() => {
     switch (frame.owner.type) {
       case FrameOwnerType.Guild:
@@ -317,9 +317,8 @@ function DetailsCard({ frame, stats, palette }: DetailsCardProps) {
   })();
 
   const mostPlacedColor = stats?.colorDistribution[0];
-  const mostPlacedColorInfo = palette.find(
-    (color) => color.id === mostPlacedColor?.colorId,
-  );
+  const mostPlacedColorInfo =
+    mostPlacedColor ? colorsById.get(mostPlacedColor.colorId) : undefined;
 
   return (
     <ActionPanelTabBody>
@@ -406,11 +405,11 @@ function DetailsCard({ frame, stats, palette }: DetailsCardProps) {
 function Leaderboard({
   frame,
   stats,
-  palette,
+  colorsById,
 }: {
   frame: Frame;
   stats: StatisticsSummaryBase;
-  palette: PaletteColorSummary[];
+  colorsById: Map<number, PaletteColorSummary>;
 }) {
   const [selectedColor, setSelectedColor] =
     useState<PaletteColorSummary | null>(null);
@@ -440,10 +439,6 @@ function Leaderboard({
     return null;
   }
 
-  const usedColors = stats.colorDistribution
-    .map((colorStat) => palette.find((color) => color.id === colorStat.colorId))
-    .filter((color): color is PaletteColorSummary => color !== undefined);
-
   return (
     <ActionPanelTabBody>
       <div>
@@ -454,19 +449,20 @@ function Leaderboard({
           value={selectedColor?.id ?? ""}
           onChange={(e) => {
             const color =
-              palette.find(
-                (c) => c.id === Number.parseInt(e.target.value, 10),
-              ) ?? null;
+              colorsById.get(Number.parseInt(e.target.value, 10)) ?? null;
             setSelectedColor(color);
             setPage(1);
           }}
         >
           <option value="">All colors</option>
-          {usedColors.map((color) => (
-            <option key={color.id} value={color.id}>
-              {color.name}
-            </option>
-          ))}
+          {stats.colorDistribution.map((colorStat) => {
+            const color = colorsById.get(colorStat.colorId);
+            return color ?
+                <option key={color.id} value={color.id}>
+                  {color.name}
+                </option>
+              : null;
+          })}
         </LeaderboardSelect>
         <div>
           {leaderboard.isFetching ?
@@ -545,6 +541,8 @@ export default function FrameDetailsPanel({
 
   const stats = isSystemFrameId(frame.id) ? canvasStats : frameStats;
 
+  const colorsById = new Map(palette.map((color) => [color.id, color]));
+
   const userHasPermsToEditSelectedFrame = user && userCanEditFrame(user, frame);
 
   return (
@@ -553,8 +551,10 @@ export default function FrameDetailsPanel({
         <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <DetailsCard frame={frame} stats={stats} palette={palette} />
-        {stats && <Leaderboard frame={frame} stats={stats} palette={palette} />}
+        <DetailsCard frame={frame} stats={stats} colorsById={colorsById} />
+        {stats && (
+          <Leaderboard frame={frame} stats={stats} colorsById={colorsById} />
+        )}
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>
