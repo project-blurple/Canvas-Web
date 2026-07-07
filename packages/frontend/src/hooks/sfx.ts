@@ -33,16 +33,16 @@ export function usePlaySound(
     );
   }, [stem]);
 
-  // If `enabled` option is explicitly provided, it takes precedence…
-  const playOrNoop =
-    typeof enabled !== "undefined" ?
-      enabled ? play
-      : noop
-      // …otherwise defer to user preference
-    : globallyEnabled ? play
-    : noop;
+  const shouldPlay = (() => {
+    // If `enabled` option is explicitly provided, it takes precedence…
+    if (typeof enabled !== "undefined") {
+      return enabled ? play : noop;
+    }
+    // …otherwise defer to user preference
+    return globallyEnabled ? play : noop;
+  })();
 
-  return { play: playOrNoop, audioRef };
+  return { play: shouldPlay, audioRef };
 }
 
 export function usePlayCooldownExpirySound() {
