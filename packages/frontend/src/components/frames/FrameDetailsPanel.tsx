@@ -3,27 +3,42 @@ import {
   type DiscordUserProfile,
   type Frame,
   FrameOwnerType,
+  type PaletteColorSummary,
+  type StatisticsSummaryBase,
 } from "@blurple-canvas-web/types";
-import { styled } from "@mui/material";
+import { Skeleton, styled } from "@mui/material";
 import {
+  ChartNoAxesColumn,
+  CircleStar,
   Crosshair,
   Hash,
   Link,
   Frame as LucideFrame,
+  Palette,
   SquarePen,
   User,
   Users,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
+import Pagination from "@/components/Pagination";
 import config from "@/config/clientConfig";
 import { useAuthContext } from "@/contexts/AuthProvider";
 import { useCanvasContext } from "@/contexts/CanvasContext";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
 import { useSelectedFrame } from "@/contexts/SelectedFrameContext";
-import { useFrameExport } from "@/hooks/queries/useFrameStats";
+import { useCanvasStats } from "@/hooks/queries/useCanvasStats";
+import { useFrameExport, useFrameStats } from "@/hooks/queries/useFrameStats";
+import {
+  useCanvasLeaderboard,
+  useFrameLeaderboard,
+} from "@/hooks/queries/useLeaderboard";
+import { usePalette } from "@/hooks/queries/usePalette";
 import { calculateScale, createPixelUrl } from "@/util";
 import { downloadAsJson } from "@/util/downloadAsJson";
+import { isSystemFrameId } from "@/util/frame";
+import Avatar, { AvatarSkeleton } from "../Avatar";
 import ActionPanelPrimitives from "../action-panel/primitives";
 import {
   ActionPanelTabBody,
@@ -89,6 +104,66 @@ const ControlButtonRow = styled("div")`
     flex: 1;
   }
 `;
+
+const LeaderboardList = styled("ol")`
+  display: grid;
+  font-size: 1rem;
+  grid-template-columns: auto 1fr auto;
+  gap: 0.5rem;
+`;
+
+const LeaderboardRow = styled("li")`
+  align-items: center;
+  column-gap: 0.75rem;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  padding: 0.5rem;
+`;
+
+const LeaderboardRank = styled("div")`
+  color: oklch(from currentColor l c h / 45%);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: center;
+`;
+
+const LeaderboardUsername = styled("div")`
+  font-weight: 600;
+  word-break: break-all;
+`;
+
+const LeaderboardPixelCount = styled("div")`
+  color: oklch(from var(--discord-white) l c h / 55%);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.875rem;
+`;
+
+const LeaderboardSelect = styled("select")`
+  background: var(--discord-legacy-not-quite-black);
+  border-radius: 4px;
+  border: 1px solid oklch(from var(--discord-white) l c h / 20%);
+  color: var(--discord-white);
+  font-size: 0.875rem;
+  margin-block-end: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  width: 100%;
+`;
+
+function LeaderboardRowSkeleton() {
+  return (
+    <LeaderboardRow aria-busy>
+      <LeaderboardRank>
+        <Skeleton width="2ch" />
+      </LeaderboardRank>
+      <div>
+        <Skeleton width="min(16ch, 100%)" />
+        <Skeleton width="min(8ch, 100%)" />
+      </div>
+      <AvatarSkeleton size={40} sx={{ alignSelf: "center" }} />
+    </LeaderboardRow>
+  );
+}
 
 function userCanEditFrame(user: DiscordUserProfile, frame: Frame): boolean {
   switch (frame.owner.type) {
@@ -211,12 +286,20 @@ function FrameLinkButton({
   );
 }
 
-function DetailsCard({ frame }: { frame: Frame }) {
+interface DetailsCardProps extends React.ComponentPropsWithRef<
+  typeof ActionPanelTabBody
+> {
+  frame: Frame;
+  stats?: StatisticsSummaryBase | null;
+  colorsById: Map<number, PaletteColorSummary>;
+}
+
+function DetailsCard({ frame, stats, colorsById }: DetailsCardProps) {
   const ownerInfo = (() => {
     switch (frame.owner.type) {
       case FrameOwnerType.Guild:
         return {
-          icon: <Users aria-hidden />,
+          icon: <CircleStar aria-hidden />,
           label: frame.owner.guild.name ?? "Unknown guild",
         };
       case FrameOwnerType.User:
@@ -231,6 +314,10 @@ function DetailsCard({ frame }: { frame: Frame }) {
         };
     }
   })();
+
+  const mostPlacedColor = stats?.colorDistribution[0];
+  const mostPlacedColorInfo =
+    mostPlacedColor ? colorsById.get(mostPlacedColor.colorId) : undefined;
 
   return (
     <ActionPanelTabBody>
@@ -253,14 +340,49 @@ function DetailsCard({ frame }: { frame: Frame }) {
                 <VisuallyHidden>Frame dimensions</VisuallyHidden>
               </TableHeader>
               <TableCell>
-                {frame.width}{" "}
+                {frame.width.toLocaleString()}{" "}
                 <X
                   size={16}
                   style={{ display: "inline", verticalAlign: "middle" }}
                 />{" "}
-                {frame.height}
+                {frame.height.toLocaleString()}
               </TableCell>
             </tr>
+            {stats && (
+              <>
+                <tr>
+                  <TableHeader>
+                    <ChartNoAxesColumn />
+                    <VisuallyHidden>Total pixels placed</VisuallyHidden>
+                  </TableHeader>
+                  <TableCell>
+                    {stats.totalPixelsPlaced.toLocaleString()}&nbsp;
+                    {stats.totalPixelsPlaced === 1 ? "pixel" : "pixels"} placed
+                  </TableCell>
+                </tr>
+                <tr>
+                  <TableHeader>
+                    <Users />
+                    <VisuallyHidden>Total users involved</VisuallyHidden>
+                  </TableHeader>
+                  <TableCell>
+                    {stats.totalUsersInvolved.toLocaleString()}&nbsp;
+                    {stats.totalUsersInvolved === 1 ? "user" : "users"} involved
+                  </TableCell>
+                </tr>
+                {mostPlacedColorInfo && (
+                  <tr>
+                    <TableHeader>
+                      <Palette />
+                      <VisuallyHidden>Most placed color</VisuallyHidden>
+                    </TableHeader>
+                    <TableCell>
+                      Most placed: {mostPlacedColorInfo.name}
+                    </TableCell>
+                  </tr>
+                )}
+              </>
+            )}
             {frame.owner.type !== FrameOwnerType.System && (
               <tr>
                 <TableHeader>
@@ -279,6 +401,121 @@ function DetailsCard({ frame }: { frame: Frame }) {
   );
 }
 
+function Leaderboard({
+  frame,
+  stats,
+  colorsById,
+}: {
+  frame: Frame;
+  stats: StatisticsSummaryBase;
+  colorsById: Map<number, PaletteColorSummary>;
+}) {
+  const [selectedColor, setSelectedColor] =
+    useState<PaletteColorSummary | null>(null);
+  const [page, setPage] = useState(1);
+  const leaderboardParams = {
+    size: 10,
+    page,
+    colorId: selectedColor?.id,
+  };
+
+  const canvasLeaderboard = useCanvasLeaderboard(
+    frame.canvasId,
+    leaderboardParams,
+    {
+      enabled: isSystemFrameId(frame.id),
+    },
+  );
+
+  const frameLeaderboard = useFrameLeaderboard(frame.id, leaderboardParams, {
+    enabled: !isSystemFrameId(frame.id),
+  });
+
+  const leaderboard =
+    isSystemFrameId(frame.id) ? canvasLeaderboard : frameLeaderboard;
+
+  if (stats.totalPixelsPlaced === 0) {
+    return null;
+  }
+
+  return (
+    <ActionPanelTabBody>
+      <div>
+        <ActionPanelPrimitives.SectionHeading>
+          Leaderboard
+        </ActionPanelPrimitives.SectionHeading>
+        <LeaderboardSelect
+          value={selectedColor?.id ?? ""}
+          onChange={(e) => {
+            const color =
+              colorsById.get(Number.parseInt(e.target.value, 10)) ?? null;
+            setSelectedColor(color);
+            setPage(1);
+          }}
+        >
+          <option value="">All colors</option>
+          {stats.colorDistribution.map((colorStat) => {
+            const color = colorsById.get(colorStat.colorId);
+            return color ?
+                <option key={color.id} value={color.id}>
+                  {color.name}
+                </option>
+              : null;
+          })}
+        </LeaderboardSelect>
+        <div>
+          {leaderboard.isFetching ?
+            <LeaderboardList>
+              {Array.from({ length: 10 }, (_, index) => (
+                // biome-ignore lint/suspicious/noArrayIndexKey: Skeletons
+                <LeaderboardRowSkeleton key={index} />
+              ))}
+            </LeaderboardList>
+          : leaderboard.data?.entries.length ?
+            <LeaderboardList>
+              {leaderboard.data.entries.map((entry) => (
+                <LeaderboardRow key={entry.userId}>
+                  <LeaderboardRank>{entry.rank}</LeaderboardRank>
+                  <div>
+                    <LeaderboardUsername>
+                      {entry.username ?? entry.userId}
+                    </LeaderboardUsername>
+                    <LeaderboardPixelCount>
+                      {entry.totalPixels.toLocaleString()}&nbsp;
+                      {entry.totalPixels === 1 ? "pixel" : "pixels"}
+                    </LeaderboardPixelCount>
+                  </div>
+                  <Avatar
+                    profilePictureUrl={entry.profilePictureUrl}
+                    size={40}
+                    username={entry.username ?? entry.userId}
+                  />
+                </LeaderboardRow>
+              ))}
+            </LeaderboardList>
+          : <p>No leaderboard data available</p>}
+          {leaderboard.data && leaderboard.data.entries.length > 0 && (
+            <Pagination
+              count={
+                leaderboard.data.total ?
+                  Math.ceil(
+                    leaderboard.data.total / (leaderboard.data.size ?? 10),
+                  )
+                : leaderboard.data.page
+              }
+              onChange={(_, value) => setPage(value)}
+              page={page}
+              size="small"
+              siblingCount={1}
+              boundaryCount={0}
+            />
+          )}
+        </div>
+      </div>
+    </ActionPanelTabBody>
+  );
+}
+
 export default function FrameDetailsPanel({
   setActivePanel,
 }: {
@@ -288,11 +525,22 @@ export default function FrameDetailsPanel({
   const { frame, setFrame } = useSelectedFrame();
   const { canvas } = useCanvasContext();
   const { focusOnFrame } = useCanvasViewContext();
+  const { data: palette = [] } = usePalette(canvas.eventId ?? undefined);
+  const { data: frameStats } = useFrameStats(frame?.id, {
+    enabled: !isSystemFrameId(frame?.id),
+  });
+  const { data: canvasStats } = useCanvasStats(canvas.id, {
+    enabled: isSystemFrameId(frame?.id),
+  });
 
   if (!frame) {
     setActivePanel(FramePanelMode.List);
     return null;
   }
+
+  const stats = isSystemFrameId(frame.id) ? canvasStats : frameStats;
+
+  const colorsById = new Map(palette.map((color) => [color.id, color]));
 
   const userHasPermsToEditSelectedFrame = user && userCanEditFrame(user, frame);
 
@@ -302,7 +550,10 @@ export default function FrameDetailsPanel({
         <Heading>{frame.name}</Heading>
       </ActionPanelTabBody>
       <FullWidthScrollView>
-        <DetailsCard frame={frame} />
+        <DetailsCard frame={frame} stats={stats} colorsById={colorsById} />
+        {stats && (
+          <Leaderboard frame={frame} stats={stats} colorsById={colorsById} />
+        )}
       </FullWidthScrollView>
       <ActionPanelTabBody>
         <div>

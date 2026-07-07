@@ -131,10 +131,7 @@ export async function getCanvasColorLeaderboard({
   const leaderboard = await prisma.color_leaderboard.findMany({
     skip: Math.max((page - 1) * take, 0),
     take,
-    orderBy: {
-      color_id: "asc",
-      rank: "asc",
-    },
+    orderBy: [{ color_id: "asc" }, { rank: "asc" }],
     where: {
       canvas_id: canvasId,
       color_id: colorId,
@@ -240,10 +237,7 @@ export async function getFrameColorLeaderboard({
   const leaderboard = await prisma.color_leaderboard_frame.findMany({
     skip: Math.max((page - 1) * take, 0),
     take,
-    orderBy: {
-      color_id: "asc",
-      rank: "asc",
-    },
+    orderBy: [{ color_id: "asc" }, { rank: "asc" }],
     where: {
       frame_id: frameId,
       color_id: colorId,
