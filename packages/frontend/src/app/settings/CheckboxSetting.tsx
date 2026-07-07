@@ -161,7 +161,7 @@ export function VolumeControlSetting({
   return (
     <CheckboxSetting onChange={onCheckedChange} {...props}>
       <VolumeControlWrapper>
-        <Volume1 />
+        <Volume1 style={{ opacity: 0.8 }} />
         <VolumeSliderWrapper>
           <VolumeSlider
             aria-label="Volume"
@@ -184,7 +184,7 @@ export function VolumeControlSetting({
             <span>100</span>
           </TickLabels>
         </VolumeSliderWrapper>
-        <Volume2 />
+        <Volume2 style={{ opacity: 0.8 }} />
 
         <datalist id={ticksLabelId}>
           {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
