@@ -149,11 +149,6 @@ const LeaderboardSelect = styled("select")`
   margin-block-end: 0.5rem;
   padding: 0.25rem 0.5rem;
   width: 100%;
-
-  &:focus {
-    outline: none;
-    border-color: var(--discord-blurple);
-  }
 `;
 
 function LeaderboardRowSkeleton() {
@@ -292,15 +287,15 @@ function FrameLinkButton({
   );
 }
 
-function DetailsCard({
-  frame,
-  stats,
-  palette,
-}: {
+interface DetailsCardProps extends React.ComponentPropsWithRef<
+  typeof ActionPanelTabBody
+> {
   frame: Frame;
   stats?: StatisticsSummaryBase | null;
   palette: PaletteColorSummary[];
-}) {
+}
+
+function DetailsCard({ frame, stats, palette }: DetailsCardProps) {
   const ownerInfo = (() => {
     switch (frame.owner.type) {
       case FrameOwnerType.Guild:
@@ -363,7 +358,8 @@ function DetailsCard({
                     <VisuallyHidden>Total pixels placed</VisuallyHidden>
                   </TableHeader>
                   <TableCell>
-                    {stats.totalPixelsPlaced.toLocaleString()} pixels placed
+                    {stats.totalPixelsPlaced.toLocaleString()}&nbsp;
+                    {stats.totalPixelsPlaced === 1 ? "pixel" : "pixels"} placed
                   </TableCell>
                 </tr>
                 <tr>
@@ -372,7 +368,8 @@ function DetailsCard({
                     <VisuallyHidden>Total users involved</VisuallyHidden>
                   </TableHeader>
                   <TableCell>
-                    {stats.totalUsersInvolved.toLocaleString()} users
+                    {stats.totalUsersInvolved.toLocaleString()}&nbsp;
+                    {stats.totalUsersInvolved === 1 ? "user" : "users"} involved
                   </TableCell>
                 </tr>
                 {mostPlacedColorInfo && (
@@ -489,7 +486,7 @@ function Leaderboard({
                       {entry.username ?? entry.userId}
                     </LeaderboardUsername>
                     <LeaderboardPixelCount>
-                      {entry.totalPixels.toLocaleString()}{" "}
+                      {entry.totalPixels.toLocaleString()}&nbsp;
                       {entry.totalPixels === 1 ? "pixel" : "pixels"}
                     </LeaderboardPixelCount>
                   </div>
@@ -501,7 +498,7 @@ function Leaderboard({
                 </LeaderboardRow>
               ))}
             </LeaderboardList>
-          : <p>No leaderboard data available.</p>}
+          : <p>No leaderboard data available</p>}
           {leaderboard.data && leaderboard.data.entries.length > 0 && (
             <Pagination
               count={
