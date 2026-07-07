@@ -1,5 +1,9 @@
 import { styled } from "@mui/material";
-import { useId } from "react";
+import { debounce } from "es-toolkit";
+import { Volume1, Volume2 } from "lucide-react";
+import { useEffect, useId, useMemo } from "react";
+
+const VOLUME_PREVIEW_DEBOUNCE_MS = 300;
 
 const Wrapper = styled("div")`
   align-items: baseline;
@@ -33,6 +37,36 @@ const Description = styled("p")`
   margin-block-start: 0.5em;
 `;
 
+const VolumeControlWrapper = styled("div")`
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-block-start: 0.5rem;
+`;
+
+const VolumeSliderWrapper = styled("div")`
+  display: flex;
+  flex-direction: column;
+  inline-size: 80%;
+`;
+
+const VolumeSlider = styled("input")`
+  inline-size: 100%;
+`;
+
+const TickLabels = styled("div")`
+  color: oklch(from var(--discord-white) l c h / 55%);
+  display: flex;
+  font-size: 0.75rem;
+  justify-content: space-between;
+  margin-block-start: 0.25rem;
+  text-align: center;
+
+  > span {
+    min-inline-size: 2.5ch;
+  }
+`;
+
 interface CheckboxSettingProps
   extends
     Omit<React.ComponentPropsWithRef<typeof Wrapper>, "onChange">,
@@ -54,6 +88,7 @@ export default function CheckboxSetting({
   label,
   name,
   onChange,
+  children,
   ...props
 }: CheckboxSettingProps) {
   const id = useId();
@@ -70,6 +105,93 @@ export default function CheckboxSetting({
       />
       <Label htmlFor={id}>{label}</Label>
       {description && <Description>{description}</Description>}
+      {children}
     </Wrapper>
+  );
+}
+
+interface VolumeControlSettingProps extends Omit<
+  React.ComponentPropsWithRef<typeof CheckboxSetting>,
+  "onChange" | "onVolumeChange"
+> {
+  volume?: number;
+  onVolumeChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onCheckedChange?: React.ChangeEventHandler<HTMLInputElement>;
+  onVolumePreview?: () => void;
+  previewAudioRef?: React.RefObject<HTMLAudioElement | null>;
+}
+
+export function VolumeControlSetting({
+  volume = 70,
+  onVolumeChange,
+  onCheckedChange,
+  onVolumePreview,
+  previewAudioRef,
+  ...props
+}: VolumeControlSettingProps) {
+  const ticksLabelId = useId();
+
+  const debouncedPreview = useMemo(
+    () =>
+      debounce(() => {
+        // Stop any currently playing preview
+        if (previewAudioRef?.current) {
+          previewAudioRef.current.pause();
+          previewAudioRef.current.currentTime = 0;
+        }
+
+        onVolumePreview?.();
+      }, VOLUME_PREVIEW_DEBOUNCE_MS),
+    [previewAudioRef, onVolumePreview],
+  );
+
+  useEffect(() => {
+    return () => {
+      debouncedPreview.cancel();
+    };
+  }, [debouncedPreview]);
+
+  const handleVolumeChange: React.ChangeEventHandler<HTMLInputElement> = (
+    e,
+  ) => {
+    onVolumeChange?.(e);
+    debouncedPreview();
+  };
+
+  return (
+    <CheckboxSetting onChange={onCheckedChange} {...props}>
+      <VolumeControlWrapper>
+        <Volume1 style={{ opacity: 0.8 }} />
+        <VolumeSliderWrapper>
+          <VolumeSlider
+            aria-label="Volume"
+            disabled={
+              props["aria-busy"] === true ||
+              props["aria-busy"] === "true" ||
+              !props.checked
+            }
+            list={ticksLabelId}
+            max={100}
+            min={0}
+            onChange={handleVolumeChange}
+            step={10}
+            type="range"
+            value={volume}
+          />
+          <TickLabels>
+            <span>0</span>
+            <span>50</span>
+            <span>100</span>
+          </TickLabels>
+        </VolumeSliderWrapper>
+        <Volume2 style={{ opacity: 0.8 }} />
+
+        <datalist id={ticksLabelId}>
+          {Array.from({ length: 11 }, (_, i) => i * 10).map((value) => (
+            <option key={value} value={value} />
+          ))}
+        </datalist>
+      </VolumeControlWrapper>
+    </CheckboxSetting>
   );
 }

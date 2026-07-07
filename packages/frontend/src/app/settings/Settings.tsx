@@ -2,7 +2,8 @@
 
 import { styled } from "@mui/material";
 import { BellRing } from "lucide-react";
-import CheckboxSetting from "./CheckboxSetting";
+import { usePlaySound } from "@/hooks/sfx";
+import { VolumeControlSetting } from "./CheckboxSetting";
 import useLocalStorage from "./useLocalStorage";
 
 const Wrapper = styled("div")`
@@ -51,29 +52,49 @@ const Aside = styled("aside")`
 `;
 
 function SoundEffectsSetting() {
-  const [value, setValue] = useLocalStorage("audio/sound-fx");
+  const [enabled, setEnabled] = useLocalStorage("audio/sound-fx");
+  const [volume, setVolume] = useLocalStorage("audio/sound-fx/volume");
+  const { play, audioRef } = usePlaySound("place_pixel", {
+    enabled: true,
+    volume,
+  });
+
   return (
-    <CheckboxSetting
-      aria-busy={value === undefined}
-      checked={value}
+    <VolumeControlSetting
+      aria-busy={enabled === undefined}
+      checked={enabled}
       description="Play sound effects as you interact with a canvas"
       label="Sound effects"
       name="sound-fx"
-      onChange={(e) => setValue(e.target.checked)}
+      onCheckedChange={(e) => setEnabled(e.target.checked)}
+      volume={volume}
+      onVolumeChange={(e) => setVolume(e.target.valueAsNumber)}
+      onVolumePreview={play}
+      previewAudioRef={audioRef}
     />
   );
 }
 
 function CooldownExpiryJingleSetting() {
-  const [value, setValue] = useLocalStorage("audio/cooldown-jingle");
+  const [enabled, setEnabled] = useLocalStorage("audio/cooldown-jingle");
+  const [volume, setVolume] = useLocalStorage("audio/cooldown-jingle/volume");
+  const { play, audioRef } = usePlaySound("cooldown_notification", {
+    enabled: true,
+    volume,
+  });
+
   return (
-    <CheckboxSetting
-      aria-busy={value === undefined}
-      checked={value}
+    <VolumeControlSetting
+      aria-busy={enabled === undefined}
+      checked={enabled}
       description="Play a sound when you can place another pixel"
       label="Cooldown expiry jingle"
       name="cooldown-jingle"
-      onChange={(e) => setValue(e.target.checked)}
+      onCheckedChange={(e) => setEnabled(e.target.checked)}
+      volume={volume}
+      onVolumeChange={(e) => setVolume(e.target.valueAsNumber)}
+      onVolumePreview={play}
+      previewAudioRef={audioRef}
     />
   );
 }
