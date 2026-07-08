@@ -182,8 +182,8 @@ importers:
         specifier: ^4.1.5
         version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.16(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))
       vitest-environment-prisma-postgres:
-        specifier: ^1.0.1
-        version: 1.0.1(@prisma/adapter-pg@7.7.0)(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.10.0)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(vitest@4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.16(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)))
+        specifier: ^2.0.0
+        version: 2.0.0(@prisma/adapter-pg@7.7.0)(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.10.0)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(vitest@4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.16(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0)))
 
   packages/frontend:
     dependencies:
@@ -4413,13 +4413,13 @@ packages:
       yaml:
         optional: true
 
-  vitest-environment-prisma-postgres@1.0.1:
-    resolution: {integrity: sha512-kUmthYXxQTPuz8NvSo9GxUd7Htn8jMkBXZuqDiCPJtK5ycjRxSjYkW0WESMzxYDOp1YtwfVyIxNcpYDaKu1LGw==}
-    engines: {node: '>=24.0.0'}
+  vitest-environment-prisma-postgres@2.0.0:
+    resolution: {integrity: sha512-92S0jx5aRLco48rW+uPPnmrvLADpc2BdJKJM3LB/2C4DnRADiTjiLAEKwyNhfVEi+Zwi3Gfn5VDvT+keFqeLWQ==}
+    engines: {node: '>=20'}
     peerDependencies:
       '@prisma/adapter-pg': '>=4 <8'
       prisma: '>=4 <8'
-      vitest: '>=4 <5'
+      vitest: '>=4.1 <5'
 
   vitest@4.1.5:
     resolution: {integrity: sha512-9Xx1v3/ih3m9hN+SbfkUyy0JAs72ap3r7joc87XL6jwF0jGg6mFBvQ1SrwaX+h8BlkX6Hz9shdd1uo6AF+ZGpg==}
@@ -9007,7 +9007,7 @@ snapshots:
       jiti: 2.7.0
       yaml: 2.9.0
 
-  vitest-environment-prisma-postgres@1.0.1(@prisma/adapter-pg@7.7.0)(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.10.0)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(vitest@4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.16(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))):
+  vitest-environment-prisma-postgres@2.0.0(@prisma/adapter-pg@7.7.0)(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.10.0)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(vitest@4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.9.1)(vite@8.0.16(@types/node@25.9.1)(jiti@2.7.0)(yaml@2.9.0))):
     dependencies:
       '@prisma/adapter-pg': 7.7.0
       prisma: 7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.10.0)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3)
