@@ -6,14 +6,7 @@ import type { Schemas, ValidatedHandler, ValidateMiddleware } from "./validate";
  * with its original Express signature.
  */
 type HttpMethod =
-  | "all"
-  | "get"
-  | "post"
-  | "put"
-  | "delete"
-  | "patch"
-  | "options"
-  | "head";
+  "all" | "get" | "post" | "put" | "delete" | "patch" | "options" | "head";
 
 /**
  * The schemas of the first {@link ValidateMiddleware} in a handler chain, or

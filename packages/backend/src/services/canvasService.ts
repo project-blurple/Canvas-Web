@@ -44,8 +44,7 @@ interface LockedCanvas {
  */
 interface UnlockedCanvas {
   placeState:
-    | typeof CanvasPlaceState.Anyone
-    | typeof CanvasPlaceState.NoNewUsers;
+    typeof CanvasPlaceState.Anyone | typeof CanvasPlaceState.NoNewUsers;
   width: number;
   height: number;
   pixels: PixelColor[];
