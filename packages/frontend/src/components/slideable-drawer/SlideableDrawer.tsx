@@ -61,8 +61,7 @@ const Handle = styled("div")`
 `;
 
 type CssValue =
-  | { type: "Rem"; value: number }
-  | { type: "Percentage"; value: number };
+  { type: "Rem"; value: number } | { type: "Percentage"; value: number };
 
 // Kinda just eyeballed the 6 and 3.75 rem and it looked ok.
 const pointerBounds = [

@@ -21,7 +21,9 @@ export const AUDIT_RESOURCE_TYPES = Object.keys(
 ) as readonly AuditResourceType[];
 
 export type AuditAction = {
-  [R in AuditResourceType]: `${R}.${(typeof AUDIT_ACTIONS_BY_RESOURCE)[R][number]}`;
+  [
+    R in AuditResourceType
+  ]: `${R}.${(typeof AUDIT_ACTIONS_BY_RESOURCE)[R][number]}`;
 }[AuditResourceType];
 
 export const AUDIT_ACTIONS: readonly AuditAction[] = Object.entries(

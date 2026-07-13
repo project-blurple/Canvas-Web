@@ -15,7 +15,9 @@ export const CanvasWrapper = styled("main")`
 
     display: grid;
     // Restricts the height of the page to the viewport
-    grid-template-rows: var(--navbar-height) calc(100dvh - var(--navbar-height));
+    grid-template-rows:
+      var(--navbar-height)
+      calc(100dvh - var(--navbar-height));
     height: 100dvh;
 
     ${({ theme }) => theme.breakpoints.up("lg")} {
