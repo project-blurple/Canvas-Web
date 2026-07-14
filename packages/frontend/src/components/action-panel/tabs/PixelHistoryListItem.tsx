@@ -3,6 +3,7 @@ import { Skeleton, styled } from "@mui/material";
 
 import ColorCodeChip from "@/components/ColorCodeChip";
 import { StaticSwatch } from "@/components/swatch";
+import { formatRelativeTime } from "@/util/intl";
 
 const Wrapper = styled("div")`
   align-items: center;
@@ -22,6 +23,10 @@ const SwatchSkeleton = styled(Skeleton)`
   height: auto;
 `;
 
+const UserInfo = styled("div")`
+  min-width: 0;
+`;
+
 const Username = styled("p")`
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -30,6 +35,12 @@ const Username = styled("p")`
 
 const ColorName = styled("p")`
   color: oklch(from var(--discord-white) l c h / 60%);
+  letter-spacing: 0.01em;
+`;
+
+const Timestamp = styled("time")`
+  color: oklch(from var(--discord-white) l c h / 40%);
+  font-size: 0.75rem;
   letter-spacing: 0.01em;
 `;
 
@@ -43,14 +54,14 @@ export default function PixelHistoryListItem({
   record,
   ...props
 }: PixelHistoryListItemProps) {
-  const { color, userProfile } = record ?? {};
+  const { color, userProfile, timestamp } = record ?? {};
 
   return (
     <Wrapper {...props}>
       {color ?
         <StyledSwatch key={color.code} paletteColor={color} />
       : <SwatchSkeleton variant="rectangular" />}
-      <div>
+      <UserInfo>
         <Username title={record?.userId}>
           {record ?
             (userProfile?.username ?? record.userId)
@@ -67,7 +78,15 @@ export default function PixelHistoryListItem({
             </>
           : <Skeleton width={120} />}
         </ColorName>
-      </div>
+        {timestamp && (
+          <Timestamp
+            dateTime={timestamp}
+            title={new Date(timestamp).toLocaleString()}
+          >
+            {formatRelativeTime(timestamp)}
+          </Timestamp>
+        )}
+      </UserInfo>
     </Wrapper>
   );
 }
