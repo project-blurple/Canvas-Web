@@ -97,8 +97,8 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       kysely:
-        specifier: ^0.29.2
-        version: 0.29.2
+        specifier: ^0.29.4
+        version: 0.29.4
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -107,7 +107,7 @@ importers:
         version: 2.2.0
       prisma-extension-kysely:
         specifier: ^4.0.0
-        version: 4.0.0(@prisma/client@7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.2)
+        version: 4.0.0(@prisma/client@7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.4)
       sharp:
         specifier: ^0.35.0
         version: 0.35.3(@types/node@25.9.1)
@@ -3369,8 +3369,8 @@ packages:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
 
-  kysely@0.29.2:
-    resolution: {integrity: sha512-s6WVJyEZrbm6jhBpiKHsGHyePMrVQKJ85wZCFCr9W4QHv6WTjWIrdvTmO9hDEA3bNK0xkrE2DqrHsXMLWuZpQg==}
+  kysely@0.29.4:
+    resolution: {integrity: sha512-y5mVgQNkMbs1eK9Xyc0pmNdabN2wHhRYY/5r4W5HrUT1rYCEPeVNSj1RUJeSDKT3U0p+mXCvLgkrFuIafYI6BA==}
     engines: {node: '>=22.0.0'}
 
   lazystream@1.0.1:
@@ -8082,7 +8082,7 @@ snapshots:
 
   kleur@3.0.3: {}
 
-  kysely@0.29.2: {}
+  kysely@0.29.4: {}
 
   lazystream@1.0.1:
     dependencies:
@@ -8538,10 +8538,10 @@ snapshots:
 
   prettier@3.9.4: {}
 
-  prisma-extension-kysely@4.0.0(@prisma/client@7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.2):
+  prisma-extension-kysely@4.0.0(@prisma/client@7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3))(kysely@0.29.4):
     dependencies:
       '@prisma/client': 7.7.0(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3))(typescript@6.0.3)
-      kysely: 0.29.2
+      kysely: 0.29.4
 
   prisma-kysely@3.1.1(prisma@7.7.0(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(better-sqlite3@12.11.1)(react-dom@19.2.5(react@19.2.7))(react@19.2.7)(typescript@6.0.3)):
     dependencies:
