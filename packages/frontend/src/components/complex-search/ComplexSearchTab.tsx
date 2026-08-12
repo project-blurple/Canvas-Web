@@ -4,6 +4,7 @@ import type {
 } from "@blurple-canvas-web/types";
 import { Checkbox, FormControlLabel, styled } from "@mui/material";
 import type { AxiosError } from "axios";
+import { Download } from "lucide-react";
 import type { DateTime } from "luxon";
 import { useEffect, useState } from "react";
 import ActionPanelPrimitives from "@/components/action-panel/primitives";
@@ -12,6 +13,7 @@ import {
   FullWidthScrollView,
   TabPanel,
 } from "@/components/action-panel/tabs/ActionPanelTabBody";
+import { BasicButton } from "@/components/button";
 import { COMPLEX_SEARCH_BOUNDS_MIN_SIZE } from "@/constants/selectedBounds";
 import { useCanvasContext } from "@/contexts";
 import { useCanvasViewContext } from "@/contexts/CanvasViewContext";
@@ -34,6 +36,7 @@ import SearchUserEntries, {
   type SearchUserSortBy,
   type SearchUserSortDirection,
 } from "./SearchUserEntry";
+import { toast } from "sonner";
 
 const ComplexSearchTabBlock = styled(TabPanel)`
   grid-template-rows: 1fr auto;
@@ -81,10 +84,24 @@ const SortSelect = styled("select")`
   }
 `;
 
+const RightAlignedControls = styled("div")`
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+`;
+
 const SortControlRow = styled("div")`
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+`;
+
+const DownloadButton = styled(BasicButton)`
+  min-width: unset;
+  padding-inline: 0.25rem;
+  padding-block: 0rem;
+  font-size: 0.75rem;
+  font-weight: 400;
 `;
 
 const EraseWrapper = styled("div")`
@@ -119,6 +136,16 @@ function areBoundsValid(bounds: ViewBounds | null): boolean {
 }
 
 export type SearchFilterMode = "include" | "exclude";
+
+function escapeCsvValue(value: string | number): string {
+  const normalisedValue = String(value).replaceAll('"', '""');
+  return `"${normalisedValue}"`;
+}
+
+function formatFileDate(dateIso: string | undefined): string {
+  if (!dateIso) return "any";
+  return dateIso.replaceAll(/[^\d]/g, "").slice(0, 14) || "any";
+}
 
 const sortOptions: { value: SearchUserSortBy; label: string }[] = [
   { value: "entryCount", label: "Entry count" },
@@ -290,6 +317,62 @@ export default function ComplexSearchTab({
     setSortDirection(event.target.value as SearchUserSortDirection);
   }
 
+  function handleCsvDownload() {
+    if (!historyData?.users || !searchParams) return;
+
+    const headers = [
+      "userId",
+      "username",
+      "entries",
+      "firstPlaced",
+      "lastPlaced",
+    ];
+    const rows = Object.entries(historyData.users).map(([userId, summary]) => [
+      String(userId),
+      summary.userProfile?.username ?? "",
+      summary.count,
+      summary.firstPlaced,
+      summary.lastPlaced,
+    ]);
+
+    const csvLines = [
+      headers.join(","),
+      ...rows.map((row) => row.map((value) => escapeCsvValue(value)).join(",")),
+    ];
+
+    const csvContent = csvLines.join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const userFilterLabel =
+      searchParams.includeUserIds ?
+        `users-include-${searchParams.includeUserIds.length}`
+      : searchParams.excludeUserIds ?
+        `users-exclude-${searchParams.excludeUserIds.length}`
+      : "users-any";
+    const colorFilterLabel =
+      searchParams.includeColors ?
+        `colors-include-${searchParams.includeColors.length}`
+      : searchParams.excludeColors ?
+        `colors-exclude-${searchParams.excludeColors.length}`
+      : "colors-any";
+    const point1 = searchParams.point1 ?? searchParams.point0;
+    const boundsLabel = `x${searchParams.point0.x}-${point1.x}_y${searchParams.point0.y}-${point1.y}`;
+    const fromLabel = formatFileDate(searchParams.fromDateTime);
+    const toLabel = formatFileDate(searchParams.toDateTime);
+    const exportedAt = new Date()
+      .toISOString()
+      .replaceAll(/[^\d]/g, "")
+      .slice(0, 14);
+
+    link.href = url;
+    link.download = `complex-search-canvas-${canvas.id}-${boundsLabel}-${userFilterLabel}-${colorFilterLabel}-from-${fromLabel}-to-${toLabel}-exported-${exportedAt}.csv`;
+    document.body.append(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  }
+
   const Results: React.FC = () => {
     if (historyQuery.status === "error") {
       const { status } = historyQuery.error as AxiosError;
@@ -347,26 +430,48 @@ export default function ComplexSearchTab({
                 })}
                 )
               </Summary>
-              <SortControlRow>
-                <SortSelect value={sortBy} onChange={handleSortChange}>
-                  {sortOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </SortSelect>
-                <SortSelect
-                  aria-label="Sort direction"
-                  value={sortDirection}
-                  onChange={handleSortDirectionChange}
+              <RightAlignedControls>
+                <SortControlRow>
+                  <SortSelect value={sortBy} onChange={handleSortChange}>
+                    {sortOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </SortSelect>
+                  <SortSelect
+                    aria-label="Sort direction"
+                    value={sortDirection}
+                    onChange={handleSortDirectionChange}
+                  >
+                    {sortDirectionOptions.map(({ value, label }) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </SortSelect>
+                </SortControlRow>
+                <DownloadButton
+                  onClick={() => {
+                    const toastId = toast.loading("Generating CSV...");
+                    setTimeout(() => {
+                      try {
+                        handleCsvDownload();
+                        toast.success("CSV downloaded!", { id: toastId });
+                      } catch {
+                        toast.error("Failed to generate CSV", { id: toastId });
+                      }
+                    }, 0);
+                  }}
+                  disabled={
+                    !historyData?.users ||
+                    Object.keys(historyData.users).length === 0
+                  }
                 >
-                  {sortDirectionOptions.map(({ value, label }) => (
-                    <option key={value} value={value}>
-                      {label}
-                    </option>
-                  ))}
-                </SortSelect>
-              </SortControlRow>
+                  CSV
+                  <Download size={12} />
+                </DownloadButton>
+              </RightAlignedControls>
             </ResultsHeader>
             <SearchUserEntries
               users={historyData.users}
