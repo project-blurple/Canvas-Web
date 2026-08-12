@@ -79,7 +79,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@testcontainers/postgresql": "^11.14.0",
+    "@testcontainers/postgresql": "^12.1.0",
     "@tsconfig/node24": "^24.0.4",
     "@types/better-sqlite3": "^7.6.13",
     "@types/cors": "^2.8.19",
