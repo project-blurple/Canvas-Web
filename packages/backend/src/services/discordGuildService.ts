@@ -2,16 +2,15 @@ import type { GuildData } from "@blurple-canvas-web/types";
 import type { SessionData } from "express-session";
 import { prisma } from "@/client";
 import config from "@/config";
+import { discordApi } from "@/discord-api";
 import { ApiError } from "@/errors";
 import BadRequestError from "@/errors/BadRequestError";
 import NotFoundError from "@/errors/NotFoundError";
 import TooManyRequestsError from "@/errors/TooManyRequestsError";
 import UnauthorizedError from "@/errors/UnauthorizedError";
-import fetchWithRetries from "@/utils/fetchWithRetries";
 
 const GUILD_FLAGS_CACHE_TTL_MS = 900_000; // 15 min
 
-const DISCORD_API_BASE_URL = "https://discord.com/api/v10";
 const ADMINISTRATOR_PERMISSION = 0x8n;
 const MANAGE_GUILD_PERMISSION = 0x20n;
 
@@ -36,7 +35,7 @@ interface GuildPermissionsSummary {
 }
 
 interface DiscordRequestOptions {
-  endpoint: string;
+  endpoint: `/${string}`;
   authorization: `Bearer ${string}`;
 }
 
@@ -64,14 +63,11 @@ async function discordRequest<T>({
   endpoint,
   authorization,
 }: DiscordRequestOptions): Promise<T> {
-  const response = await fetchWithRetries(
-    `${DISCORD_API_BASE_URL}${endpoint}`,
-    {
-      headers: {
-        Authorization: authorization,
-      },
+  const response = await discordApi.fetch(endpoint, {
+    headers: {
+      Authorization: authorization,
     },
-  );
+  });
 
   if (response.status === 401 || response.status === 403) {
     throw new UnauthorizedError(

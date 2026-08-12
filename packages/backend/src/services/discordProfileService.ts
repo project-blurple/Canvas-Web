@@ -1,23 +1,7 @@
 import type { DiscordUserProfile } from "@blurple-canvas-web/types";
 import { type discord_user_profile, prisma } from "@/client";
-import { NotFoundError } from "@/errors";
 
-export async function getDiscordProfile(
-  userId: discord_user_profile["user_id"],
-): Promise<discord_user_profile> {
-  const discordUserProfile = await prisma.discord_user_profile.findFirst({
-    where: {
-      user_id: userId,
-    },
-  });
-
-  if (!discordUserProfile) {
-    throw new NotFoundError(`Discord profile not found for user ID ${userId}`);
-  }
-
-  return discordUserProfile;
-}
-
+/** @internal Exported only for testing */
 export async function createOrUpdateDiscordProfile(
   profile: discord_user_profile,
 ): Promise<void> {
@@ -65,6 +49,7 @@ export function getProfilePictureUrlFromHash(
   return createCustomAvatarUrl(userId, profilePictureHash);
 }
 
+/** @internal Exported only for testing */
 export function createCustomAvatarUrl(
   userId: discord_user_profile["user_id"],
   profilePictureHash: string,

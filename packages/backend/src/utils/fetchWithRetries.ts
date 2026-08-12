@@ -14,7 +14,7 @@ function getStandDownSecondsFromHeaders(headers: Headers): number {
   return delaySeconds ? Number.parseFloat(delaySeconds) : Number.NaN;
 }
 
-interface RetryOptions {
+export interface RetryOptions {
   maxAttempts: number;
   /**
    * If the response has no `Retry-After` or `X-Ratelimit-Reset-After` header, will retry with delay
