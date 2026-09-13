@@ -14,6 +14,7 @@ import { PixelReconciliationService } from "@/canvas/pixel-reconciliation.servic
 import type { DB } from "@/common/database/core/kysely/types";
 import { PrismaService } from "@/common/database/core/prisma.service";
 import { PixelService } from "@/pixel/pixel.service";
+import { SnapshotService } from "@/snapshot/snapshot.service";
 
 export interface GetPixelHistoryParams {
   canvasId: CanvasInfo["id"];
@@ -41,6 +42,7 @@ export class HistoryService {
     private readonly pixelService: PixelService,
     private readonly pixelReconciliationService: PixelReconciliationService,
     private readonly blocklistService: BlocklistService,
+    private readonly snapshotService: SnapshotService,
   ) {}
 
   /**
@@ -184,7 +186,13 @@ export class HistoryService {
       coordinatesUpdated,
     );
 
-    // TODO: snapshots
+    const earliestEntryTimestamp = new Date(
+      Math.min(...deletedEntries.map((entry) => entry.timestamp.getTime())),
+    );
+    await this.snapshotService.setSnapshotDirtyTimestamp(
+      params.canvasId,
+      earliestEntryTimestamp,
+    );
 
     if (shouldBlockAuthors) {
       const authorIds = new Set(deletedEntries.map((entry) => entry.userId));

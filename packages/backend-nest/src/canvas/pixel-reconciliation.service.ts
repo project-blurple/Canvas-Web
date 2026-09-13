@@ -1,12 +1,12 @@
 import type { PixelColor, Point } from "@blurple-canvas-web/types";
 import { Injectable, Logger } from "@nestjs/common";
+import { BLANK_PIXEL_COLOR_ID } from "@/common/constants";
 import type { History } from "@/common/database/core/prisma.client";
 import { PrismaService } from "@/common/database/core/prisma.service";
 import { NotFoundError } from "@/common/errors/not-found.error";
 import { BroadcastService } from "@/realtime/broadcast.service";
+import { SnapshotService } from "@/snapshot/snapshot.service";
 import { CanvasCacheService } from "./canvas-cache.service";
-
-export const BLANK_PIXEL_COLOR_ID = 1;
 
 const COORDINATE_CHUNK_SIZE = 500;
 
@@ -20,6 +20,7 @@ export class PixelReconciliationService {
     private readonly prisma: PrismaService,
     private readonly canvasCacheService: CanvasCacheService,
     private readonly broadcastService: BroadcastService,
+    private readonly snapshotService: SnapshotService,
   ) {}
 
   async createBulkPlaceEntries({
@@ -101,20 +102,41 @@ export class PixelReconciliationService {
       return;
     }
 
-    const coordinatesByCanvas = new Map<number, Point[]>();
+    const restoredByCanvas = new Map<
+      number,
+      { coordinates: Point[]; earliestTimestamp: Date }
+    >();
     for (const entry of restoredEntries) {
-      const coordinates = coordinatesByCanvas.get(entry.canvasId) ?? [];
-      coordinates.push({ x: entry.x, y: entry.y });
-      coordinatesByCanvas.set(entry.canvasId, coordinates);
+      const existing = restoredByCanvas.get(entry.canvasId);
+      if (existing) {
+        existing.coordinates.push({ x: entry.x, y: entry.y });
+        if (entry.timestamp < existing.earliestTimestamp) {
+          existing.earliestTimestamp = entry.timestamp;
+        }
+      } else {
+        restoredByCanvas.set(entry.canvasId, {
+          coordinates: [{ x: entry.x, y: entry.y }],
+          earliestTimestamp: entry.timestamp,
+        });
+      }
     }
 
     await Promise.all(
-      Array.from(coordinatesByCanvas.entries(), ([canvasId, coordinates]) =>
-        this.restorePixelsAfterHistoryModification(canvasId, coordinates),
+      Array.from(
+        restoredByCanvas.entries(),
+        async ([canvasId, { coordinates, earliestTimestamp }]) => {
+          await this.restorePixelsAfterHistoryModification(
+            canvasId,
+            coordinates,
+          );
+
+          await this.snapshotService.setSnapshotDirtyTimestamp(
+            canvasId,
+            earliestTimestamp,
+          );
+        },
       ),
     );
-
-    // TODO: snapshots
   }
 
   /**

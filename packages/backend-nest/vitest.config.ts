@@ -11,7 +11,7 @@ export default defineConfig({
     include: ["src/**/*.spec.ts"],
     root: "./",
     globalSetup: ["./src/test/vitest.globalSetup.ts"],
-    setupFiles: ["./src/test/database.ts"],
+    setupFiles: ["./src/test/database.ts", "./src/test/snapshot-database.ts"],
     env: {
       DISCORD_CLIENT_ID: "test-client-id",
       DISCORD_CLIENT_SECRET: "test-client-secret",

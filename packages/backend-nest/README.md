@@ -55,6 +55,21 @@ $ pnpm run test
 $ pnpm run test:e2e
 ```
 
+## Snapshots
+
+The backend can periodically render lossless WebP snapshots of each canvas for
+the timelapse feature. Generation is off by default and gated by
+`GENERATE_SNAPSHOTS`, `SNAPSHOTS_AVAILABLE_FOR_CANVASES` and
+`SNAPSHOT_SCHEDULER_INTERVAL_MS`. Snapshots are never served over HTTP, and the
+separate SQLite manifest database must be migrated before the first boot with
+generation enabled:
+
+```bash
+$ pnpm run prisma:snapshot:migrate
+```
+
+Run the generator in exactly one backend at a time.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are

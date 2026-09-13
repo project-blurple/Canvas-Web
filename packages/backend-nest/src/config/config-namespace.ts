@@ -6,6 +6,7 @@ export const ConfigNamespace = {
   Frames: "frames",
   Placement: "placement",
   Session: "session",
+  Snapshot: "snapshot",
   Telemetry: "telemetry",
 } as const;
 

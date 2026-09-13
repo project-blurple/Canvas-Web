@@ -4,6 +4,8 @@
 **/backend/static/timelapse
 **/backend/data/snapshots
 **/backend-nest/static/canvas
+**/backend-nest/static/snapshots
+**/backend-nest/data/snapshots
 
 # Prisma generated files
 **/backend/src/client/core/generated/*
@@ -11,6 +13,7 @@
 **/backend/src/client/core/kysely/*
 **/backend-nest/src/common/database/core/generated/*
 **/backend-nest/src/common/database/core/kysely/*
+**/backend-nest/src/common/database/snapshot/generated/*
 
 # Logs
 logs

@@ -7,6 +7,7 @@ import { DatabaseModule } from "@/common/database/database.module";
 import { AppConfigModule } from "@/config/config.module";
 import { PixelService } from "@/pixel/pixel.service";
 import { BroadcastService } from "@/realtime/broadcast.service";
+import { SnapshotService } from "@/snapshot/snapshot.service";
 import { testPrisma as prisma } from "@/test/database";
 import { seedAll } from "@/test/seed";
 import { seedCanvases } from "@/test/seed/canvases";
@@ -19,6 +20,10 @@ const broadcastService = {
   broadcastPixel: vi.fn(),
   broadcastPixelsBulk: vi.fn(),
   broadcastCanvasInfo: vi.fn(),
+};
+
+const snapshotService = {
+  setSnapshotDirtyTimestamp: vi.fn(),
 };
 
 describe("HistoryService", () => {
@@ -36,6 +41,7 @@ describe("HistoryService", () => {
         BlocklistService,
         CanvasCacheService,
         { provide: BroadcastService, useValue: broadcastService },
+        { provide: SnapshotService, useValue: snapshotService },
       ],
     }).compile();
     await moduleRef.init();
@@ -193,6 +199,11 @@ describe("HistoryService", () => {
 
       await expect(blocklistService.userIsBlocklisted(1n)).resolves.toBe(true);
       expect(broadcastService.broadcastPixelsBulk).toHaveBeenCalledTimes(1);
+
+      expect(snapshotService.setSnapshotDirtyTimestamp).toHaveBeenCalledWith(
+        1,
+        new Date(9),
+      );
     });
 
     it("does nothing when no rows match and never blocks", async () => {
@@ -204,6 +215,7 @@ describe("HistoryService", () => {
 
       await expect(blocklistService.userIsBlocklisted(1n)).resolves.toBe(false);
       expect(broadcastService.broadcastPixelsBulk).not.toHaveBeenCalled();
+      expect(snapshotService.setSnapshotDirtyTimestamp).not.toHaveBeenCalled();
     });
   });
 

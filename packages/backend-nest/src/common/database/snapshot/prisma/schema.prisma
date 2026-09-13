@@ -1,0 +1,35 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../generated"
+  moduleFormat        = "cjs"
+  engineType          = "client"
+  importFileExtension = ""
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model SnapshotManifest {
+  id                    Int      @id @default(autoincrement())
+  canvasId              Int      @map("canvas_id")
+  snapshotAt            DateTime @map("snapshot_at")
+  historyCount          Int      @default(0) @map("history_count")
+  lastIncludedHistoryAt DateTime @map("last_included_history_at")
+  imagePath             String   @map("image_path")
+  fileSizeBytes         Int?     @map("file_size_bytes")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@unique([canvasId, snapshotAt])
+  @@map("snapshot_manifest")
+}
+
+model SnapshotCursor {
+  canvasId               Int       @id @map("canvas_id")
+  lastProcessedTimestamp DateTime  @default(now()) @map("last_processed_timestamp")
+  dirtyFromTimestamp     DateTime? @map("dirty_from_timestamp")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  @@map("snapshot_cursor")
+}

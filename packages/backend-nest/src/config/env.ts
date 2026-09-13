@@ -9,6 +9,23 @@ if (!process.env.VITEST) {
 
 const requiredString = z.string().min(1);
 
+// Parsed from a JSON array string, e.g. `[1,2,3]`.
+const canvasAllowlist = z
+  .preprocess((value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+    try {
+      return JSON.parse(value);
+    } catch {
+      // Hand the raw string to the array schema so it reports a clear error
+      // instead of throwing here.
+      return value;
+    }
+  }, z.array(z.number().int().positive()))
+  .transform((canvasIds) => [...new Set(canvasIds)])
+  .default([]);
+
 export const envSchema = z.object({
   DATABASE_URL: requiredString,
   DISCORD_CLIENT_ID: requiredString,
@@ -35,6 +52,13 @@ export const envSchema = z.object({
   CAPTCHA_ENABLED: z.string().optional(),
   TURNSTILE_SECRET_KEY: requiredString.optional(),
   DISCORD_SERVER_INVITE: requiredString.optional(),
+  GENERATE_SNAPSHOTS: z.string().optional(),
+  SNAPSHOTS_AVAILABLE_FOR_CANVASES: canvasAllowlist,
+  SNAPSHOT_SCHEDULER_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(60000),
 });
 
 export type Env = z.infer<typeof envSchema>;

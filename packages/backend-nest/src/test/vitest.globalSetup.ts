@@ -1,4 +1,7 @@
 import { exec } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { promisify } from "node:util";
 import {
   PostgreSqlContainer,
@@ -7,6 +10,7 @@ import {
 
 const execAsync = promisify(exec);
 let container: StartedPostgreSqlContainer;
+let snapshotDir: string | undefined;
 
 export async function setup() {
   container = await new PostgreSqlContainer("postgres:17.9-alpine").start();
@@ -34,8 +38,24 @@ export async function setup() {
       env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
     },
   );
+
+  // The harness in `snapshot-database.ts` copies this template per worker.
+  snapshotDir = mkdtempSync(path.join(tmpdir(), "blurple-snapshot-db-"));
+  process.env.SNAPSHOT_DATABASE_URL = `file:${path.join(snapshotDir, "template.sqlite")}`;
+  await execAsync(
+    "npx prisma migrate deploy --config src/common/database/snapshot/prisma/prisma.config.ts",
+    {
+      env: {
+        ...process.env,
+        SNAPSHOT_DATABASE_URL: process.env.SNAPSHOT_DATABASE_URL,
+      },
+    },
+  );
 }
 
 export async function teardown() {
   await container.stop();
+  if (snapshotDir) {
+    rmSync(snapshotDir, { recursive: true, force: true });
+  }
 }

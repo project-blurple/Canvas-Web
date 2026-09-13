@@ -1,13 +1,16 @@
+import { Test, type TestingModule } from "@nestjs/testing";
+
 import { ForbiddenError } from "@/common/errors/forbidden.error";
-import type { CaptchaConfig } from "@/config/captcha.config";
+import { type CaptchaConfig, captchaConfig } from "@/config/captcha.config";
 import { TurnstileService } from "./turnstile.service";
 
-function makeService(config: Partial<CaptchaConfig>): TurnstileService {
-  return new TurnstileService({
-    enabled: false,
-    turnstileSecretKey: undefined,
-    ...config,
-  });
+function createModule(config: CaptchaConfig): Promise<TestingModule> {
+  return Test.createTestingModule({
+    providers: [
+      TurnstileService,
+      { provide: captchaConfig.KEY, useValue: config },
+    ],
+  }).compile();
 }
 
 function siteverifyResponse(body: unknown, init?: ResponseInit): Response {
@@ -26,43 +29,28 @@ describe("TurnstileService", () => {
     vi.unstubAllGlobals();
   });
 
-  describe("onModuleInit", () => {
-    it("throws when enabled without a secret key", () => {
-      const service = makeService({ enabled: true });
+  describe("when enabled and configured", () => {
+    let moduleRef: TestingModule;
+    let service: TurnstileService;
 
-      expect(() => service.onModuleInit()).toThrow(/TURNSTILE_SECRET_KEY/);
-    });
-
-    it("does not throw when enabled with a secret key", () => {
-      const service = makeService({
+    beforeAll(async () => {
+      moduleRef = await createModule({
         enabled: true,
         turnstileSecretKey: "secret",
       });
+      service = moduleRef.get(TurnstileService);
+    });
 
+    afterAll(async () => {
+      await moduleRef.close();
+    });
+
+    it("onModuleInit accepts the configuration", () => {
       expect(() => service.onModuleInit()).not.toThrow();
     });
 
-    it("does not throw when disabled", () => {
-      const service = makeService({ enabled: false });
-
-      expect(() => service.onModuleInit()).not.toThrow();
-    });
-  });
-
-  describe("verify", () => {
-    it("is a no-op (no network call) when captcha is disabled", async () => {
-      const service = makeService({ enabled: false });
-
-      await expect(service.verify("token")).resolves.toBeUndefined();
-      expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it("verifies the token against Cloudflare when the token is valid", async () => {
+    it("verifies the token against Cloudflare", async () => {
       fetchMock.mockResolvedValueOnce(siteverifyResponse({ success: true }));
-      const service = makeService({
-        enabled: true,
-        turnstileSecretKey: "secret",
-      });
 
       await expect(service.verify("good-token")).resolves.toBeUndefined();
 
@@ -75,10 +63,6 @@ describe("TurnstileService", () => {
 
     it("throws ForbiddenError when Cloudflare reports failure", async () => {
       fetchMock.mockResolvedValueOnce(siteverifyResponse({ success: false }));
-      const service = makeService({
-        enabled: true,
-        turnstileSecretKey: "secret",
-      });
 
       await expect(service.verify("bad-token")).rejects.toBeInstanceOf(
         ForbiddenError,
@@ -89,10 +73,6 @@ describe("TurnstileService", () => {
       fetchMock.mockResolvedValueOnce(
         siteverifyResponse({ success: true }, { status: 500 }),
       );
-      const service = makeService({
-        enabled: true,
-        turnstileSecretKey: "secret",
-      });
 
       await expect(service.verify("token")).rejects.toBeInstanceOf(
         ForbiddenError,
@@ -101,19 +81,60 @@ describe("TurnstileService", () => {
 
     it("throws ForbiddenError when the request itself fails", async () => {
       fetchMock.mockRejectedValueOnce(new Error("network down"));
-      const service = makeService({
-        enabled: true,
-        turnstileSecretKey: "secret",
-      });
 
       await expect(service.verify("token")).rejects.toBeInstanceOf(
         ForbiddenError,
       );
     });
+  });
 
-    it("throws ForbiddenError when enabled but unconfigured", async () => {
-      const service = makeService({ enabled: true });
+  describe("when disabled", () => {
+    let moduleRef: TestingModule;
+    let service: TurnstileService;
 
+    beforeAll(async () => {
+      moduleRef = await createModule({
+        enabled: false,
+        turnstileSecretKey: undefined,
+      });
+      service = moduleRef.get(TurnstileService);
+    });
+
+    afterAll(async () => {
+      await moduleRef.close();
+    });
+
+    it("onModuleInit accepts the configuration", () => {
+      expect(() => service.onModuleInit()).not.toThrow();
+    });
+
+    it("verify is a no-op without a network call", async () => {
+      await expect(service.verify("token")).resolves.toBeUndefined();
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("when enabled but unconfigured", () => {
+    let moduleRef: TestingModule;
+    let service: TurnstileService;
+
+    beforeAll(async () => {
+      moduleRef = await createModule({
+        enabled: true,
+        turnstileSecretKey: undefined,
+      });
+      service = moduleRef.get(TurnstileService);
+    });
+
+    afterAll(async () => {
+      await moduleRef.close();
+    });
+
+    it("onModuleInit throws so the misconfiguration fails fast", () => {
+      expect(() => service.onModuleInit()).toThrow(/TURNSTILE_SECRET_KEY/);
+    });
+
+    it("verify throws ForbiddenError without a network call", async () => {
       await expect(service.verify("token")).rejects.toBeInstanceOf(
         ForbiddenError,
       );

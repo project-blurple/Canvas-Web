@@ -7,6 +7,7 @@ import { BlocklistModule } from "@/blocklist/blocklist.module";
 import { CanvasModule } from "@/canvas/canvas.module";
 import { DiscordModule } from "@/discord/discord.module";
 import { PixelModule } from "@/pixel/pixel.module";
+import { SnapshotModule } from "@/snapshot/snapshot.module";
 import { HistoryController } from "./history.controller";
 import { HistoryService } from "./history.service";
 
@@ -17,6 +18,7 @@ import { HistoryService } from "./history.service";
     BlocklistModule,
     DiscordModule,
     AuthModule,
+    SnapshotModule,
   ],
   controllers: [HistoryController],
   providers: [HistoryService, CanvasModeratorGuard, CanvasAdminGuard],
