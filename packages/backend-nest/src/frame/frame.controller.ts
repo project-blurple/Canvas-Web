@@ -1,5 +1,6 @@
 import {
   CanvasIdParamModel,
+  CanvasPlaceState,
   CreateFrameBodyModel,
   ExportFrameParamModel,
   FrameDataParamModel,
@@ -36,11 +37,20 @@ import {
   CurrentUser,
   CurrentUserDto,
 } from "@/auth/decorator/current-user.decorator";
-import { RequiresLogin } from "@/auth/require-auth.decorator";
+import {
+  RequiresCanvasModerator,
+  RequiresLogin,
+} from "@/auth/require-auth.decorator";
+import { CanvasService } from "@/canvas/canvas.service";
 import { ExportService } from "@/canvas/export.service";
+import { BadRequestError } from "@/common/errors/bad-request.error";
 import { type FramesConfig, framesConfig } from "@/config/frames.config";
 import { DiscordTokenService } from "@/discord/discord-token.service";
-import { FrameMutationRateLimit } from "@/rate-limit/rate-limit.decorators";
+import {
+  FrameMutationRateLimit,
+  TimelapseRateLimit,
+} from "@/rate-limit/rate-limit.decorators";
+import { TimelapseService } from "@/timelapse/timelapse.service";
 import { FrameService } from "./frame.service";
 
 class ExportFrameParamsDto extends createZodDto(ExportFrameParamModel) {}
@@ -63,7 +73,9 @@ export class FrameController {
 
   constructor(
     private readonly frameService: FrameService,
+    private readonly canvasService: CanvasService,
     private readonly exportService: ExportService,
+    private readonly timelapseService: TimelapseService,
     private readonly discordTokenService: DiscordTokenService,
     @Inject(framesConfig.KEY) private readonly frames: FramesConfig,
   ) {}
@@ -108,6 +120,49 @@ export class FrameController {
           `inline; filename="frame-${params.frameId}.png"`,
         ),
     );
+  }
+
+  @Get(":frameId.mp4")
+  @RequiresCanvasModerator()
+  @TimelapseRateLimit()
+  @ApiOperation({ summary: "Timelapse MP4 of a frame's region" })
+  @ApiProduces("video/mp4")
+  @ApiOkResponse({ description: "The timelapse video" })
+  async frameTimelapseMp4(
+    @Param() params: FrameIdParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const frame = await this.frameService.getFrameById(params.frameId);
+    const canvas = await this.canvasService.getCanvasInfo(frame.canvasId);
+
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
+      throw new BadRequestError(
+        "Timelapse generation is only available for locked canvases",
+      );
+    }
+
+    const { start, end } =
+      await this.frameService.getFramePlacementTimestamps(frame);
+
+    const filePath = await this.timelapseService.generateTimelapse({
+      canvasId: frame.canvasId,
+      start,
+      end,
+      bounds: { x0: frame.x0, y0: frame.y0, x1: frame.x1, y1: frame.y1 },
+    });
+
+    res
+      .status(200)
+      .type("mp4")
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${frame.canvasId}-frame-${frame.id}-timelapse.mp4"`,
+      )
+      .sendFile(filePath, (err) => {
+        if (err) {
+          this.logger.error(`Failed to send timelapse file ${filePath}:`, err);
+        }
+      });
   }
 
   @Get(":frameId")

@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule, SchedulerRegistry } from "@nestjs/schedule";
 import { Test, type TestingModule } from "@nestjs/testing";
 
@@ -31,7 +32,12 @@ const baseConfig: SnapshotConfig = {
 
 function createModule(config: SnapshotConfig): Promise<TestingModule> {
   return Test.createTestingModule({
-    imports: [AppConfigModule, DatabaseModule, ScheduleModule.forRoot()],
+    imports: [
+      AppConfigModule,
+      DatabaseModule,
+      EventEmitterModule.forRoot(),
+      ScheduleModule.forRoot(),
+    ],
     providers: [
       SnapshotStoreService,
       SnapshotService,

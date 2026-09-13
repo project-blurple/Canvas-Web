@@ -7,6 +7,7 @@ import {
   CanvasPasteBodyModel,
   CanvasPlaceState,
   CanvasSummarySchema,
+  CanvasTimelapseParamModel,
   CooldownSchema,
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
@@ -44,8 +45,13 @@ import {
 } from "@/auth/decorator/current-user.decorator";
 import {
   RequiresCanvasAdmin,
+  RequiresCanvasModerator,
   RequiresLogin,
 } from "@/auth/require-auth.decorator";
+import { BadRequestError } from "@/common/errors/bad-request.error";
+import { TimelapseRateLimit } from "@/rate-limit/rate-limit.decorators";
+import { getTimelapseVideoFormat } from "@/timelapse/timelapse.constants";
+import { TimelapseService } from "@/timelapse/timelapse.service";
 import { CanvasService } from "./canvas.service";
 import { type CachedCanvas, CanvasCacheService } from "./canvas-cache.service";
 import { ExportService } from "./export.service";
@@ -102,6 +108,8 @@ class CanvasPasteResponseDto extends createZodDto(
   }),
 ) {}
 
+class CanvasTimelapseQueryDto extends createZodDto(CanvasTimelapseParamModel) {}
+
 @Controller("canvas")
 export class CanvasController {
   private readonly logger = new Logger(CanvasController.name);
@@ -110,6 +118,7 @@ export class CanvasController {
     private readonly canvasService: CanvasService,
     private readonly canvasCacheService: CanvasCacheService,
     private readonly exportService: ExportService,
+    private readonly timelapseService: TimelapseService,
   ) {}
 
   @Get()
@@ -160,6 +169,48 @@ export class CanvasController {
     return {
       cooldownEndTime: cooldownEndTime ?? undefined,
     };
+  }
+
+  @Get(":canvasId.mp4")
+  @RequiresCanvasModerator()
+  @TimelapseRateLimit()
+  @ApiOperation({ summary: "Timelapse video of an entire canvas" })
+  @ApiProduces("video/mp4", "video/webm")
+  @ApiOkResponse({ description: "The timelapse video" })
+  async canvasTimelapseMp4(
+    @Param() params: CanvasIdParamsDto,
+    @Query() query: CanvasTimelapseQueryDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const canvas = await this.canvasService.getCanvasInfo(params.canvasId);
+
+    if (canvas.placeState !== CanvasPlaceState.NoOne) {
+      throw new BadRequestError(
+        "Timelapse generation is only available for locked canvases",
+      );
+    }
+
+    const raw = query.raw ? "raw" : "default";
+
+    const filePath = await this.timelapseService.generateTimelapse({
+      canvasId: params.canvasId,
+      raw,
+    });
+
+    const format = getTimelapseVideoFormat(raw);
+
+    res
+      .status(200)
+      .type(format)
+      .setHeader(
+        "Content-Disposition",
+        `inline; filename="canvas-${params.canvasId}-timelapse${raw === "raw" ? "-raw" : ""}.${format}"`,
+      )
+      .sendFile(filePath, (err) => {
+        if (err) {
+          this.logger.error(`Failed to send timelapse file ${filePath}:`, err);
+        }
+      });
   }
 
   @Get(":canvasId@:scale.png")

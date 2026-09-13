@@ -462,4 +462,33 @@ export class FrameService {
       );
     }
   }
+
+  async getFramePlacementTimestamps(frame: {
+    canvasId: number;
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  }): Promise<{ start: Date; end: Date }> {
+    // Inclusive bounds (<=) to match frame_stats views and boundsWithDimensions
+    const row = await this.prisma.$kysely
+      .selectFrom("history")
+      .select([
+        (eb) => eb.fn.min("timestamp").as("startAt"),
+        (eb) => eb.fn.max("timestamp").as("endAt"),
+      ])
+      .where("canvasId", "=", frame.canvasId)
+      .where("erasedAt", "is", null)
+      .where("x", ">=", frame.x0)
+      .where("x", "<=", frame.x1)
+      .where("y", ">=", frame.y0)
+      .where("y", "<=", frame.y1)
+      .executeTakeFirst();
+
+    if (!row?.startAt || !row.endAt) {
+      throw new NotFoundError("No placement history found for this frame");
+    }
+
+    return { start: row.startAt, end: row.endAt };
+  }
 }

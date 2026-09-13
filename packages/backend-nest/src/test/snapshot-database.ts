@@ -74,6 +74,7 @@ vi.mock(
 
 export async function resetSnapshotDatabase(): Promise<void> {
   const { client } = await harness;
+  await client.timelapseManifest.deleteMany();
   await client.snapshotManifest.deleteMany();
   await client.snapshotCursor.deleteMany();
 }

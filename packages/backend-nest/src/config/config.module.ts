@@ -11,6 +11,7 @@ import { placementConfig } from "./placement.config";
 import { sessionConfig } from "./session.config";
 import { snapshotConfig } from "./snapshot.config";
 import { telemetryConfig } from "./telemetry.config";
+import { timelapseConfig } from "./timelapse.config";
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { telemetryConfig } from "./telemetry.config";
         sessionConfig,
         snapshotConfig,
         telemetryConfig,
+        timelapseConfig,
       ],
     }),
   ],

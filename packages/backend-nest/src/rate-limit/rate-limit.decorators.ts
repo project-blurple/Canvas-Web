@@ -34,3 +34,6 @@ export const GuildRefreshRateLimit = () => rateLimit(RATE_LIMITS.guildRefresh);
 
 /** 2000 requests / 24h on pixel-history retrieval. */
 export const HistoryQueryRateLimit = () => rateLimit(RATE_LIMITS.historyQuery);
+
+/** 3 requests / 60s on timelapse generation. */
+export const TimelapseRateLimit = () => rateLimit(RATE_LIMITS.timelapseRequest);

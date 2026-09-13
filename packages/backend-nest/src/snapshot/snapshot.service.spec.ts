@@ -1,3 +1,4 @@
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { Test, type TestingModule } from "@nestjs/testing";
 
 import { DatabaseModule } from "@/common/database/database.module";
@@ -18,7 +19,7 @@ const baseConfig: SnapshotConfig = {
 
 function createModule(config: SnapshotConfig): Promise<TestingModule> {
   return Test.createTestingModule({
-    imports: [AppConfigModule, DatabaseModule],
+    imports: [AppConfigModule, DatabaseModule, EventEmitterModule.forRoot()],
     providers: [SnapshotStoreService, SnapshotService],
   })
     .overrideProvider(snapshotConfig.KEY)

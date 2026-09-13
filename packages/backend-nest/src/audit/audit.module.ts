@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
 import { APP_INTERCEPTOR } from "@nestjs/core";
-import { EventEmitterModule } from "@nestjs/event-emitter";
 
 import { CanvasAdminGuard } from "@/auth/guards/canvas-admin.guard";
 import { DiscordModule } from "@/discord/discord.module";
@@ -9,7 +8,7 @@ import { AuditInterceptor } from "./audit.interceptor";
 import { AuditService } from "./audit.service";
 
 @Module({
-  imports: [EventEmitterModule.forRoot(), DiscordModule],
+  imports: [DiscordModule],
   controllers: [AuditController],
   providers: [
     AuditService,

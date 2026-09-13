@@ -33,3 +33,31 @@ model SnapshotCursor {
 
   @@map("snapshot_cursor")
 }
+
+model TimelapseManifest {
+  id               Int       @id @default(autoincrement())
+  canvasId         Int       @map("canvas_id")
+  requestedStartAt DateTime? @map("requested_start_at")
+  requestedEndAt   DateTime? @map("requested_end_at")
+  effectiveStartAt DateTime  @map("effective_start_at")
+  effectiveEndAt   DateTime  @map("effective_end_at")
+  boundsX0         Int?      @map("bounds_x0")
+  boundsY0         Int?      @map("bounds_y0")
+  boundsX1         Int?      @map("bounds_x1")
+  boundsY1         Int?      @map("bounds_y1")
+  scale            Int
+  frameRate        Int       @map("frame_rate")
+  endHoldDurationMs Int      @map("end_hold_duration_ms")
+  showEndCard      Boolean   @default(true) @map("show_end_card")
+  backgroundColor  String    @map("background_color")
+  cacheKey         String    @unique @map("cache_key")
+  filePath         String    @map("file_path")
+  fileSizeBytes    Int?      @map("file_size_bytes")
+  invalidatedAt    DateTime? @map("invalidated_at")
+  accessedAt       DateTime? @map("accessed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  @@index([canvasId, effectiveStartAt, effectiveEndAt])
+  @@map("timelapse_manifest")
+}

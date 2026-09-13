@@ -8,6 +8,7 @@ export const ConfigNamespace = {
   Session: "session",
   Snapshot: "snapshot",
   Telemetry: "telemetry",
+  Timelapse: "timelapse",
 } as const;
 
 export type ConfigNamespace =

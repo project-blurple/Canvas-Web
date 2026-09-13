@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { ZodSerializerInterceptor } from "nestjs-zod";
 
@@ -21,11 +22,13 @@ import { RateLimitModule } from "@/rate-limit/rate-limit.module";
 import { RealtimeModule } from "@/realtime/realtime.module";
 import { SnapshotModule } from "@/snapshot/snapshot.module";
 import { StatisticsModule } from "@/statistics/statistics.module";
+import { TimelapseModule } from "@/timelapse/timelapse.module";
 
 @Module({
   imports: [
     AppConfigModule,
     DatabaseModule,
+    EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     RateLimitModule,
     AuthModule,
@@ -41,6 +44,7 @@ import { StatisticsModule } from "@/statistics/statistics.module";
     HistoryModule,
     StatisticsModule,
     SnapshotModule,
+    TimelapseModule,
   ],
   providers: [
     { provide: APP_PIPE, useClass: ZodValidationPipe },

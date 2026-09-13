@@ -59,6 +59,17 @@ export const envSchema = z.object({
     .int()
     .positive()
     .default(60000),
+  FFMPEG_PATH: z.string().optional(),
+  TIMELAPSE_MAX_CONCURRENT_ENCODES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(1),
+  TIMELAPSE_ENCODE_TIMEOUT_MS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(600_000),
 });
 
 export type Env = z.infer<typeof envSchema>;
