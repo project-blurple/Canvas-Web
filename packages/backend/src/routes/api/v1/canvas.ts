@@ -1,5 +1,6 @@
 import { stat } from "node:fs/promises";
 import {
+  type BoundsInput,
   CanvasExportParamModel,
   type CanvasExportScale,
   CanvasIdParamModel,
@@ -10,8 +11,7 @@ import {
   CreateCanvasBodyModel,
   DEFAULT_CANVAS_EXPORT_SCALE,
   EditCanvasBodyModel,
-  type FrameBoundsInput,
-  OptionalFrameBoundsModel,
+  OptionalBoundsModel,
 } from "@blurple-canvas-web/types";
 import { type Response, Router } from "express";
 import BadRequestError from "@/errors/BadRequestError";
@@ -83,7 +83,7 @@ canvasRouter.get("/current", async (req, res) => {
 
 canvasRouter.get(
   "/:canvasId@:scale.png",
-  validate({ params: CanvasExportParamModel, query: OptionalFrameBoundsModel }),
+  validate({ params: CanvasExportParamModel, query: OptionalBoundsModel }),
   async (req, res) => {
     const scale = req.params.scale;
     addSpanAttributes(req, {
@@ -316,7 +316,7 @@ async function sendCachedCanvas(
   canvasId: number,
   cachedCanvas: CachedCanvas,
   scale: CanvasExportScale = DEFAULT_CANVAS_EXPORT_SCALE,
-  bounds?: FrameBoundsInput,
+  bounds?: BoundsInput,
 ): Promise<number | undefined> {
   if (cachedCanvas.placeState === CanvasPlaceState.NoOne) {
     const canvasPath = getLockedCanvasPath(cachedCanvas.canvasPaths, scale);

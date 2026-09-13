@@ -29,6 +29,12 @@ const PlacePixelArrayElement = z.object({
   ]),
 });
 
+export const PlacePixelResponseModel = z.object({
+  cooldownEndTime: z.number().int().nullable(),
+});
+
+export type PlacePixelResponse = z.infer<typeof PlacePixelResponseModel>;
+
 export const PlacePixelArrayBodyModel = z.array(PlacePixelArrayElement);
 
 export type PlacePixelArray = z.infer<typeof PlacePixelArrayBodyModel>;

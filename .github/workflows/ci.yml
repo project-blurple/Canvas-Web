@@ -72,6 +72,7 @@ jobs:
         package:
           - types
           - backend
+          - backend-nest
           - frontend
     steps:
       - uses: actions/checkout@v6
@@ -87,6 +88,7 @@ jobs:
 
       - name: Restore Next.js cache
         uses: actions/cache@v5
+        if: ${{ matrix.package == 'frontend' }}
         with:
           path: ${{ github.workspace }}/packages/frontend/.next/cache
           # Generate a new cache whenever packages or source files change
