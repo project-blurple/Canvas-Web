@@ -64,7 +64,7 @@ describe("SnapshotPrismaService bootstrap assertions", () => {
     writeFileSync(databasePath, "");
 
     await expect(initService(databasePath)).rejects.toThrow(
-      `missing required tables: snapshot_manifest, snapshot_cursor. ${MIGRATE_HINT}`,
+      `missing required tables: snapshot_manifest, snapshot_cursor, timelapse_manifest. ${MIGRATE_HINT}`,
     );
   });
 });

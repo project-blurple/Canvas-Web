@@ -5,6 +5,7 @@
 **/backend/data/snapshots
 **/backend-nest/static/canvas
 **/backend-nest/static/snapshots
+**/backend-nest/static/timelapse
 **/backend-nest/data/snapshots
 
 # Prisma generated files

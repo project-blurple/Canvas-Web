@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { PixelColor } from "@blurple-canvas-web/types";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { Test, type TestingModule } from "@nestjs/testing";
 
@@ -53,7 +54,12 @@ describe("snapshot invalidation through history moderation", () => {
   beforeAll(async () => {
     imageRoot = mkdtempSync(path.join(tmpdir(), "blurple-snapshot-invalid-"));
     moduleRef = await Test.createTestingModule({
-      imports: [AppConfigModule, DatabaseModule, ScheduleModule.forRoot()],
+      imports: [
+        AppConfigModule,
+        DatabaseModule,
+        EventEmitterModule.forRoot(),
+        ScheduleModule.forRoot(),
+      ],
       providers: [
         HistoryService,
         PixelService,

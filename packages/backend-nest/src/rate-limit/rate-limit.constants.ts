@@ -10,6 +10,7 @@ export const RATE_LIMITS = {
     limit: 2000,
     bucket: "history-query",
   },
+  timelapseRequest: { ttl: 60_000, limit: 3, bucket: "timelapse-request" },
 } as const satisfies Record<
   string,
   { ttl: number; limit: number; bucket: string }

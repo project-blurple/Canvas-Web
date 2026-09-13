@@ -1,9 +1,12 @@
 import type { CanvasInfo } from "@blurple-canvas-web/types";
 import { Inject, Injectable } from "@nestjs/common";
+import { EventEmitter2 } from "@nestjs/event-emitter";
 
 import type { SnapshotManifest } from "@/common/database/snapshot/snapshot-prisma.client";
 import type { SnapshotConfig } from "@/config/snapshot.config";
 import { snapshotConfig } from "@/config/snapshot.config";
+import type { SnapshotDirtyEvent } from "./snapshot.events";
+import { SNAPSHOT_DIRTY_EVENT } from "./snapshot.events";
 import { SnapshotStoreService } from "./snapshot-store.service";
 
 export interface GetSnapshotsParams {
@@ -23,6 +26,7 @@ export class SnapshotService {
 
   constructor(
     private readonly snapshotStore: SnapshotStoreService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject(snapshotConfig.KEY) private readonly config: SnapshotConfig,
   ) {
     this.availableCanvasIds = new Set(config.availableForCanvases);
@@ -62,5 +66,10 @@ export class SnapshotService {
     }
 
     await this.snapshotStore.markDirty(canvasId, timestamp);
+
+    this.eventEmitter.emit(SNAPSHOT_DIRTY_EVENT, {
+      canvasId,
+      timestamp,
+    } satisfies SnapshotDirtyEvent);
   }
 }

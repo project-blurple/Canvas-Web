@@ -17,6 +17,7 @@ import {
 const REQUIRED_SNAPSHOT_TABLES = [
   "snapshot_manifest",
   "snapshot_cursor",
+  "timelapse_manifest",
 ] as const;
 
 class SnapshotPrismaClientSetup {
@@ -78,7 +79,7 @@ export class SnapshotPrismaService
   private readonly assertRequiredTablesExist = async (): Promise<void> => {
     const rows = await this.$queryRaw<Array<{ name: string }>>`
       SELECT name FROM sqlite_master
-      WHERE type = 'table' AND name IN ('snapshot_manifest', 'snapshot_cursor')
+      WHERE type = 'table' AND name IN ('snapshot_manifest', 'snapshot_cursor', 'timelapse_manifest')
     `;
 
     const foundTables = new Set(rows.map((row) => row.name));
