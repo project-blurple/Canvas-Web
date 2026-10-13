@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17-alpine
+    shm_size: 256mb
+    environment:
+      POSTGRES_USER: ${DB_USER:-canvas}
+      POSTGRES_PASSWORD:
+        ${DB_PASSWORD:?DB_PASSWORD must be set (env or root .env)}
+      POSTGRES_DB: ${DB_NAME:-canvas}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  migrator:
+    environment:
+      DATABASE_URL:
+        &db_url postgresql://${DB_USER:-canvas}:${DB_PASSWORD:?DB_PASSWORD must
+        be set}@db:5432/${DB_NAME:-canvas}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backend:
+    environment:
+      DATABASE_URL: *db_url
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

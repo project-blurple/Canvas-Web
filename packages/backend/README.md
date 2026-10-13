@@ -96,12 +96,19 @@ docker compose up -d
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ```
 
+- Run full stack with bundled Postgres (used by the production Komodo stack).
+  `DB_USER`/`DB_NAME` default to `canvas`; `DB_PASSWORD` is required:
+
+  ```bash
+  DB_PASSWORD=... docker compose -f docker-compose.yml -f docker-compose.db.yml up -d
+  ```
+
 - Run lightweight local-only stack (Jaeger + OpenSearch) while running the
   backend on your host:
 
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
+  ```bash
+  docker compose -f docker-compose.dev.yml up -d
+  ```
 
 - Environment (host `pnpm dev`):
 
