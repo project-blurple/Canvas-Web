@@ -6,6 +6,7 @@ export { useCanvasStats } from "./useCanvasStats";
 export { useEventInfo } from "./useEventInfo";
 export { useEventStats } from "./useEventStats";
 export { useCanvasLeaderboard } from "./useLeaderboard";
+export { useCreateColor, useEditColor } from "./usePalette";
 export { usePalette } from "./usePalette";
 export { useComplexPixelHistory, usePixelHistory } from "./usePixelHistory";
 export { useRefreshGuildMemberships, useUserData } from "./useUserData";

@@ -5,7 +5,15 @@ import type {
   PaletteColor,
   PaletteRequest,
 } from "@blurple-canvas-web/types";
-import { type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import {
+  type AxiosError,
+  type AxiosResponse,
+  type UseMutationResult,
+  type UseQueryOptions,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import axios from "axios";
 import Color from "colorjs.io";
 import config from "@/config/clientConfig";
@@ -45,5 +53,62 @@ export function usePalette(
     enabled: useQueryOptions?.enabled ?? true,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+  });
+}
+
+export interface ColorInput {
+  code: string;
+  name: string;
+  global: boolean;
+  rgba: [number, number, number, number];
+}
+
+export function useCreateColor(): UseMutationResult<
+  AxiosResponse<{ message: string }>,
+  AxiosError,
+  ColorInput
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    AxiosResponse<{ message: string }>,
+    AxiosError,
+    ColorInput
+  >({
+    mutationFn: async (data: ColorInput) => {
+      const requestUrl = `${config.apiUrl}/api/v1/palette`;
+      return await axios.post(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["palette"] });
+    },
+  });
+}
+
+export function useEditColor(
+  colorId: number,
+): UseMutationResult<
+  AxiosResponse<{ message: string }>,
+  AxiosError,
+  ColorInput
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    AxiosResponse<{ message: string }>,
+    AxiosError,
+    ColorInput
+  >({
+    mutationFn: async (data: ColorInput) => {
+      const requestUrl = `${config.apiUrl}/api/v1/palette/${encodeURIComponent(colorId)}`;
+      return await axios.put(requestUrl, data, {
+        withCredentials: true,
+      });
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["palette"] });
+    },
   });
 }
